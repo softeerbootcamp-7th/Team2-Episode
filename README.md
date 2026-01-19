@@ -1,94 +1,27 @@
-# Episode : 마인드맵으로 정리하는 나의 경험 아카이브 
- Softeer 7기 2팀 종합 프로젝트
+<div align="center">
+<h1>Episode</h1>
 
-<br />
-<br />
+`softeer 7th 2Team`
 
-# 기획/디자인 링크
-[figma](https://www.figma.com/design/hTYvt1ufIO462HogLTosKe/Handoff_guidelines_%EC%86%8C%ED%94%84%ED%8B%B0%EC%96%B4-7%EA%B8%B0--%EB%B3%B5%EC%82%AC-?node-id=11522-532&m=dev)
+<img alt="image" src="https://github.com/user-attachments/assets/f0dc6923-5076-4981-b9cd-ba671313d250" />
+<h6>흩어진 경험을 한 편의 이야기로 잇다.</h6>
+</div>
 
-<br />
-<br />
-
-# 브랜치 구조
-
-```
-main (배포용 브랜치)
-└── dev (개발 통합 브랜치)
-    ├── be-dev (백엔드 파트 통합 브랜치)
-    │   ├── feat[#1]/login
-    │   ├── feat[#2]/auth
-    │   ├── fix[#3]/token
-    │   └── refactor[#4]/user
-    │
-    └── fe-dev (프론트엔드 파트 통합 브랜치)
-        ├── feat[#5]/home
-        ├── feat[#6]/login
-        ├── fix[#7]/ui
-        └── refactor[#8]/api
-```
-
-
-<br />
-<br />
-
-# 커밋 템플릿
-
-- 한글로 내용 작성
-- 예시: `feat: 안녕하세여`
+> 사용자는 경험을 활동 타입–활동명–상세 경험 구조의 마인드맵과 STAR 기법으로 정리하고, 핵심 역량 태그를 통해 경험을 체계적으로 관리·조회할 수 있습니다.⛓️‍💥📑 <br />
+>
+> 지금 에피소드에서 경험을 구조화하고, 필요한 순간 바로 꺼낼 수 있는 준비를 시작해 보세요.
 
 <br />
 
-| name | description |
-| :---: | :---: |
-| feat | 새로운 기능 추가 <br/> 이때, markup 또한 포함된다. |
-| design | css 수정 |
-| refactor | 코드 리팩토링 |
-| fix | 버그 수정 |
-| chore | 빌드 업무 수정, 패키지 매니저 수정, 파일 삭제, 이름 수정 등 잡일 |
-| docs | 개발문서 관련 (README) |
-| test |
+<div align="center">
 
+[팀 노션](https://www.notion.so/bside/2-2d32202027358184b712cd7978a157a5)
+|
+[피그마](https://www.figma.com/design/hTYvt1ufIO462HogLTosKe/Handoff_guidelines_소프티어-7기--복사-?node-id=1-6&p=f&t=Z0PIWuZECLYFK4GB-0)
+|
+[wiki](https://github.com/softeerbootcamp-7th/Team2-2yat/wiki/%ED%9A%8C%EC%9D%98%EB%A1%9D)
 
-<br />
-<br />
-
-# 이슈 템플릿 
-
-
-```
-// 기능 성격
-
-# (선택) 목적
-
-# 세부내용
-
-# task
-- [ ] 구현
-- [ ] 기능 테스트
-```
-
-```
-// 버그 성격
-
-# (선택) 목적
-
-# 문제가 발생하는 조건 또는 상황
-
-# task
-- [ ] 구현
-- [ ] 기능 테스트
-```
-
-<br />
-<br />
-
-# 회의록 목록
-
-[wiki_바로가기](https://github.com/softeerbootcamp-7th/Team2-2yat/wiki/%ED%9A%8C%EC%9D%98%EB%A1%9D)
-
-<br />
-<br />
+</div>
 
 # 팀원 소개
 
