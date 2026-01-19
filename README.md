@@ -1,5 +1,5 @@
-# Team2-2yat
-
+# Episode : 마인드맵으로 정리하는 나의 경험 아카이브 
+ Softeer 7기 2팀 종합 프로젝트
 
 <br />
 <br />
