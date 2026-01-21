@@ -15,7 +15,7 @@ export default defineConfig([
         extends: ["js/recommended"],
         languageOptions: { globals: globals.browser },
         rules: {
-            "react/react-in-jsx-scope": false,
+            "react/react-in-jsx-scope": "off",
             "simple-import-sort/imports": "error",
             "simple-import-sort/exports": "error",
         },
