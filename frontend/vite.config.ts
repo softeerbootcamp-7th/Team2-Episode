@@ -8,6 +8,9 @@ import path from "path";
 export default defineConfig({
     plugins: [react(), tailwindcss()],
     resolve: {
-        alias: [{ find: "@shared", replacement: path.resolve(__dirname, "src/shared") }],
+        alias: [
+            { find: "@shared", replacement: path.resolve(__dirname, "src/shared") },
+            { find: "@utils", replacement: path.resolve(__dirname, "src/utils") },
+        ],
     },
 });
