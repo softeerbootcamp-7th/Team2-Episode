@@ -12,6 +12,7 @@ export default defineConfig({
         alias: [
             { find: "@shared", replacement: path.resolve(__dirname, "src/shared") },
             { find: "@utils", replacement: path.resolve(__dirname, "src/utils") },
+            { find: "@icons", replacement: path.resolve(__dirname, "src/assets/icons") },
         ],
     },
 });

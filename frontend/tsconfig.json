@@ -6,7 +6,8 @@
         "baseUrl": "./src",
         "paths": {
             "@shared/*": ["shared/*"],
-            "@utils/*": ["utils/*"]
+            "@utils/*": ["utils/*"],
+            "@icons/*": ["assets/icons/*"]
         },
         "outDir": "./dist"
     }
