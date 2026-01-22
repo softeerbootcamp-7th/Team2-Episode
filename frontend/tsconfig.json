@@ -7,7 +7,8 @@
         "paths": {
             "@shared/*": ["shared/*"],
             "@utils/*": ["utils/*"],
-            "@icons/*": ["assets/icons/*"]
+            "@icons/*": ["assets/icons/*"],
+            "@features/*": ["features/*"]
         },
         "outDir": "./dist"
     }

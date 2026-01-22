@@ -1,7 +1,7 @@
-import AddNode from "@shared/components/add-node-button/AddNodeButton";
+import AddNodeButton from "@features/mindmap/node/AddNodeButton";
 
 function App() {
-    return <AddNode />;
+    return <AddNodeButton />;
 }
 
 export default App;
