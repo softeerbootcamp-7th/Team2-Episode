@@ -5,6 +5,7 @@ const NODE_COLORS = ["violet", "blue", "skyblue", "mint", "cyan", "purple", "mag
 
 const getColorClass = (colorIndex: number) => {
     const index = colorIndex % NODE_COLORS.length;
+
     return `bg-node-${NODE_COLORS[index]}-op-100`;
 };
 
@@ -20,6 +21,7 @@ type AddNodeButtonProps = {
     colorIndex?: number;
     className?: string;
 };
+
 const AddNodeButton = ({ colorIndex = 0, className }: AddNodeButtonProps) => {
     return (
         <button
