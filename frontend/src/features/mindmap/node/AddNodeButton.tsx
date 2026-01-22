@@ -1,13 +1,6 @@
 import { cn } from "@utils/cn";
-import MoveIcon from "features/mindmap/node/MoveIcon";
-
-const NODE_COLORS = ["violet", "blue", "skyblue", "mint", "cyan", "purple", "magenta", "navy"] as const;
-
-const getColorClass = (colorIndex: number) => {
-    const index = colorIndex % NODE_COLORS.length;
-
-    return `bg-node-${NODE_COLORS[index]}-op-100`;
-};
+import MoveIcon from "@features/mindmap/node/MoveIcon";
+import { getColorClass } from "@features/mindmap/node/colors";
 
 type AddNodeButtonProps = {
     colorIndex?: number;
