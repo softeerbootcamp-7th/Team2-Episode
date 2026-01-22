@@ -1,6 +1,6 @@
 import { cn } from "@utils/cn";
-import MoveIcon from "@features/mindmap/node/MoveIcon";
 import { getColorClass } from "@features/mindmap/node/colors";
+import AddNodeHoverIcon from "@features/mindmap/node/AddNodeHoverIcon";
 
 type AddNodeButtonProps = {
     colorIndex?: number;
@@ -22,7 +22,7 @@ export default function AddNodeButton({ colorIndex = 0, className }: AddNodeButt
                             transition-all duration-300 ease-in-out"
             >
                 <div className="z-10">
-                    <MoveIcon />
+                    <AddNodeHoverIcon />
                 </div>
             </div>
         </button>
