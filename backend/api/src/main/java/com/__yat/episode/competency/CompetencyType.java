@@ -1,0 +1,37 @@
+package com.__yat.episode.competency;
+
+
+import com.__yat.episode.question.Question;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "competency_type")
+public class CompetencyType {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "type_name", nullable = false, length = 50)
+    private String typeName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Category category;
+
+    @OneToMany(mappedBy = "competencyType")
+    private List<Question> questions;
+
+    public enum Category {
+        협업_커뮤니케이션_역량,
+        문제해결_사고_역량,
+        실행_성장_역량
+    }
+
+}

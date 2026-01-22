@@ -1,0 +1,26 @@
+package com.__yat.episode.mindmap;
+
+import com.__yat.episode.users.Users;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "user2mindmap")
+public class User2Mindmap {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
+
+    @ManyToOne
+    @JoinColumn(name = "mindmap_id", nullable = false)
+    private Mindmap mindmap;
+
+}
