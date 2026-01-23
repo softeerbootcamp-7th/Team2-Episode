@@ -17,7 +17,7 @@ public class Episode {
     @EmbeddedId
     private EpisodeId id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mindmap_id")
     private Mindmap mindmap;
 

@@ -20,7 +20,7 @@ public class Users {
     @Column(name = "kakao_id")
     private Long kakaoId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
