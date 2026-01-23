@@ -4,8 +4,12 @@ import type { NodeComponentProps } from "@features/mindmap/node/types/node";
 import Icon from "@shared/components/icon/Icon";
 
 export default function MenuNodeButton({ color, className }: NodeComponentProps) {
+    const handleMenu = () => {
+        //TODO: MENU
+    };
     return (
         <div
+            onClick={handleMenu}
             className={cn(
                 "w-3 h-3 cursor-pointer rounded-bl-md rounded-tr-md justify-center items-center flex",
                 getColorClass({ color }),
