@@ -29,14 +29,4 @@ public class Users {
 
     @Column(name = "has_watched_feature_guide", nullable = false)
     private Boolean hasWatchedFeatureGuide;
-
-    @OneToMany(mappedBy = "user")
-    private List<Episode> episodes;
-
-    @OneToMany(mappedBy = "user")
-    private List<User2Mindmap> user2Mindmaps;
-
-    @OneToMany(mappedBy = "user")
-    private List<DiagnosisResult> diagnosisResults;
-
 }

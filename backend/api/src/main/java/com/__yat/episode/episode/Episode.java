@@ -17,15 +17,6 @@ public class Episode {
     @EmbeddedId
     private EpisodeId id;
 
-    @MapsId("userId")
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private Users user;
-
-    @MapsId("nodeId")
-    @Column(name = "node_id")
-    private Integer nodeId;
-
     @ManyToOne
     @JoinColumn(name = "mindmap_id")
     private Mindmap mindmap;

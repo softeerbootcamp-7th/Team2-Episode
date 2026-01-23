@@ -26,13 +26,4 @@ public class Job {
     @ManyToOne
     @JoinColumn(name = "occupation_id", nullable = false)
     private Occupation occupation;
-
-    @OneToMany(mappedBy = "job")
-    private List<Users> users;
-
-    @OneToMany(mappedBy = "job")
-    private List<DiagnosisResult> diagnosisResults;
-
-    @OneToMany(mappedBy = "job")
-    private List<Question> questions;
 }

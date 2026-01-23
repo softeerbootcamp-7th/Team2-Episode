@@ -25,13 +25,9 @@ public class CompetencyType {
     @Column(nullable = false)
     private Category category;
 
-    @OneToMany(mappedBy = "competencyType")
-    private List<Question> questions;
-
     public enum Category {
         협업_커뮤니케이션_역량,
         문제해결_사고_역량,
         실행_성장_역량
     }
-
 }

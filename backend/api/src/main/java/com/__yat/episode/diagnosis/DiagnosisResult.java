@@ -1,5 +1,7 @@
 package com.__yat.episode.diagnosis;
 
+import com.__yat.episode.job.Job;
+import com.__yat.episode.users.Users;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,17 +16,13 @@ public class DiagnosisResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 
-    @Column(name = "job_id", nullable = false)
-    private Integer jobId;
 
-    protected DiagnosisResult() {
-    }
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "job_id", nullable = false)
+    private Job job;
 
-    public DiagnosisResult(Long userId, Integer jobId) {
-        this.userId = userId;
-        this.jobId = jobId;
-    }
 }
