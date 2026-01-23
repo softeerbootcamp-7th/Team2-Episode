@@ -1,11 +1,11 @@
-package com.__yat.episode;
+package com.2yat.episode;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 @SpringBootApplication
-@EntityScan(basePackages = {"com.__yat.episode"})
+@EntityScan(basePackages = {"com.2yat.episode"})
 public class EpisodeApplication {
 
 	public static void main(String[] args) {
