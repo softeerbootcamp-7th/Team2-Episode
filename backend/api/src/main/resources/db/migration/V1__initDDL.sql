@@ -34,8 +34,8 @@ CREATE TABLE `users` (
     CONSTRAINT `user2job`
     FOREIGN KEY (`job_id`)
     REFERENCES `job` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE )
     ENGINE=InnoDB
     DEFAULT CHARSET=utf8mb4
     COLLATE=utf8mb4_unicode_ci;
