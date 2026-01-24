@@ -1,22 +1,29 @@
 import { cn } from "@utils/cn";
-import { getColorClass } from "@features/mindmap/node/utils/colors";
-import type { NodeComponentProps } from "@features/mindmap/node/types/node";
 import Icon from "@shared/components/icon/Icon";
+import { cva, type VariantProps } from "class-variance-authority";
+import { ComponentPropsWithRef } from "react";
 
-export default function MenuNodeButton({ color, className }: NodeComponentProps) {
-    const handleMenu = () => {
-        //TODO: MENU
-    };
+const nodeVariants = cva("w-3 h-3 cursor-pointer rounded-bl-md rounded-tr-md justify-center items-center flex", {
+    variants: {
+        color: {
+            violet: "bg-node-violet-op-100",
+            blue: "bg-node-blue-op-100",
+            skyblue: "bg-node-skyblue-op-100",
+            mint: "bg-node-mint-op-100",
+            cyan: "bg-node-cyan-op-100",
+            purple: "bg-node-purple-op-100",
+            magenta: "bg-node-magenta-op-100",
+            navy: "bg-node-navy-op-100",
+        },
+    },
+});
+
+type Props = ComponentPropsWithRef<"button"> & VariantProps<typeof nodeVariants> & {};
+
+export default function MenuNodeButton({ color, className, ...rest }: Props) {
     return (
-        <div
-            onClick={handleMenu}
-            className={cn(
-                "w-3 h-3 cursor-pointer rounded-bl-md rounded-tr-md justify-center items-center flex",
-                getColorClass({ color }),
-                className,
-            )}
-        >
+        <button className={cn(nodeVariants({ color }), className)} {...rest}>
             <Icon name="ic_ellipsis" size={8} color="var(--color-base-white)" />
-        </div>
+        </button>
     );
 }
