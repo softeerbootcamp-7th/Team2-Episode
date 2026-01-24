@@ -1,6 +1,7 @@
 import { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { COLOR_SET } from "@shared/styles/color_set";
+import { cn } from "@utils/cn";
 
 type Props = ComponentPropsWithoutRef<"button"> &
     VariantProps<typeof buttonVariants> & {
@@ -10,7 +11,7 @@ type Props = ComponentPropsWithoutRef<"button"> &
 
 const Button = ({ variant = "primary", size = "md", leftSlot, rightSlot, children, className, ...rest }: Props) => {
     return (
-        <button className={buttonVariants({ variant, size, className })} {...rest}>
+        <button className={cn(buttonVariants({ variant, size }), className)} {...rest}>
             {leftSlot ? leftSlot : null}
             {children}
             {rightSlot ? rightSlot : null}
