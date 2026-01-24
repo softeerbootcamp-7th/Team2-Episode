@@ -8,7 +8,6 @@ export const NODE_COLORS = ["violet", "blue", "skyblue", "mint", "cyan", "purple
  */
 export function getColorStyle({ colorIndex, color, opacity }: NodeComponentProps): string {
     if (color) {
-        console.log(color);
         return `var(--color-node-${color}-op-${opacity})`;
     }
     const colorName = NODE_COLORS[colorIndex % NODE_COLORS.length];
