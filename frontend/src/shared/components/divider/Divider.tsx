@@ -1,0 +1,14 @@
+import { cn } from "@utils/cn";
+
+type Direction = "x" | "y";
+type Props = React.ComponentPropsWithoutRef<"div"> & {
+    direction?: Direction;
+};
+
+const Divider = ({ direction = "y", className, ...props }: Props) => {
+    return <div className={cn(`bg-gray-300 ${directionStyles(direction)}`, className)} {...props} />;
+};
+
+export default Divider;
+
+const directionStyles = (direction: Direction) => (direction === "y" ? "w-full h-[1px]" : "h-full w-[1px]");
