@@ -1,0 +1,17 @@
+package com.yat2.episode.auth.util;
+
+import java.security.SecureRandom;
+import java.util.Base64;
+
+public final class OAuthUtil {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    public static String generateState() {
+        byte[] bytes = new byte[32];
+        RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private OAuthUtil() {}
+}
