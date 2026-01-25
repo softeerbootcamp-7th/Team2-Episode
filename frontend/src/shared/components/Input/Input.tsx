@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority";
-import { ComponentPropsWithoutRef, useState } from "react";
+import { ComponentPropsWithoutRef } from "react";
 
 const InputVariants = cva(
     "bg-base-white border border-solid border-gray-300 rounded-xl p-4 justify-start items-start focus:border-(--color-primary) focus:outline-none",
@@ -23,47 +23,41 @@ type MultilineInputProps = Omit<ComponentPropsWithoutRef<"textarea">, "size"> & 
 const MAX_LENGTH = 43;
 
 export const Input = {
-    Small: ({ placeholder, ...rest }: SingleLineInputProps) => {
-        const [inputValue, setInputValue] = useState("");
-        const status = inputValue ? "filled" : "empty";
+    Small: ({ placeholder, value, ...rest }: SingleLineInputProps) => {
+        const status = value ? "filled" : "empty";
 
         return (
             <input
                 className={InputVariants({ size: "sm", status })}
                 placeholder={placeholder}
-                value={inputValue}
+                value={value || ""}
                 maxLength={MAX_LENGTH}
-                onChange={(e) => setInputValue(e.target.value)}
                 {...rest}
             />
         );
     },
 
-    Medium: ({ placeholder, ...rest }: MultilineInputProps) => {
-        const [textValue, setTextValue] = useState("");
-        const status = textValue ? "filled" : "empty";
+    Medium: ({ placeholder, value, ...rest }: MultilineInputProps) => {
+        const status = value ? "filled" : "empty";
 
         return (
             <textarea
                 className={InputVariants({ size: "md", status })}
                 placeholder={placeholder}
-                value={textValue}
-                onChange={(e) => setTextValue(e.target.value)}
+                value={value || ""}
                 {...rest}
             />
         );
     },
 
-    Large: ({ placeholder, ...rest }: MultilineInputProps) => {
-        const [textValue, setTextValue] = useState("");
-        const status = textValue ? "filled" : "empty";
+    Large: ({ placeholder, value, ...rest }: MultilineInputProps) => {
+        const status = value ? "filled" : "empty";
 
         return (
             <textarea
                 className={InputVariants({ size: "lg", status })}
                 placeholder={placeholder}
-                value={textValue}
-                onChange={(e) => setTextValue(e.target.value)}
+                value={value}
                 {...rest}
             />
         );
