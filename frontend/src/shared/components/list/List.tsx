@@ -1,9 +1,14 @@
 import { cn } from "@utils/cn";
-import { ComponentPropsWithRef } from "react";
+import { Children, ComponentPropsWithoutRef, Fragment } from "react";
+import Divider from "../divider/Divider";
 
-type Props = ComponentPropsWithRef<"ul"> & {};
+type Props = ComponentPropsWithoutRef<"ul"> & {
+    hasDivider?: boolean;
+};
 
-const List = ({ children, className, ...rest }: Props) => {
+const List = ({ hasDivider = true, children, className, ...rest }: Props) => {
+    const childrenArray = Children.toArray(children);
+
     return (
         <ul
             className={cn(
@@ -12,7 +17,13 @@ const List = ({ children, className, ...rest }: Props) => {
             )}
             {...rest}
         >
-            {children}
+            {childrenArray.map((child, index) => (
+                <Fragment key={index}>
+                    {hasDivider && <Divider direction="x" className="first:hidden" />}
+
+                    {child}
+                </Fragment>
+            ))}
         </ul>
     );
 };
