@@ -1,4 +1,5 @@
 import { COLOR_SET } from "@shared/styles/color_set";
+import { cn } from "@utils/cn";
 import { cva, VariantProps } from "class-variance-authority";
 import { ComponentPropsWithoutRef, ReactNode } from "react";
 
@@ -14,6 +15,7 @@ const Chip = <T extends AllowedElementType = "button">({
     variant = "primary",
     size = "md",
     leftSlot,
+    className,
     children,
     as,
     ...rest
@@ -21,7 +23,7 @@ const Chip = <T extends AllowedElementType = "button">({
     const Component = as ? as : "button";
 
     return (
-        <Component className={variants({ variant, size })} {...rest}>
+        <Component className={cn(variants({ variant, size }), className)} {...rest}>
             {leftSlot ? leftSlot : null}
 
             {children}
