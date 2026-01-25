@@ -19,12 +19,12 @@ const ListRow = ({ variant = "default", leftSlot, contents, rightSlot, className
             {...rest}
         >
             <div className="flex flex-row gap-2 items-center">
-                {leftSlot && leftSlot}
+                {leftSlot}
 
                 {contents}
             </div>
 
-            {rightSlot && rightSlot}
+            {rightSlot}
         </li>
     );
 };
