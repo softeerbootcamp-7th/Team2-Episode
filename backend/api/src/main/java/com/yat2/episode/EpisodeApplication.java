@@ -1,6 +1,6 @@
 package com.yat2.episode;
 
-import com.yat2.episode.auth.KakaoProperties;
+import com.yat2.episode.auth.oauth.KakaoProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

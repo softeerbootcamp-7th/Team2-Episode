@@ -1,10 +1,12 @@
 package com.yat2.episode.auth;
 
-import com.yat2.episode.auth.util.OAuthUtil;
+import com.yat2.episode.auth.oauth.KakaoProperties;
+import com.yat2.episode.auth.oauth.OAuthUtil;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -14,12 +16,13 @@ import org.springframework.web.servlet.view.RedirectView;
 public class AuthController {
 
     private final KakaoProperties kakaoProperties;
+    private final AuthService authService;
 
     @GetMapping("/login")
     public RedirectView loginWithKakao(HttpSession session) {
         String clientId = kakaoProperties.getClientId();
         String redirectUri = kakaoProperties.getRedirectUri();
-        String authUrl = kakaoProperties.getAuthUrl();
+        String authUrl = kakaoProperties.authUrl();
 
         String state = OAuthUtil.generateState();
         session.setAttribute("OAUTH_STATE", state);
@@ -31,5 +34,15 @@ public class AuthController {
                 "&state=" + state;
 
         return new RedirectView(redirect);
+    }
+
+    @GetMapping("/callback")
+    public RedirectView kakaoCallback(
+            HttpSession session,
+            @RequestParam("code") String code,
+            @RequestParam("state") String state
+    ) throws Exception {
+        authService.handleKakaoCallback(session, code, state);
+        return new RedirectView("/");
     }
 }
