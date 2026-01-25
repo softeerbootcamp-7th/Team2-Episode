@@ -1,13 +1,16 @@
 import { type NodeComponentProps } from "@features/mindmap/node/types/node";
-import { useState } from "react";
+import { ComponentPropsWithoutRef, useState } from "react";
 import AddNodeDot from "@features/mindmap/node/add_node/AddNodeDot";
 import AddNodeArrow from "@features/mindmap/node/add_node/AddNodeArrow";
 
-export default function AddNodeButton({ color }: NodeComponentProps) {
+type Props = ComponentPropsWithoutRef<"button"> & NodeComponentProps & {};
+
+export default function AddNodeButton({ color, ...rest }: Props) {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
         <button
+            {...rest}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className="relative w-13.5 h-13.5 flex items-center justify-center"
