@@ -1,7 +1,7 @@
 import { COLOR_SET } from "@shared/styles/color_set";
 import { cva, VariantProps } from "class-variance-authority";
 import { ComponentPropsWithoutRef, ReactNode } from "react";
-import Icon from "../icon/Icon";
+import Icon from "@shared/components/icon/Icon";
 import { cn } from "@utils/cn";
 
 type Props = ComponentPropsWithoutRef<"button"> &
