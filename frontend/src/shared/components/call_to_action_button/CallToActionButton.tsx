@@ -1,16 +1,17 @@
 import { COLOR_SET } from "@shared/styles/color_set";
 import { cva, VariantProps } from "class-variance-authority";
 import { ComponentPropsWithoutRef, ReactNode } from "react";
-import Icon from "../icon/Icon";
+import Icon from "@shared/components/icon/Icon";
+import { cn } from "@utils/cn";
 
 type Props = ComponentPropsWithoutRef<"button"> &
     VariantProps<typeof variants> & {
         variant?: "primary" | "primary_accent" | "quaternary_accent_outlined";
     };
 
-const CallToActionButton = ({ variant = "primary", children }: Props) => {
+const CallToActionButton = ({ variant = "primary", className, children }: Props) => {
     return (
-        <button className={variants({ variant })}>
+        <button className={cn(variants({ variant }), className)}>
             {children}
 
             <div className="bg-white rounded-sm p-2">
