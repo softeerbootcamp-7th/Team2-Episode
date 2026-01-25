@@ -48,23 +48,27 @@ public class KakaoIdTokenVerifier {
         this.jwtProcessor = processor;
     }
 
-    public JWTClaimsSet verify(String idToken) throws Exception {
-        JWTClaimsSet claims = jwtProcessor.process(idToken, null);
+    public JWTClaimsSet verify(String idToken) {
+        try{
+            JWTClaimsSet claims = jwtProcessor.process(idToken, null);
 
-        if (!props.issuer().equals(claims.getIssuer())) {
-            throw new IllegalStateException("Invalid issuer");
+            if (!props.issuer().equals(claims.getIssuer())) {
+                throw new IllegalStateException("Invalid issuer");
+            }
+
+            if (!claims.getAudience().contains(props.getClientId())) {
+                throw new IllegalStateException("Invalid audience");
+            }
+
+            Date now = new Date();
+            if (claims.getExpirationTime() == null ||
+                    now.after(claims.getExpirationTime())) {
+                throw new IllegalStateException("Token expired");
+            }
+
+            return claims;
+        } catch (Exception e) {
+            throw new IllegalStateException("Invalid Kakao ID Token", e);
         }
-
-        if (!claims.getAudience().contains(props.getClientId())) {
-            throw new IllegalStateException("Invalid audience");
-        }
-
-        Date now = new Date();
-        if (claims.getExpirationTime() == null ||
-                now.after(claims.getExpirationTime())) {
-            throw new IllegalStateException("Token expired");
-        }
-
-        return claims;
     }
 }
