@@ -1,7 +1,7 @@
 import { cn } from "@utils/cn";
 import Icon from "@shared/components/icon/Icon";
 import { cva, type VariantProps } from "class-variance-authority";
-import { ComponentPropsWithRef } from "react";
+import { ComponentPropsWithoutRef } from "react";
 
 const nodeVariants = cva("w-3 h-3 cursor-pointer rounded-bl-md rounded-tr-md justify-center items-center flex", {
     variants: {
@@ -18,7 +18,7 @@ const nodeVariants = cva("w-3 h-3 cursor-pointer rounded-bl-md rounded-tr-md jus
     },
 });
 
-type Props = ComponentPropsWithRef<"button"> & VariantProps<typeof nodeVariants> & {};
+type Props = ComponentPropsWithoutRef<"button"> & VariantProps<typeof nodeVariants> & {};
 
 export default function MenuNodeButton({ color, className, ...rest }: Props) {
     return (
