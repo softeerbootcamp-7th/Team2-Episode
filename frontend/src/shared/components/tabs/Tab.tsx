@@ -1,8 +1,10 @@
-import React, { cloneElement, Children, ComponentProps } from "react";
+import { cloneElement, Children, ComponentProps, ReactElement } from "react";
 import TabItem from "./TabItem";
 
+type ChildrenType = ReactElement<ComponentProps<typeof TabItem>>;
+
 type Props = {
-    children: (React.ReactElement<ComponentProps<typeof TabItem>> | null)[];
+    children: ChildrenType | ChildrenType[];
     onChange: (index: number) => void;
     selectedIndex: number;
 };
