@@ -2,10 +2,20 @@ import { ComponentPropsWithoutRef, useState } from "react";
 import { cn } from "@utils/cn";
 import Icon from "@shared/components/icon/Icon";
 
-type Props = ComponentPropsWithoutRef<"div"> & { onSearch?: (value: string) => void; placeholder?: string };
+type Props = ComponentPropsWithoutRef<"div"> & {
+    onChange?: (value: string) => void;
+    onSearch?: (value: string) => void;
+    placeholder?: string;
+};
 
-export default function Search({ onSearch, placeholder = "검색", className, ...rest }: Props) {
+export default function Search({ onSearch, onChange, placeholder = "검색", className, ...rest }: Props) {
     const [value, setValue] = useState("");
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        setValue(newValue);
+        onChange?.(newValue);
+    };
 
     const handleSearch = () => {
         if (value) {
@@ -43,7 +53,7 @@ export default function Search({ onSearch, placeholder = "검색", className, ..
             <input
                 type="text"
                 value={value}
-                onChange={(e) => setValue(e.target.value)}
+                onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 className="flex-1 bg-transparent outline-none text-text-sub1 placeholder:text-gray-500"
