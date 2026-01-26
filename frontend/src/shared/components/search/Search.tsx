@@ -1,12 +1,11 @@
 import { ComponentPropsWithoutRef, useState } from "react";
-import { cva, VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "@utils/cn";
 import Icon from "@shared/components/icon/Icon";
 
 type Status = "empty" | "writing" | "result";
 
-type Props = ComponentPropsWithoutRef<"div"> &
-    VariantProps<typeof containerVariants> & { onSearch?: (value: string) => void; placeholder?: string };
+type Props = ComponentPropsWithoutRef<"div"> & { onSearch?: (value: string) => void; placeholder?: string };
 
 export default function Search({ onSearch, placeholder = "검색", className, ...rest }: Props) {
     const [value, setValue] = useState("");
