@@ -3,9 +3,12 @@ import { ComponentPropsWithoutRef, useState } from "react";
 import AddNodeDot from "@features/mindmap/node/add_node/AddNodeDot";
 import AddNodeArrow from "@features/mindmap/node/add_node/AddNodeArrow";
 
-type Props = ComponentPropsWithoutRef<"div"> & NodeComponentProps & {};
+type Props = ComponentPropsWithoutRef<"div"> &
+    NodeComponentProps & {
+        direction: "left" | "right";
+    };
 
-export default function AddNode({ color, ...rest }: Props) {
+export default function AddNode({ color, direction, ...rest }: Props) {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
@@ -21,7 +24,7 @@ export default function AddNode({ color, ...rest }: Props) {
             <div
                 className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}
             >
-                <AddNodeArrow color={color} />
+                <AddNodeArrow color={color} direction={direction} />
             </div>
         </div>
     );

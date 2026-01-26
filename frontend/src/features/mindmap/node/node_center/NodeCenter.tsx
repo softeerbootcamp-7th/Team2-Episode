@@ -16,11 +16,11 @@ export default function NodeCenter({ username = "", className, ...rest }: Props)
             onMouseLeave={() => setIsHover(false)}
             {...rest}
         >
-            {isHover && <AddNode color="violet" />}
+            {isHover && <AddNode color="violet" direction="left" />}
             <div className="cursor-pointer w-40 bg-primary rounded-full h-40 flex items-center justify-center text-white typo-body-16-semibold px-3 whitespace-pre-line">
                 {label}
             </div>
-            {isHover && <AddNode color="violet" />}
+            {isHover && <AddNode color="violet" direction="right" />}
         </div>
     );
 }
