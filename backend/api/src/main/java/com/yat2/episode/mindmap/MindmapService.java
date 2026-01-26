@@ -1,8 +1,11 @@
 package com.yat2.episode.mindmap;
 
+import org.springframework.stereotype.Service;
+
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class MindmapService {
     private final MindmapRepository mindmapRepository;
 
