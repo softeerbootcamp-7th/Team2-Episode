@@ -49,3 +49,7 @@ tasks.named('test') {
 	useJUnitPlatform()
 	failOnNoDiscoveredTests = false
 }
+
+bootJar {
+	archiveFileName = "app.jar"
+}
