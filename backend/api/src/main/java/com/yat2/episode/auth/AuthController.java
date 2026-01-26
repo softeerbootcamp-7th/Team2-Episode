@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,11 +34,13 @@ public class AuthController {
         String state = OAuthUtil.generateState();
         session.setAttribute("OAUTH_STATE", state);
 
-        String redirect = authUrl +
-                "?response_type=code" +
-                "&client_id=" + clientId +
-                "&redirect_uri=" + redirectUri +
-                "&state=" + state;
+        String redirect = UriComponentsBuilder.fromUriString(authUrl)
+                .queryParam("response_type", "code")
+                .queryParam("client_id", clientId)
+                .queryParam("redirect_uri", redirectUri)
+                .queryParam("state", state)
+                .build()
+                .toUriString();
 
         return new RedirectView(redirect);
     }
