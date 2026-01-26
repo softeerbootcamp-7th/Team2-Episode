@@ -3,13 +3,13 @@ import { ComponentPropsWithoutRef, useState } from "react";
 import AddNodeDot from "@features/mindmap/node/add_node/AddNodeDot";
 import AddNodeArrow from "@features/mindmap/node/add_node/AddNodeArrow";
 
-type Props = ComponentPropsWithoutRef<"button"> & NodeComponentProps & {};
+type Props = ComponentPropsWithoutRef<"div"> & NodeComponentProps & {};
 
-export default function AddNodeButton({ color, ...rest }: Props) {
+export default function AddNode({ color, ...rest }: Props) {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
-        <button
+        <div
             {...rest}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -23,6 +23,6 @@ export default function AddNodeButton({ color, ...rest }: Props) {
             >
                 <AddNodeArrow color={color} />
             </div>
-        </button>
+        </div>
     );
 }
