@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "preserve",
+        "moduleResolution": "bundler",
+        "jsx": "react-jsx",
+        "baseUrl": "./src",
+        "paths": {
+            "@shared/*": ["shared/*"],
+            "@utils/*": ["utils/*"],
+            "@icons/*": ["assets/icons/*"],
+            "@features/*": ["features/*"]
+        },
+        "outDir": "./dist"
+    }
+}
