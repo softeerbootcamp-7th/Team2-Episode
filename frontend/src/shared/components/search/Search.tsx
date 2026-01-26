@@ -1,18 +1,17 @@
 import { ComponentPropsWithoutRef } from "react";
 import { cn } from "@utils/cn";
 import Icon from "@shared/components/icon/Icon";
-import useSearch from "@shared/hooks/useSearch";
+import useSearch, { UseSearchParams } from "@shared/hooks/useSearch";
 
-type Props = ComponentPropsWithoutRef<"div"> & {
-    onChange?: (value: string) => void;
-    onSearch?: (value: string) => void;
-    placeholder?: string;
-};
+type Props = ComponentPropsWithoutRef<"div"> &
+    UseSearchParams & {
+        placeholder?: string;
+    };
 
-export default function Search({ onSearch, onChange, placeholder = "검색", className, ...rest }: Props) {
+export default function Search({ onSearchChange, onSearchSubmit, placeholder = "검색", className, ...rest }: Props) {
     const { value, handleChange, handleSearch, handleClear, handleKeyDown } = useSearch({
-        onChange,
-        onSearch,
+        onSearchChange,
+        onSearchSubmit,
     });
 
     return (

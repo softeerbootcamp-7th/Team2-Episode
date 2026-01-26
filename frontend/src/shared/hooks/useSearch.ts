@@ -1,24 +1,24 @@
 import { useState } from "react";
 
-type UseSearchParams = {
-    onChange?: (value: string) => void;
-    onSearch?: (value: string) => void;
+export type UseSearchParams = {
+    onSearchChange?: (value: string) => void;
+    onSearchSubmit?: (value: string) => void;
 };
 
-export default function useSearch({ onChange, onSearch }: UseSearchParams = {}) {
+export default function useSearch({ onSearchChange, onSearchSubmit }: UseSearchParams = {}) {
     const [value, setValue] = useState("");
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         setValue(newValue);
-        if (onChange) {
-            onChange(newValue);
+        if (onSearchChange) {
+            onSearchChange(newValue);
         }
     };
 
     const handleSearch = () => {
-        if (value && onSearch) {
-            onSearch(value);
+        if (value && onSearchSubmit) {
+            onSearchSubmit(value);
         }
     };
 
