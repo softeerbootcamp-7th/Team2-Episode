@@ -6,6 +6,7 @@ import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.util.DefaultResourceRetriever;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import org.springframework.stereotype.Component;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -14,16 +15,15 @@ import com.nimbusds.jose.proc.SecurityContext;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Date;
+import java.util.Set;
 
 @Component
 public class KakaoIdTokenVerifier {
 
     private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
-    private final KakaoProperties props;
+    private final DefaultJWTClaimsVerifier<SecurityContext> claimsVerifier;
 
     public KakaoIdTokenVerifier(KakaoProperties props) throws MalformedURLException {
-        this.props = props;
 
         DefaultResourceRetriever retriever =
                 new DefaultResourceRetriever(2000, 5000);
@@ -45,25 +45,24 @@ public class KakaoIdTokenVerifier {
         processor.setJWSKeySelector(keySelector);
 
         this.jwtProcessor = processor;
+
+        JWTClaimsSet expectedClaims = new JWTClaimsSet.Builder()
+                .issuer(props.issuer())
+                .audience(props.getClientId())
+                .build();
+
+        this.claimsVerifier =
+                new DefaultJWTClaimsVerifier<>(
+                        expectedClaims,
+                        Set.of("sub", "exp", "iat")
+                );
     }
 
     public JWTClaimsSet verify(String idToken) {
-        try{
+        try {
             JWTClaimsSet claims = jwtProcessor.process(idToken, null);
 
-            if (!props.issuer().equals(claims.getIssuer())) {
-                throw new IllegalStateException("Invalid issuer");
-            }
-
-            if (!claims.getAudience().contains(props.getClientId())) {
-                throw new IllegalStateException("Invalid audience");
-            }
-
-            Date now = new Date();
-            if (claims.getExpirationTime() == null ||
-                    now.after(claims.getExpirationTime())) {
-                throw new IllegalStateException("Token expired");
-            }
+            claimsVerifier.verify(claims, null);
 
             return claims;
         } catch (Exception e) {
