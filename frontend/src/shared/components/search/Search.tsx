@@ -65,7 +65,7 @@ export default function Search({ onSearch, placeholder = "검색", className, ..
 }
 
 const containerVariants = cva(
-    "bg-base-white typo-body-14-reg flex w-225 gap-3 items-center rounded-xl border border-solid px-4 py-3 shadow-sm",
+    "bg-base-white typo-body-14-reg flex gap-3 items-center rounded-xl border border-solid px-4 py-3 shadow-sm w-full",
     {
         variants: {
             status: {
