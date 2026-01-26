@@ -29,12 +29,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework:spring-webflux'
 
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
 
 	implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	implementation 'org.flywaydb:flyway-core:9.22.3'
-	implementation 'org.flywaydb:flyway-mysql:9.22.3'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-mysql'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
