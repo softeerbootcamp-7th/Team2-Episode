@@ -1,7 +1,7 @@
 export const NODE_COLORS = ["violet", "blue", "skyblue", "mint", "cyan", "purple", "magenta", "navy"] as const;
 export type NodeColor = (typeof NODE_COLORS)[number];
 
-type OpacityLevel = 5 | 10 | 15 | 20 | 30 | 100;
+export type OpacityLevel = 5 | 10 | 15 | 20 | 30 | 100;
 
 const COLOR_CLASS_MAP: Record<NodeColor, Record<OpacityLevel, string>> = {
     violet: {
