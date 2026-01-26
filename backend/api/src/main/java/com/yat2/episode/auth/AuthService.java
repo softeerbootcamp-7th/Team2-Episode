@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -41,12 +43,10 @@ public class AuthService {
                 kakaoIdTokenVerifier.verify(kakaoResponse.idToken());
 
         Long kakaoUserId = Long.parseLong(claims.getSubject());
-        String rawNickname = (String) claims.getClaim("nickname");
-        if (rawNickname == null) {
-            rawNickname = "USER_" + kakaoUserId;
-        }
 
-        final String nickname = rawNickname;
+        String nickname = Optional.ofNullable((String) claims.getClaim("nickname"))
+                .orElse("USER_" + kakaoUserId);
+
         Users user = usersRepository.findByKakaoId(kakaoUserId)
                 .orElseGet(() -> createNewUser(kakaoUserId, nickname));
 
