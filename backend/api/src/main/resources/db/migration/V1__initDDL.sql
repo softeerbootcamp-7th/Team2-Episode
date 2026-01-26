@@ -28,7 +28,7 @@ CREATE TABLE `users` (
    `kakao_id` BIGINT NOT NULL,
    `job_id` INT,
    `nickname` VARCHAR(45) NOT NULL,
-    `has_watched_feature_guide` BIT(1) NOT NULL,
+    `has_watched_feature_guide` TINYINT(1) NOT NULL,
     PRIMARY KEY (`kakao_id`),
     INDEX `user2job_idx` (`job_id` ASC) VISIBLE,
     CONSTRAINT `user2job`
@@ -81,7 +81,7 @@ CREATE TABLE `question` (
 CREATE TABLE `mindmap` (
     `id` BINARY(16) NOT NULL,
     `created_time` DATETIME NOT NULL,
-    `is_shared` BIT(1) NOT NULL,
+    `is_shared` TINYINT(1) NOT NULL,
     PRIMARY KEY (`id`))
     ENGINE=InnoDB
     DEFAULT CHARSET=utf8mb4
