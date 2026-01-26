@@ -141,10 +141,9 @@
 */
 @layer base {
     button:not(:disabled) {
-        cursor: pointer;
+        @apply cursor-pointer;
     }
-
     button:disabled {
-        cursor: not-allowed;
+        @apply cursor-not-allowed;
     }
 }
