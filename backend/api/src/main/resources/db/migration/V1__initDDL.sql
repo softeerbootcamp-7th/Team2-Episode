@@ -26,7 +26,7 @@ CREATE TABLE `job` (
 
 CREATE TABLE `users` (
    `kakao_id` BIGINT NOT NULL,
-   `job_id` INT NOT NULL,
+   `job_id` INT,
    `nickname` VARCHAR(45) NOT NULL,
     `has_watched_feature_guide` TINYINT NOT NULL,
     PRIMARY KEY (`kakao_id`),
@@ -44,7 +44,7 @@ CREATE TABLE `users` (
 CREATE TABLE `competency_type` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `type_name` VARCHAR(50) NOT NULL,
-    `category` ENUM("협업/커뮤니케이션 역량", "문제해결/사고 역량", "실행/성장 역량") NOT NULL,
+    `category` ENUM('협업_커뮤니케이션_역량', '문제해결_사고_역량', '실행_성장_역량') NOT NULL,
     PRIMARY KEY (`id`))
     ENGINE=InnoDB
     DEFAULT CHARSET=utf8mb4
