@@ -29,10 +29,10 @@ const nodeVariants = cva(
 export default function Node({
     size = "sm",
     color = "violet",
-    className,
-    text,
-    children,
+    text = "",
     direction,
+    children,
+    className,
     ...rest
 }: NodeProps) {
     const [isSelected, setIsSelected] = useState(false);
