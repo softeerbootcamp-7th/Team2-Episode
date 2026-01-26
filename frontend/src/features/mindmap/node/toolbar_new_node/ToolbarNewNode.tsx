@@ -1,0 +1,18 @@
+import { ComponentPropsWithoutRef, type ReactNode } from "react";
+import { cn } from "@utils/cn";
+
+const TOOLBAR_CLASS =
+    "flex w-40 min-w-40 px-4.5 py-5 justify-center items-center gap-2.5 typo-body-14-medium rounded-xl border-2 border-gray-500 bg-white shadow-[0_0_15px_0_rgba(43,46,67,0.15)]";
+
+type ToolbarNewNodeProps = ComponentPropsWithoutRef<"div"> & {
+    children?: ReactNode;
+};
+
+export default function ToolbarNewNode({ className, children, ...rest }: ToolbarNewNodeProps) {
+    const content = children ?? "새로운 노드";
+    return (
+        <div {...rest} className={cn(TOOLBAR_CLASS, className)}>
+            {content}
+        </div>
+    );
+}
