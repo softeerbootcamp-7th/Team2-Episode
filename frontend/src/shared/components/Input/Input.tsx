@@ -1,4 +1,4 @@
-import { cva } from "class-variance-authority";
+import { cva, VariantProps } from "class-variance-authority";
 import { ComponentPropsWithoutRef } from "react";
 
 const InputVariants = cva(
@@ -19,14 +19,8 @@ const InputVariants = cva(
     },
 );
 
-type InputSize = "sm" | "md" | "lg" | "full";
-
-type SingleLineInputProps = ComponentPropsWithoutRef<"input"> & {
-    inputSize?: InputSize;
-};
-type MultilineInputProps = ComponentPropsWithoutRef<"textarea"> & {
-    inputSize?: InputSize;
-};
+type SingleLineInputProps = ComponentPropsWithoutRef<"input"> & VariantProps<typeof InputVariants>;
+type MultilineInputProps = ComponentPropsWithoutRef<"textarea"> & VariantProps<typeof InputVariants>;
 
 const MAX_LENGTH = 43;
 
