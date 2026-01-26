@@ -4,6 +4,7 @@ import { cn } from "@utils/cn";
 import { type NodeColor } from "@features/mindmap/node/constants/colors";
 import { colorBySize } from "@features/mindmap/node/utils/style";
 import AddNode from "@features/mindmap/node/add_node/AddNode";
+import MenuNodeButton from "@features/mindmap/node/menu_node/MenuNodeButton";
 
 type NodeProps = ComponentPropsWithoutRef<"div"> &
     VariantProps<typeof nodeVariants> & {
@@ -12,7 +13,7 @@ type NodeProps = ComponentPropsWithoutRef<"div"> &
     };
 
 const nodeVariants = cva(
-    "flex w-40 min-w-40 px-4.5 py-5 justify-center items-center gap-2.5 rounded-xl transition-shadow cursor-pointer outline-none",
+    "relative flex w-40 min-w-40 px-4.5 py-5 justify-center items-center gap-2.5 rounded-xl transition-shadow cursor-pointer outline-none",
     {
         variants: {
             size: {
@@ -29,7 +30,7 @@ export default function Node({
     color = "violet",
     className,
     children,
-    direction = "left",
+    direction,
     ...rest
 }: Omit<NodeProps, "status">) {
     const colorClass = colorBySize(size, color);
@@ -45,6 +46,10 @@ export default function Node({
             )}
             <div className={cn(nodeVariants({ size }), colorClass, className)} tabIndex={0}>
                 {children}
+                <MenuNodeButton
+                    color={color}
+                    className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300"
+                />
             </div>
             {direction === "right" && (
                 <AddNode
