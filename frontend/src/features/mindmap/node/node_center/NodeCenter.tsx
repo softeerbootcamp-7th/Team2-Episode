@@ -5,6 +5,8 @@ type Props = ComponentPropsWithoutRef<"div"> & {
     username?: string;
 };
 
+const primary_color = "violet";
+
 export default function NodeCenter({ username = "", className, ...rest }: Props) {
     const [isHover, setIsHover] = useState(false);
     const label = username ? `${username}의\n마인드맵` : "마인드맵";
@@ -16,11 +18,11 @@ export default function NodeCenter({ username = "", className, ...rest }: Props)
             onMouseLeave={() => setIsHover(false)}
             {...rest}
         >
-            {isHover && <AddNode color="violet" direction="left" />}
+            {isHover && <AddNode color={primary_color} direction="left" />}
             <div className="cursor-pointer w-40 bg-primary rounded-full h-40 flex items-center justify-center text-white typo-body-16-semibold px-3 whitespace-pre-line">
                 {label}
             </div>
-            {isHover && <AddNode color="violet" direction="right" />}
+            {isHover && <AddNode color={primary_color} direction="right" />}
         </div>
     );
 }
