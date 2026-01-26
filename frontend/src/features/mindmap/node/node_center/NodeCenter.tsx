@@ -7,7 +7,7 @@ type Props = ComponentPropsWithoutRef<"div"> & {
 
 export default function NodeCenter({ username = "", className, ...rest }: Props) {
     const [isHover, setIsHover] = useState(false);
-    const label = username ? `${username}의 마인드맵` : "마인드맵";
+    const label = username ? `${username}의\n마인드맵` : "마인드맵";
 
     return (
         <div
@@ -17,7 +17,7 @@ export default function NodeCenter({ username = "", className, ...rest }: Props)
             {...rest}
         >
             {isHover && <AddNode color="violet" />}
-            <div className="cursor-pointer w-40 bg-primary rounded-full h-40 flex items-center justify-center text-white typo-body-16-semibold px-3 text-center leading-tight">
+            <div className="cursor-pointer w-40 bg-primary rounded-full h-40 flex items-center justify-center text-white typo-body-16-semibold px-3 whitespace-pre-line">
                 {label}
             </div>
             {isHover && <AddNode color="violet" />}
