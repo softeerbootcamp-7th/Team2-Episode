@@ -31,7 +31,7 @@ export default function AddNodeArrow({ color, direction, className, ...rest }: P
     return (
         <button onClick={handleAddNode} className={outerCircleClass}>
             <div className={iconCircleClass}>
-                <IcIconMove className={cn(DirectionProps({ direction }))} />
+                <IcIconMove className={cn(DirectionProps({ direction }), className)} />
             </div>
         </button>
     );
