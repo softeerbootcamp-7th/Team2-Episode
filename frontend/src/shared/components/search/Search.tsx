@@ -48,7 +48,7 @@ export default function Search({ onSearch, placeholder = "검색", className, ..
                 onBlur={() => setIsFocused(false)}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
-                className={cn("flex-1 bg-transparent outline-none", textVariants({ status }))}
+                className={cn(textVariants({ status }), className)}
             />
 
             {status === "result" && (
