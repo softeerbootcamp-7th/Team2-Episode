@@ -1,18 +1,17 @@
 type Props = {
     name: (typeof ICON_NAMES)[number];
-    width?: number | string;
     color?: string;
     size?: number | string;
     strokeWidth?: number | string;
 };
 
-function Icon({ color = "currentColor", size = 24, width, strokeWidth = 1.6, name }: Props) {
+function Icon({ color = "currentColor", size = 24, strokeWidth = 1.6, name }: Props) {
     const viewBox = name === "ic_logo" ? "0 0 87 17" : "0 0 24 24";
 
     return (
         <svg
             color={color}
-            width={width || size}
+            width={size}
             height={size}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
