@@ -1,21 +1,23 @@
 type Props = {
     name: (typeof ICON_NAMES)[number];
-
+    width?: number | string;
     color?: string;
     size?: number | string;
     strokeWidth?: number | string;
 };
 
-function Icon({ color = "currentColor", size = 24, strokeWidth = 1.6, name }: Props) {
+function Icon({ color = "currentColor", size = 24, width, strokeWidth = 1.6, name }: Props) {
+    const viewBox = name === "ic_logo" ? "0 0 87 17" : "0 0 24 24";
+
     return (
         <svg
             color={color}
-            width={size}
+            width={width || size}
             height={size}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeLinejoin="round"
-            viewBox="0 0 24 24"
+            viewBox={viewBox}
             fill="none"
         >
             <use href={`/icons.svg#${name}`} />
@@ -67,6 +69,7 @@ const ICON_NAMES = [
     "ic_writing",
     "ic_x_circle",
     "ic_x",
+    "ic_logo",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
