@@ -13,6 +13,13 @@ type Props = ComponentPropsWithoutRef<"div"> & {
 export default function GlobalNavigationBar({ isLanding = false, tabs, onClick }: Props) {
     const [selectedTab, setSelectedTab] = useState(0);
 
+    const handleTab = (index: number) => {
+        setSelectedTab(index);
+        if (onClick) {
+            onClick(index);
+        }
+    };
+
     return (
         <div className={cn("w-full h-full p-4", isLanding ? "bg-base-white" : "bg-white-op-20")}>
             <Row
@@ -26,10 +33,7 @@ export default function GlobalNavigationBar({ isLanding = false, tabs, onClick }
                                 key={index}
                                 variant={selectedTab === index ? "basic_accent" : "quaternary"}
                                 size="full"
-                                onClick={() => {
-                                    setSelectedTab(index);
-                                    onClick(index);
-                                }}
+                                onClick={() => handleTab(index)}
                             >
                                 {tab}
                             </Button>
