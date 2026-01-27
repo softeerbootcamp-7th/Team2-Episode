@@ -155,12 +155,12 @@ export const BG_CLASS_MAP = {
 } as const;
 
 export const SHADOW_CLASS_MAP: Record<NodeColor, string> = {
-    violet: "shadow-[0_0_15px_0_var(--ColorSystem-Node-violet-op-30)]",
-    blue: "shadow-[0_0_15px_0_var(--ColorSystem-Node-blue-op-30)]",
-    skyblue: "shadow-[0_0_15px_0_var(--ColorSystem-Node-skyblue-op-30)]",
-    mint: "shadow-[0_0_15px_0_var(--ColorSystem-Node-mint-op-30)]",
-    cyan: "shadow-[0_0_15px_0_var(--ColorSystem-Node-cyan-op-30)]",
-    purple: "shadow-[0_0_15px_0_var(--ColorSystem-Node-purple-op-30)]",
-    magenta: "shadow-[0_0_15px_0_var(--ColorSystem-Node-magenta-op-30)]",
-    navy: "shadow-[0_0_15px_0_var(--ColorSystem-Node-navy-op-30)]",
+    violet: "shadow-[0_0_30px_5px_var(--color-node-violet-op-20)]",
+    blue: "shadow-[0_0_30px_5px_var(--color-node-blue-op-20)]",
+    skyblue: "shadow-[0_0_30px_5px_var(--color-node-skyblue-op-20)]",
+    mint: "shadow-[0_0_30px_5px_var(--color-node-mint-op-20)]",
+    cyan: "shadow-[0_0_30px_5px_var(--color-node-cyan-op-20)]",
+    purple: "shadow-[0_0_30px_5px_var(--color-node-purple-op-20)]",
+    magenta: "shadow-[0_0_30px_5px_var(--color-node-magenta-op-20)]",
+    navy: "shadow-[0_0_30px_5px_var(--color-node-navy-op-20)]",
 };

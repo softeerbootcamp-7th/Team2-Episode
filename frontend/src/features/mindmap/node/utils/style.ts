@@ -16,14 +16,14 @@ export function colorBySize(size: "sm" | "md" | "lg", color: NodeColor, state: N
 
     const STATE_SIZE_STYLES: Record<NodeState, Record<"sm" | "md" | "lg", string>> = {
         default: {
+            sm: `border ${border} bg-white`,
+            md: `border ${border} ${BG_CLASS_MAP[color][5]}`,
+            lg: `border ${border} ${BG_CLASS_MAP[color][15]}`,
+        },
+        selected: {
             sm: `border-2 ${border} bg-white`,
             md: `border-2 ${border} ${BG_CLASS_MAP[color][5]}`,
             lg: `border-2 ${border} ${BG_CLASS_MAP[color][15]}`,
-        },
-        selected: {
-            sm: `border ${border} bg-white hover:border hover:${border} hover:bg-white`,
-            md: `border ${border} ${BG_CLASS_MAP[color][5]} hover:border hover:${border} hover:${BG_CLASS_MAP[color][5]}`,
-            lg: `border ${border} ${BG_CLASS_MAP[color][15]} hover:border hover:${border} hover:${BG_CLASS_MAP[color][15]}`,
         },
     };
 

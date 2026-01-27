@@ -42,7 +42,7 @@ export default function Node({
     ...rest
 }: Props) {
     const colorClass = colorBySize(size, color, state);
-    const selectedStyles = state == "default" ? `border-2 ${shadowClass(color)}` : "";
+    const selectedStyles = state == "selected" ? `border-2 ${shadowClass(color)}` : "";
 
     return (
         <div className={`group relative flex items-center gap-2`} {...rest}>
@@ -57,7 +57,7 @@ export default function Node({
                 className={cn(nodeVariants({ size }), colorClass, selectedStyles, className)}
                 onClick={() => {
                     if (onSelectedChange) {
-                        onSelectedChange(!state);
+                        onSelectedChange(state === "default");
                     }
                 }}
             >
@@ -66,7 +66,7 @@ export default function Node({
                     color={color}
                     className={cn(
                         "absolute top-0 right-0 transition-opacity duration-300",
-                        state == "default" ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                        state === "selected" ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                     )}
                 />
             </div>
