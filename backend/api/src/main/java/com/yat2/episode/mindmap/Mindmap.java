@@ -21,11 +21,11 @@ public class Mindmap {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdTime;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_time", nullable = false)
-    private LocalDateTime updatedTime;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     @Column(name = "is_shared", nullable = false)
     private boolean shared;
@@ -36,9 +36,8 @@ public class Mindmap {
     protected Mindmap() {
     }
 
-    public Mindmap(UUID id, LocalDateTime createdTime, boolean shared, boolean isFavorite) {
+    public Mindmap(UUID id, boolean shared, boolean isFavorite) {
         this.id = id;
-        this.createdTime = createdTime;
         this.shared = shared;
         this.isFavorite = isFavorite;
     }

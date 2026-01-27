@@ -1,21 +1,21 @@
 ALTER TABLE mindmap
-    ADD COLUMN updated_time DATETIME(6) NULL
+    ADD COLUMN updated_at DATETIME(6) NULL
 COMMENT '마지막 수정 시간'
-AFTER created_time;
+AFTER created_at;
 
 UPDATE mindmap
-SET updated_time = created_time;
+SET updated_at = created_at;
 
 ALTER TABLE mindmap
-    MODIFY updated_time DATETIME(6) NOT NULL;
+    MODIFY updated_at DATETIME(6) NOT NULL;
 
 
 ALTER TABLE episode
-    ADD COLUMN created_time DATETIME(6) NULL
+    ADD COLUMN created_at DATETIME(6) NULL
 COMMENT '생성 시간';
 
 UPDATE episode
-SET created_time = NOW(6);
+SET created_at = NOW(6);
 
 ALTER TABLE episode
-    MODIFY created_time DATETIME(6) NOT NULL;
+    MODIFY created_at DATETIME(6) NOT NULL;
