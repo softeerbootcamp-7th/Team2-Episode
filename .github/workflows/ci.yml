@@ -49,7 +49,7 @@ jobs:
 
       - name: Build & Test
         if: steps.changes.outputs.changed == 'true'
-        run: ./gradlew clean build
+        run: ./gradlew build
 
       - name: Skip backend CI
         if: steps.changes.outputs.changed == 'false'
