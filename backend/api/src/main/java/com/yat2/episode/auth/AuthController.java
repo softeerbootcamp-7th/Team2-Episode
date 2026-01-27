@@ -42,7 +42,7 @@ public class AuthController {
         String referer = request.getHeader("Referer");
 
         boolean isLocalDev =
-                referer != null && referer.startsWith("http://localhost");
+                referer != null && (referer.startsWith("http://localhost") || referer.startsWith("http://127.0.0.1"));
 
         session.setAttribute(SESSION_LOCAL_DEV, isLocalDev);
 
