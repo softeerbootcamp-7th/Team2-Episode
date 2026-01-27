@@ -1,14 +1,18 @@
-import { BaseDirection, Direction } from "@shared/components/popover/Popover";
 import findParentDOMByClass from "@utils/findParentDOMByClass";
 import { RefObject, useLayoutEffect, useState } from "react";
 
-type Props = {
-    triggerRef: RefObject<HTMLDivElement | null>;
-    contentsRef: RefObject<HTMLDivElement | null>;
-    disabled?: boolean;
-    primaryDirection: BaseDirection;
-    secondaryDirection?: BaseDirection;
-};
+export const BASE_DIRECTIONS = ["top", "bottom", "left", "right"] as const;
+export type BaseDirection = (typeof BASE_DIRECTIONS)[number];
+export type Direction =
+    | "bottom_right"
+    | "bottom_left"
+    | "top_right"
+    | "top_left"
+    | "right_top"
+    | "right_bottom"
+    | "left_top"
+    | "left_bottom"
+    | BaseDirection;
 
 const OPPOSITE: Record<BaseDirection, BaseDirection> = {
     top: "bottom",
@@ -17,142 +21,79 @@ const OPPOSITE: Record<BaseDirection, BaseDirection> = {
     right: "left",
 };
 
-type SafeDirection = {
-    primaryDirection: BaseDirection;
-    secondaryDirection?: BaseDirection;
+type Props = {
+    triggerRef: RefObject<HTMLDivElement | null>;
+    contentsRef: RefObject<HTMLDivElement | null>;
+    disabled?: boolean;
+    direction: Direction;
 };
 
-const useCalcSafeDirection = ({
-    disabled = false,
-    primaryDirection,
-    secondaryDirection,
-    triggerRef,
-    contentsRef,
-}: Props) => {
-    const [safeDirection, setSafeDirection] = useState<SafeDirection>({
-        primaryDirection,
-        secondaryDirection,
-    });
+const useCalcSafeDirection = ({ disabled = false, direction, triggerRef, contentsRef }: Props) => {
+    const [safeDirection, setSafeDirection] = useState<Direction>(direction);
 
     useLayoutEffect(() => {
-        if (disabled || !contentsRef?.current || !triggerRef?.current) return;
+        const trigger = triggerRef.current;
+        const contents = contentsRef.current;
 
-        const triggerRect = triggerRef.current.getBoundingClientRect();
-        const contentsRect = contentsRef.current.getBoundingClientRect();
-        const parentRect = getParentRect({ triggerRef });
-
-        const space = calcRemainingSpace({ parentRect, triggerRect });
-
-        // 1. Primary 결정 (축 반전)
-        let nextPrimary = primaryDirection;
-        const isPrimaryVertical = primaryDirection === "top" || primaryDirection === "bottom";
-        const primarySize = isPrimaryVertical ? contentsRect.height : contentsRect.width;
-
-        if (space[primaryDirection] < primarySize && space[OPPOSITE[primaryDirection]] > space[primaryDirection]) {
-            nextPrimary = OPPOSITE[primaryDirection];
+        if (disabled || !trigger || !contents) {
+            return;
         }
 
-        // 2. Secondary 결정
-        let nextSecondary = secondaryDirection;
-        if (secondaryDirection) {
-            const isSecondaryVertical = secondaryDirection === "top" || secondaryDirection === "bottom";
-            const secondarySize = isSecondaryVertical ? contentsRect.height : contentsRect.width;
+        const parent =
+            findParentDOMByClass({ startDOM: trigger, className: "overflow-hidden" }) || document.documentElement;
+        const parentRect = parent.getBoundingClientRect();
+        const triggerRect = trigger.getBoundingClientRect();
+        const contentsRect = contents.getBoundingClientRect();
 
-            // Secondary 방향으로 공간이 부족하면 반전
-            if (
-                space[secondaryDirection] < secondarySize &&
-                space[OPPOSITE[secondaryDirection]] > space[secondaryDirection]
-            ) {
-                nextSecondary = OPPOSITE[secondaryDirection];
+        const remainingSpace = {
+            top: triggerRect.top - parentRect.top,
+            bottom: parentRect.bottom - triggerRect.bottom,
+            left: triggerRect.left - parentRect.left,
+            right: parentRect.right - triggerRect.right,
+        };
+
+        const getSafe = (dir: BaseDirection): BaseDirection => {
+            const isVertical = dir === "top" || dir === "bottom";
+            const targetSize = isVertical ? contentsRect.height : contentsRect.width;
+
+            if (remainingSpace[dir] >= targetSize) {
+                return dir;
+            } else {
+                return OPPOSITE[dir];
             }
-        }
+        };
 
-        setSafeDirection({
-            primaryDirection: nextPrimary,
-            secondaryDirection: nextSecondary,
-        });
-    }, [disabled, primaryDirection, secondaryDirection]);
+        // 바로 다음, 다다음 라인에서 유효성 검사 후 valid값 주입하므로(타입가드처럼) as를 사용했습니다.
+        const [primaryDirection, secondaryDirection] = direction.split("_") as BaseDirection[];
+        const safePrimaryDirection = getSafe(primaryDirection || "bottom");
+        const safeSecondaryDirection = secondaryDirection ? getSafe(secondaryDirection) : undefined;
+
+        const filteredDirection = [safePrimaryDirection, safeSecondaryDirection].filter((v) => v !== undefined);
+        const joinedDirection = filteredDirection.join("_");
+        const nextDirection = isDirection(joinedDirection) ? joinedDirection : "bottom";
+
+        setSafeDirection(nextDirection);
+    }, [disabled, direction]);
 
     return { safeDirection };
 };
+
 export default useCalcSafeDirection;
 
-function calcRemainingSpace({ parentRect, triggerRect }: { parentRect: DOMRect; triggerRect: DOMRect }) {
-    const remainingSpace = {
-        top: triggerRect.top - parentRect.top,
-        bottom: parentRect.bottom - triggerRect.bottom,
-        left: triggerRect.left - parentRect.left,
-        right: parentRect.right - triggerRect.right,
-    };
+function isDirection(direction: string): direction is Direction {
+    const [primary, secondary] = direction.split("_");
 
-    return remainingSpace;
-}
+    if (primary) {
+        if (secondary && secondary !== primary) {
+            return true;
+        }
 
-type CardinalDirections = {
-    top: number;
-    left: number;
-    bottom: number;
-    right: number;
-};
+        if (!secondary) {
+            return true;
+        }
 
-function needReverseTo({
-    to,
-    contentsRect,
-    remainingSpace,
-}: {
-    to: "top" | "left" | "bottom" | "right";
-    contentsRect: DOMRect;
-    remainingSpace: CardinalDirections;
-}) {
-    switch (to) {
-        case "top":
-            if (remainingSpace.top > contentsRect.height && remainingSpace.bottom < contentsRect.height) {
-                return true;
-            }
-
-            return false;
-
-        case "bottom":
-            if (remainingSpace.bottom > contentsRect.height && remainingSpace.top < contentsRect.height) {
-                return true;
-            }
-
-            return false;
-
-        case "left":
-            if (remainingSpace.left > contentsRect.width && remainingSpace.right < contentsRect.width) {
-                return true;
-            }
-
-            return false;
-
-        case "right":
-            if (remainingSpace.right > contentsRect.width && remainingSpace.left < contentsRect.width) {
-                return true;
-            }
-
-            return false;
-
-        default:
-            return false;
-    }
-}
-
-function isBaseDirection(direction: Direction): direction is BaseDirection {
-    if (!direction.includes("_")) {
-        return true;
+        return false;
     }
 
     return false;
-}
-
-function getParentRect({ triggerRef }: { triggerRef: RefObject<HTMLDivElement> }) {
-    const parent =
-        findParentDOMByClass({
-            startDOM: triggerRef.current,
-            className: "overflow-hidden",
-        }) || document.documentElement;
-    const parentRect = parent.getBoundingClientRect();
-
-    return parentRect;
 }

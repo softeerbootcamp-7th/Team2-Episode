@@ -1,33 +1,22 @@
 import useCalcSafeDirection from "@shared/hooks/useCalcSafeDirection";
 import useToggle from "@shared/hooks/useToggle";
-import { cva, VariantProps } from "class-variance-authority";
+import { SafeVariantProps } from "@shared/types/safe_variant_props";
+import { cva } from "class-variance-authority";
 import { ReactNode, useRef } from "react";
 
-export type BaseDirection = "top" | "bottom" | "left" | "right";
-export type Direction =
-    | "bottom_right"
-    | "bottom_left"
-    | "top_right"
-    | "top_left"
-    | "right_top"
-    | "right_bottom"
-    | "left_top"
-    | "left_bottom"
-    | BaseDirection;
-
-type Props = VariantProps<typeof variants> & {
+type Props = SafeVariantProps<typeof variants> & {
     children: ReactNode;
     contents: ReactNode;
 };
 
-const Popover = ({ primaryDirection = "bottom", secondaryDirection = "none", children, contents }: Props) => {
+const Popover = ({ direction = "bottom_left", children, contents }: Props) => {
     const triggerRef = useRef<HTMLDivElement>(null);
     const contentsRef = useRef<HTMLDivElement>(null);
 
     const [isVisible, isVisibleHandler] = useToggle();
+
     const { safeDirection } = useCalcSafeDirection({
-        primaryDirection,
-        secondaryDirection: undefined,
+        direction,
         triggerRef,
         contentsRef,
         disabled: !isVisible,
@@ -38,7 +27,7 @@ const Popover = ({ primaryDirection = "bottom", secondaryDirection = "none", chi
             <div onClick={isVisibleHandler.toggle}>{children}</div>
 
             {isVisible && (
-                <div ref={contentsRef} className={variants({ ...safeDirection })}>
+                <div ref={contentsRef} className={variants({ direction: safeDirection })}>
                     {contents}
                 </div>
             )}
@@ -50,20 +39,19 @@ export default Popover;
 
 const variants = cva("absolute z-50", {
     variants: {
-        primaryDirection: {
+        direction: {
             top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
+            top_left: "bottom-full right-0 mb-2",
+            top_right: "bottom-full left-0 mb-2",
             bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
+            bottom_left: "top-full right-0 mt-2",
+            bottom_right: "top-full left-0 mt-2",
             left: "right-full top-1/2 -translate-y-1/2 mr-2",
+            left_top: "right-full bottom-0 mr-2",
+            left_bottom: "right-full top-0 mr-2",
             right: "left-full top-1/2 -translate-y-1/2 ml-2",
-        },
-        secondaryDirection: {
-            // Secondary가 있을 때 각 위치를 강제 고정
-            top: "top-0 translate-y-0",
-            bottom: "bottom-0 translate-y-0",
-            left: "left-0 translate-x-0",
-            right: "right-0 translate-x-0",
-            // 값이 없을 때(null/undefined)를 위한 기본값은 아래 compound에서 처리
-            none: "",
+            right_top: "left-full bottom-0 ml-2",
+            right_bottom: "left-full top-0 ml-2",
         },
     },
 });
