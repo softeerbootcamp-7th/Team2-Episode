@@ -5,7 +5,7 @@ import { type NodeColor } from "@features/mindmap/node/constants/colors";
 import { colorBySize, shadowClass } from "@features/mindmap/node/utils/style";
 import AddNode from "@features/mindmap/node/add_node/AddNode";
 import MenuNodeButton from "@features/mindmap/node/menu_node/MenuNodeButton";
-import { NodeState } from "../types/node";
+import { NodeState } from "@features/mindmap/node/types/node";
 
 type NodeProps = {
     id: string;
