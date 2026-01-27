@@ -3,14 +3,15 @@ import Icon from "@shared/components/icon/Icon";
 import Button from "@shared/components/button/Button";
 import Row from "@shared/components/row/Row";
 import { cn } from "@utils/cn";
+import Profile from "../profile/profile";
 
 type Props = ComponentPropsWithoutRef<"div"> & {
-    tabs: string[];
+    contents: string[];
     isLanding?: boolean;
     onClick?: (index: number) => void;
 };
 
-export default function GlobalNavigationBar({ isLanding = false, tabs, onClick }: Props) {
+export default function GlobalNavigationBar({ isLanding = false, contents, onClick }: Props) {
     const [selectedTab, setSelectedTab] = useState(0);
 
     const handleTab = (index: number) => {
@@ -28,7 +29,7 @@ export default function GlobalNavigationBar({ isLanding = false, tabs, onClick }
                 leftSlot={<Icon name="ic_logo" size="100%" color="var(--color-text-main1)" />}
                 contents={
                     <div className="flex h-full gap-2">
-                        {tabs.map((tab, index) => (
+                        {contents.map((tab, index) => (
                             <Button
                                 key={index}
                                 variant={selectedTab === index ? "basic_accent" : "quaternary"}
@@ -40,16 +41,7 @@ export default function GlobalNavigationBar({ isLanding = false, tabs, onClick }
                         ))}
                     </div>
                 }
-                rightSlot={
-                    <div className="flex h-full gap-2">
-                        <Button variant="quaternary_accent_outlined" size="full">
-                            로그인
-                        </Button>
-                        <Button variant="primary" size="full">
-                            회원가입
-                        </Button>
-                    </div>
-                }
+                rightSlot={<Profile name="박은서" />}
             />
         </div>
     );
