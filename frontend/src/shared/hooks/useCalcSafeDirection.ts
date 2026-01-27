@@ -45,6 +45,7 @@ const useCalcSafeDirection = ({ disabled = false, direction, triggerRef, content
         const triggerRect = trigger.getBoundingClientRect();
         const contentsRect = contents.getBoundingClientRect();
 
+        // 남은 공간
         const remainingSpace = {
             top: triggerRect.top - parentRect.top,
             bottom: parentRect.bottom - triggerRect.bottom,
@@ -52,22 +53,22 @@ const useCalcSafeDirection = ({ disabled = false, direction, triggerRef, content
             right: parentRect.right - triggerRect.right,
         };
 
-        const getSafe = (dir: BaseDirection): BaseDirection => {
-            const isVertical = dir === "top" || dir === "bottom";
-            const targetSize = isVertical ? contentsRect.height : contentsRect.width;
-
-            if (remainingSpace[dir] >= targetSize) {
-                return dir;
-            } else {
-                return OPPOSITE[dir];
-            }
-        };
-
         // 바로 다음, 다다음 라인에서 유효성 검사 후 valid값 주입하므로(타입가드처럼) as를 사용했습니다.
         const [primaryDirection, secondaryDirection] = direction.split("_") as BaseDirection[];
-        const safePrimaryDirection = getSafe(primaryDirection || "bottom");
-        const safeSecondaryDirection = secondaryDirection ? getSafe(secondaryDirection) : undefined;
+        const safePrimaryDirection = getSafeDirection({
+            direction: primaryDirection || "bottom",
+            remainingSpace,
+            parentRect,
+            contentsRect,
+        });
+        const safeSecondaryDirection = getSafeDirection({
+            direction: secondaryDirection,
+            remainingSpace,
+            parentRect,
+            contentsRect,
+        });
 
+        // 안전한 방향을 결정
         const filteredDirection = [safePrimaryDirection, safeSecondaryDirection].filter((v) => v !== undefined);
         const joinedDirection = filteredDirection.join("_");
         const nextDirection = isDirection(joinedDirection) ? joinedDirection : "bottom";
@@ -97,3 +98,60 @@ function isDirection(direction: string): direction is Direction {
 
     return false;
 }
+
+function isOverflowing({
+    direction,
+    contentsRect,
+    parentRect,
+}: {
+    direction: BaseDirection;
+    contentsRect: DOMRect;
+    parentRect: DOMRect;
+}) {
+    if (direction === "top") return contentsRect.top < parentRect.top;
+    if (direction === "bottom") return contentsRect.bottom > parentRect.bottom;
+    if (direction === "left") return contentsRect.left < parentRect.left;
+    if (direction === "right") return contentsRect.right > parentRect.right;
+
+    return false;
+}
+
+type CardinalDirection = {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+};
+
+const getSafeDirection = ({
+    direction,
+    contentsRect,
+    parentRect,
+    remainingSpace,
+}: {
+    direction: BaseDirection | undefined;
+    contentsRect: DOMRect;
+    parentRect: DOMRect;
+    remainingSpace: CardinalDirection;
+}): BaseDirection | undefined => {
+    const isVertical = direction === "top" || direction === "bottom";
+    const targetSize = isVertical ? contentsRect.height : contentsRect.width;
+
+    if (direction === undefined) {
+        let safeDirection: BaseDirection | undefined = direction;
+
+        BASE_DIRECTIONS.forEach((curDirection) => {
+            if (isOverflowing({ direction: curDirection, contentsRect, parentRect })) {
+                safeDirection = OPPOSITE[curDirection];
+            }
+        });
+
+        return safeDirection;
+    }
+
+    if (remainingSpace[direction] >= targetSize) {
+        return direction;
+    } else {
+        return OPPOSITE[direction];
+    }
+};
