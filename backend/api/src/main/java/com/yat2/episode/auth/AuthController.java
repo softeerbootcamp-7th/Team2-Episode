@@ -4,6 +4,7 @@ import com.yat2.episode.auth.dto.IssuedTokens;
 import com.yat2.episode.auth.oauth.KakaoProperties;
 import com.yat2.episode.auth.oauth.OAuthUtil;
 import com.yat2.episode.auth.token.AuthCookieFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -26,13 +27,20 @@ public class AuthController {
     private final AuthCookieFactory authCookieFactory;
 
     @GetMapping("/login")
-    public RedirectView loginWithKakao(HttpSession session) {
+    public RedirectView loginWithKakao(HttpSession session, HttpServletRequest request) {
         String clientId = kakaoProperties.getClientId();
         String redirectUri = kakaoProperties.getRedirectUri();
         String authUrl = kakaoProperties.authUrl();
 
         String state = OAuthUtil.generateState();
         session.setAttribute("OAUTH_STATE", state);
+
+        String referer = request.getHeader("Referer");
+
+        boolean isLocalDev =
+                referer != null && referer.startsWith("http://localhost");
+
+        session.setAttribute("OAUTH_LOCAL_DEV", isLocalDev);
 
         String redirect = UriComponentsBuilder.fromUriString(authUrl)
                 .queryParam("response_type", "code")
@@ -60,7 +68,14 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        //TODO: redirect target state로 설정
-        return new RedirectView("http://localhost:5173");
+        boolean isLocalDev = Boolean.TRUE.equals(
+                session.getAttribute("OAUTH_LOCAL_DEV")
+        );
+
+        String redirect = isLocalDev ? "http://localhost:5173" : "https://episode.io.kr";
+
+        session.removeAttribute("OAUTH_LOCAL_DEV");
+
+        return new RedirectView(redirect);
     }
 }
