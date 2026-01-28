@@ -35,21 +35,21 @@ function NodeComponent({ className, children, ...rest }: Props) {
 type NodeContentProps = ComponentPropsWithoutRef<"div"> &
     VariantProps<typeof nodeVariants> & {
         color: NodeColor;
-        state: NodeState;
+        variants: NodeState;
         onStateChange?: (selected: boolean) => void;
         children: ReactNode;
     };
 
-function NodeContent({ size = "sm", color, state, onStateChange, className, children, ...rest }: NodeContentProps) {
-    const colorClass = colorBySize(size, color, state);
-    const selectedStyles = state === "selected" ? `border-2 ${shadowClass(color)}` : "";
+function NodeContent({ size = "sm", color, variants, onStateChange, className, children, ...rest }: NodeContentProps) {
+    const colorClass = colorBySize(size, color, variants);
+    const selectedStyles = variants === "highlight" ? `border-2 ${shadowClass(color)}` : "";
 
     return (
         <div
             className={cn(nodeVariants({ size }), colorClass, selectedStyles, className)}
             onClick={() => {
                 if (onStateChange) {
-                    onStateChange(state === "default");
+                    onStateChange(variants === "default");
                 }
             }}
             {...rest}
@@ -59,7 +59,7 @@ function NodeContent({ size = "sm", color, state, onStateChange, className, chil
                 color={color}
                 className={cn(
                     "absolute top-0 right-0 transition-opacity duration-300",
-                    state === "selected" ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                    variants === "highlight" ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                 )}
             />
         </div>
