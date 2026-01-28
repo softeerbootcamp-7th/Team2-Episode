@@ -47,8 +47,8 @@ function NodeContent({ size = "sm", color, variant = "default", className, child
         if (variant === "highlight") return "highlight";
         return "default";
     };
-
     const state = getState();
+
     const colorClass = colorBySize(size, color, state);
     const selectedStyles = state === "selected" ? `border-2 ${shadowClass(color)}` : "";
 
