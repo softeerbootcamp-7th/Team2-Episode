@@ -26,7 +26,6 @@ function Icon({ color = "currentColor", size = 24, strokeWidth = 1.6, name }: Pr
 export default Icon;
 
 const ICON_NAMES = [
-    "ic_kakao_login",
     "ic_cursor",
     "ic_star",
     "ic_star_filled",
@@ -67,6 +66,7 @@ const ICON_NAMES = [
     "ic_writing",
     "ic_x_circle",
     "ic_x",
+    "ic_kakao_login",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];

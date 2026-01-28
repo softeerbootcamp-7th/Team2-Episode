@@ -47,4 +47,9 @@ public class AuthService {
 
         return tokens;
     }
+
+    public Optional<Users> getUserByCookie(String token) {
+        Long kakaoId = jwtProvider.verifyAccessTokenAndGetUserId(token);
+        return usersRepository.findByKakaoId(kakaoId);
+    }
 }
