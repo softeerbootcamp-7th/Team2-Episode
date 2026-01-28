@@ -34,7 +34,7 @@ public class RefreshTokenService {
     public void validateSession(String refreshToken) {
         String tokenHash = hash(refreshToken);
 
-        RefreshToken stored = refreshTokenRepository.findByTokenHash(tokenHash)
+        refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
     }
 
