@@ -28,21 +28,21 @@ public class MindmapService {
         }
     }
 
-    public List<MindmapDataDto> getPrivateMindmapById(Long userId) {
-        return mindmapRepository.findMindmapsByUserId(userId)
+    private List<MindmapDataDto> getMindmapsByShared(Long userId, boolean shared) {
+        return mindmapRepository.findMindmapsByUserIdAndShared(userId, shared)
                 .stream()
-                .filter(mindmap -> !mindmap.isShared())
                 .map(MindmapDataDto::of)
                 .toList();
     }
 
-    public List<MindmapDataDto> getPublicMindmapById(Long userId) {
-        return mindmapRepository.findMindmapsByUserId(userId)
-                .stream()
-                .filter(mindmap -> mindmap.isShared())
-                .map(MindmapDataDto::of)
-                .toList();
+    public List<MindmapDataDto> getPrivateMindmapById(Long userId) {
+        return getMindmapsByShared(userId, false);
     }
+
+    public List<MindmapDataDto> getPublicMindmapById(Long userId) {
+        return getMindmapsByShared(userId, true);
+    }
+
 
 
     public List<MindmapDataDto> getAllMindmapById(Long userId) {

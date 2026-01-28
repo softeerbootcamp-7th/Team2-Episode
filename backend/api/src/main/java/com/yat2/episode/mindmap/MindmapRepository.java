@@ -10,6 +10,21 @@ import java.util.UUID;
 
 @Repository
 public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
+
+    @Query("""
+                SELECT m
+                FROM MindmapParticipant p
+                JOIN p.mindmap m
+                WHERE p.user.kakaoId = :userId
+                  AND m.shared = :shared
+                ORDER BY m.isFavorite DESC, m.updatedAt DESC
+            """)
+    List<Mindmap> findMindmapsByUserIdAndShared(
+            @Param("userId") Long userId,
+            @Param("shared") boolean shared
+    );
+
+
     @Query("""
                 SELECT m
                 FROM MindmapParticipant p
