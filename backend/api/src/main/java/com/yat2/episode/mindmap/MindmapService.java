@@ -10,9 +10,11 @@ import java.util.UUID;
 @Service
 public class MindmapService {
     private final MindmapRepository mindmapRepository;
+    private final MindmapParticipantRepository mindmapParticipantRepository;
 
-    public MindmapService(MindmapRepository mindmapRepository) {
+    public MindmapService(MindmapRepository mindmapRepository, MindmapParticipantRepository mindmapParticipantRepository) {
         this.mindmapRepository = mindmapRepository;
+        this.mindmapParticipantRepository = mindmapParticipantRepository;
     }
 
     public Optional<Mindmap> getMindmapById(String mindmapIdStr) {
@@ -25,7 +27,10 @@ public class MindmapService {
     }
 
     public List<Mindmap> getPrivateMindmapById(Users user) {
-        //todo: 구현 필요
-        return null;
+        return mindmapRepository.findMindmapsByUserId(user.getKakaoId())
+                .stream()
+                .filter(mindmap -> !mindmap.isShared())
+                .toList();
     }
+
 }
