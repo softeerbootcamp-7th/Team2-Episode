@@ -27,7 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @Tag(name = "Auth", description = "카카오 OAuth 로그인 및 토큰 재발급 API")
 public class AuthController {
     private static final String SESSION_STATE = "OAUTH_STATE";
