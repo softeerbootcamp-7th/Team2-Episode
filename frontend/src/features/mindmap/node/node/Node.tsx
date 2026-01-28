@@ -24,7 +24,7 @@ const nodeVariants = cva(
     },
 );
 
-function Node({ className, children, ...rest }: Props) {
+function NodeComponent({ className, children, ...rest }: Props) {
     return (
         <div className={cn("group relative flex items-center gap-2", className)} {...rest}>
             {children}
@@ -66,7 +66,7 @@ function NodeContent({ size = "sm", color, state, onStateChange, className, chil
     );
 }
 
-Node.Content = NodeContent;
-Node.Addon = AddNode;
-
-export default Node;
+export const Node = Object.assign(NodeComponent, {
+    AddNode: AddNode,
+    Content: NodeContent,
+});
