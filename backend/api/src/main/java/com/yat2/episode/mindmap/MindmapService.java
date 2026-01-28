@@ -28,6 +28,14 @@ public class MindmapService {
         }
     }
 
+    public List<MindmapDataDto> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
+        return switch (type) {
+            case PRIVATE -> getMindmapsByShared(userId, false);
+            case PUBLIC  -> getMindmapsByShared(userId, true);
+            default      -> getAllMindmapById(userId);
+        };
+    }
+
     private List<MindmapDataDto> getMindmapsByShared(Long userId, boolean shared) {
         return mindmapRepository.findMindmapsByUserIdAndShared(userId, shared)
                 .stream()
@@ -35,17 +43,7 @@ public class MindmapService {
                 .toList();
     }
 
-    public List<MindmapDataDto> getPrivateMindmapById(Long userId) {
-        return getMindmapsByShared(userId, false);
-    }
-
-    public List<MindmapDataDto> getPublicMindmapById(Long userId) {
-        return getMindmapsByShared(userId, true);
-    }
-
-
-
-    public List<MindmapDataDto> getAllMindmapById(Long userId) {
+    private List<MindmapDataDto> getAllMindmapById(Long userId) {
         return mindmapRepository.findMindmapsByUserId(userId)
                 .stream()
                 .map(MindmapDataDto::of)

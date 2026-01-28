@@ -5,6 +5,7 @@ import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -18,6 +19,10 @@ import java.util.List;
 @RequestMapping("/mindmap")
 @Tag(name = "Mindmap", description = "마인드맵 관리 API")
 public class MindmapController {
+    public enum MindmapVisibility {
+        ALL, PRIVATE, PUBLIC
+    }
+
     private final MindmapService mindmapService;
     private final AuthService authService;
 
@@ -27,95 +32,25 @@ public class MindmapController {
     }
 
     @Operation(
-            summary = "내 비공개 마인드맵 목록 조회",
+            summary = "마인드맵 목록 조회 (통합)",
             description = """
-                    로그인한 사용자가 소유한 개인 마인드맵을 조회합니다.
-                    즐겨찾기 여부 및 최근 수정일 기준으로 정렬됩니다.
+                    로그인한 사용자의 마인드맵 목록을 조회합니다.
+                    Query Parameter를 통해 전체(ALL), 비공개(PRIVATE), 공개/팀(PUBLIC)을 필터링합니다.
+                    파라미터가 없으면 기본값은 ALL입니다.
                     """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "비공개 마인드맵 목록 조회 성공"),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = """
-                            인증 실패  
-                            - UNAUTHORIZED  
-                            - AUTH_EXPIRED  
-                            - INVALID_TOKEN  
-                            - INVALID_TOKEN_SIGNATURE  
-                            - INVALID_TOKEN_ISSUER  
-                            - INVALID_TOKEN_TYPE  
-                            """,
-                    content = @Content
-            )
-
+            @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
     })
-    @GetMapping("/private")
-    public ResponseEntity<List<MindmapDataDto>> getMyPrivateMindmapList(@CookieValue(name = "access_token", required = false) String token) {
+    @GetMapping
+    public ResponseEntity<List<MindmapDataDto>> getMindmaps(
+            @CookieValue(name = "access_token", required = false) String token,
+            @Parameter(description = "조회할 마인드맵 유형 (ALL, PRIVATE, PUBLIC)")
+            @RequestParam(name = "type", required = false, defaultValue = "ALL") MindmapVisibility type
+    ) {
         Long userId = authService.getUserIdByToken(token);
-
-        return ResponseEntity.ok(mindmapService.getPrivateMindmapById(userId));
-    }
-
-    @Operation(
-            summary = "내 공개 마인드맵 목록 조회",
-            description = """
-                    로그인한 사용자가 참여 중인 팀 마인드맵을 조회합니다.
-                    즐겨찾기 여부 및 최근 수정일 기준으로 정렬됩니다.
-                    """
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "전체 마인드맵 목록 조회 성공"),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = """
-                            인증 실패  
-                            - UNAUTHORIZED  
-                            - AUTH_EXPIRED  
-                            - INVALID_TOKEN  
-                            - INVALID_TOKEN_SIGNATURE  
-                            - INVALID_TOKEN_ISSUER  
-                            - INVALID_TOKEN_TYPE  
-                            """,
-                    content = @Content
-            )
-
-    })
-    @GetMapping("/public")
-    public ResponseEntity<List<MindmapDataDto>> getMyPublicMindmapList(@CookieValue(name = "access_token", required = false) String token) {
-        Long userId = authService.getUserIdByToken(token);
-        return ResponseEntity.ok(mindmapService.getPublicMindmapById(userId));
-    }
-
-
-    @Operation(
-            summary = "내 전체 마인드맵 목록 조회",
-            description = """
-                    로그인한 사용자가 참여 중인 모든 마인드맵을 조회합니다.
-                    즐겨찾기 여부 및 최근 수정일 기준으로 정렬됩니다.
-                    """
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "전체 마인드맵 목록 조회 성공"),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = """
-                            인증 실패  
-                            - UNAUTHORIZED  
-                            - AUTH_EXPIRED  
-                            - INVALID_TOKEN  
-                            - INVALID_TOKEN_SIGNATURE  
-                            - INVALID_TOKEN_ISSUER  
-                            - INVALID_TOKEN_TYPE  
-                            """,
-                    content = @Content
-            )
-
-    })
-    @GetMapping("/all")
-    public ResponseEntity<List<MindmapDataDto>> getMyAllMindmapList(@CookieValue(name = "access_token", required = false) String token) {
-        Long userId = authService.getUserIdByToken(token);
-        return ResponseEntity.ok(mindmapService.getAllMindmapById(userId));
+        return ResponseEntity.ok(mindmapService.getMindmaps(userId, type));
     }
 
     @Operation(
@@ -142,7 +77,7 @@ public class MindmapController {
             )
 
     })
-    @GetMapping("/list")
+    @GetMapping("/titles")
     public ResponseEntity<List<MindmapIdentityDto>> getMyMindmapNames(@CookieValue(name = "access_token", required = false) String token) {
         Long userId = authService.getUserIdByToken(token);
         return ResponseEntity.ok(mindmapService.getMindmapListById(userId));
