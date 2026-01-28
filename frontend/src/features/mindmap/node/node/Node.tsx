@@ -50,11 +50,11 @@ function NodeContent({ size = "sm", color, variant = "default", className, child
     const state = getState();
 
     const colorClass = colorBySize(size, color, state);
-    const selectedStyles = state === "selected" ? `border-2 ${shadowClass(color)}` : "";
+    const variantStyles = state === "selected" || state === "highlight" ? `border-2 ${shadowClass(color)}` : "";
 
     return (
         <div
-            className={cn(nodeVariants({ size }), colorClass, selectedStyles, className)}
+            className={cn(nodeVariants({ size }), colorClass, variantStyles, className)}
             onClick={() => setIsSelected(!isSelected)}
             {...rest}
         >
@@ -63,7 +63,7 @@ function NodeContent({ size = "sm", color, variant = "default", className, child
                 color={color}
                 className={cn(
                     "absolute top-0 right-0 transition-opacity duration-300",
-                    state === "selected" ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                    state === "selected" ? "opacity-100" : "opacity-0",
                 )}
             />
         </div>
