@@ -1,6 +1,7 @@
 package com.yat2.episode.mindmap;
 
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
+import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import com.yat2.episode.users.Users;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +49,14 @@ public class MindmapService {
         return mindmapRepository.findMindmapsByUserId(userId)
                 .stream()
                 .map(MindmapDataDto::of)
+                .toList();
+    }
+
+
+    public List<MindmapIdentityDto> getMindmapListById(Long userId) {
+        return mindmapRepository.findMindmapListByUserId(userId)
+                .stream()
+                .map(MindmapIdentityDto::of)
                 .toList();
     }
 }

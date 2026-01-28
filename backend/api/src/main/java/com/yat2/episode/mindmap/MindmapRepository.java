@@ -19,4 +19,13 @@ public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
             """)
     List<Mindmap> findMindmapsByUserId(@Param("userId") Long userId);
 
+
+    @Query("""
+                SELECT m
+                FROM MindmapParticipant p
+                JOIN p.mindmap m
+                WHERE p.user.kakaoId = :userId
+                ORDER BY m.createdAt DESC
+            """)
+    List<Mindmap> findMindmapListByUserId(@Param("userId") Long userId);
 }

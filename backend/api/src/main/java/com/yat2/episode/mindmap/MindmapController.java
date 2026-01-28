@@ -74,16 +74,24 @@ public class MindmapController {
     })
     public ResponseEntity<List<MindmapDataDto>> getMyAllMindmapList(@CookieValue(name = "access_token", required = false) String token) {
         Long userId = authService.getUserIdByToken(token);
-        return ResponseEntity.ok(mindmapService.getPublicMindmapById(userId));
+        return ResponseEntity.ok(mindmapService.getAllMindmapById(userId));
     }
 
     @GetMapping("/my/list")
-    public ResponseEntity<List<MindmapIdentityDto>> getMyMindmapNames() {
-        //todo: userId 가져오기
-        //todo: 마인드맵_참여자 table에서 userId 기준 mindmap 데이터(shared = true) 가져오기
-        //todo: 생성 순 기준으로 정렬하기
-
-        return ResponseEntity.ok(null);
+    @Operation(
+            summary = "내 마인드맵 이름 목록 조회",
+            description = """
+        로그인한 사용자가 참여 중인 마인드맵의 식별 정보(아이디, 이름) 목록을 조회합니다.
+        마인드맵 선택 드롭다운, 사이드바 등에 사용됩니다.
+        """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "마인드맵 이름 목록 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    public ResponseEntity<List<MindmapIdentityDto>> getMyMindmapNames(@CookieValue(name = "access_token", required = false) String token) {
+        Long userId = authService.getUserIdByToken(token);
+        return ResponseEntity.ok(mindmapService.getMindmapListById(userId));
     }
 
     @PostMapping()
