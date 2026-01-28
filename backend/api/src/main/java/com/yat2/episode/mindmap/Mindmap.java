@@ -25,6 +25,9 @@ public class Mindmap {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     @Column(name = "is_shared", nullable = false)
     private boolean shared;
 

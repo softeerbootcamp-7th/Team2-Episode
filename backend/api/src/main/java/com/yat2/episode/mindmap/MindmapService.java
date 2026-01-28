@@ -1,5 +1,6 @@
 package com.yat2.episode.mindmap;
 
+import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.users.Users;
 import org.springframework.stereotype.Service;
 
@@ -26,11 +27,18 @@ public class MindmapService {
         }
     }
 
-    public List<Mindmap> getPrivateMindmapById(Users user) {
-        return mindmapRepository.findMindmapsByUserId(user.getKakaoId())
-                .stream()
-                .filter(mindmap -> !mindmap.isShared())
-                .toList();
-    }
+//    public List<MindmapDataDto> getPrivateMindmapById(Users user) {
+//        return mindmapRepository.findMindmapsByUserId(user.getKakaoId())
+//                .stream()
+//                .filter(mindmap -> !mindmap.isShared())
+//                .toList();
+//    }
+//
+//    public List<Mindmap> getPrivateMindmapById(Users user) {
+//        return mindmapRepository.findMindmapsByUserId(user.getKakaoId())
+//                .stream()
+//                .filter(mindmap -> !mindmap.isShared())
+//                .toList();
+//    }
 
 }
