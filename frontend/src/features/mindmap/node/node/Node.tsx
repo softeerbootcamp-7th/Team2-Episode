@@ -1,4 +1,4 @@
-import { ComponentPropsWithoutRef, ReactNode } from "react";
+import { ComponentPropsWithoutRef, ReactNode, useState } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@utils/cn";
 import { type NodeColor } from "@features/mindmap/node/constants/colors";
@@ -35,23 +35,27 @@ function NodeComponent({ className, children, ...rest }: Props) {
 type NodeContentProps = ComponentPropsWithoutRef<"div"> &
     VariantProps<typeof nodeVariants> & {
         color: NodeColor;
-        variants: NodeState;
-        onStateChange?: (selected: boolean) => void;
+        variant?: NodeState;
         children: ReactNode;
     };
 
-function NodeContent({ size = "sm", color, variants, onStateChange, className, children, ...rest }: NodeContentProps) {
-    const colorClass = colorBySize(size, color, variants);
-    const selectedStyles = variants === "highlight" ? `border-2 ${shadowClass(color)}` : "";
+function NodeContent({ size = "sm", color, variant = "default", className, children, ...rest }: NodeContentProps) {
+    const [isSelected, setIsSelected] = useState(false);
+
+    const getState = (): NodeState => {
+        if (isSelected) return "selected";
+        if (variant === "highlight") return "highlight";
+        return "default";
+    };
+
+    const state = getState();
+    const colorClass = colorBySize(size, color, state);
+    const selectedStyles = state === "selected" ? `border-2 ${shadowClass(color)}` : "";
 
     return (
         <div
             className={cn(nodeVariants({ size }), colorClass, selectedStyles, className)}
-            onClick={() => {
-                if (onStateChange) {
-                    onStateChange(variants === "default");
-                }
-            }}
+            onClick={() => setIsSelected(!isSelected)}
             {...rest}
         >
             {children}
@@ -59,7 +63,7 @@ function NodeContent({ size = "sm", color, variants, onStateChange, className, c
                 color={color}
                 className={cn(
                     "absolute top-0 right-0 transition-opacity duration-300",
-                    variants === "highlight" ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                    state === "selected" ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                 )}
             />
         </div>
