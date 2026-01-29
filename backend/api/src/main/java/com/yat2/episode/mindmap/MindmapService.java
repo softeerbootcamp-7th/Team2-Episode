@@ -88,7 +88,7 @@ public class MindmapService {
         Mindmap savedMindmap = mindmapRepository.save(mindmap);
 
         MindmapParticipant participant = MindmapParticipant.builder()
-                .user(user).mindmap(mindmap).build();
+                .user(user).mindmap(savedMindmap).build();
 
         mindmapParticipantRepository.save(participant);
         String presignedURL = snapshotRepository.createPresignedUploadUrl("maps/" + savedMindmap.getId());
