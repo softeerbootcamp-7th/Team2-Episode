@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
-import static com.yat2.episode.auth.token.AuthCookieNames.*;
+import static com.yat2.episode.auth.cookie.AuthCookieNames.*;
 
 @Configuration
 public class SwaggerConfig {

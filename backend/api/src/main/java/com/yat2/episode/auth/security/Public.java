@@ -1,4 +1,4 @@
-package com.yat2.episode.auth.annotation;
+package com.yat2.episode.auth.security;
 
 import java.lang.annotation.*;
 

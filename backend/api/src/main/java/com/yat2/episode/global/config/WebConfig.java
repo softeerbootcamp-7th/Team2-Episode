@@ -1,6 +1,6 @@
 package com.yat2.episode.global.config;
 
-import com.yat2.episode.auth.AuthInterceptor;
+import com.yat2.episode.auth.security.AuthInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.RestController;

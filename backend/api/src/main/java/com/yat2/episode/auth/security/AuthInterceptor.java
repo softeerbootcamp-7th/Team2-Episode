@@ -1,7 +1,6 @@
-package com.yat2.episode.auth;
+package com.yat2.episode.auth.security;
 
-import com.yat2.episode.auth.annotation.Public;
-import com.yat2.episode.auth.token.JwtProvider;
+import com.yat2.episode.auth.jwt.JwtProvider;
 import com.yat2.episode.global.constant.RequestAttrs;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
@@ -13,7 +12,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import static com.yat2.episode.auth.token.AuthCookieNames.ACCESS_COOKIE_NAME;
+import static com.yat2.episode.auth.cookie.AuthCookieNames.ACCESS_COOKIE_NAME;
 
 @Component
 @RequiredArgsConstructor

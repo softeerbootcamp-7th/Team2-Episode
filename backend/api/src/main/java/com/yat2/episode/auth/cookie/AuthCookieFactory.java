@@ -1,13 +1,12 @@
-package com.yat2.episode.auth.token;
+package com.yat2.episode.auth.cookie;
 
-import com.yat2.episode.auth.config.CookieProperties;
-import com.yat2.episode.auth.config.JwtProperties;
+import com.yat2.episode.auth.jwt.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import static com.yat2.episode.auth.token.AuthCookieNames.*;
+import static com.yat2.episode.auth.cookie.AuthCookieNames.*;
 
 @Component
 @RequiredArgsConstructor
