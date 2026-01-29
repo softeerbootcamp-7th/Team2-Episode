@@ -175,7 +175,7 @@ public class MindmapController {
         Long userId = authService.getUserIdByToken(token);
         MindmapCreatedWithUrlDto resBody = mindmapService.createMindmap(userId, reqBody);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
+                .path("/{mindmapId}")
                 .buildAndExpand(resBody.mindmap().mindmapId())
                 .toUri();
 
