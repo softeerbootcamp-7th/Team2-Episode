@@ -1,10 +1,10 @@
 package com.yat2.episode.auth;
 
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.yat2.episode.auth.dto.IssuedTokens;
-import com.yat2.episode.auth.dto.KakaoTokenResponse;
+import com.yat2.episode.auth.jwt.IssuedTokens;
+import com.yat2.episode.auth.oauth.KakaoTokenResponse;
 import com.yat2.episode.auth.refresh.RefreshTokenService;
-import com.yat2.episode.auth.token.JwtProvider;
+import com.yat2.episode.auth.jwt.JwtProvider;
 import com.yat2.episode.auth.oauth.KakaoIdTokenVerifier;
 import com.yat2.episode.auth.oauth.KakaoOAuthClient;
 import com.yat2.episode.users.Users;
@@ -48,6 +48,10 @@ public class AuthService {
         return tokens;
     }
 
+    public Long getUserIdByToken(String token){
+        return jwtProvider.verifyAccessTokenAndGetUserId(token);
+    }
+  
     @Transactional
     public IssuedTokens refresh(String refreshToken) {
         Long userId = jwtProvider.verifyRefreshTokenAndGetUserId(refreshToken);
