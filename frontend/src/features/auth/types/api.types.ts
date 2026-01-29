@@ -18,6 +18,8 @@ export type AuthCheckResponse = {
     isAuthenticated: boolean;
     userId: number | null;
     nickname: string | null;
+    onboardingCompleted: boolean | null;
+    featureGuideCompleted: boolean | null;
 };
 
 /**
@@ -39,5 +41,7 @@ export function authCheckResponseToUser(response: AuthCheckResponse): User | nul
     return {
         userId: response.userId!,
         nickname: response.nickname!,
+        onboardingCompleted: response.onboardingCompleted,
+        featureGuideCompleted: response.featureGuideCompleted,
     };
 }

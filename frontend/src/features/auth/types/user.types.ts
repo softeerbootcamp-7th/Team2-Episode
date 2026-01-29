@@ -4,4 +4,6 @@
 export type User = {
     userId: number;
     nickname: string;
+    onboardingCompleted: boolean;
+    featureGuideCompleted: boolean;
 };
