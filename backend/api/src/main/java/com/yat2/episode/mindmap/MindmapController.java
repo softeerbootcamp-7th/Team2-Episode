@@ -66,6 +66,37 @@ public class MindmapController {
     }
 
     @Operation(
+            summary = "마인드맵 조회",
+            description = """
+                    입력된 마인드맵의 UUID를 기반으로 마인드맵 데이터를 조회합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "마인드맵 조회 성공"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = """
+                            인증 실패
+                            - UNAUTHORIZED
+                            - AUTH_EXPIRED
+                            - INVALID_TOKEN
+                            - INVALID_TOKEN_SIGNATURE
+                            - INVALID_TOKEN_ISSUER
+                            - INVALID_TOKEN_TYPE
+                            """,
+                    content = @Content
+            )
+    })
+    @GetMapping("/{mindmapId}")
+    public ResponseEntity<MindmapDataDto> getMindmap(
+            @CookieValue(name = "access_token", required = false) String token,
+            @PathVariable String UUID
+    ) {
+        Long userId = authService.getUserIdByToken(token);
+        return ResponseEntity.ok(mindmapService.getMindmapById(userId, UUID));
+    }
+
+    @Operation(
             summary = "내 마인드맵 이름 목록 조회",
             description = """
                     로그인한 사용자가 참여 중인 마인드맵의 식별 정보(아이디, 이름) 목록을 조회합니다.

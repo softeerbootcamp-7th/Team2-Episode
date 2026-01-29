@@ -1,5 +1,7 @@
 package com.yat2.episode.mindmap;
 
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
 import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
@@ -19,13 +21,15 @@ public class MindmapService {
     private final MindmapRepository mindmapRepository;
     private final MindmapParticipantRepository mindmapParticipantRepository;
 
-    public Optional<Mindmap> getMindmapById(String mindmapIdStr) {
-        try {
-            UUID mindmapId = UUID.fromString(mindmapIdStr);
-            return mindmapRepository.findById(mindmapId);
-        } catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
+    public MindmapDataDto getMindmapById(Long userId, String mindmapIdStr) {
+        return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
+    }
+
+    public void validAccessMindmap(Long userId, String uuidStr){
+        UUID uuid = getUUID(uuidStr);
+
+        mindmapParticipantRepository.findByMindmapIdAndUserId(uuid, userId)
+                .orElseThrow(()->new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 
     public List<MindmapDataDto> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
@@ -65,5 +69,19 @@ public class MindmapService {
         //todo: mindmap uuid 기반 s3의 presigned URL 셍성
         //todo: 생성된 모든 값을 기반으로 하여 응답 생성
         return new MindmapCreatedWithUrlDto(null, null);
+    }
+
+    private UUID getUUID(String uuidStr){
+        try {
+            return UUID.fromString(uuidStr);
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_MINDMAP_UUID);
+        }
+    }
+
+    private Mindmap getMindmapByUUIDString(Long userId, String uuidStr){
+        UUID mindmapId = getUUID(uuidStr);
+        return mindmapRepository.findByIdAndUserId(mindmapId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 }
