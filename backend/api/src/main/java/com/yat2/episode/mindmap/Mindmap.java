@@ -20,6 +20,7 @@ import java.util.UUID;
 public class Mindmap {
 
     @Id
+    @GeneratedValue
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
