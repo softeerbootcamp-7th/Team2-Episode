@@ -68,6 +68,8 @@ public class MindmapService {
     @Transactional(rollbackFor = Exception.class)
     public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body){
         String finalTitle = body.title();
+        Users user = usersRepository.findByKakaoId(userId)
+                .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (body.isShared()) {
             if (finalTitle == null || finalTitle.isBlank()) {
@@ -76,7 +78,7 @@ public class MindmapService {
         }
         else {
             if (finalTitle == null || finalTitle.isBlank()) {
-                finalTitle = getPrivateMindmapName(userId);
+                finalTitle = getPrivateMindmapName(user);
             }
         }
 
@@ -86,18 +88,15 @@ public class MindmapService {
                 .isFavorite(false)
                 .build();
 
-        Users user = usersRepository.findByKakaoId(userId)
-                .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
         Mindmap savedMindmap = mindmapRepository.save(mindmap);
         
         MindmapParticipant participant = MindmapParticipant.builder()
                 .user(user).mindmap(mindmap).build();
 
         mindmapParticipantRepository.save(participant);
-        //todo: 사용자와 mindmap 사이 참여 관계를 MindmapParticipant에 저장
         //todo: mindmap uuid 기반 s3의 presigned URL 셍성
-        //todo: 생성된 모든 값을 기반으로 하여 응답 생성
-        return new MindmapCreatedWithUrlDto(null, null);
+
+        return new MindmapCreatedWithUrlDto(MindmapDataDto.of(savedMindmap), null);
     }
 
     private UUID getUUID(String uuidStr){
