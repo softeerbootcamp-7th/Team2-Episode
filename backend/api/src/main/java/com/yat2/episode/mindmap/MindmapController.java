@@ -19,6 +19,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
+
 
 @RequiredArgsConstructor
 @RestController
@@ -70,10 +72,9 @@ public class MindmapController {
     })
     @GetMapping("/{mindmapId}")
     public ResponseEntity<MindmapDataDto> getMindmap(
-            @CookieValue(name = "access_token", required = false) String token,
+            @RequestAttribute(USER_ID) long userId,
             @PathVariable String mindmapId
     ) {
-        Long userId = authService.getUserIdByToken(token);
         return ResponseEntity.ok(mindmapService.getMindmapById(userId, mindmapId));
     }
 
@@ -92,8 +93,7 @@ public class MindmapController {
 
     })
     @GetMapping("/titles")
-    public ResponseEntity<List<MindmapIdentityDto>> getMyMindmapNames(@CookieValue(name = "access_token", required = false) String token) {
-        Long userId = authService.getUserIdByToken(token);
+    public ResponseEntity<List<MindmapIdentityDto>> getMyMindmapNames(@RequestAttribute(USER_ID) long userId) {
         return ResponseEntity.ok(mindmapService.getMindmapList(userId));
     }
 
@@ -123,8 +123,7 @@ public class MindmapController {
 
     })
     @PostMapping()
-    public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@CookieValue(name = "access_token", required = false) String token, @RequestBody MindmapArgsReqDto reqBody) {
-        Long userId = authService.getUserIdByToken(token);
+    public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@RequestAttribute(USER_ID) long userId, @RequestBody MindmapArgsReqDto reqBody) {
         MindmapCreatedWithUrlDto resBody = mindmapService.createMindmap(userId, reqBody);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{mindmapId}")
