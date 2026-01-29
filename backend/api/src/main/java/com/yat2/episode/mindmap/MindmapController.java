@@ -2,6 +2,7 @@ package com.yat2.episode.mindmap;
 
 import com.yat2.episode.auth.AuthService;
 import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
+import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 
@@ -120,10 +122,13 @@ public class MindmapController {
 
     })
     @PostMapping()
-    public ResponseEntity<Object> createMindmap(@CookieValue(name = "access_token", required = false) String token, @RequestBody MindmapArgsReqDto reqBody) {
+    public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@CookieValue(name = "access_token", required = false) String token, @RequestBody MindmapArgsReqDto reqBody) {
         Long userId = authService.getUserIdByToken(token);
+        MindmapCreatedWithUrlDto resBody = mindmapService.createMindmap(userId, reqBody);
 
-        return ResponseEntity.ok(mindmapService.createMindmap(userId, reqBody));
+        return ResponseEntity
+                .created(URI.create("/mindmap/" + resBody.mindmap().mindmapId()))
+                .body(resBody);
     }
 
     @PostMapping("/connect/{mindmapId}")
