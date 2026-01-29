@@ -1,6 +1,6 @@
 import { ComponentPropsWithoutRef } from "react";
-import AddNodeDot from "@features/mindmap/node/add_node/AddNodeDot";
-import AddNodeArrow from "@features/mindmap/node/add_node/AddNodeArrow";
+import AddNodeDot from "@features/mindmap/node/components/add_node/AddNodeDot";
+import AddNodeArrow from "@features/mindmap/node/components/add_node/AddNodeArrow";
 import { cn } from "@utils/cn";
 import { NodeColor } from "@features/mindmap/node/constants/colors";
 import { cva, type VariantProps } from "class-variance-authority";

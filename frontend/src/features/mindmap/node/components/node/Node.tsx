@@ -3,8 +3,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@utils/cn";
 import { type NodeColor } from "@features/mindmap/node/constants/colors";
 import { colorBySize, shadowClass } from "@features/mindmap/node/utils/style";
-import AddNode from "@features/mindmap/node/add_node/AddNode";
-import MenuNodeButton from "@features/mindmap/node/menu_node/MenuNodeButton";
+import AddNode from "@features/mindmap/node/components/add_node/AddNode";
+import MenuNodeButton from "@features/mindmap/node/components/menu_node/MenuNodeButton";
 import { NodeMode } from "@features/mindmap/node/types/node";
 
 type Props = ComponentPropsWithoutRef<"div"> & {
