@@ -30,18 +30,18 @@ public class MindmapService {
         return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
     }
 
-    public void validAccessMindmap(Long userId, String uuidStr){
+    public void validAccessMindmap(Long userId, String uuidStr) {
         UUID uuid = getUUID(uuidStr);
 
         mindmapParticipantRepository.findByMindmapIdAndUserId(uuid, userId)
-                .orElseThrow(()->new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 
     public List<MindmapDataDto> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
         return switch (type) {
             case PRIVATE -> getMindmapsByShared(userId, false);
-            case PUBLIC  -> getMindmapsByShared(userId, true);
-            default      -> getAllMindmap(userId);
+            case PUBLIC -> getMindmapsByShared(userId, true);
+            default -> getAllMindmap(userId);
         };
     }
 
@@ -68,17 +68,16 @@ public class MindmapService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body){
+    public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body) {
         String finalTitle = body.title();
         Users user = usersRepository.findByKakaoId(userId)
-                .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (body.isShared()) {
             if (finalTitle == null || finalTitle.isBlank()) {
                 throw new CustomException(ErrorCode.MINDMAP_TITLE_REQUIRED);
             }
-        }
-        else {
+        } else {
             if (finalTitle == null || finalTitle.isBlank()) {
                 finalTitle = getPrivateMindmapName(user);
             }
@@ -91,12 +90,12 @@ public class MindmapService {
                 .build();
 
         Mindmap savedMindmap = mindmapRepository.save(mindmap);
-        
+
         MindmapParticipant participant = MindmapParticipant.builder()
                 .user(user).mindmap(mindmap).build();
 
         mindmapParticipantRepository.save(participant);
-        String presignedURL = snapshotRepository.createPresignedUploadUrl("maps/"+savedMindmap.getId());
+        String presignedURL = snapshotRepository.createPresignedUploadUrl("maps/" + savedMindmap.getId());
 
         return new MindmapCreatedWithUrlDto(MindmapDataDto.of(savedMindmap), presignedURL);
     }
@@ -104,7 +103,7 @@ public class MindmapService {
     //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제
     //todo: disconnect 시 마인드맵 참여자가 0인 경우의 s3 데이터와 db 내 마인드맵 데이터 삭제
 
-    private UUID getUUID(String uuidStr){
+    private UUID getUUID(String uuidStr) {
         try {
             return UUID.fromString(uuidStr);
         } catch (IllegalArgumentException e) {
@@ -112,19 +111,21 @@ public class MindmapService {
         }
     }
 
-    private Mindmap getMindmapByUUIDString(Long userId, String uuidStr){
+    private Mindmap getMindmapByUUIDString(Long userId, String uuidStr) {
         UUID mindmapId = getUUID(uuidStr);
         return mindmapRepository.findByIdAndUserId(mindmapId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 
-    private String getPrivateMindmapName(Users user){
+    private String getPrivateMindmapName(Users user) {
         StringBuilder sb = new StringBuilder(user.getNickname())
                 .append(MindmapConstants.PRIVATE_NAME);
         Long count = mindmapRepository.getCountSameNameByNameAndUserId(sb.toString(), user.getKakaoId());
-        sb.append("(")
-        .append(count)
-        .append(")");
+        if (count > 0) {
+            sb.append("(")
+                    .append(count)
+                    .append(")");
+        }
         return sb.toString();
     }
 
