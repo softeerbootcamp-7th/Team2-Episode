@@ -37,7 +37,7 @@ public class AuthController {
     private final KakaoProperties kakaoProperties;
     private final AuthService authService;
     private final AuthCookieFactory authCookieFactory;
-    private final OAuthRedirectProperties OAuthRedirectProperties;
+    private final OAuthRedirectProperties oAuthRedirectProperties;
     private final RefreshTokenService refreshTokenService;
 
     @GetMapping("/login")
@@ -110,7 +110,7 @@ public class AuthController {
         ResponseCookie accessCookie = authCookieFactory.access(tokens.accessToken());
         ResponseCookie refreshCookie = authCookieFactory.refresh(tokens.refreshToken());
 
-        String redirect = isLocalDev ? OAuthRedirectProperties.getLocal() : OAuthRedirectProperties.getProd();
+        String redirect = isLocalDev ? oAuthRedirectProperties.getLocal() : oAuthRedirectProperties.getProd();
 
         return ResponseEntity.status(302)
                 .header(HttpHeaders.LOCATION, redirect)
