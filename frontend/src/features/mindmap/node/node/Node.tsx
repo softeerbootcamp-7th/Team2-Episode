@@ -49,7 +49,15 @@ type NodeContentProps = ComponentPropsWithoutRef<"div"> &
         children: ReactNode;
     };
 
-function NodeContent({ size = "sm", color, variant = "default", className, children, ...rest }: NodeContentProps) {
+function NodeContent({
+    size = "sm",
+    color,
+    variant = "default",
+    className,
+    children,
+    onClick,
+    ...rest
+}: NodeContentProps) {
     const [isSelected, setIsSelected] = useState(false);
 
     const getNodeMode = (): NodeMode => {
@@ -62,10 +70,16 @@ function NodeContent({ size = "sm", color, variant = "default", className, child
     const colorClass = colorBySize({ size, color, nodeMode });
     const variantStyles = nodeMode === "selected" || nodeMode === "highlight" ? `${shadowClass(color)}` : "";
 
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        setIsSelected((prev) => !prev);
+        if (onClick) {
+            onClick(e);
+        }
+    };
     return (
         <div
             className={cn(nodeVariants({ size }), colorClass, variantStyles, className)}
-            onClick={() => setIsSelected(!isSelected)}
+            onClick={handleClick}
             {...rest}
         >
             {children}
