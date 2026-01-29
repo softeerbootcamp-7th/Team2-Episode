@@ -29,7 +29,7 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
             if (isRefreshing && refreshPromise) {
                 const refreshed = await refreshPromise;
                 if (!refreshed) {
-                    throw new Error("Token refresh failed");
+                    throw new Error("TOKEN_REFRESH_FAILED");
                 }
             } else {
                 const promise = refreshToken();
@@ -39,8 +39,7 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
                 setRefreshState(false, null);
 
                 if (!refreshed) {
-                    window.location.href = "/login";
-                    throw new Error("Token refresh failed");
+                    throw new Error("TOKEN_REFRESH_FAILED");
                 }
             }
 
