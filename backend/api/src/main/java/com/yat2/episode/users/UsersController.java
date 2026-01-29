@@ -1,20 +1,25 @@
 package com.yat2.episode.users;
 
+import com.yat2.episode.users.dto.UserMeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
+import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UsersController {
-
     private final UsersService usersService;
+    private final UsersRepository usersRepository;
 
-    public UsersController(UsersService usersService) {
-        this.usersService = usersService;
+    @GetMapping("/me")
+    public ResponseEntity<UserMeResponse> getMe(@RequestAttribute(USER_ID) long userId){
+        return ResponseEntity.ok(usersService.getMe(userId));
     }
 
     @Operation(
