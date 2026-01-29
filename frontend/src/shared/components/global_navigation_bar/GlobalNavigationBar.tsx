@@ -15,8 +15,8 @@ export default function GlobalNavigationBar({ variant = "white", rightSlot }: Pr
     const navigate = useNavigate();
     const location = useLocation();
 
-    const isMatchPath = (targetPath: string) => {
-        return location.pathname === targetPath;
+    const includePath = (targetPath: string) => {
+        return location.pathname.includes(targetPath);
     };
 
     return (
@@ -28,21 +28,21 @@ export default function GlobalNavigationBar({ variant = "white", rightSlot }: Pr
                 <Button
                     size="sm"
                     onClick={() => navigate(routeHelper.mindmap.list())}
-                    variant={isMatchPath(routeHelper.mindmap.list()) ? "tertiary" : "ghost"}
+                    variant={includePath(routeHelper.mindmap.list()) ? "tertiary" : "ghost"}
                 >
                     마인드맵
                 </Button>
                 <Button
                     size="sm"
                     onClick={() => navigate(routeHelper.episode_archive())}
-                    variant={isMatchPath(routeHelper.episode_archive()) ? "tertiary" : "ghost"}
+                    variant={includePath(routeHelper.episode_archive()) ? "tertiary" : "ghost"}
                 >
                     에피소드 보관함
                 </Button>
                 <Button
                     size="sm"
                     onClick={() => navigate(routeHelper.self_diagnosis.list())}
-                    variant={isMatchPath(routeHelper.self_diagnosis.list()) ? "tertiary" : "ghost"}
+                    variant={includePath(routeHelper.self_diagnosis.list()) ? "tertiary" : "ghost"}
                 >
                     기출문항 셀프진단
                 </Button>
