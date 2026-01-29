@@ -11,7 +11,13 @@ type Props = ComponentPropsWithoutRef<"div"> & {
 
 export default function AddNode({ color, direction, className, ...rest }: Props) {
     return (
-        <div {...rest} className={cn("relative w-13.5 h-13.5 flex items-center justify-center", className)}>
+        <div
+            {...rest}
+            className={cn(
+                "relative w-13.5 h-13.5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                className,
+            )}
+        >
             <div className="transition-opacity duration-300">
                 <AddNodeDot color={color} />
             </div>
