@@ -42,19 +42,9 @@ public class MindmapController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공"),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = """
-                            인증 실패
-                            - UNAUTHORIZED
-                            - AUTH_EXPIRED
-                            - INVALID_TOKEN
-                            - INVALID_TOKEN_SIGNATURE
-                            - INVALID_TOKEN_ISSUER
-                            - INVALID_TOKEN_TYPE
-                            """,
-                    content = @Content
-            )
+            @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
+            @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
     })
     @GetMapping
     public ResponseEntity<List<MindmapDataDto>> getMindmaps(
@@ -74,19 +64,9 @@ public class MindmapController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "마인드맵 조회 성공"),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = """
-                            인증 실패
-                            - UNAUTHORIZED
-                            - AUTH_EXPIRED
-                            - INVALID_TOKEN
-                            - INVALID_TOKEN_SIGNATURE
-                            - INVALID_TOKEN_ISSUER
-                            - INVALID_TOKEN_TYPE
-                            """,
-                    content = @Content
-            )
+            @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
+            @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
     })
     @GetMapping("/{mindmapId}")
     public ResponseEntity<MindmapDataDto> getMindmap(
@@ -106,19 +86,9 @@ public class MindmapController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "마인드맵 이름 목록 조회 성공"),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = """
-                            인증 실패
-                            - UNAUTHORIZED
-                            - AUTH_EXPIRED
-                            - INVALID_TOKEN
-                            - INVALID_TOKEN_SIGNATURE
-                            - INVALID_TOKEN_ISSUER
-                            - INVALID_TOKEN_TYPE
-                            """,
-                    content = @Content
-            )
+            @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
+            @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 
     })
     @GetMapping("/titles")
@@ -142,32 +112,14 @@ public class MindmapController {
             @ApiResponse(
                     responseCode = "400",
                     description = """
-                        잘못된 요청
-                        - MINDMAP_TITLE_REQUIRED: 팀 마인드맵 생성 시 제목 누락
-                        """,
+                            잘못된 요청
+                            - MINDMAP_TITLE_REQUIRED: 팀 마인드맵 생성 시 제목 누락
+                            """,
                     content = @Content
             ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = """
-                        인증 실패
-                            - UNAUTHORIZED
-                            - AUTH_EXPIRED
-                            - INVALID_TOKEN
-                            - INVALID_TOKEN_SIGNATURE
-                            - INVALID_TOKEN_ISSUER
-                            - INVALID_TOKEN_TYPE
-                        """,
-                    content = @Content
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = """
-                        리소스 없음
-                        - USER_NOT_FOUND: 토큰의 사용자 정보를 DB에서 찾을 수 없음
-                        """,
-                    content = @Content
-            )
+            @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
+            @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 
     })
     @PostMapping()
