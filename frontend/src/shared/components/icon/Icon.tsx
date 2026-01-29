@@ -1,12 +1,12 @@
 type Props = {
     name: (typeof ICON_NAMES)[number];
-
     color?: string;
     size?: number | string;
     strokeWidth?: number | string;
+    rotate?: number;
 };
 
-function Icon({ color = "currentColor", size = 24, strokeWidth = 1.6, name }: Props) {
+function Icon({ color = "currentColor", size = 24, strokeWidth = 1.6, name, rotate = 0 }: Props) {
     return (
         <svg
             color={color}
@@ -17,6 +17,10 @@ function Icon({ color = "currentColor", size = 24, strokeWidth = 1.6, name }: Pr
             strokeLinejoin="round"
             viewBox="0 0 24 24"
             fill="none"
+            style={{
+                transform: `rotate(${rotate}deg)`,
+                transition: "transform 0.2s ease-in-out",
+            }}
         >
             <use href={`/icons.svg#${name}`} />
         </svg>
@@ -66,6 +70,7 @@ const ICON_NAMES = [
     "ic_writing",
     "ic_x_circle",
     "ic_x",
+    "ic_kakao_login",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
