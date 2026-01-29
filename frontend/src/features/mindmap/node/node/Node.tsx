@@ -5,7 +5,7 @@ import { type NodeColor } from "@features/mindmap/node/constants/colors";
 import { colorBySize, shadowClass } from "@features/mindmap/node/utils/style";
 import AddNode from "@features/mindmap/node/add_node/AddNode";
 import MenuNodeButton from "@features/mindmap/node/menu_node/MenuNodeButton";
-import { NodeState } from "@features/mindmap/node/types/node";
+import { NodeMode } from "@features/mindmap/node/types/node";
 
 type Props = ComponentPropsWithoutRef<"div"> & {
     children?: ReactNode;
@@ -35,22 +35,22 @@ function NodeComponent({ className, children, ...rest }: Props) {
 type NodeContentProps = ComponentPropsWithoutRef<"div"> &
     VariantProps<typeof nodeVariants> & {
         color: NodeColor;
-        variant?: NodeState;
+        variant?: NodeMode;
         children: ReactNode;
     };
 
 function NodeContent({ size = "sm", color, variant = "default", className, children, ...rest }: NodeContentProps) {
     const [isSelected, setIsSelected] = useState(false);
 
-    const getState = (): NodeState => {
+    const getNodeMode = (): NodeMode => {
         if (isSelected) return "selected";
         if (variant === "highlight") return "highlight";
         return "default";
     };
-    const state = getState();
+    const nodeMode = getNodeMode();
 
-    const colorClass = colorBySize({ size, color, state });
-    const variantStyles = state === "selected" || state === "highlight" ? `${shadowClass(color)}` : "";
+    const colorClass = colorBySize({ size, color, nodeMode });
+    const variantStyles = nodeMode === "selected" || nodeMode === "highlight" ? `${shadowClass(color)}` : "";
 
     return (
         <div
@@ -63,7 +63,7 @@ function NodeContent({ size = "sm", color, variant = "default", className, child
                 color={color}
                 className={cn(
                     "absolute top-0 right-0 transition-opacity duration-300",
-                    state === "selected" ? "opacity-100" : "opacity-0",
+                    nodeMode === "selected" ? "opacity-100" : "opacity-0",
                 )}
             />
         </div>

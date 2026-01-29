@@ -1,1 +1,1 @@
-export type NodeState = "default" | "highlight" | "selected";
+export type NodeMode = "default" | "highlight" | "selected";

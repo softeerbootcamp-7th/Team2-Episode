@@ -1,15 +1,23 @@
 import { COLOR_CLASS_MAP, SHADOW_CLASS_MAP, type NodeColor } from "@features/mindmap/node/constants/colors";
 
-import { NodeState } from "@features/mindmap/node/types/node";
+import { NodeMode } from "@features/mindmap/node/types/node";
 
 export function shadowClass(color: NodeColor) {
     return SHADOW_CLASS_MAP[color];
 }
 
-export function colorBySize({ size, color, state }: { size: "sm" | "md" | "lg"; color: NodeColor; state: NodeState }) {
+export function colorBySize({
+    size,
+    color,
+    nodeMode,
+}: {
+    size: "sm" | "md" | "lg";
+    color: NodeColor;
+    nodeMode: NodeMode;
+}) {
     const border = COLOR_CLASS_MAP.border[color][100];
 
-    const STATE_SIZE_STYLES: Record<NodeState, Record<"sm" | "md" | "lg", string>> = {
+    const STATE_SIZE_STYLES: Record<NodeMode, Record<"sm" | "md" | "lg", string>> = {
         default: {
             sm: `border ${border} bg-white`,
             md: `border ${border} ${COLOR_CLASS_MAP.bg[color][5]}`,
@@ -27,5 +35,5 @@ export function colorBySize({ size, color, state }: { size: "sm" | "md" | "lg"; 
         },
     };
 
-    return STATE_SIZE_STYLES[state][size];
+    return STATE_SIZE_STYLES[nodeMode][size];
 }
