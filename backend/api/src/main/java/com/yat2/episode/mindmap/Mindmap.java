@@ -1,6 +1,7 @@
 package com.yat2.episode.mindmap;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@Builder
 @Table(name = "mindmap")
 public class Mindmap {
 

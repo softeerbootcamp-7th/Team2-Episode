@@ -2,12 +2,16 @@ package com.yat2.episode.mindmap;
 
 import com.yat2.episode.users.Users;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@Builder
+@RequiredArgsConstructor
 @Table(name = "mindmap_participant")
 public class MindmapParticipant {
 
@@ -23,4 +27,8 @@ public class MindmapParticipant {
     @JoinColumn(name = "mindmap_id", nullable = false)
     private Mindmap mindmap;
 
+    public MindmapParticipant(Users user, Mindmap mindmap) {
+        this.user = user;
+        this.mindmap = mindmap;
+    }
 }

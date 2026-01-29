@@ -52,4 +52,13 @@ public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
                 WHERE m.id = :uuid and p.user.kakaoId = :userId
             """)
     Optional<Mindmap> findByIdAndUserId(@Param("uuid") UUID uuid, @Param("userId") Long userId);
+
+    @Query("""
+                SELECT COUNT(p)
+                FROM MindmapParticipant p
+                JOIN p.mindmap m
+                WHERE m.name LIKE CONCAT(:name, '%')
+                  AND p.user.kakaoId = :userId
+            """)
+    Long getCountSameNameByNameAndUserId(@Param("name") String name, @Param("userId") Long userId);
 }

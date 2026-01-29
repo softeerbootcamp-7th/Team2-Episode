@@ -1,5 +1,6 @@
 package com.yat2.episode.mindmap;
 
+import com.yat2.episode.global.constant.MindmapConstants;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
@@ -7,6 +8,7 @@ import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import com.yat2.episode.users.Users;
+import com.yat2.episode.users.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class MindmapService {
     private final MindmapRepository mindmapRepository;
     private final MindmapParticipantRepository mindmapParticipantRepository;
+    private final UsersRepository usersRepository;
 
     public MindmapDataDto getMindmapById(Long userId, String mindmapIdStr) {
         return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
@@ -62,10 +65,35 @@ public class MindmapService {
                 .toList();
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body){
-        //todo: title과 shared 값을 기반으로 defaultTitle 생성
-        //todo: 입력 값 기반 mindmap 데이터를 db에 저장
+        String finalTitle = body.title();
+
+        if (body.isShared()) {
+            if (finalTitle == null || finalTitle.isBlank()) {
+                throw new CustomException(ErrorCode.MINDMAP_TITLE_REQUIRED);
+            }
+        }
+        else {
+            if (finalTitle == null || finalTitle.isBlank()) {
+                finalTitle = getPrivateMindmapName(userId);
+            }
+        }
+
+        Mindmap mindmap = Mindmap.builder()
+                .name(finalTitle)
+                .shared(body.isShared())
+                .isFavorite(false)
+                .build();
+
+        Users user = usersRepository.findByKakaoId(userId)
+                .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Mindmap savedMindmap = mindmapRepository.save(mindmap);
+        
+        MindmapParticipant participant = MindmapParticipant.builder()
+                .user(user).mindmap(mindmap).build();
+
+        mindmapParticipantRepository.save(participant);
         //todo: 사용자와 mindmap 사이 참여 관계를 MindmapParticipant에 저장
         //todo: mindmap uuid 기반 s3의 presigned URL 셍성
         //todo: 생성된 모든 값을 기반으로 하여 응답 생성
@@ -85,4 +113,15 @@ public class MindmapService {
         return mindmapRepository.findByIdAndUserId(mindmapId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
+
+    private String getPrivateMindmapName(Users user){
+        StringBuilder sb = new StringBuilder(user.getNickname())
+                .append(MindmapConstants.PRIVATE_NAME);
+        Long count = mindmapRepository.getCountSameNameByNameAndUserId(sb.toString(), user.getKakaoId());
+        sb.append("(")
+        .append(count)
+        .append(")");
+        return sb.toString();
+    }
+
 }
