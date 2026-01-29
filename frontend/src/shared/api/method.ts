@@ -1,17 +1,20 @@
 import type { FetchOptions } from "@shared/api/types";
 import { fetchWithAuth } from "@shared/api/client";
 
-type PostParams<TBody extends object> = {
+type BaseParams = {
     endpoint: string;
+    options?: FetchOptions;
+};
+
+type DataParams<TBody extends object> = BaseParams & {
     data?: TBody;
-    options: FetchOptions;
 };
 
 /**
  * GET 요청
  */
-export function get<T>(endpoint: string, options?: FetchOptions): Promise<T> {
-    return fetchWithAuth<T>(endpoint, { ...options, method: "GET" });
+export function get<TResponse>({ endpoint, options }: BaseParams): Promise<TResponse> {
+    return fetchWithAuth<TResponse>(endpoint, { ...options, method: "GET" });
 }
 
 /**
@@ -23,7 +26,7 @@ export function post<TResponse, TBody extends object>({
     endpoint,
     data,
     options,
-}: PostParams<TBody>): Promise<TResponse> {
+}: DataParams<TBody>): Promise<TResponse> {
     return fetchWithAuth<TResponse>(endpoint, {
         ...options,
         method: "POST",
@@ -34,7 +37,7 @@ export function post<TResponse, TBody extends object>({
 /**
  * PUT 요청
  */
-export function put<TResponse, TBody extends object>(params: PostParams<TBody>): Promise<TResponse> {
+export function put<TResponse, TBody extends object>(params: DataParams<TBody>): Promise<TResponse> {
     const { endpoint, data, options } = params;
     return fetchWithAuth<TResponse>(endpoint, {
         ...options,
@@ -46,6 +49,6 @@ export function put<TResponse, TBody extends object>(params: PostParams<TBody>):
 /**
  * DELETE 요청
  */
-export function del<T>(endpoint: string, options?: FetchOptions): Promise<T> {
-    return fetchWithAuth<T>(endpoint, { ...options, method: "DELETE" });
+export function del<TResponse>({ endpoint, options }: BaseParams): Promise<TResponse> {
+    return fetchWithAuth<TResponse>(endpoint, { ...options, method: "DELETE" });
 }
