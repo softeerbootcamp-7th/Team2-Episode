@@ -39,7 +39,19 @@ public class MindmapController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(
+                    responseCode = "401",
+                    description = """
+                            인증 실패
+                            - UNAUTHORIZED
+                            - AUTH_EXPIRED
+                            - INVALID_TOKEN
+                            - INVALID_TOKEN_SIGNATURE
+                            - INVALID_TOKEN_ISSUER
+                            - INVALID_TOKEN_TYPE
+                            """,
+                    content = @Content
+            )
     })
     @GetMapping
     public ResponseEntity<List<MindmapDataDto>> getMindmaps(
@@ -63,13 +75,13 @@ public class MindmapController {
             @ApiResponse(
                     responseCode = "401",
                     description = """
-                            인증 실패  
-                            - UNAUTHORIZED  
-                            - AUTH_EXPIRED  
-                            - INVALID_TOKEN  
-                            - INVALID_TOKEN_SIGNATURE  
-                            - INVALID_TOKEN_ISSUER  
-                            - INVALID_TOKEN_TYPE  
+                            인증 실패
+                            - UNAUTHORIZED
+                            - AUTH_EXPIRED
+                            - INVALID_TOKEN
+                            - INVALID_TOKEN_SIGNATURE
+                            - INVALID_TOKEN_ISSUER
+                            - INVALID_TOKEN_TYPE
                             """,
                     content = @Content
             )
@@ -81,10 +93,35 @@ public class MindmapController {
         return ResponseEntity.ok(mindmapService.getMindmapList(userId));
     }
 
+    @Operation(
+            summary = "내 마인드맵 생성",
+            description = """
+                    마인드맵을 생성합니다.
+                    팀 마인드맵 생성 시에는 중심 노드가 되는 프로젝트 명이 default 마인드맵 명이 됩니다.
+                    개인 마인드맵 생성 시에는 title에 값을 넣어주지 않으셔도 됩니다. 값이 넣어진 상태로 요청하는 경우
+                    팀/개인 마인드맵에 상관 없이 해당 이름으로 마인드맵을 생성합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "마인드맵 생성 성공"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = """
+                            인증 실패
+                            - UNAUTHORIZED
+                            - AUTH_EXPIRED
+                            - INVALID_TOKEN
+                            - INVALID_TOKEN_SIGNATURE
+                            - INVALID_TOKEN_ISSUER
+                            - INVALID_TOKEN_TYPE
+                            """,
+                    content = @Content
+            )
 
+    })
     @PostMapping()
-    public ResponseEntity<Object> createMindmap(@RequestBody MindmapArgsReqDto reqBody) {
-        // todo: userId 가져오기
+    public ResponseEntity<Object> createMindmap(@CookieValue(name = "access_token", required = false) String token, @RequestBody MindmapArgsReqDto reqBody) {
+        Long userId = authService.getUserIdByToken(token);
         // todo: isShared 여부 기반 웹소켓 로직 추가
         // todo: 기본 활동 타입 인자 기반으로 yDoc 베이스 제공 필요
         return ResponseEntity.ok(null);

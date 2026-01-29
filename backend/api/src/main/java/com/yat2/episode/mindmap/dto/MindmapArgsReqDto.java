@@ -4,6 +4,6 @@ import java.util.List;
 
 public record MindmapArgsReqDto(
         boolean isShared,
-        List<String> activityCases
+        String title
 ) {
 }
