@@ -20,15 +20,12 @@ public class Question {
     @JoinColumn(name = "competency_type_id", nullable = false)
     private CompetencyType competencyType;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "job_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_id")
     private Job job;
 
     @Column(name = "content", nullable = false, length = 200)
     private String content;
-
-    @Column(name = "guidance_message", nullable = false, length = 200)
-    private String guidanceMessage;
 
     protected Question() {
     }
@@ -36,12 +33,10 @@ public class Question {
     public Question(
             CompetencyType competencyType,
             Job job,
-            String content,
-            String guidanceMessage
+            String content
     ) {
         this.competencyType = competencyType;
         this.job = job;
         this.content = content;
-        this.guidanceMessage = guidanceMessage;
     }
 }
