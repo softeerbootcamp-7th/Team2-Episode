@@ -1,10 +1,7 @@
 package com.yat2.episode.mindmap;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,6 +14,7 @@ import java.util.UUID;
 @Setter
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "mindmap")
 public class Mindmap {
@@ -42,14 +40,4 @@ public class Mindmap {
 
     @Column(name = "is_favorite", nullable = false)
     private boolean isFavorite;
-
-    protected Mindmap() {
-    }
-
-    public Mindmap(UUID id, boolean shared, boolean isFavorite) {
-        this.id = id;
-        this.shared = shared;
-        this.isFavorite = isFavorite;
-    }
-
 }
