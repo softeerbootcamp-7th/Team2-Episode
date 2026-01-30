@@ -30,3 +30,10 @@ export const ERROR_CODES = {
     NOT_FOUND: "존재하지 않는 API 입니다.",
     METHOD_NOT_ALLOWED: "지원하지 않는 HTTP 메서드입니다.",
 } as const;
+
+export const ERROR_META = {
+    TOKEN_REFRESH_ERROR: {
+        name: "TOKEN_REFRESH_ERROR",
+        defaultMessage: "토큰 갱신에 실패했습니다.",
+    },
+} as const;
