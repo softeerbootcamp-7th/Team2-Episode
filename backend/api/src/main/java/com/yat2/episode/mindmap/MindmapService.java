@@ -8,15 +8,11 @@ import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.users.Users;
 import com.yat2.episode.users.UsersRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -28,9 +24,6 @@ public class MindmapService {
     private final UsersRepository usersRepository;
     private final S3SnapshotRepository snapshotRepository;
     private final TransactionTemplate transactionTemplate;
-
-    @Autowired
-    private MindmapService self;
 
     public MindmapDataDto getMindmapById(Long userId, String mindmapIdStr) {
         return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
