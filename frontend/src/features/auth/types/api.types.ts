@@ -1,4 +1,4 @@
-import { User } from "@features/auth/types/user.types";
+import { User } from "@/features/auth/types/user.types";
 
 /**
  * 카카오 로그인 API
@@ -18,8 +18,8 @@ export type AuthCheckResponse = {
     isAuthenticated: boolean;
     userId: number | null;
     nickname: string | null;
-    onboardingCompleted: boolean | null;
-    featureGuideCompleted: boolean | null;
+    onboarded: boolean | null;
+    guideSeen: boolean | null;
 };
 
 /**
@@ -41,7 +41,7 @@ export function authCheckResponseToUser(response: AuthCheckResponse): User | nul
     return {
         userId: response.userId!,
         nickname: response.nickname!,
-        onboardingCompleted: response.onboardingCompleted!,
-        featureGuideCompleted: response.featureGuideCompleted!,
+        onboarded: response.onboarded!,
+        guideSeen: response.guideSeen!,
     };
 }
