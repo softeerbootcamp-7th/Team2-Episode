@@ -1,3 +1,9 @@
+export type ErrorCodeKey = keyof typeof ERROR_CODES;
+
+export function isErrorCodeKey(code: string): code is ErrorCodeKey {
+    return Object.prototype.hasOwnProperty.call(ERROR_CODES, code);
+}
+
 export const ERROR_CODES = {
     // Mindmap
     MINDMAP_NOT_FOUND: "마인드맵을 찾을 수 없습니다.",
