@@ -30,18 +30,3 @@ export type ApiError = {
     code: string;
     message: string;
 };
-
-/**
- * 유틸리티: AuthCheckResponse를 User로 반환
- */
-export function authCheckResponseToUser(response: AuthCheckResponse): User | null {
-    if (!response.isAuthenticated) {
-        return null;
-    }
-    return {
-        userId: response.userId!,
-        nickname: response.nickname!,
-        onboarded: response.onboarded!,
-        guideSeen: response.guideSeen!,
-    };
-}
