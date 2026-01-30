@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 @EntityScan(basePackages = {"com.yat2.episode"})
 @ConfigurationPropertiesScan("com.yat2.episode")
-@EnableJpaAuditing
 public class EpisodeApplication {
 
 	public static void main(String[] args) {

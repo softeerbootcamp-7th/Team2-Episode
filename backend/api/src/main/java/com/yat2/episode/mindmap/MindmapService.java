@@ -3,11 +3,8 @@ package com.yat2.episode.mindmap;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.mindmap.dto.*;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import com.yat2.episode.users.Users;
 import com.yat2.episode.users.UsersRepository;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +85,7 @@ public class MindmapService {
         mindmapParticipantRepository.save(participant);
         String presignedURL = snapshotRepository.createPresignedUploadUrl("maps/" + savedMindmap.getId());
 
-        return new MindmapCreatedWithUrlDto(MindmapDataDto.of(savedMindmap), presignedURL);
+        return new MindmapCreatedWithUrlDto(MindmapDataExceptDateDto.of(savedMindmap), presignedURL);
     }
 
     //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제

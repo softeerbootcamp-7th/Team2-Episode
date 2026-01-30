@@ -1,10 +1,7 @@
 package com.yat2.episode.mindmap;
 
 import com.yat2.episode.auth.AuthService;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
+import com.yat2.episode.mindmap.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
