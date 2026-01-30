@@ -8,7 +8,13 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "mindmap_participant")
+@Table(
+        name = "mindmap_participant",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_mindmap_participant_user_mindmap",
+                columnNames = {"user_id", "mindmap_id"}
+        )
+)
 public class MindmapParticipant {
 
     @Id
