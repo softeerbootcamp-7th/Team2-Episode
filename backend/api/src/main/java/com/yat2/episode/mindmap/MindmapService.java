@@ -29,13 +29,6 @@ public class MindmapService {
         return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
     }
 
-    public void validAccessMindmap(Long userId, String uuidStr) {
-        UUID uuid = getUUID(uuidStr);
-
-        mindmapParticipantRepository.findByMindmapIdAndUserId(uuid, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
-    }
-
     public List<MindmapDataDto> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
         return switch (type) {
             case PRIVATE -> getMindmapsByShared(userId, false);
@@ -102,7 +95,7 @@ public class MindmapService {
         }
     }
 
-    private Mindmap getMindmapByUUIDString(Long userId, String uuidStr) {
+    public Mindmap getMindmapByUUIDString(Long userId, String uuidStr) {
         UUID mindmapId = getUUID(uuidStr);
         return mindmapRepository.findByIdAndUserId(mindmapId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
