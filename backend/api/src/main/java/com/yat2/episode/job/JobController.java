@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/job")
 @Tag(name = "Job", description = "직군/직무 조회 API")
-class JobController {
+public class JobController {
     private final JobService jobService;
 
     @GetMapping
