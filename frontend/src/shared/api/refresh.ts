@@ -3,7 +3,6 @@ import { ApiError } from "@/features/auth/types/api.types";
 import { ERROR_CODES, ERROR_META, isErrorCodeKey } from "@/shared/constants/error";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const TOKEN_EXPIRED = "TOKEN_EXPIRED";
 
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
@@ -13,7 +12,7 @@ let refreshPromise: Promise<boolean> | null = null;
  *  해당 에러 발생 시 상위 컴포넌트에서 훅으로 로그인 페이지로 리다이렉트 처리
  */
 export class TokenRefreshError extends Error {
-    constructor(code: string = TOKEN_EXPIRED) {
+    constructor(code: string = "TOKEN_EXPIRED") {
         super(isErrorCodeKey(code) ? ERROR_CODES[code] : ERROR_META.TOKEN_REFRESH_ERROR.defaultMessage);
         this.name = ERROR_META.TOKEN_REFRESH_ERROR.name;
         this.code = code;
