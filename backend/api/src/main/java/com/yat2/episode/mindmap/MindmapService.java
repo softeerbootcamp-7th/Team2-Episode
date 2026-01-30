@@ -3,7 +3,7 @@ package com.yat2.episode.mindmap;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.S3.S3SnapshotRepository;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
 import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;

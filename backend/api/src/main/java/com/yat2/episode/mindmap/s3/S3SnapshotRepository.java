@@ -1,4 +1,4 @@
-package com.yat2.episode.mindmap.S3;
+package com.yat2.episode.mindmap.s3;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
