@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class MindmapService {
     private final MindmapRepository mindmapRepository;

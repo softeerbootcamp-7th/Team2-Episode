@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/competency-type")
@@ -27,13 +29,10 @@ public class CompetencyTypeController {
         return ResponseEntity.ok(competencyTypeService.getAllData());
     }
 
-    @Transactional(readOnly = true)
     @GetMapping("/mindmap/{mindmapId}")
     public ResponseEntity<List<DetailCompetencyTypeDto>> getCompetenciesInMindmap(
-            @CookieValue(name = "access_token", required = false) String token,
+            @RequestAttribute(USER_ID) long userId,
             @PathVariable String mindmapId) {
-
-        Long userId = authService.getUserIdByToken(token);
         mindmapService.validAccessMindmap(userId, mindmapId);
         return ResponseEntity.ok(
                 competencyTypeService.getCompetencyTypesInMindmap(mindmapId)
