@@ -9,7 +9,6 @@ import java.util.UUID;
 
 @Entity
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "mindmap")
 public class Mindmap {

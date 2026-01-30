@@ -6,8 +6,6 @@ import lombok.*;
 
 @Entity
 @Getter
-@Setter
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "mindmap_participant")
 public class MindmapParticipant {
