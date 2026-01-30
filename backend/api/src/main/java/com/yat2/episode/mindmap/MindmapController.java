@@ -1,12 +1,14 @@
 package com.yat2.episode.mindmap;
 
 import com.yat2.episode.auth.AuthService;
+import com.yat2.episode.global.exception.ErrorResponse;
 import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,7 +41,7 @@ public class MindmapController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping
     public ResponseEntity<List<MindmapDataDto>> getMindmaps(
@@ -63,15 +65,15 @@ public class MindmapController {
             @ApiResponse(
                     responseCode = "401",
                     description = """
-                            인증 실패  
-                            - UNAUTHORIZED  
-                            - AUTH_EXPIRED  
-                            - INVALID_TOKEN  
-                            - INVALID_TOKEN_SIGNATURE  
-                            - INVALID_TOKEN_ISSUER  
-                            - INVALID_TOKEN_TYPE  
+                            인증 실패
+                            - UNAUTHORIZED
+                            - AUTH_EXPIRED
+                            - INVALID_TOKEN
+                            - INVALID_TOKEN_SIGNATURE
+                            - INVALID_TOKEN_ISSUER
+                            - INVALID_TOKEN_TYPE
                             """,
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
 
     })

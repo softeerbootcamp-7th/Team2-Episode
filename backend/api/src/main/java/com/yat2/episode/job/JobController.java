@@ -1,6 +1,7 @@
 package com.yat2.episode.job;
 
 import com.yat2.episode.auth.security.Public;
+import com.yat2.episode.global.exception.ErrorResponse;
 import com.yat2.episode.job.dto.OccupationWithJobsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -35,7 +36,7 @@ public class JobController {
                     description = "조회 성공",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = OccupationWithJobsResponse.class)))
             ),
-            @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
+            @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<List<OccupationWithJobsResponse>> getOccupationsWithJobs() {
         return ResponseEntity.ok(jobService.getOccupationsWithJobs());
