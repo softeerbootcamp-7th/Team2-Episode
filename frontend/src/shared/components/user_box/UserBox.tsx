@@ -1,5 +1,6 @@
-import Icon from "@shared/components/icon/Icon";
 import { ComponentPropsWithoutRef } from "react";
+
+import Icon from "@/shared/components/icon/Icon";
 
 type Props = ComponentPropsWithoutRef<"div"> & {
     name: string;

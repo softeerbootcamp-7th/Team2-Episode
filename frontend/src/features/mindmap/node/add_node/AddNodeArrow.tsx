@@ -1,8 +1,9 @@
-import { COLOR_CLASS_MAP, NodeColor } from "@features/mindmap/node/constants/colors";
 import IcIconMove from "@icons/ic_tool_move.svg?react";
-import { cn } from "@utils/cn";
 import { cva, VariantProps } from "class-variance-authority";
 import { ComponentPropsWithoutRef } from "react";
+
+import { COLOR_CLASS_MAP, NodeColor } from "@/features/mindmap/node/constants/colors";
+import { cn } from "@/utils/cn";
 
 type Props = Omit<ComponentPropsWithoutRef<"button">, "color"> &
     VariantProps<typeof DirectionProps> & {

@@ -1,6 +1,7 @@
-import { InputVariants } from "@shared/styles/input_variants";
 import { VariantProps } from "class-variance-authority";
 import { ComponentPropsWithoutRef } from "react";
+
+import { InputVariants } from "@/shared/styles/input_variants";
 
 type SingleLineInputProps = ComponentPropsWithoutRef<"input"> & VariantProps<typeof InputVariants>;
 

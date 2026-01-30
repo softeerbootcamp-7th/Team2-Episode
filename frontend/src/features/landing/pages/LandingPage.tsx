@@ -1,5 +1,5 @@
-import Button from "@shared/components/button/Button";
-import GlobalNavigationBar from "@shared/components/global_navigation_bar/GlobalNavigationBar";
+import Button from "@/shared/components/button/Button";
+import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 
 const LandingPage = () => {
     return (

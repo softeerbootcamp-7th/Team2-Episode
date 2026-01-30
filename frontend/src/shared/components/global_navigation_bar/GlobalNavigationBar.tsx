@@ -1,10 +1,10 @@
-import Icon from "@shared/components/icon/Icon";
-import { routeHelper } from "@shared/utils/route";
 import { cva } from "class-variance-authority";
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
-import Button from "../button/Button";
+import Button from "@/shared/components/button/Button";
+import Icon from "@/shared/components/icon/Icon";
+import { routeHelper } from "@/shared/utils/route";
 
 type Props = {
     rightSlot?: ReactNode;

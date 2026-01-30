@@ -3,8 +3,8 @@ import {
     COLOR_CLASS_MAP,
     type NodeColor,
     SHADOW_CLASS_MAP,
-} from "@features/mindmap/node/constants/colors";
-import { NodeState } from "@features/mindmap/node/types/node";
+} from "@/features/mindmap/node/constants/colors";
+import { NodeState } from "@/features/mindmap/node/types/node";
 
 export function shadowClass(color: NodeColor) {
     return SHADOW_CLASS_MAP[color];
