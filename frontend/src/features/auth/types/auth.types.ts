@@ -14,7 +14,7 @@ export type AuthState = {
  * AuthContext 값 타입
  */
 export interface AuthContextValue extends AuthState {
-    login: (user: User) => void;
+    login: (user: User) => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
 }
