@@ -25,8 +25,8 @@ import static com.yat2.episode.auth.cookie.AuthCookieNames.*;
 
 @Configuration
 public class SwaggerConfig {
-    public static final String SWAGGER_ACCESS_TOKEN = "ACCESS_TOKEN";
-    public static final String SWAGGER_REFRESH_TOKEN = "REFRESH_TOKEN";
+    public static final String SWAGGER_ACCESS_TOKEN = "COOKIE_ACCESS_TOKEN";
+    public static final String SWAGGER_REFRESH_TOKEN = "COOKIE_REFRESH_TOKEN";
 
     @Bean
     public OpenAPI openAPI() {
@@ -57,23 +57,22 @@ public class SwaggerConfig {
     @Bean
     public OperationCustomizer apiErrorCodeCustomizer() {
         return (operation, handlerMethod) -> {
-            Set<ErrorCode> errorCodes = Stream.concat(
-                            AnnotatedElementUtils.findAllMergedAnnotations(handlerMethod.getMethod(), ApiErrorCodes.class).stream(),
-                            AnnotatedElementUtils.findAllMergedAnnotations(handlerMethod.getBeanType(), ApiErrorCodes.class).stream()
-                    )
+            Set<ErrorCode> errorCodes = Stream.of(handlerMethod.getMethod(), handlerMethod.getBeanType())
+                    .map(elem -> AnnotatedElementUtils.findAllMergedAnnotations(elem, ApiErrorCodes.class))
+                    .flatMap(Collection::stream)
                     .flatMap(ann -> Arrays.stream(ann.value()))
                     .collect(Collectors.toCollection(LinkedHashSet::new));
 
             if (errorCodes.isEmpty()) return operation;
 
-            Map<Integer, List<Example>> examplesByStatus = errorCodes.stream()
-                    .map(this::errorExample)
-                    .collect(Collectors.groupingBy(e -> ((ErrorExample) e.getValue()).status()));
-
-            examplesByStatus.forEach((status, examples) -> {
-                ApiResponse response = createApiResponse(status, examples);
-                operation.getResponses().addApiResponse(String.valueOf(status), response);
-            });
+            errorCodes.stream()
+                    .collect(Collectors.groupingBy(
+                            ec -> ec.getHttpStatus().value(),
+                            Collectors.mapping(this::errorExample, Collectors.toList())
+                    ))
+                    .forEach((status, examples) -> operation.getResponses().addApiResponse(
+                            String.valueOf(status), createApiResponse(status, examples)
+                    ));
 
             return operation;
         };
