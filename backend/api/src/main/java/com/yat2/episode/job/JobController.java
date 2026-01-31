@@ -1,7 +1,7 @@
 package com.yat2.episode.job;
 
 import com.yat2.episode.auth.security.Public;
-import com.yat2.episode.global.swagger.AuthRequiredErrorResponses;
+import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.job.dto.OccupationWithJobsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -37,7 +37,7 @@ public class JobController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = OccupationWithJobsResponse.class)))
             )
     })
-    @AuthRequiredErrorResponses
+    @AuthRequiredErrors
     public ResponseEntity<List<OccupationWithJobsResponse>> getOccupationsWithJobs() {
         return ResponseEntity.ok(jobService.getOccupationsWithJobs());
     }
