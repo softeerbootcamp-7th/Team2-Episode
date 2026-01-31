@@ -1,5 +1,7 @@
 package com.yat2.episode.mindmap.s3;
 
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
@@ -85,7 +87,7 @@ public class S3PostSigner {
             byte[] kSigning = hmac(kService, "aws4_request");
             return toHex(hmac(kSigning, stringToSign));
         } catch (Exception e) {
-            throw new RuntimeException("서명 생성 실패", e);
+            throw new CustomException(ErrorCode.S3_URL_FAIL);
         }
     }
 
