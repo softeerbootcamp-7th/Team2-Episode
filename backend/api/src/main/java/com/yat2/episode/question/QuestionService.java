@@ -1,8 +1,12 @@
 package com.yat2.episode.question;
 
 import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.question.dto.CategoryGroupResponseDto;
 import com.yat2.episode.question.dto.SimpleQuestionDto;
+import com.yat2.episode.users.Users;
+import com.yat2.episode.users.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,45 +21,32 @@ import java.util.stream.Collectors;
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
+    private final UsersRepository usersRepository;
 
     @Transactional(readOnly = true)
-    public List<CategoryGroupResponseDto> getQuestionSet(){
-        List<Question> selectedQuestions = getRandomOnePerCompetency();
-        Map<CompetencyType.Category, List<Question>> questionsByCategory = selectedQuestions.stream()
+    public List<CategoryGroupResponseDto> getQuestionSetByUserId(long userId){
+        Users user = usersRepository.findByKakaoId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getJob() == null) {
+            throw new CustomException(ErrorCode.JOB_NOT_SELECTED);
+        }
+
+        List<Question> questions = questionRepository.findAllWithCompetencyByJobId(user.getJob().getId());
+
+        Map<CompetencyType.Category, List<Question>> questionsByCategory = questions.stream()
                 .collect(Collectors.groupingBy(q -> q.getCompetencyType().getCategory()));
 
         return questionsByCategory.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
                     CompetencyType.Category category = entry.getKey();
-                    List<Question> questions = entry.getValue();
-
-                    List<SimpleQuestionDto> questionDtos = questions.stream()
+                    List<SimpleQuestionDto> questionDtos = entry.getValue().stream()
                             .map(SimpleQuestionDto::of)
                             .toList();
 
                     return new CategoryGroupResponseDto(category, questionDtos);
                 })
                 .toList();
-    }
-
-    private List<Question> getRandomOnePerCompetency() {
-        List<Question> allQuestions = questionRepository.findAllWithCompetency();
-
-        Map<CompetencyType, List<Question>> questionsByCompetency = allQuestions.stream()
-                .collect(Collectors.groupingBy(Question::getCompetencyType));
-
-        List<Question> selectedQuestions = new ArrayList<>();
-        Random random = new Random();
-
-        for (CompetencyType type : questionsByCompetency.keySet()) {
-            List<Question> questions = questionsByCompetency.get(type);
-            if (!questions.isEmpty()) {
-                int randomIndex = random.nextInt(questions.size());
-                selectedQuestions.add(questions.get(randomIndex));
-            }
-        }
-
-        return selectedQuestions;
     }
 }
