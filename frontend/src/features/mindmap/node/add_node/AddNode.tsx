@@ -1,9 +1,9 @@
 import { ComponentPropsWithoutRef } from "react";
 
 import { cn } from "@/utils/cn";
-import { NodeColor } from "../constants/colors";
-import AddNodeDot from "../components/add_node/AddNodeDot";
-import AddNodeArrow from "../components/add_node/AddNodeArrow";
+import { NodeColor } from "@/features/mindmap/node/constants/colors";
+import AddNodeDot from "@/features/mindmap/node/components/add_node/AddNodeDot";
+import AddNodeArrow from "@/features/mindmap/node/components/add_node/AddNodeArrow";
 
 type Props = ComponentPropsWithoutRef<"div"> & {
         color : NodeColor
