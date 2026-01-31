@@ -33,7 +33,6 @@ export default function AddNodeArrow({ color, direction, className }: Props) {
         <button onClick={handleAddNode} className={outerCircleClass}>
             <div className={iconCircleClass}>
                 <Icon name="ic_tool_move" color="var(--color-base-white)" fill="var(--color-base-white)" size={17} rotate={direction == "left" ? 310 : 135}/>
-                {/* <IcIconMove className={cn(DirectionProps({ direction }), className)} /> */}
             </div>
         </button>
     );
