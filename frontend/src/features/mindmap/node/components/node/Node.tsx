@@ -7,7 +7,7 @@ import { NodeColor } from "@/features/mindmap/node/constants/colors";
 import { NodeMode } from "@/features/mindmap/node/types/node";
 import { colorBySize, shadowClass } from "@/features/mindmap/node/utils/style";
 import { cn } from "@/utils/cn";
-import { SafeVariantProps } from "@/shared/types/safe_variant_props";
+import { NonNullableVariantProps } from "@/shared/types/safe_variant_props";
 
 type Props = ComponentPropsWithoutRef<"div"> & {
     children?: ReactNode;
@@ -45,7 +45,7 @@ function NodeComponent({ className, children, ...rest }: Props) {
 }
 
 type NodeContentProps = ComponentPropsWithoutRef<"div"> &
-    SafeVariantProps<typeof nodeVariants> & {
+    NonNullableVariantProps<typeof nodeVariants> & {
         color: NodeColor;
         highlight?: boolean;
         children: ReactNode;
