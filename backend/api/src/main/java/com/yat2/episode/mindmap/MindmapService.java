@@ -84,9 +84,6 @@ public class MindmapService {
             Map<String, String> uploadInfo = snapshotRepository.createPresignedUploadInfo("maps/" + savedMindmap.getId());
             return new MindmapCreatedWithUrlDto(MindmapDataExceptDateDto.of(savedMindmap), uploadInfo);
         }
-        catch (CustomException e){
-            throw e;
-        }
         catch (Exception e) {
             mindmapRepository.delete(savedMindmap);
             throw new CustomException(ErrorCode.S3_URL_FAIL);
