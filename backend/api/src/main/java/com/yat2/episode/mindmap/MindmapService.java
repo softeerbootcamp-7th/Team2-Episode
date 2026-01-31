@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class MindmapService {
     private final MindmapRepository mindmapRepository;
@@ -30,6 +29,7 @@ public class MindmapService {
         return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
     }
 
+    @Transactional(readOnly = true)
     public List<MindmapDataDto> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
         return switch (type) {
             case PRIVATE -> getMindmapsByShared(userId, false);
@@ -53,6 +53,7 @@ public class MindmapService {
     }
 
 
+    @Transactional(readOnly = true)
     public List<MindmapIdentityDto> getMindmapList(Long userId) {
         return mindmapRepository.findByUserIdOrderByCreatedDesc(userId)
                 .stream()
@@ -60,7 +61,6 @@ public class MindmapService {
                 .toList();
     }
 
-    @Transactional
     public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body) {
         Users user = usersRepository.findByKakaoId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -101,6 +101,8 @@ public class MindmapService {
         }
     }
 
+
+    @Transactional(readOnly = true)
     public Mindmap getMindmapByUUIDString(Long userId, String uuidStr) {
         UUID mindmapId = getUUID(uuidStr);
         return mindmapRepository.findByIdAndUserId(mindmapId, userId)
