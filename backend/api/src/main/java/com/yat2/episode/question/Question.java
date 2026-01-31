@@ -23,10 +23,6 @@ public class Question {
     @JoinColumn(name = "competency_type_id", nullable = false)
     private CompetencyType competencyType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id")
-    private Job job;
-
     @Column(name = "content", nullable = false, length = 200)
     private String content;
 
@@ -40,7 +36,6 @@ public class Question {
             String guidanceMessage
     ) {
         this.competencyType = competencyType;
-        this.job = job;
         this.content = content;
         this.guidanceMessage = guidanceMessage;
     }
