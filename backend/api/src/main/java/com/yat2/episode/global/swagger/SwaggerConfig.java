@@ -24,8 +24,8 @@ import static com.yat2.episode.auth.cookie.AuthCookieNames.*;
 
 @Configuration
 public class SwaggerConfig {
-    public static final String SWAGGER_ACCESS_TOKEN = "COOKIE_ACCESS_TOKEN";
-    public static final String SWAGGER_REFRESH_TOKEN = "COOKIE_REFRESH_TOKEN";
+    public static final String SWAGGER_ACCESS_TOKEN = "ACCESS_TOKEN";
+    public static final String SWAGGER_REFRESH_TOKEN = "REFRESH_TOKEN";
 
     @Bean
     public OpenAPI openAPI() {
