@@ -14,4 +14,6 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
                 WHERE p.mindmap.id = :uuid and p.user.kakaoId = :userId
             """)
     Optional<MindmapParticipant> findByMindmapIdAndUserId(@Param("uuid") UUID uuid, @Param("userId") Long userId);
+
+    boolean existsByMindmapId(UUID mindmapId);
 }

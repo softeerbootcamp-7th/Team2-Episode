@@ -146,6 +146,16 @@ public class MindmapService {
 
     @Transactional
     public void deleteMindmap(long userId, String mindmapId){
-        //todo: 마인드맵 참여자 내역 삭제
+        UUID mindmapUUID = getUUID(mindmapId);
+        MindmapParticipant participant = mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapUUID, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND));
+
+        mindmapParticipantRepository.delete(participant);
+
+        boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmapId(mindmapUUID);
+
+        if (!hasOtherParticipants) {
+            mindmapRepository.deleteById(mindmapUUID);
+        }
     }
 }

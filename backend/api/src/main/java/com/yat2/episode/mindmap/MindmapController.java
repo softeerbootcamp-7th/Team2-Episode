@@ -172,7 +172,7 @@ public class MindmapController {
             )
     })
     @AuthRequiredErrors
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR})
+    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND})
     @DeleteMapping("/{mindmapId}")
     public ResponseEntity<?> deleteMindmap(@RequestAttribute(USER_ID) long userId, @PathVariable String mindmapId) {
         mindmapService.deleteMindmap(userId, mindmapId);
