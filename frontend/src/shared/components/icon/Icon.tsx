@@ -7,8 +7,8 @@ type Props = {
     viewBox?: string;
     width?: string | number;
     height?: string | number;
+    fill?: string;
 };
-
 /**
  * size를 주면 정사각형 크기, width height를 주면 직사각형 크기로 렌더링합니다.
  */
@@ -17,6 +17,7 @@ function Icon({
     size = 24,
     width = size,
     height = size,
+    fill,
     strokeWidth = 1.6,
     rotate = 0,
     viewBox = "0 0 24 24",
@@ -31,7 +32,7 @@ function Icon({
             strokeLinecap="round"
             strokeLinejoin="round"
             viewBox={viewBox}
-            fill="none"
+            fill={fill ? fill : "none"}
             style={{
                 transform: `rotate(${rotate}deg)`,
                 transition: "transform 0.2s ease-in-out",

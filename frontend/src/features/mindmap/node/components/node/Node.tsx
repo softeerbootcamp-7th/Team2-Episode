@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { ComponentPropsWithoutRef, ReactNode, useState } from "react";
 
 import AddNode from "@/features/mindmap/node/add_node/AddNode";
@@ -7,12 +7,13 @@ import { NodeColor } from "@/features/mindmap/node/constants/colors";
 import { NodeMode } from "@/features/mindmap/node/types/node";
 import { colorBySize, shadowClass } from "@/features/mindmap/node/utils/style";
 import { cn } from "@/utils/cn";
+import { NonNullableVariantProps } from "@/shared/types/safe_variant_props";
 
 type Props = ComponentPropsWithoutRef<"div"> & {
     children?: ReactNode;
 };
 
-const nodeVariants = cva(
+export const nodeVariants = cva(
     "relative flex w-40 px-4.5 py-5 justify-center items-center gap-2.5 rounded-xl transition-shadow cursor-pointer outline-none",
     {
         variants: {
@@ -44,7 +45,7 @@ function NodeComponent({ className, children, ...rest }: Props) {
 }
 
 type NodeContentProps = ComponentPropsWithoutRef<"div"> &
-    VariantProps<typeof nodeVariants> & {
+    NonNullableVariantProps<typeof nodeVariants> & {
         color: NodeColor;
         highlight?: boolean;
         children: ReactNode;

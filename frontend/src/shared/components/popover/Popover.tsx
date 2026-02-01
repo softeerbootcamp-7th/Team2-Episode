@@ -3,9 +3,9 @@ import { ReactNode, useRef } from "react";
 
 import useCalcSafeDirection from "@/shared/hooks/useCalcSafeDirection";
 import useToggle from "@/shared/hooks/useToggle";
-import { SafeVariantProps } from "@/shared/types/safe_variant_props";
+import { NonNullableVariantProps } from "@/shared/types/safe_variant_props";
 
-type Props = SafeVariantProps<typeof variants> & {
+type Props = NonNullableVariantProps<typeof variants> & {
     children: ReactNode;
     contents: ReactNode;
 };
