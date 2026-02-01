@@ -48,27 +48,32 @@ export default class NodeContainer {
         this.broker.publish(nodeId);
     }
 
-    appendChild({ parentNodeId }: { parentNodeId: NodeId }) {
+    appendChild({
+        parentNodeId,
+        childNode = this.generateNewNodeElement(),
+    }: {
+        parentNodeId: NodeId;
+        childNode?: NodeElement;
+    }) {
         try {
             const parentNode = this._getNode(parentNodeId);
-            const newNode = this.generateNewNodeElement();
+            childNode.parentId = parentNodeId;
 
             if (parentNode.lastChildId) {
                 // 자식 자연수
                 const lastNode = this._getNode(parentNode.lastChildId);
 
-                lastNode.nextId = newNode.id;
-                newNode.prevId = lastNode.id;
+                lastNode.nextId = childNode.id;
+                childNode.prevId = lastNode.id;
+                childNode.nextId = null; // 필요없긴함
 
-                newNode.parentId = parentNode.id;
-                parentNode.lastChildId = newNode.id;
+                parentNode.lastChildId = childNode.id;
 
                 // this.notify(lastNode.id);
             } else {
                 // 자식 0
-                parentNode.firstChildId = newNode.id;
-                parentNode.lastChildId = newNode.id;
-                newNode.parentId = parentNode.id;
+                parentNode.firstChildId = childNode.id;
+                parentNode.lastChildId = childNode.id;
             }
 
             // this.notify(newNode.id);
@@ -83,12 +88,12 @@ export default class NodeContainer {
         }
     }
 
-    appendTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: "prev" | "next" }) {
+    attachTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: "prev" | "next" }) {
         try {
             const baseNode = this._getNode(baseNodeId);
 
             // Root 노드 옆에는 추가할 수 없음
-            if (baseNode.parentId === ROOT_NODE_PARENT_ID) {
+            if (baseNode.type === "root") {
                 throw new Error("루트 노드의 형제로는 노드를 추가할 수 없습니다.");
             }
 
@@ -174,33 +179,31 @@ export default class NodeContainer {
 
             if (parentNode.firstChildId === node.id) {
                 parentNode.firstChildId = node.nextId;
-
-                this.notify(parentNode.id);
+                // this.notify(parentNode.id);
             }
 
             if (parentNode.lastChildId === node.id) {
                 parentNode.lastChildId = node.prevId;
-
-                this.notify(parentNode.id);
+                // this.notify(parentNode.id);
             }
 
             if (node.prevId) {
                 const prevNode = this._getNode(node.prevId);
                 prevNode.nextId = node.nextId;
-
-                this.notify(prevNode.id);
+                // this.notify(prevNode.id);
             }
 
             if (node.nextId) {
                 const nextNode = this._getNode(node.nextId);
                 nextNode.prevId = node.prevId;
-
-                this.notify(nextNode.id);
+                // this.notify(nextNode.id);
             }
 
-            this.notify(nodeId);
-
             this._deleteTraverse({ nodeId });
+
+            this.notify(parentNode.id);
+
+            // this.notify(nodeId);
         } catch (e) {
             if (e instanceof Error) {
                 alert(e.message);
@@ -211,23 +214,19 @@ export default class NodeContainer {
     }
 
     private _deleteTraverse({ nodeId }: { nodeId: NodeId }) {
-        const node = this.getNodeFromContainer(nodeId);
-        if (!node) {
-            return;
-        }
+        const node = this._getNode(nodeId);
 
         let childId = node.firstChildId;
 
         while (childId) {
-            const child = this.nodeContainer.get(childId);
+            const child = this.safeGetNode(childId);
             if (!child) break;
 
-            const nextChildId = child.nextId;
             this._deleteTraverse({ nodeId: childId });
-            childId = nextChildId;
+
+            childId = child.nextId;
         }
 
-        this.notify(nodeId);
         this.deleteNodeFromContainer(nodeId);
     }
 
@@ -241,44 +240,9 @@ export default class NodeContainer {
         return node;
     }
 
-    private detach({ node }: { node: NodeElement }) {
-        if (node.type === "root") {
-            throw new Error("루트 노드는 뗄 수 없습니다.");
-        }
-
-        const parentNode = this._getNode(node.parentId);
-
-        // 1. 부모 포인터 갱신
-        if (parentNode?.firstChildId === node.id) {
-            parentNode.firstChildId = node.nextId;
-        }
-        if (parentNode?.lastChildId === node.id) {
-            parentNode.lastChildId = node.prevId;
-        }
-
-        // 2. 형제 포인터 갱신
-        if (node.prevId) {
-            const prevNode = this._getNode(node.prevId);
-            prevNode.nextId = node.nextId;
-            this.notify(prevNode.id);
-        }
-        if (node.nextId) {
-            const nextNode = this._getNode(node.nextId);
-            nextNode.prevId = node.prevId;
-            this.notify(nextNode.id);
-        }
-
-        // 3. 부모 알림
-        this.notify(parentNode.id);
-
-        // 4. [수정됨] 본인 데이터 처리를 먼저 다 끝내고 notify 해야 함
-        node.prevId = null;
-        node.nextId = null;
-        node.parentId = "detached"; // 임시 상태
-
-        // 5. [수정됨] 이제 notify (이 시점에 Map에 "detached" 상태인 복사본이 저장됨)
-        this.notify(node.id);
-    }
+    /**
+     * 아직 인자를 어떻게 받아야 좋을 지 확신 못함.
+     */
     moveTo({
         baseNodeId,
         movingNodeId,
@@ -288,47 +252,51 @@ export default class NodeContainer {
         movingNodeId: NodeId;
         direction: "prev" | "next" | "child";
     }) {
-        if (baseNodeId === movingNodeId) return;
+        // 제자리
+        if (direction === "child" && baseNodeId === movingNodeId) {
+            return;
+        }
+
+        if (baseNodeId === movingNodeId) {
+            return;
+        }
 
         try {
-            let baseNode = this._getNode(baseNodeId);
-            // 여기서 movingNode를 가져오지만...
-            let movingNode = this._getNode(movingNodeId);
+            const baseNode = this._getNode(baseNodeId);
+            const movingNode = this._getNode(movingNodeId);
 
-            // ... (사이클 방지 로직 생략 - 기존 유지) ...
-            const currentParentId: string | null = baseNode.parentId;
-            if (direction === "child" && baseNodeId === movingNodeId) return;
             let checkNodeId = baseNode.id;
-            if (direction !== "child") checkNodeId = baseNode.parentId!;
+            if (direction !== "child") {
+                checkNodeId = baseNode.parentId;
+            }
 
+            // drop한 곳에서 위로 가면서 movingNode가 있는지 확인
             let tempParent = this.safeGetNode(checkNodeId);
             while (tempParent) {
-                if (tempParent.id === movingNodeId) throw new Error("자손 밑으로 이동 불가");
-                if (tempParent.id === ROOT_NODE_PARENT_ID) break;
+                if (tempParent.id === movingNodeId) {
+                    throw new Error("자손 밑으로 이동 불가");
+                }
+
+                if (tempParent.type === "root") {
+                    break;
+                }
+
                 tempParent = this.safeGetNode(tempParent.parentId);
             }
 
-            // 1. Detach 실행
-            // 내부에서 notify가 돌면서 Map의 movingNode가 새로운 객체로 교체됨
             this.detach({ node: movingNode });
 
-            // 2. [🔥 핵심 수정] 참조 갱신 (Refresh Reference)
-            // detach에 의해 Map 내부의 객체가 바뀌었으므로, movingNode 변수를 최신화해야 함
-            // 이걸 안 하면 attach 함수들이 옛날 객체(movingNode)를 수정하고,
-            // notify는 Map에 있는 새 객체를 복사해서 저장하느라 수정사항이 씹힘.
-            baseNode = this._getNode(baseNodeId);
-            movingNode = this._getNode(movingNodeId);
+            // baseNode = this._getNode(baseNodeId);
+            // movingNode = this._getNode(movingNodeId);
 
-            // 3. 연결 실행 (이제 싱싱한 객체를 넘김)
             if (direction === "prev") {
                 this.attachPrev({ baseNode, movingNode });
             } else if (direction === "next") {
                 this.attachNext({ baseNode, movingNode });
             } else if (direction === "child") {
-                this.attachChild({ parentNode: baseNode, movingNode });
+                this.appendChild({ parentNodeId: baseNode.id, childNode: movingNode });
             }
         } catch (e) {
-            console.error(e);
             if (e instanceof Error) {
                 alert(e.message);
             } else {
@@ -337,32 +305,41 @@ export default class NodeContainer {
         }
     }
 
-    // [New] 기존 노드를 parentNode의 맨 마지막 자식으로 붙임
-    private attachChild({ parentNode, movingNode }: { parentNode: NodeElement; movingNode: NodeElement }) {
-        movingNode.parentId = parentNode.id;
-
-        if (parentNode.lastChildId) {
-            // 이미 자식이 있다면 막내 뒤에 붙임
-            const lastNode = this._getNode(parentNode.lastChildId);
-
-            lastNode.nextId = movingNode.id;
-            movingNode.prevId = lastNode.id;
-            movingNode.nextId = null;
-
-            parentNode.lastChildId = movingNode.id;
-
-            this.notify(lastNode.id); // 이전 막내 알림
-        } else {
-            // 자식이 없다면 첫째이자 막내가 됨
-            parentNode.firstChildId = movingNode.id;
-            parentNode.lastChildId = movingNode.id;
-            movingNode.prevId = null;
-            movingNode.nextId = null;
+    private detach({ node }: { node: NodeElement }) {
+        if (node.type === "root") {
+            throw new Error("루트 노드는 뗄 수 없습니다.");
         }
 
-        // 여기서도 부모 알림은 마지막에 한 번!
+        const parentNode = this._getNode(node.parentId);
+
+        // 1. 부모 포인터 갱신
+        if (parentNode.firstChildId === node.id) {
+            parentNode.firstChildId = node.nextId;
+        }
+
+        if (parentNode.lastChildId === node.id) {
+            parentNode.lastChildId = node.prevId;
+        }
+
+        if (node.prevId) {
+            const prevNode = this._getNode(node.prevId);
+            prevNode.nextId = node.nextId;
+            // this.notify(prevNode.id);
+        }
+
+        if (node.nextId) {
+            const nextNode = this._getNode(node.nextId);
+            nextNode.prevId = node.prevId;
+            // this.notify(nextNode.id);
+        }
+
         this.notify(parentNode.id);
-        this.notify(movingNode.id);
+
+        node.prevId = null;
+        node.nextId = null;
+        node.parentId = "detached"; // 임시 상태
+
+        // this.notify(node.id);
     }
 
     getChildIds(nodeId: NodeId): NodeId[] {
@@ -372,13 +349,13 @@ export default class NodeContainer {
         const childIds: NodeId[] = [];
         let currentChildId = node.firstChildId;
 
-        // Linked List를 순회하며 배열로 변환
         while (currentChildId) {
             childIds.push(currentChildId);
 
             const childNode = this.safeGetNode(currentChildId);
-            // 방어 로직: 링크가 깨져서 무한루프 도는 것 방지
-            if (!childNode) break;
+            if (!childNode) {
+                break;
+            }
 
             currentChildId = childNode.nextId;
         }
@@ -386,19 +363,6 @@ export default class NodeContainer {
         return childIds;
     }
 
-    safeGetNode(nodeId: NodeId) {
-        if (!nodeId || nodeId === ROOT_NODE_PARENT_ID) return undefined;
-
-        return this.nodeContainer.get(nodeId);
-    }
-
-    /**
-     * movingNode를 baseNode의 '뒤(Next)'에 연결합니다.
-     */
-
-    /**
-     * nodeId를 받아 내용을 업데이트합니다.
-     */
     update({ nodeId, newNodeData }: { nodeId: NodeId; newNodeData: Partial<Omit<NodeElement, "id">> }) {
         // TODO: newNodeData의 형을 다르게 해야할 수 있습니다. 일단은 Element로 뚫었는데 Node만 뚫어도될지도. 아직은 구현체가 확실하지 않아서 모르겠음.
         try {
@@ -472,5 +436,15 @@ export default class NodeContainer {
 
     private deleteNodeFromContainer(nodeId: NodeId) {
         this.nodeContainer.delete(nodeId);
+    }
+
+    safeGetNode(nodeId: NodeId) {
+        const node = this.nodeContainer.get(nodeId);
+
+        if (!node) {
+            return undefined;
+        }
+
+        return node;
     }
 }
