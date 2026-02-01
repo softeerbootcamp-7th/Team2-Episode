@@ -1,18 +1,32 @@
 import { ComponentPropsWithoutRef } from "react";
 
-import AddNodeArrow from "@/features/mindmap/node/add_node/AddNodeArrow";
-import AddNodeDot from "@/features/mindmap/node/add_node/AddNodeDot";
-import { type NodeComponentProps } from "@/features/mindmap/node/types/node";
+import AddNodeArrow from "@/features/mindmap/node/components/add_node/AddNodeArrow";
 import { cn } from "@/utils/cn";
+import { NodeColor } from "@/features/mindmap/node/constants/colors";
+import { cva, type VariantProps } from "class-variance-authority";
+import AddNodeDot from "@/features/mindmap/node/components/add_node/AddNodeDot";
+
+const addNodeVariants = cva(
+    "relative w-13.5 h-13.5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+    {
+        variants: {
+            direction: {
+                left: "order-first",
+                right: "order-last",
+            },
+        },
+    },
+);
 
 type Props = ComponentPropsWithoutRef<"div"> &
-    NodeComponentProps & {
+    VariantProps<typeof addNodeVariants> & {
+        color: NodeColor;
         direction: "left" | "right";
     };
 
 export default function AddNode({ color, direction, className, ...rest }: Props) {
     return (
-        <div {...rest} className={cn("relative w-13.5 h-13.5 flex items-center justify-center", className)}>
+        <div {...rest} className={cn(addNodeVariants({ direction }), className)}>
             <div className="transition-opacity duration-300">
                 <AddNodeDot color={color} />
             </div>
