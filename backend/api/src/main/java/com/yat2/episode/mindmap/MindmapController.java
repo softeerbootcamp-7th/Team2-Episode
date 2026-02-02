@@ -176,4 +176,26 @@ public class MindmapController {
         mindmapService.deleteMindmap(userId, mindmapId);
         return ResponseEntity.noContent().build();
     }
+    @Operation(
+            summary = "마인드맵 즐겨찾기 상태 변경",
+            description = "마인드맵의 즐겨찾기 여부를 설정하거나 해제합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "업데이트 성공",
+                    content = @Content(schema = @Schema(implementation = MindmapDataDto.class))
+            )
+    })
+    @AuthRequiredErrors
+    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND})
+    @PatchMapping("/{mindmapId}/favorite")
+    public ResponseEntity<MindmapDataDto> updateFavoriteStatus(
+            @RequestAttribute(USER_ID) long userId,
+            @PathVariable String mindmapId,
+            @RequestParam boolean status
+    ) {
+        MindmapDataDto updatedMindmap = mindmapService.updateFavoriteStatus(userId, mindmapId, status);
+        return ResponseEntity.ok(updatedMindmap);
+    }
 }

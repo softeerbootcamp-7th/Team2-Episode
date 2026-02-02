@@ -159,4 +159,10 @@ public class MindmapService {
             mindmapRepository.deleteById(mindmapUUID);
         }
     }
+
+    @Transactional
+    public MindmapDataDto updateFavoriteStatus(long userId, String mindmapId, boolean status) {
+
+        return null;
+    }
 }
