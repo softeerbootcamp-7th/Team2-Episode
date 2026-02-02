@@ -46,7 +46,8 @@ public class MindmapController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(schema =
+            @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
             @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
     })
@@ -125,7 +126,8 @@ public class MindmapController {
 
     })
     @PostMapping()
-    public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@RequestAttribute(USER_ID) long userId, @RequestBody MindmapArgsReqDto reqBody) {
+    public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@RequestAttribute(USER_ID) long userId,
+                                                                  @RequestBody MindmapArgsReqDto reqBody) {
         MindmapCreatedWithUrlDto resBody = mindmapFacade.createMindmap(userId, reqBody);
         URI location = mindmapService.getCreatedURI(resBody.mindmap().mindmapId());
         return ResponseEntity
@@ -166,12 +168,13 @@ public class MindmapController {
             )
     })
     @AuthRequiredErrors
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @DeleteMapping("/{mindmapId}")
     public ResponseEntity<?> deleteMindmap(@RequestAttribute(USER_ID) long userId, @PathVariable String mindmapId) {
         mindmapService.deleteMindmap(userId, mindmapId);
         return ResponseEntity.noContent().build();
     }
+
     @Operation(
             summary = "마인드맵 즐겨찾기 상태 변경",
             description = "마인드맵의 즐겨찾기 여부를 설정하거나 해제합니다."
@@ -184,7 +187,7 @@ public class MindmapController {
             )
     })
     @AuthRequiredErrors
-    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/favorite")
     public ResponseEntity<MindmapDataDto> updateFavoriteStatus(
             @RequestAttribute(USER_ID) long userId,

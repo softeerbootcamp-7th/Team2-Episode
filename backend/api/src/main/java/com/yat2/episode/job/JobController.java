@@ -37,7 +37,8 @@ public class JobController {
             @ApiResponse(
                     responseCode = "200",
                     description = "조회 성공",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = OccupationWithJobsResponse.class)))
+                    content = @Content(array = @ArraySchema(schema =
+                    @Schema(implementation = OccupationWithJobsResponse.class)))
             )
     })
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)

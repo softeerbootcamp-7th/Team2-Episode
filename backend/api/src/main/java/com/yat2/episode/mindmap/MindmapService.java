@@ -72,13 +72,13 @@ public class MindmapService {
             finalTitle = getPrivateMindmapName(user);
         }
 
-  Mindmap mindmap = new Mindmap(finalTitle, body.isShared());
+        Mindmap mindmap = new Mindmap(finalTitle, body.isShared());
         mindmapRepository.save(mindmap);
 
         MindmapParticipant participant = new MindmapParticipant(user, mindmap);
         mindmapParticipantRepository.save(participant);
 
-      return MindmapDataExceptDateDto.of(participant);
+        return MindmapDataExceptDateDto.of(participant);
     }
 
     @Transactional
@@ -86,9 +86,10 @@ public class MindmapService {
         mindmapRepository.findById(mindmapId).ifPresent(mindmapRepository::delete);
     }
 
-    public MindmapCreatedWithUrlDto getUploadInfo(MindmapDataExceptDateDto mindmapDatas){
-            Map<String, String> uploadInfo = snapshotRepository.createPresignedUploadInfo("maps/" + mindmapDatas.mindmapId());
-            return new MindmapCreatedWithUrlDto(mindmapDatas, uploadInfo);
+    public MindmapCreatedWithUrlDto getUploadInfo(MindmapDataExceptDateDto mindmapDatas) {
+        Map<String, String> uploadInfo =
+                snapshotRepository.createPresignedUploadInfo("maps/" + mindmapDatas.mindmapId());
+        return new MindmapCreatedWithUrlDto(mindmapDatas, uploadInfo);
     }
 
     //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제
@@ -178,7 +179,7 @@ public class MindmapService {
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 
-    public URI getCreatedURI(UUID mindmapId){
+    public URI getCreatedURI(UUID mindmapId) {
         return ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{mindmapId}")
                 .buildAndExpand(mindmapId)

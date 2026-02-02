@@ -36,7 +36,8 @@ public class QuestionController {
             @ApiResponse(
                     responseCode = "200",
                     description = "조회 성공",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CategoryGroupResponseDto.class)))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation =
+                            CategoryGroupResponseDto.class)))
             ),
             @ApiResponse(responseCode = "400", description = "직무 미션택", content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
