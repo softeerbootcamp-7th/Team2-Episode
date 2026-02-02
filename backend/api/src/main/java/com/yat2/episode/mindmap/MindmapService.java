@@ -22,7 +22,6 @@ public class MindmapService {
     private final MindmapRepository mindmapRepository;
     private final MindmapParticipantRepository mindmapParticipantRepository;
     private final UsersRepository usersRepository;
-    private final S3SnapshotRepository snapshotRepository;
     private final TransactionTemplate transactionTemplate;
 
     public MindmapDataDto getMindmapById(Long userId, String mindmapIdStr) {
@@ -59,32 +58,29 @@ public class MindmapService {
                 .toList();
     }
 
-    public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body) {
+    @Transactional
+    public MindmapDataExceptDateDto saveMindmapAndParticipant(long userId, MindmapArgsReqDto body) {
         Users user = usersRepository.findByKakaoId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        MindmapParticipant mindmapParticipant = transactionTemplate.execute(status -> {
-            String finalTitle = body.title();
-            if (finalTitle == null || finalTitle.isBlank()) {
-                if (body.isShared()) throw new CustomException(ErrorCode.MINDMAP_TITLE_REQUIRED);
-                finalTitle = getPrivateMindmapName(user);
-            }
-
-            Mindmap mindmap = new Mindmap(finalTitle, body.isShared());
-            Mindmap saved = mindmapRepository.save(mindmap);
-
-            MindmapParticipant participant = new MindmapParticipant(user, saved);
-            mindmapParticipantRepository.save(participant);
-
-            return participant;
-        });
-        try {
-            String presignedURL = snapshotRepository.createPresignedUploadUrl("maps/" + mindmapParticipant.getMindmap().getId());
-            return new MindmapCreatedWithUrlDto(MindmapDataExceptDateDto.of(mindmapParticipant), presignedURL);
-        } catch (Exception e) {
-            mindmapRepository.delete(mindmapParticipant.getMindmap());
-            throw new CustomException(ErrorCode.S3_URL_FAIL);
+        String finalTitle = body.title();
+        if (finalTitle == null || finalTitle.isBlank()) {
+            if (body.isShared()) throw new CustomException(ErrorCode.MINDMAP_TITLE_REQUIRED);
+            finalTitle = getPrivateMindmapName(user);
         }
+
+
+        Mindmap mindmap = new Mindmap(finalTitle, body.isShared());
+        mindmapRepository.save(mindmap);
+
+        MindmapParticipant participant = new MindmapParticipant(user, mindmap);
+        mindmapParticipantRepository.save(participant);
+
+        return MindmapDataExceptDateDto.of(participant);
+    }
+
+    @Transactional
+    public void rollbackMindmap(UUID mindmapId) {
+        mindmapRepository.findById(mindmapId).ifPresent(mindmapRepository::delete);
     }
 
     //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제

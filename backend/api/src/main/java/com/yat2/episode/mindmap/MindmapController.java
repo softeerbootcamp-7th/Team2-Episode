@@ -1,11 +1,13 @@
 package com.yat2.episode.mindmap;
 
 import com.yat2.episode.auth.AuthService;
+import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.mindmap.dto.*;
 import com.yat2.episode.global.exception.ErrorResponse;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,6 +37,7 @@ public class MindmapController {
 
     private final MindmapService mindmapService;
     private final AuthService authService;
+    private final S3SnapshotRepository snapshotRepository;
 
     @Operation(
             summary = "마인드맵 목록 조회 (통합)",
@@ -126,10 +129,19 @@ public class MindmapController {
     })
     @PostMapping()
     public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@RequestAttribute(USER_ID) long userId, @RequestBody MindmapArgsReqDto reqBody) {
-        MindmapCreatedWithUrlDto resBody = mindmapService.createMindmap(userId, reqBody);
+        MindmapDataExceptDateDto mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody);
+        MindmapCreatedWithUrlDto resBody = null;
+        try {
+            String presignedURL = snapshotRepository.createPresignedUploadUrl("maps/" + mindmapData.mindmapId());
+            resBody = new MindmapCreatedWithUrlDto(mindmapData, presignedURL);
+        } catch (Exception e) {
+            mindmapService.rollbackMindmap(mindmapData.mindmapId());
+            throw new CustomException(ErrorCode.S3_URL_FAIL);
+        }
+
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{mindmapId}")
-                .buildAndExpand(resBody.mindmap().mindmapId())
+                .buildAndExpand(mindmapData.mindmapId())
                 .toUri();
 
         return ResponseEntity
@@ -170,7 +182,7 @@ public class MindmapController {
             )
     })
     @AuthRequiredErrors
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND})
+    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
     @DeleteMapping("/{mindmapId}")
     public ResponseEntity<?> deleteMindmap(@RequestAttribute(USER_ID) long userId, @PathVariable String mindmapId) {
         mindmapService.deleteMindmap(userId, mindmapId);
@@ -188,7 +200,7 @@ public class MindmapController {
             )
     })
     @AuthRequiredErrors
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND})
+    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
     @PatchMapping("/{mindmapId}/favorite")
     public ResponseEntity<MindmapDataDto> updateFavoriteStatus(
             @RequestAttribute(USER_ID) long userId,
