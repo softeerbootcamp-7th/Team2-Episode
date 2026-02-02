@@ -53,7 +53,7 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
             code: "UNKNOWN_ERROR",
             message: `HTTP ${response.status}: ${response.statusText}`,
         }));
-        throw new Error(error.message || `HTTP ${response.status}`);
+        throw error;
     }
 
     if (response.status === 204) {
