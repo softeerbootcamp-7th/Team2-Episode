@@ -132,10 +132,7 @@ public class MindmapController {
         MindmapDataExceptDateDto mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody);
         try {
             MindmapCreatedWithUrlDto resBody = mindmapService.getUploadInfo(mindmapData);
-            URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                    .path("/{mindmapId}")
-                    .buildAndExpand(mindmapData.mindmapId())
-                    .toUri();
+            URI location = mindmapService.getCreatedURI(mindmapData.mindmapId());
 
             return ResponseEntity
                     .created(location)
