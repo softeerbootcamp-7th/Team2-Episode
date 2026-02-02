@@ -101,7 +101,7 @@ public class MindmapService {
 
     public MindmapParticipant getMindmapByUUIDString(Long userId, String uuidStr) {
         UUID mindmapId = getUUID(uuidStr);
-        return mindmapParticipantRepository.findByIdAndUserId(mindmapId, userId)
+        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 

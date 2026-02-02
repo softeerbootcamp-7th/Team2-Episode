@@ -49,11 +49,4 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
             """)
     List<MindmapParticipant> findByUserIdOrderByFavoriteAndUpdatedDesc(@Param("userId") Long userId);
 
-    @Query("""
-                SELECT p
-                FROM MindmapParticipant p
-                JOIN p.mindmap m
-                WHERE m.id = :uuid and p.user.kakaoId = :userId
-            """)
-    Optional<MindmapParticipant> findByIdAndUserId(@Param("uuid") UUID uuid, @Param("userId") Long userId);
 }
