@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
@@ -21,9 +20,7 @@ import java.util.*;
 public class S3PostSigner {
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    @Value("${aws.s3.max-upload-size:10485760}")
-    private long maxUploadSize;
+    private static final S3Properties s3Properties = new S3Properties();
 
     public Map<String, String> generatePostFields(String bucket, String key, String region,
                                                   String endpoint, AwsCredentials credentials) {
@@ -80,7 +77,7 @@ public class S3PostSigner {
                 conditions.add(Map.of("x-amz-security-token", sessionToken));
             }
 
-            conditions.add(List.of("content-length-range", 0, maxUploadSize));
+            conditions.add(List.of("content-length-range", 0, s3Properties.getMaxUploadSize()));
 
             policy.put("conditions", conditions);
             return objectMapper.writeValueAsString(policy);

@@ -15,6 +15,9 @@ public class S3Properties {
     private String endpoint;
     private String accessKey;
     private String secretKey;
+
+    private long maxUploadSize = 10485760L;
+
     private Bucket bucket = new Bucket();
 
     @Getter
