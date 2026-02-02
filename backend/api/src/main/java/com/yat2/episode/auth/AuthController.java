@@ -70,6 +70,7 @@ public class AuthController {
                     .header(HttpHeaders.LOCATION, redirect)
                     .build();
         } catch (Exception e) {
+            safeInvalidate(session);
             return redirectToFrontWithError(ErrorCode.INTERNAL_ERROR);
         }
     }
@@ -98,8 +99,6 @@ public class AuthController {
                 throw new CustomException(ErrorCode.INVALID_OAUTH_STATE);
             }
 
-            safeInvalidate(session);
-
             IssuedTokens tokens = authService.handleKakaoCallback(code);
 
             ResponseCookie accessCookie = authCookieFactory.access(tokens.accessToken());
@@ -112,11 +111,11 @@ public class AuthController {
                     .build();
 
         } catch (CustomException e) {
-            safeInvalidate(session);
             return redirectToFrontWithError(e.getErrorCode());
         } catch (Exception e) {
-            safeInvalidate(session);
             return redirectToFrontWithError(ErrorCode.INTERNAL_ERROR);
+        } finally {
+            safeInvalidate(session);
         }
     }
 
