@@ -49,6 +49,6 @@ export function put<TResponse, TBody extends object>(params: DataParams<TBody>):
 /**
  * DELETE 요청
  */
-export function del<TResponse>({ endpoint, options }: BaseParams): Promise<TResponse> {
+export function del<TResponse = void>({ endpoint, options }: BaseParams): Promise<TResponse> {
     return fetchWithAuth<TResponse>(endpoint, { ...options, method: "DELETE" });
 }
