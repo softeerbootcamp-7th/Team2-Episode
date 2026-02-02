@@ -43,6 +43,15 @@ public class UsersController {
         return usersService.getMe(userId);
     }
 
+    @Operation(
+            summary = "내 직무 설정",
+            description = "인증된 사용자의 직무(job)를 변경합니다. jobId는 Query Parameter로 전달합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "설정 성공 (응답 바디 없음)")
+    })
+    @AuthRequiredErrors
+    @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.JOB_NOT_FOUND})
     @PatchMapping("/me/job")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateMyJob(
