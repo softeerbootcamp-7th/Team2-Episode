@@ -31,7 +31,14 @@ public class MindmapParticipant {
     @JoinColumn(name = "mindmap_id", nullable = false)
     private Mindmap mindmap;
 
-    public MindmapParticipant(User user, Mindmap mindmap) {
+    @Column(name = "is_favorite", insertable = false)
+    private boolean isFavorite;
+
+    public void updateFavorite(boolean status) {
+        this.isFavorite = status;
+    }
+
+    public MindmapParticipant(User user, Mindmap mindmap){
         this.user = user;
         this.mindmap = mindmap;
     }

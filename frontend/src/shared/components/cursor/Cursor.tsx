@@ -6,7 +6,7 @@ type Props = {
 };
 
 const Cursor = ({ colorIndex = 0, name }: Props) => {
-    const colorKey = COLORS[colorIndex % COLORS.length];
+    const colorKey: Color = COLORS[colorIndex % COLORS.length] ?? "blue";
     const colorStyle = COLOR_MAP[colorKey];
 
     return (
@@ -26,11 +26,12 @@ const Cursor = ({ colorIndex = 0, name }: Props) => {
 
 export default Cursor;
 
-const COLOR_MAP = {
+const COLORS = ["blue", "pink", "green", "purple", "orange"] as const;
+type Color = (typeof COLORS)[number];
+const COLOR_MAP: Record<Color, { text: string; bg: string }> = {
     blue: { text: "text-cursor-blue", bg: "bg-cursor-blue" },
     pink: { text: "text-cursor-pink", bg: "bg-cursor-pink" },
     green: { text: "text-cursor-green", bg: "bg-cursor-green" },
     purple: { text: "text-cursor-purple", bg: "bg-cursor-purple" },
     orange: { text: "text-cursor-orange", bg: "bg-cursor-orange" },
 };
-const COLORS = Object.keys(COLOR_MAP);
