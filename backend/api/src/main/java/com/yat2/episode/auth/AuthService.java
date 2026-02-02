@@ -1,6 +1,12 @@
 package com.yat2.episode.auth;
 
 import com.nimbusds.jwt.JWTClaimsSet;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
 import com.yat2.episode.auth.jwt.IssuedTokens;
 import com.yat2.episode.auth.jwt.JwtProvider;
 import com.yat2.episode.auth.oauth.KakaoIdTokenVerifier;
@@ -9,11 +15,6 @@ import com.yat2.episode.auth.oauth.KakaoTokenResponse;
 import com.yat2.episode.auth.refresh.RefreshTokenService;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

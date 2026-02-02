@@ -1,9 +1,10 @@
 package com.yat2.episode.diagnosis;
 
-import com.yat2.episode.question.Question;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import com.yat2.episode.question.Question;
 
 @Entity
 @Getter

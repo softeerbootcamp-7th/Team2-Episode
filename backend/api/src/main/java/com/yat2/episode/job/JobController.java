@@ -1,9 +1,5 @@
 package com.yat2.episode.job;
 
-import com.yat2.episode.auth.security.Public;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.global.swagger.ApiErrorCodes;
-import com.yat2.episode.job.dto.OccupationWithJobsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,6 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+
+import com.yat2.episode.auth.security.Public;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.global.swagger.ApiErrorCodes;
+import com.yat2.episode.job.dto.OccupationWithJobsResponse;
+
 @Public
 @RestController
 @RequiredArgsConstructor

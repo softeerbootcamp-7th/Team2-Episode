@@ -1,12 +1,5 @@
 package com.yat2.episode.mindmap;
 
-import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.dto.*;
-import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +8,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.mindmap.constants.MindmapConstants;
+import com.yat2.episode.mindmap.dto.*;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
 
 @RequiredArgsConstructor
 @Service
@@ -82,8 +83,7 @@ public class MindmapService {
         try {
             Map<String, String> uploadInfo = snapshotRepository.createPresignedUploadInfo("maps/" + savedMindmap.getId());
             return new MindmapCreatedWithUrlDto(MindmapDataExceptDateDto.of(savedMindmap), uploadInfo);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             mindmapRepository.delete(savedMindmap);
             throw new CustomException(ErrorCode.S3_URL_FAIL);
         }

@@ -1,14 +1,5 @@
 package com.yat2.episode.auth;
 
-import com.yat2.episode.auth.cookie.AuthCookieFactory;
-import com.yat2.episode.auth.jwt.IssuedTokens;
-import com.yat2.episode.auth.oauth.KakaoProperties;
-import com.yat2.episode.auth.oauth.OAuthUtil;
-import com.yat2.episode.auth.refresh.RefreshTokenService;
-import com.yat2.episode.auth.security.Public;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.global.swagger.ApiErrorCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -24,6 +15,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.yat2.episode.auth.cookie.AuthCookieFactory;
+import com.yat2.episode.auth.jwt.IssuedTokens;
+import com.yat2.episode.auth.oauth.KakaoProperties;
+import com.yat2.episode.auth.oauth.OAuthUtil;
+import com.yat2.episode.auth.refresh.RefreshTokenService;
+import com.yat2.episode.auth.security.Public;
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.global.swagger.ApiErrorCodes;
+
 @Public
 @RestController
 @RequiredArgsConstructor
@@ -31,14 +32,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Tag(name = "Auth", description = "인증 관련")
 public class AuthController {
     private static final String SESSION_STATE = "OAUTH_STATE";
-
-    @Value("${auth.redirect}")
-    private String oauthRedirect;
-
     private final KakaoProperties kakaoProperties;
     private final AuthService authService;
     private final AuthCookieFactory authCookieFactory;
     private final RefreshTokenService refreshTokenService;
+    @Value("${auth.redirect}")
+    private String oauthRedirect;
 
     @GetMapping("/login")
     @Operation(
@@ -127,7 +126,7 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "재발급 성공 (응답 바디 없음, Set-Cookie로 토큰 갱신)")
     })
-    @ApiErrorCodes({ErrorCode.INVALID_TOKEN_TYPE, ErrorCode.INTERNAL_ERROR})
+    @ApiErrorCodes({ ErrorCode.INVALID_TOKEN_TYPE, ErrorCode.INTERNAL_ERROR })
     public ResponseEntity<Void> refresh(
             @Parameter(
                     in = ParameterIn.COOKIE,

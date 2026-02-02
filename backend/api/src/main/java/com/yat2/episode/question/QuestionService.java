@@ -1,12 +1,5 @@
 package com.yat2.episode.question;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.question.dto.CategoryGroupResponseDto;
-import com.yat2.episode.question.dto.SimpleQuestionDto;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.question.dto.CategoryGroupResponseDto;
+import com.yat2.episode.question.dto.SimpleQuestionDto;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
+
 @RequiredArgsConstructor
 @Service
 public class QuestionService {
@@ -22,7 +23,7 @@ public class QuestionService {
     private final UserService userService;
 
     @Transactional(readOnly = true)
-    public List<CategoryGroupResponseDto> getQuestionSetByUserId(long userId){
+    public List<CategoryGroupResponseDto> getQuestionSetByUserId(long userId) {
         User user = userService.getUserOrThrow(userId);
 
         if (user.getJob() == null) {

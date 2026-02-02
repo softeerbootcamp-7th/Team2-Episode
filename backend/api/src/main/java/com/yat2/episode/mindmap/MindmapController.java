@@ -1,8 +1,5 @@
 package com.yat2.episode.mindmap;
 
-import com.yat2.episode.auth.AuthService;
-import com.yat2.episode.mindmap.dto.*;
-import com.yat2.episode.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,6 +15,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+import com.yat2.episode.auth.AuthService;
+import com.yat2.episode.global.exception.ErrorResponse;
+import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
+import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
+import com.yat2.episode.mindmap.dto.MindmapDataDto;
+import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
+
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
 
@@ -26,10 +30,6 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @RequestMapping("/mindmap")
 @Tag(name = "Mindmap", description = "마인드맵 관리 API")
 public class MindmapController {
-    public enum MindmapVisibility {
-        ALL, PRIVATE, PUBLIC
-    }
-
     private final MindmapService mindmapService;
     private final AuthService authService;
 
@@ -155,5 +155,9 @@ public class MindmapController {
         // todo: userId 가져오기
         // todo: mindmap participant 테이블 반영
         return ResponseEntity.ok(null);
+    }
+
+    public enum MindmapVisibility {
+        ALL, PRIVATE, PUBLIC
     }
 }

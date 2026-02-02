@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface QuestionRepository  extends JpaRepository<Question, Integer> {
+public interface QuestionRepository extends JpaRepository<Question, Integer> {
     @Query("SELECT q FROM Question q JOIN FETCH q.competencyType")
     List<Question> findAllWithCompetency();
 

@@ -1,10 +1,11 @@
 package com.yat2.episode.user;
 
-import com.yat2.episode.job.Job;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.yat2.episode.job.Job;
 
 @Entity
 @Getter

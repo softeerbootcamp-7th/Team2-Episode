@@ -1,12 +1,13 @@
 package com.yat2.episode.auth.refresh;
 
-import com.yat2.episode.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+
+import com.yat2.episode.user.User;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

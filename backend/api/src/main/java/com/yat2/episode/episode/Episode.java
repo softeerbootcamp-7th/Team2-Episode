@@ -1,8 +1,5 @@
 package com.yat2.episode.episode;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.mindmap.Mindmap;
-import com.yat2.episode.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,6 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.mindmap.Mindmap;
+import com.yat2.episode.user.User;
 
 @Getter
 @Setter

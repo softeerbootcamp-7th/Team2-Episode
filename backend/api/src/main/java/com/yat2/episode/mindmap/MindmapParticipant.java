@@ -1,8 +1,11 @@
 package com.yat2.episode.mindmap;
 
-import com.yat2.episode.user.User;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import com.yat2.episode.user.User;
 
 @Entity
 @Getter
@@ -10,7 +13,7 @@ import lombok.*;
         name = "mindmap_participant",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_mindmap_participant_user_mindmap",
-                columnNames = {"user_id", "mindmap_id"}
+                columnNames = { "user_id", "mindmap_id" }
         )
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,7 +31,7 @@ public class MindmapParticipant {
     @JoinColumn(name = "mindmap_id", nullable = false)
     private Mindmap mindmap;
 
-    public MindmapParticipant(User user, Mindmap mindmap){
+    public MindmapParticipant(User user, Mindmap mindmap) {
         this.user = user;
         this.mindmap = mindmap;
     }

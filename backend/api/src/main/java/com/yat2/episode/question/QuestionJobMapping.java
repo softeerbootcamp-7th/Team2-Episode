@@ -1,11 +1,12 @@
 package com.yat2.episode.question;
 
 
-import com.yat2.episode.job.Job;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.yat2.episode.job.Job;
 
 @Getter
 @Entity
@@ -24,7 +25,7 @@ public class QuestionJobMapping {
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
-    public QuestionJobMapping(Job job, Question question){
+    public QuestionJobMapping(Job job, Question question) {
         this.question = question;
         this.job = job;
     }

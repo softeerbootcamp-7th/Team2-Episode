@@ -1,11 +1,12 @@
 package com.yat2.episode.question;
 
-import com.yat2.episode.job.Job;
-import com.yat2.episode.competency.CompetencyType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.job.Job;
 
 @Getter
 @Entity

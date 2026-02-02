@@ -1,12 +1,10 @@
 package com.yat2.episode.global.swagger;
 
-import com.yat2.episode.auth.security.Public;
-import com.yat2.episode.global.exception.ErrorCode;
-import io.swagger.v3.oas.models.media.Content;
-import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.customizers.OperationCustomizer;
@@ -16,12 +14,15 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.yat2.episode.auth.cookie.AuthCookieNames.*;
+import com.yat2.episode.auth.security.Public;
+import com.yat2.episode.global.exception.ErrorCode;
+
+import static com.yat2.episode.auth.cookie.AuthCookieNames.ACCESS_COOKIE_NAME;
+import static com.yat2.episode.auth.cookie.AuthCookieNames.REFRESH_COOKIE_NAME;
 
 @Configuration
 public class SwaggerConfig {

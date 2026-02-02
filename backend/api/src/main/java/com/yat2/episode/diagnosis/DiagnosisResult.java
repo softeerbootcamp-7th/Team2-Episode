@@ -1,10 +1,11 @@
 package com.yat2.episode.diagnosis;
 
-import com.yat2.episode.job.Job;
-import com.yat2.episode.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import com.yat2.episode.job.Job;
+import com.yat2.episode.user.User;
 
 @Getter
 @Setter

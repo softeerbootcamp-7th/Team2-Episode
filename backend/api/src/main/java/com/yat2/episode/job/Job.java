@@ -11,7 +11,7 @@ import lombok.Setter;
         name = "job",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_job_occupation_name",
-                columnNames = {"occupation_id", "name"}
+                columnNames = { "occupation_id", "name" }
         )
 )
 public class Job {
