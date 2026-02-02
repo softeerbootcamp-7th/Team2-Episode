@@ -35,7 +35,7 @@ public class MindmapParticipant {
         this.isFavorite = status;
     }
 
-    public MindmapParticipant(Users user, Mindmap mindmap){
+    public MindmapParticipant(User user, Mindmap mindmap){
         this.user = user;
         this.mindmap = mindmap;
     }

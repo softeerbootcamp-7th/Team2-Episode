@@ -6,6 +6,7 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.dto.*;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserRepository;
 import com.yat2.episode.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,10 +22,9 @@ import java.util.UUID;
 public class MindmapService {
     private final MindmapRepository mindmapRepository;
     private final MindmapParticipantRepository mindmapParticipantRepository;
-    private final UsersRepository usersRepository;
+    private final UserRepository userRepository;
     private final S3SnapshotRepository snapshotRepository;
     private final TransactionTemplate transactionTemplate;
-    private final UserService userService;
 
     public MindmapDataDto getMindmapById(Long userId, String mindmapIdStr) {
         return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
@@ -65,7 +65,7 @@ public class MindmapService {
 
     @Transactional
     public MindmapDataExceptDateDto saveMindmapAndParticipant(long userId, MindmapArgsReqDto body) {
-        Users user = usersRepository.findByKakaoId(userId)
+        User user = (User) userRepository.findByKakaoId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         String finalTitle = body.title();
         if (finalTitle == null || finalTitle.isBlank()) {
@@ -86,22 +86,10 @@ public class MindmapService {
     public void rollbackMindmap(UUID mindmapId) {
         mindmapRepository.findById(mindmapId).ifPresent(mindmapRepository::delete);
     }
-    public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body) {
-        User user = userService.getUserOrThrow(userId);
 
-        Mindmap mindmap = new Mindmap(finalTitle, body.isShared());
-        mindmapRepository.save(mindmap);
-
-        MindmapParticipant participant = new MindmapParticipant(user, mindmap);
-        mindmapParticipantRepository.save(participant);
-        try {
-            Map<String, String> uploadInfo = snapshotRepository.createPresignedUploadInfo("maps/" + savedMindmap.getId());
-            return new MindmapCreatedWithUrlDto(MindmapDataExceptDateDto.of(savedMindmap), uploadInfo);
-        }
-        catch (Exception e) {
-            mindmapRepository.delete(savedMindmap);
-            throw new CustomException(ErrorCode.S3_URL_FAIL);
-        }
+    public MindmapCreatedWithUrlDto getUploadInfo(MindmapDataExceptDateDto mindmapDatas){
+            Map<String, String> uploadInfo = snapshotRepository.createPresignedUploadInfo("maps/" + mindmapDatas.mindmapId());
+            return new MindmapCreatedWithUrlDto(mindmapDatas, uploadInfo);
     }
 
     //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제
@@ -164,12 +152,11 @@ public class MindmapService {
     public void deleteMindmap(long userId, String mindmapId) {
         UUID mindmapUUID = getUUID(mindmapId);
 
-
         Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
 
         int deletedCount = mindmapParticipantRepository.deleteByMindmapIdAndUserId(mindmapUUID, userId);
-        if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND);
+        if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_NOT_FOUND);
 
         boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapUUID);
 

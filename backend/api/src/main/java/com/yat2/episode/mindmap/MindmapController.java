@@ -130,23 +130,21 @@ public class MindmapController {
     @PostMapping()
     public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@RequestAttribute(USER_ID) long userId, @RequestBody MindmapArgsReqDto reqBody) {
         MindmapDataExceptDateDto mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody);
-        MindmapCreatedWithUrlDto resBody = null;
         try {
-            String presignedURL = snapshotRepository.createPresignedUploadUrl("maps/" + mindmapData.mindmapId());
-            resBody = new MindmapCreatedWithUrlDto(mindmapData, presignedURL);
-        } catch (Exception e) {
-            mindmapService.rollbackMindmap(mindmapData.mindmapId());
-            throw new CustomException(ErrorCode.S3_URL_FAIL);
+            MindmapCreatedWithUrlDto resBody = mindmapService.getUploadInfo(mindmapData);
+            URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                    .path("/{mindmapId}")
+                    .buildAndExpand(mindmapData.mindmapId())
+                    .toUri();
+
+            return ResponseEntity
+                    .created(location)
+                    .body(resBody);
         }
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{mindmapId}")
-                .buildAndExpand(mindmapData.mindmapId())
-                .toUri();
-
-        return ResponseEntity
-                .created(location)
-                .body(resBody);
+        catch (CustomException e){
+            mindmapService.rollbackMindmap(mindmapData.mindmapId());
+            throw e;
+        }
     }
 
     @PostMapping("/connect/{mindmapId}")

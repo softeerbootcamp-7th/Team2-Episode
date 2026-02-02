@@ -29,7 +29,7 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
     @Query("""
                 SELECT p
                 FROM MindmapParticipant p
-                JOIN p.mindmap m
+                JOIN FETCH p.mindmap m
                 WHERE p.user.kakaoId = :userId
                   AND m.shared = :shared
                 ORDER BY p.isFavorite DESC, m.updatedAt DESC
@@ -43,7 +43,7 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
     @Query("""
                 SELECT p
                 FROM MindmapParticipant p
-                JOIN p.mindmap m
+                JOIN FETCH p.mindmap m
                 WHERE p.user.kakaoId = :userId
                 ORDER BY p.isFavorite DESC, m.updatedAt DESC
             """)
