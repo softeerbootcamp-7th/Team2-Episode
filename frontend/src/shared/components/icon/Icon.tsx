@@ -13,7 +13,7 @@ type Props = {
  * size를 주면 정사각형 크기, width height를 주면 직사각형 크기로 렌더링합니다.
  */
 function Icon({
-    color = "currentColor",
+    color,
     size = 24,
     width = size,
     height = size,
@@ -24,7 +24,7 @@ function Icon({
 }: Props) {
     return (
         <svg
-            color={color}
+            color={color ? color : "none"}
             width={width ? width : size}
             height={height ? height : size}
             strokeWidth={strokeWidth}
