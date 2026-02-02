@@ -37,4 +37,12 @@ public class Users {
     public void changeNickname(String nickname) {
         this.nickname = nickname;
     }
+
+    public void updateJob(Job job) {
+        this.job = job;
+    }
+
+    public void markFeatureGuideWatched() {
+        this.hasWatchedFeatureGuide = true;
+    }
 }
