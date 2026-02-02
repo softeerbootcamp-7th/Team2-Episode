@@ -59,7 +59,6 @@ public class MindmapService {
                 .toList();
     }
 
-    @Transactional
     public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body) {
         Users user = usersRepository.findByKakaoId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
