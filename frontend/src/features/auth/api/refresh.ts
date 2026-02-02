@@ -13,7 +13,9 @@ let refreshPromise: Promise<boolean> | null = null;
  */
 export class TokenRefreshError extends Error {
     constructor(code: string = "TOKEN_EXPIRED") {
-        super(isErrorCodeKey(code) ? ERROR_CODES[code] : ERROR_META.TOKEN_REFRESH_ERROR.defaultMessage);
+        const message = isErrorCodeKey(code) ? ERROR_CODES[code] : ERROR_META.TOKEN_REFRESH_ERROR.defaultMessage;
+
+        super(message);
         this.name = ERROR_META.TOKEN_REFRESH_ERROR.name;
         this.code = code;
     }
