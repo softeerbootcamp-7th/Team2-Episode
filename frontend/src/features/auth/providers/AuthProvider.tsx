@@ -5,8 +5,8 @@ import { AuthContext } from "@/features/auth/hooks/useAuth";
 import type { User } from "@/features/auth/types/user";
 import { get } from "@/shared/api/method";
 
-const USER_API = "/users";
-const USER_ME_API = `${USER_API}/me`;
+const USER_ENDPOINT = "/users";
+const USER_ME_ENDPOINT = `${USER_ENDPOINT}/me`;
 
 type AuthProviderProps = {
     children: React.ReactNode;
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkAuth = useCallback(async () => {
         setIsLoading(true);
         try {
-            const me = await get<User>({ endpoint: USER_ME_API });
+            const me = await get<User>({ endpoint: USER_ME_ENDPOINT });
             setUser(me);
             setIsAuthenticated(true);
         } catch {
