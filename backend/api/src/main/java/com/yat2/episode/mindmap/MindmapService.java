@@ -163,7 +163,7 @@ public class MindmapService {
     @Transactional
     public MindmapDataDto updateFavoriteStatus(long userId, String mindmapId, boolean status) {
         MindmapParticipant participant = mindmapParticipantRepository
-                .findByMindmapIdAndUserId(UUID.fromString(mindmapId), userId)
+                .findByMindmapIdAndUserId(getUUID(mindmapId), userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND));
 
         participant.updateFavorite(status);
