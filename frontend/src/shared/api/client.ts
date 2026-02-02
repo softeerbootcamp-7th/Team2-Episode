@@ -1,6 +1,6 @@
-import { ApiError } from "@features/auth/types/api.types";
-import { getRefreshState, refreshToken, setRefreshState, TokenRefreshError } from "@shared/api/refresh";
-import type { FetchOptions } from "@shared/api/types";
+import { getRefreshState, refreshToken, setRefreshState, TokenRefreshError } from "@/features/auth/api/refresh";
+import { ApiError } from "@/features/auth/types/api.types";
+import type { FetchOptions } from "@/shared/api/types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
