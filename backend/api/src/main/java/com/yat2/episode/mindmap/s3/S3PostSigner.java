@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
@@ -17,10 +18,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
+@RequiredArgsConstructor
 public class S3PostSigner {
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final S3Properties s3Properties = new S3Properties();
+    private final S3Properties s3Properties;
 
     public Map<String, String> generatePostFields(String bucket, String key, String region,
                                                   String endpoint, AwsCredentials credentials) {
