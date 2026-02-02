@@ -1,25 +1,24 @@
-import IcIconMove from "@icons/ic_tool_move.svg?react";
-import { cva, VariantProps } from "class-variance-authority";
 import { ComponentPropsWithoutRef } from "react";
 
 import { COLOR_CLASS_MAP, NodeColor } from "@/features/mindmap/node/constants/colors";
+import Icon from "@/shared/components/icon/Icon";
 import { cn } from "@/utils/cn";
 
+type DirectionVariantProps = {
+    direction: "left" | "right";
+};
+
 type Props = Omit<ComponentPropsWithoutRef<"button">, "color"> &
-    VariantProps<typeof DirectionProps> & {
+    DirectionVariantProps & {
         color: NodeColor;
     };
 
-const DirectionProps = cva("w-5 h-6 text-base-white", {
-    variants: {
-        direction: {
-            left: "rotate-310",
-            right: "rotate-135",
-        },
-    },
-});
+const DIRECTION_ROTATE_MAP: Record<DirectionVariantProps["direction"], number> = {
+    left: 310,
+    right: 135,
+};
 
-export default function AddNodeArrow({ color, direction, className }: Props) {
+export default function AddNodeArrow({ color, direction }: Props) {
     const handleAddNode = () => {
         // TODO: menu 컴포넌트 생성
     };
@@ -32,7 +31,13 @@ export default function AddNodeArrow({ color, direction, className }: Props) {
     return (
         <button onClick={handleAddNode} className={outerCircleClass}>
             <div className={iconCircleClass}>
-                <IcIconMove className={cn(DirectionProps({ direction }), className)} />
+                <Icon
+                    name="ic_tool_move"
+                    color="var(--color-base-white)"
+                    fill="var(--color-base-white)"
+                    size={17}
+                    rotate={DIRECTION_ROTATE_MAP[direction]}
+                />
             </div>
         </button>
     );
