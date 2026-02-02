@@ -59,6 +59,7 @@ public class MindmapService {
                 .toList();
     }
 
+    @Transactional
     public MindmapCreatedWithUrlDto createMindmap(Long userId, MindmapArgsReqDto body) {
         Users user = usersRepository.findByKakaoId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -162,7 +163,12 @@ public class MindmapService {
 
     @Transactional
     public MindmapDataDto updateFavoriteStatus(long userId, String mindmapId, boolean status) {
+        MindmapParticipant participant = mindmapParticipantRepository
+                .findByMindmapIdAndUserId(UUID.fromString(mindmapId), userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND));
 
-        return null;
+        participant.updateFavorite(status);
+
+        return MindmapDataDto.of(participant);
     }
 }
