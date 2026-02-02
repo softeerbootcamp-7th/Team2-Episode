@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { logout as logoutApi } from "@/features/auth/api/auth";
 import { AuthContext } from "@/features/auth/contexts/AuthContext";
 import type { User } from "@/features/auth/types/user.types";
 import { get } from "@/shared/api/method";
@@ -22,8 +23,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     const logout = async () => {
-        setUser(null);
-        setIsAuthenticated(false);
+        try {
+            await logoutApi();
+        } finally {
+            setUser(null);
+            setIsAuthenticated(false);
+        }
     };
 
     // checkAuth: 내 정보 API 호출로 인증 상태 확인
