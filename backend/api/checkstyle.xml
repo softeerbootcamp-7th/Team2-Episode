@@ -5,19 +5,15 @@
 
 <module name="Checker">
 
-    <!-- 탭 문자 금지 -->
     <module name="FileTabCharacter"/>
 
-    <!-- 파일 끝 개행 -->
     <module name="NewlineAtEndOfFile"/>
 
-    <!-- ✅ TrailingWhitespace 대신: 줄 끝 공백 금지 -->
     <module name="RegexpSingleline">
         <property name="format" value="\s+$"/>
         <property name="message" value="Trailing whitespace"/>
     </module>
 
-    <!-- 한 줄 길이 -->
     <module name="LineLength">
         <property name="max" value="120"/>
         <property name="ignorePattern" value="^package\s|^import\s|https?://|ftp://"/>
@@ -38,14 +34,8 @@
             <property name="separateLineBetweenGroups" value="true"/>
         </module>
 
-        <!-- unused import -->
         <module name="UnusedImports"/>
-
-        <!-- star import는 IntelliJ 쪽에서 임계값 올려서 금지할 거면 유지 -->
         <module name="AvoidStarImport"/>
-
-        <!-- static import 금지: IntelliJ에 static group이 있으니 끔 -->
-        <!-- <module name="AvoidStaticImport"/> -->
 
     </module>
 </module>
