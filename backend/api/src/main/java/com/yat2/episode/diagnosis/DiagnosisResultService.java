@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
 import com.yat2.episode.diagnosis.dto.DiagnosisSimpleNoDateDto;
@@ -27,20 +28,31 @@ public class DiagnosisResultService {
     @Transactional
     public DiagnosisSimpleNoDateDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
         User user = userService.getUserOrThrow(userId);
-        if (user.getJob() == null) throw new CustomException(ErrorCode.JOB_NOT_SELECTED);
-        DiagnosisResult diagnosisResult =
-                diagnosisResultRepository.save(DiagnosisResult.newDiagnosis(user, user.getJob()));
-        for (Integer questionId : reqDto.unansweredQuestionIds()) {
-            Question question = questionRepository.findById(questionId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.QUESTION_NOT_FOUND));
-            diagnosisWeaknessRepository.save(DiagnosisWeakness.newDiagnosisWeakness(diagnosisResult, question));
+        validateUserJob(user);
+
+        List<Question> questions = questionRepository.findAllById(reqDto.unansweredQuestionIds());
+        if (questions.size() != reqDto.unansweredQuestionIds().size()) {
+            throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
         }
 
-        return DiagnosisSimpleNoDateDto.of(diagnosisResult, reqDto.unansweredQuestionIds().size());
+        DiagnosisResult diagnosisResult =
+                diagnosisResultRepository.save(DiagnosisResult.newDiagnosis(user, user.getJob()));
+
+        List<DiagnosisWeakness> weaknesses =
+                questions.stream().map(q -> DiagnosisWeakness.newDiagnosisWeakness(diagnosisResult, q)).toList();
+        diagnosisWeaknessRepository.saveAll(weaknesses);
+
+        return DiagnosisSimpleNoDateDto.of(diagnosisResult, weaknesses.size());
     }
 
     public URI getCreatedURI(Integer diagnosisId) {
         return ServletUriComponentsBuilder.fromCurrentRequest().path("/{diagnosisId}").buildAndExpand(diagnosisId)
                 .toUri();
+    }
+
+    private void validateUserJob(User user) {
+        if (user.getJob() == null) {
+            throw new CustomException(ErrorCode.JOB_NOT_SELECTED);
+        }
     }
 }
