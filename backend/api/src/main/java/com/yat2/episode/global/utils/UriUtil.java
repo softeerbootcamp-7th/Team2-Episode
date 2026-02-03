@@ -4,7 +4,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
-public class UriUtil {
+public final class UriUtil {
+    private UriUtil() {}
+
     public static URI createLocationUri(Object id) {
         return ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
     }
