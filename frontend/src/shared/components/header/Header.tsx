@@ -13,7 +13,7 @@ export default function Header() {
     const isLanding = pathname === "/landing";
 
     return (
-        <div className="min-h-screen overflow-hidden">
+        <div className="overflow-hidden">
             <GlobalNavigationBar
                 variant={isLanding ? "transparent" : undefined}
                 rightSlot={

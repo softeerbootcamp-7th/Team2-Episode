@@ -15,8 +15,12 @@ import { ROUTE_PATHS } from "@/shared/utils/route";
 function RootLayout() {
     return (
         <AuthProvider>
-            <Header />
-            <Outlet />
+            <div className="flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-1">
+                    <Outlet />
+                </main>
+            </div>
         </AuthProvider>
     );
 }
@@ -26,9 +30,8 @@ const router = createBrowserRouter([
         element: <RootLayout />,
         children: [
             {
-                path: ROUTE_PATHS.home,
-                middleware: [middleWare],
                 element: <HomePage />,
+                middleware: [middleWare],
                 children: [
                     {
                         index: true,
