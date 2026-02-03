@@ -32,11 +32,12 @@ public class DiagnosisWeakness {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    public static DiagnosisWeakness newDiagnosisWeakness(DiagnosisResult diagnosisResult, Question question) {
-        DiagnosisWeakness d = new DiagnosisWeakness();
-        d.diagnosisResult = diagnosisResult;
-        d.question = question;
+    private DiagnosisWeakness(DiagnosisResult diagnosisResult, Question question) {
+        this.diagnosisResult = diagnosisResult;
+        this.question = question;
+    }
 
-        return d;
+    public static DiagnosisWeakness newDiagnosisWeakness(DiagnosisResult diagnosisResult, Question question) {
+        return new DiagnosisWeakness(diagnosisResult, question);
     }
 }

@@ -39,12 +39,13 @@ public class DiagnosisResult {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-    public static DiagnosisResult newDiagnosis(User user, Job job) {
-        DiagnosisResult d = new DiagnosisResult();
-        d.user = user;
-        d.job = job;
 
-        return d;
+    private DiagnosisResult(User user, Job job) {
+        this.user = user;
+        this.job = job;
+    }
+
+    public static DiagnosisResult newDiagnosis(User user, Job job) {
+        return new DiagnosisResult(user, job);
     }
 }
