@@ -8,6 +8,7 @@ import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.mindmap.dto.*;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
@@ -105,7 +105,7 @@ public class MindmapController {
     public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@RequestAttribute(USER_ID) long userId,
                                                                   @RequestBody MindmapArgsReqDto reqBody) {
         UUID uuid = UuidCreator.getTimeOrderedEpoch();
-        Map<String, String> presignedData = mindmapService.getUploadInfo(uuid);
+        S3UploadResponseDto presignedData = mindmapService.getUploadInfo(uuid);
         MindmapDataExceptDateDto mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody, uuid);
         MindmapCreatedWithUrlDto resBody = new MindmapCreatedWithUrlDto(mindmapData, presignedData);
         URI location = mindmapService.getCreatedURI(resBody.mindmap().mindmapId());

@@ -1,10 +1,9 @@
 package com.yat2.episode.mindmap.s3;
 
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-
-import java.util.Map;
 
 @Repository
 public class S3SnapshotRepository {
@@ -23,7 +22,7 @@ public class S3SnapshotRepository {
         this.endpoint = s3Properties.getEndpoint();
     }
 
-    public Map<String, String> createPresignedUploadInfo(String objectKey) {
+    public S3UploadResponseDto createPresignedUploadInfo(String objectKey) {
         AwsCredentials credentials = credentialsProvider.resolveCredentials();
 
         return s3PostSigner.generatePostFields(bucketName, objectKey, region, endpoint, credentials);

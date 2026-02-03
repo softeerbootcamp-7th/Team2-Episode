@@ -2,25 +2,22 @@ package com.yat2.episode.mindmap.s3;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -29,14 +26,14 @@ public class S3PostSigner {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final S3Properties s3Properties;
 
-    public Map<String, String> generatePostFields(String bucket, String key, String region, String endpoint,
+    public S3UploadResponseDto generatePostFields(String bucket, String key, String region, String endpoint,
                                                   AwsCredentials credentials) {
 
         String accessKey = credentials.accessKeyId();
         String secretKey = credentials.secretAccessKey();
         String sessionToken =
                 (credentials instanceof AwsSessionCredentials) ? ((AwsSessionCredentials) credentials).sessionToken() :
-                null;
+                        null;
 
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
         String dateStamp = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -48,23 +45,21 @@ public class S3PostSigner {
         String policyBase64 = Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
         String signature = calculateSignature(policyBase64, secretKey, dateStamp, region);
 
-        Map<String, String> fields = new LinkedHashMap<>();
 
         String actionUrl = (endpoint != null && !endpoint.isEmpty()) ? endpoint + "/" + bucket :
-                           "https://" + bucket + ".s3." + region + ".amazonaws.com";
+                "https://" + bucket + ".s3." + region + ".amazonaws.com";
 
-        fields.put("action", actionUrl);
-        fields.put("key", key);
-        fields.put("x-amz-algorithm", "AWS4-HMAC-SHA256");
-        fields.put("x-amz-credential", credential);
-        fields.put("x-amz-date", xAmzDate);
-        if (sessionToken != null) {
-            fields.put("x-amz-security-token", sessionToken);
-        }
-        fields.put("policy", policyBase64);
-        fields.put("x-amz-signature", signature);
+        S3UploadFieldsDto fields = new S3UploadFieldsDto(
+                key,
+                "AWS4-HMAC-SHA256",
+                credential,
+                xAmzDate,
+                sessionToken,
+                policyBase64,
+                signature
+        );
 
-        return fields;
+        return new S3UploadResponseDto(actionUrl, fields);
     }
 
     private String createPolicyJson(String bucket, String key, String credential, String xAmzDate, String sessionToken,

@@ -8,6 +8,7 @@ import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
 import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -76,7 +76,7 @@ public class MindmapService {
         return MindmapDataExceptDateDto.of(participant);
     }
 
-    public Map<String, String> getUploadInfo(UUID mindmapId) {
+    public S3UploadResponseDto getUploadInfo(UUID mindmapId) {
         return snapshotRepository.createPresignedUploadInfo("maps/" + mindmapId);
     }
 
