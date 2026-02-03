@@ -35,12 +35,12 @@ public class DiagnosisResultController {
             """)
     @ApiResponses({ @ApiResponse(responseCode = "201", description = "저장 성공") })
     @AuthRequiredErrors
-    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, })
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND })
     @PostMapping()
     public ResponseEntity<DiagnosisSimpleDto> createMindmap(@RequestAttribute(USER_ID) long userId,
                                                             @RequestBody DiagnosisArgsReqDto reqBody) {
-        DiagnosisSimpleDto resBody = null;//diagnosisResultService.createDiagnosis(userId, reqBody);
-        URI location = null;//diagnosisResultService.getCreatedURI(resBody.mindmap().mindmapId());
+        DiagnosisSimpleDto resBody = diagnosisResultService.createDiagnosis(userId, reqBody);
+        URI location = diagnosisResultService.getCreatedURI(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
     }
 }

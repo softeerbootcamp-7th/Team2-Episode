@@ -9,7 +9,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +20,7 @@ import com.yat2.episode.user.User;
 
 @Getter
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "diagnosis_result")
 public class DiagnosisResult {
 
@@ -36,4 +39,12 @@ public class DiagnosisResult {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+    
+    public static DiagnosisResult newDiagnosis(User user, Job job) {
+        DiagnosisResult d = new DiagnosisResult();
+        d.user = user;
+        d.job = job;
+
+        return d;
+    }
 }
