@@ -35,7 +35,8 @@ public class DiagnosisResultController {
             """)
     @ApiResponses({ @ApiResponse(responseCode = "201", description = "저장 성공") })
     @AuthRequiredErrors
-    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND })
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND,
+                     ErrorCode.JOB_NOT_SELECTED })
     @PostMapping()
     public ResponseEntity<DiagnosisSimpleDto> createMindmap(@RequestAttribute(USER_ID) long userId,
                                                             @RequestBody DiagnosisArgsReqDto reqBody) {

@@ -27,6 +27,7 @@ public class DiagnosisResultService {
     @Transactional
     public DiagnosisSimpleDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
         User user = userService.getUserOrThrow(userId);
+        if (user.getJob() == null) throw new CustomException(ErrorCode.JOB_NOT_SELECTED);
         DiagnosisResult diagnosisResult =
                 diagnosisResultRepository.save(DiagnosisResult.newDiagnosis(user, user.getJob()));
         for (Integer questionId : reqDto.unansweredQuestionIds()) {
