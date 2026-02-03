@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { toast } from "sonner";
 
 import { logout as logoutApi } from "@/features/auth/api/auth";
+import { isApiError } from "@/features/auth/api/error";
+import { hasAuthTokens } from "@/features/auth/api/refresh";
 import { AuthContext } from "@/features/auth/hooks/useAuth";
 import type { User } from "@/features/auth/types/user";
 import { get } from "@/shared/api/method";
@@ -14,12 +19,41 @@ type AuthProviderProps = {
 
 export function AuthProvider({ children }: AuthProviderProps) {
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const { pathname } = useLocation();
+    const pathnameRef = useRef(pathname);
 
-    const { data: user, isLoading } = useQuery({
+    const {
+        data: user,
+        isLoading,
+        error,
+    } = useQuery({
         queryKey: ["auth", "user"],
         queryFn: async () => get<User>({ endpoint: USER_ME_ENDPOINT }),
         staleTime: 1000 * 60 * 5,
+        enabled: hasAuthTokens(),
     });
+
+    // 페이지 이동 시 ref만 업데이트(useEffect 실행 안 함)
+    useEffect(() => {
+        pathnameRef.current = pathname;
+    }, [pathname]);
+
+    useEffect(() => {
+        if (isApiError(error) && error.status === 401) {
+            const currentPath = pathnameRef.current;
+            // 끝에 붙은 / 제거
+            const cleanPath = currentPath.endsWith("/") && currentPath !== "/" ? currentPath.slice(0, -1) : currentPath;
+
+            const isExcludedPage = ["/landing", "/login"].includes(cleanPath);
+
+            if (!isExcludedPage) {
+                toast.error("로그인이 필요합니다.");
+                navigate("/landing");
+                queryClient.clear();
+            }
+        }
+    }, [error]);
 
     const login = async (newUser: User): Promise<void> => {
         queryClient.setQueryData(["auth", "user"], newUser);

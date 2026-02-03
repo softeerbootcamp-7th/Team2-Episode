@@ -4,7 +4,7 @@ import { ERROR_CODE_KEYS, ERROR_CODES } from "@/shared/constants/error";
 /**
  * ApiError 타입 가드
  */
-function isApiError(error: unknown): error is ApiError {
+export function isApiError(error: unknown): error is ApiError {
     return error !== null && typeof error === "object" && "status" in error && "code" in error && "message" in error;
 }
 
