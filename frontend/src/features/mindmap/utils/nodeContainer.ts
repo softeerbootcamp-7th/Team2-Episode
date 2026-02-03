@@ -46,7 +46,6 @@ export default class NodeContainer {
             this.nodeContainer.set(nodeId, { ...node });
         }
 
-        console.log(nodeId.slice(0, 4), node?.type);
         this.broker.publish(nodeId);
     }
 
@@ -125,7 +124,7 @@ export default class NodeContainer {
             const nextSibling = this._getNode(baseNode.nextId);
             nextSibling.prevId = movingNode.id;
 
-            this.notify(nextSibling.id);
+            // this.notify(nextSibling.id);
         }
 
         baseNode.nextId = movingNode.id;
@@ -152,7 +151,7 @@ export default class NodeContainer {
             const prevSibling = this._getNode(baseNode.prevId);
             prevSibling.nextId = movingNode.id;
 
-            this.notify(prevSibling.id);
+            // this.notify(prevSibling.id);
         }
 
         baseNode.prevId = movingNode.id;
