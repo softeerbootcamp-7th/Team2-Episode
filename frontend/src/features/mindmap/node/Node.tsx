@@ -1,11 +1,11 @@
 import { memo, useMemo } from "react";
 
-import { useMindmapContainer, useNode } from "@/features/mindmap/providers/NodeContainerProvider";
+import { useMindmapContext, useNode } from "@/features/mindmap/providers/MindmapProvider";
 
 export const NodeItem = memo(({ nodeId }: { nodeId: string }) => {
     // 1. 내 데이터 구독 (데이터 바뀌면 나만 리렌더링)
     const node = useNode(nodeId);
-    const { container } = useMindmapContainer();
+    const { container } = useMindmapContext();
 
     // 2. 자식 ID 목록 계산
     // node가 리렌더링될 때(즉, node 객체가 새로 바뀌었을 때)만 다시 계산

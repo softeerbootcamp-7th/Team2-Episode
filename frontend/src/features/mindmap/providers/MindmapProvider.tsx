@@ -31,7 +31,7 @@ export const MindMapProvider = ({ children }: { children: React.ReactNode }) => 
     return <MindMapContext.Provider value={mindmapRef.current}>{children}</MindMapContext.Provider>;
 };
 
-export const useMindmapContainer = () => {
+export const useMindmapContext = () => {
     const context = useContext(MindMapContext);
 
     if (!context) throw new Error("Provider is missing!");
@@ -40,7 +40,7 @@ export const useMindmapContainer = () => {
 };
 
 export const useNode = (nodeId: NodeId) => {
-    const { container, broker } = useMindmapContainer();
+    const { container, broker } = useMindmapContext();
 
     const subscribe = useCallback(
         (onStoreChange: () => void) => {
