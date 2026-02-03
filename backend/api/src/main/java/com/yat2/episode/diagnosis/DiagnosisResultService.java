@@ -1,19 +1,18 @@
 package com.yat2.episode.diagnosis;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-
 import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisSimpleNoDateDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisSimpleDto;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.question.Question;
 import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class DiagnosisResultService {
     private final UserService userService;
 
     @Transactional
-    public DiagnosisSimpleNoDateDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
+    public DiagnosisSimpleDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
         User user = userService.getUserOrThrow(userId);
         validateUserJob(user);
 
@@ -41,7 +40,7 @@ public class DiagnosisResultService {
                 questions.stream().map(q -> DiagnosisWeakness.newDiagnosisWeakness(diagnosisResult, q)).toList();
         diagnosisWeaknessRepository.saveAll(weaknesses);
 
-        return DiagnosisSimpleNoDateDto.of(diagnosisResult, weaknesses.size());
+        return DiagnosisSimpleDto.of(diagnosisResult, weaknesses.size());
     }
 
     private void validateUserJob(User user) {
