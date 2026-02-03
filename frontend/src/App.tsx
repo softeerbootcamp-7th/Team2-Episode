@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import { Toaster } from "sonner";
 
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
@@ -8,37 +8,48 @@ import LandingPage from "@/features/landing/pages/LandingPage";
 import MindmapPage from "@/features/mindmap/pages/MindmapPage";
 import SelfDiagnosisPage from "@/features/self_diagnosis/pages/SelfDiagnosisPage";
 import LoginPage from "@/features/user/login/pages/LoginPages";
+import Header from "@/shared/components/header/Header";
 import { ROUTE_PATHS } from "@/shared/utils/route";
+
+function RootLayout() {
+    return (
+        <AuthProvider>
+            <Header />
+            <Outlet />
+        </AuthProvider>
+    );
+}
 
 const router = createBrowserRouter([
     {
-        path: ROUTE_PATHS.home,
-        element: (
-            <AuthProvider>
-                <HomePage />
-            </AuthProvider>
-        ),
+        element: <RootLayout />,
         children: [
             {
-                path: ROUTE_PATHS.mindmap.list,
-                element: <MindmapPage />,
+                path: ROUTE_PATHS.home,
+                element: <HomePage />,
+                children: [
+                    {
+                        path: ROUTE_PATHS.mindmap.list,
+                        element: <MindmapPage />,
+                    },
+                    {
+                        path: ROUTE_PATHS.episode_archive,
+                        element: <EpisodeArchivePage />,
+                    },
+                    {
+                        path: ROUTE_PATHS.self_diagnosis.list,
+                        element: <SelfDiagnosisPage />,
+                    },
+                ],
             },
             {
-                path: ROUTE_PATHS.episode_archive,
-                element: <EpisodeArchivePage />,
-            },
-            {
-                path: ROUTE_PATHS.self_diagnosis.list,
-                element: <SelfDiagnosisPage />,
+                path: ROUTE_PATHS.landing,
+                element: <LandingPage />,
             },
         ],
     },
     {
-        path: ROUTE_PATHS.landing,
-        element: <LandingPage />,
-    },
-    {
-        path: ROUTE_PATHS.login,
+        path: "/login",
         element: <LoginPage />,
     },
 ]);

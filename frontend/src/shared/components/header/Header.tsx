@@ -1,11 +1,21 @@
-import { Outlet } from "react-router";
+import { Link, useLocation } from "react-router";
 
-const HomePage = () => {
-    // const { user, logout } = useAuth();
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import Button from "@/shared/components/button/Button";
+import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
+import Popover from "@/shared/components/popover/Popover";
+import UserBox from "@/shared/components/user_box/UserBox";
+import { routeHelper } from "@/shared/utils/route";
+
+export default function Header() {
+    const { user, logout } = useAuth();
+    const { pathname } = useLocation();
+    const isLanding = pathname === "/landing";
 
     return (
         <div className="min-h-screen overflow-hidden">
-            {/* <GlobalNavigationBar
+            <GlobalNavigationBar
+                variant={isLanding ? "transparent" : undefined}
                 rightSlot={
                     user ? (
                         <Popover
@@ -30,13 +40,7 @@ const HomePage = () => {
                         </Link>
                     )
                 }
-            /> */}
-
-            <main>
-                <Outlet />
-            </main>
+            />
         </div>
     );
-};
-
-export default HomePage;
+}
