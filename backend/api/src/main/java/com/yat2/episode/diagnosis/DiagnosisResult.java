@@ -9,13 +9,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.Setter;
 
 import com.yat2.episode.job.Job;
 import com.yat2.episode.user.User;
 
 @Getter
-@Setter
 @Entity
 @Table(name = "diagnosis_result")
 public class DiagnosisResult {

@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
+import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
 import com.yat2.episode.diagnosis.dto.DiagnosisSimpleDto;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
@@ -38,7 +38,7 @@ public class DiagnosisResultController {
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, })
     @PostMapping()
     public ResponseEntity<DiagnosisSimpleDto> createMindmap(@RequestAttribute(USER_ID) long userId,
-                                                            @RequestBody MindmapArgsReqDto reqBody) {
+                                                            @RequestBody DiagnosisArgsReqDto reqBody) {
         DiagnosisSimpleDto resBody = null;//diagnosisResultService.createDiagnosis(userId, reqBody);
         URI location = null;//diagnosisResultService.getCreatedURI(resBody.mindmap().mindmapId());
         return ResponseEntity.created(location).body(resBody);
