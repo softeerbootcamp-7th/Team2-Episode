@@ -59,8 +59,8 @@ public class MindmapController {
     @GetMapping
     public ResponseEntity<List<MindmapDataDto>> getMindmaps(
             @CookieValue(name = "access_token", required = false) String token,
-            @Parameter(description = "조회할 마인드맵 유형 (ALL, PRIVATE, PUBLIC)") @RequestParam(name = "type",
-                    required = false, defaultValue = "ALL") MindmapVisibility type) {
+            @Parameter(description = "조회할 마인드맵 유형 (ALL, PRIVATE, PUBLIC)")
+            @RequestParam(name = "type", required = false, defaultValue = "ALL") MindmapVisibility type) {
         Long userId = authService.getUserIdByToken(token);
         return ResponseEntity.ok(mindmapService.getMindmaps(userId, type));
     }

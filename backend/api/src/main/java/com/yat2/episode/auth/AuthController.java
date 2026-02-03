@@ -121,9 +121,9 @@ public class AuthController {
     @Operation(summary = "로그아웃", description = "쿠키의 refresh_token을 기반으로 access_token/refresh_token을 만료 처리합니다")
     @ApiResponses({ @ApiResponse(responseCode = "204", description = "로그아웃 성공 (응답 바디 없음, Set-Cookie로 쿠키 만료)") })
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
-    public ResponseEntity<Void> logout(@Parameter(in = ParameterIn.COOKIE, name = "refresh_token",
-            description = "Refresh Token 쿠키 (없어도 로그아웃 처리됨)") @CookieValue(value = "refresh_token",
-            required = false) String refreshToken) {
+    public ResponseEntity<Void> logout(
+            @Parameter(in = ParameterIn.COOKIE, name = "refresh_token", description = "Refresh Token 쿠키 (없어도 로그아웃 처리됨)")
+            @CookieValue(value = "refresh_token", required = false) String refreshToken) {
         refreshTokenService.deleteByRefreshToken(refreshToken);
 
         ResponseCookie expiredAccess = authCookieFactory.deleteAccess();
