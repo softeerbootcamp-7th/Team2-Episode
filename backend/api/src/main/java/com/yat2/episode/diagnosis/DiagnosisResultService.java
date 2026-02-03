@@ -34,10 +34,10 @@ public class DiagnosisResultService {
         }
 
         DiagnosisResult diagnosisResult =
-                diagnosisResultRepository.save(DiagnosisResult.newDiagnosis(user, user.getJob()));
+                diagnosisResultRepository.save(new DiagnosisResult(user, user.getJob()));
 
         List<DiagnosisWeakness> weaknesses =
-                questions.stream().map(q -> DiagnosisWeakness.newDiagnosisWeakness(diagnosisResult, q)).toList();
+                questions.stream().map(q -> new DiagnosisWeakness(diagnosisResult, q)).toList();
         diagnosisWeaknessRepository.saveAll(weaknesses);
 
         return DiagnosisSimpleDto.of(diagnosisResult, weaknesses.size());
