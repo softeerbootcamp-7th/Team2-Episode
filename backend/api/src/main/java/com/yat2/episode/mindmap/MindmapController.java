@@ -162,6 +162,18 @@ public class MindmapController {
         return ResponseEntity.ok(updatedMindmap);
     }
 
+    @Operation(summary = "마인드맵 이름 변경", description = "마인드맵의 이름을 변경합니다. 팀 마인드맵 또한 모든 사용자에게 반영되는 수정 사항입니다.")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "업데이트 성공",
+            content = @Content(schema = @Schema(implementation = MindmapDataDto.class))) })
+    @AuthRequiredErrors
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @PatchMapping("/{mindmapId}/name")
+    public ResponseEntity<MindmapDataDto> updateName(@RequestAttribute(USER_ID) long userId,
+                                                     @PathVariable String mindmapId, @RequestParam String name) {
+        MindmapDataDto updatedMindmap = mindmapService.updateName(userId, mindmapId, name);
+        return ResponseEntity.ok(updatedMindmap);
+    }
+
     public enum MindmapVisibility {
         ALL, PRIVATE, PUBLIC
     }
