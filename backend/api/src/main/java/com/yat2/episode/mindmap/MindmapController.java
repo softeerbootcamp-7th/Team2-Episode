@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -33,6 +34,7 @@ import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
 import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
+import com.yat2.episode.mindmap.dto.MindmapNameUpdateReqDto;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
@@ -169,8 +171,9 @@ public class MindmapController {
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/name")
     public ResponseEntity<MindmapDataDto> updateName(@RequestAttribute(USER_ID) long userId,
-                                                     @PathVariable String mindmapId, @RequestParam String name) {
-        MindmapDataDto updatedMindmap = mindmapService.updateName(userId, mindmapId, name);
+                                                     @PathVariable String mindmapId,
+                                                     @Valid @RequestBody MindmapNameUpdateReqDto request) {
+        MindmapDataDto updatedMindmap = mindmapService.updateName(userId, mindmapId, request.name());
         return ResponseEntity.ok(updatedMindmap);
     }
 
