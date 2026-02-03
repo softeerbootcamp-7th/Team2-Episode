@@ -29,6 +29,7 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.exception.ErrorResponse;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
+import com.yat2.episode.global.utils.UriUtil;
 import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
 import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
 import com.yat2.episode.mindmap.dto.MindmapDataDto;
@@ -114,7 +115,7 @@ public class MindmapController {
     public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(@RequestAttribute(USER_ID) long userId,
                                                                   @RequestBody MindmapArgsReqDto reqBody) {
         MindmapCreatedWithUrlDto resBody = mindmapFacade.createMindmap(userId, reqBody);
-        URI location = mindmapService.getCreatedURI(resBody.mindmap().mindmapId());
+        URI location = UriUtil.createLocationUri(resBody.mindmap().mindmapId());
         return ResponseEntity.created(location).body(resBody);
     }
 

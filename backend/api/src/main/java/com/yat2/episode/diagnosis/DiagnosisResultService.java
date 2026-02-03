@@ -3,9 +3,7 @@ package com.yat2.episode.diagnosis;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 
 import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
@@ -17,6 +15,7 @@ import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
 public class DiagnosisResultService {
@@ -43,11 +42,6 @@ public class DiagnosisResultService {
         diagnosisWeaknessRepository.saveAll(weaknesses);
 
         return DiagnosisSimpleNoDateDto.of(diagnosisResult, weaknesses.size());
-    }
-
-    public URI getCreatedURI(Integer diagnosisId) {
-        return ServletUriComponentsBuilder.fromCurrentRequest().path("/{diagnosisId}").buildAndExpand(diagnosisId)
-                .toUri();
     }
 
     private void validateUserJob(User user) {

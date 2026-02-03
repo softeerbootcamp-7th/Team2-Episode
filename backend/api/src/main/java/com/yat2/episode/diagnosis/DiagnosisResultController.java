@@ -20,6 +20,7 @@ import com.yat2.episode.diagnosis.dto.DiagnosisSimpleNoDateDto;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
+import com.yat2.episode.global.utils.UriUtil;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
@@ -41,7 +42,7 @@ public class DiagnosisResultController {
     public ResponseEntity<DiagnosisSimpleNoDateDto> createMindmap(@RequestAttribute(USER_ID) long userId,
                                                                   @RequestBody DiagnosisArgsReqDto reqBody) {
         DiagnosisSimpleNoDateDto resBody = diagnosisResultService.createDiagnosis(userId, reqBody);
-        URI location = diagnosisResultService.getCreatedURI(resBody.diagnosisId());
+        URI location = UriUtil.createLocationUri(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
     }
 }
