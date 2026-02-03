@@ -1,16 +1,23 @@
-package com.yat2.episode.users;
+package com.yat2.episode.user;
 
-import com.yat2.episode.job.Job;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.yat2.episode.job.Job;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
-public class Users {
+public class User {
 
     @Id
     @Column(name = "kakao_id")
@@ -26,8 +33,8 @@ public class Users {
     @Column(name = "has_watched_feature_guide", nullable = false)
     private Boolean hasWatchedFeatureGuide;
 
-    public static Users newUser(Long kakaoId, String nickname) {
-        Users u = new Users();
+    public static User newUser(Long kakaoId, String nickname) {
+        User u = new User();
         u.kakaoId = kakaoId;
         u.nickname = nickname;
         u.hasWatchedFeatureGuide = false;
@@ -36,5 +43,13 @@ public class Users {
 
     public void changeNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void updateJob(Job job) {
+        this.job = job;
+    }
+
+    public void markFeatureGuideWatched() {
+        this.hasWatchedFeatureGuide = true;
     }
 }

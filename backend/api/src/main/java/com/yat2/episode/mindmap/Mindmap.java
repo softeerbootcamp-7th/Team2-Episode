@@ -1,7 +1,12 @@
 package com.yat2.episode.mindmap;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -28,9 +33,6 @@ public class Mindmap {
 
     @Column(name = "is_shared", nullable = false)
     private boolean shared;
-
-    @Column(name = "is_favorite", insertable = false)
-    private boolean isFavorite;
 
     public Mindmap(String name, boolean shared) {
         this.name = name;

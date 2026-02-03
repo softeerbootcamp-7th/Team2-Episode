@@ -131,7 +131,8 @@
     --color-landing-mint-op-40: color-mix(in srgb, var(--color-landing-mint-op-100), transparent 40%);
 
     --color-postit-base: #d07d71; /* post it */
-    --color-postit-bg: #ffdcd7 --color-postit-text: var(--color-postit-base);
+    --color-postit-bg: #ffdcd7;
+    --color-postit-text: var(--color-postit-base);
     --color-postit-dot: color-mix(in srgb, var(--color-postit-base), transparent 40%);
 }
 
