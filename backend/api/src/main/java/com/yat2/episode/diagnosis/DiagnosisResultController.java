@@ -27,7 +27,7 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/diagnosis")
-@Tag(name = "Diagnosis", description = "마인드맵 관리 API")
+@Tag(name = "Diagnosis", description = "역량 진단 관리 API")
 public class DiagnosisResultController {
     private final DiagnosisResultService diagnosisResultService;
 
@@ -39,8 +39,8 @@ public class DiagnosisResultController {
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND,
                      ErrorCode.JOB_NOT_SELECTED })
     @PostMapping()
-    public ResponseEntity<DiagnosisSimpleNoDateDto> createMindmap(@RequestAttribute(USER_ID) long userId,
-                                                                  @RequestBody DiagnosisArgsReqDto reqBody) {
+    public ResponseEntity<DiagnosisSimpleNoDateDto> createDiagnosis(@RequestAttribute(USER_ID) long userId,
+                                                                    @RequestBody DiagnosisArgsReqDto reqBody) {
         DiagnosisSimpleNoDateDto resBody = diagnosisResultService.createDiagnosis(userId, reqBody);
         URI location = UriUtil.createLocationUri(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
