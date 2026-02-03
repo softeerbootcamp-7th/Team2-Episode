@@ -10,6 +10,6 @@ public record DiagnosisSimpleDto(Integer diagnosisId, String diagnosisName, Loca
 
     static public DiagnosisSimpleDto of(DiagnosisResult diagnosisResult, int lackCountOfCompetency) {
         return new DiagnosisSimpleDto(diagnosisResult.getId(), diagnosisResult.getJob().getName() + diagnosisTemplate,
-                                      LocalDateTime.now(), lackCountOfCompetency);
+                                      diagnosisResult.getCreatedAt(), lackCountOfCompetency);
     }
 }
