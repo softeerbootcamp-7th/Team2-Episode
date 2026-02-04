@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { logout as logoutApi } from "@/features/auth/api/auth";
 import { isApiError } from "@/features/auth/api/error";
+import { AUTH_QUERY_KEYS } from "@/features/auth/constants/query_key";
 import { AuthContext } from "@/features/auth/hooks/useAuth";
 import type { User } from "@/features/auth/types/user";
 import { USER_ME_ENDPOINT } from "@/shared/api/api";
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading,
         error,
     } = useQuery({
-        queryKey: ["auth", "user"],
+        queryKey: [AUTH_QUERY_KEYS.user],
         queryFn: async () => get<User>({ endpoint: USER_ME_ENDPOINT, options: { skipRefresh: true } }),
         staleTime: 1000 * 60 * 5,
         retry: false,
@@ -54,13 +55,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, [error]);
 
     const login = async (newUser: User): Promise<void> => {
-        queryClient.setQueryData(["auth", "user"], newUser);
+        queryClient.setQueryData([AUTH_QUERY_KEYS.user], newUser);
     };
 
     const logoutMutation = useMutation({
         mutationFn: async () => logoutApi(),
         onSuccess: () => {
-            queryClient.removeQueries({ queryKey: ["auth", "user"] });
+            queryClient.removeQueries({ queryKey: [AUTH_QUERY_KEYS.user] });
         },
     });
 
@@ -74,7 +75,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 isLoading,
                 login,
                 logout: logoutMutation.mutateAsync,
-                checkAuth: () => queryClient.refetchQueries({ queryKey: ["auth", "user"] }),
+                checkAuth: () => queryClient.refetchQueries({ queryKey: [AUTH_QUERY_KEYS.user] }),
             }}
         >
             {children}

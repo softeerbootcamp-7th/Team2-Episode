@@ -1,12 +1,13 @@
 import { redirect } from "react-router";
 
+import { AUTH_QUERY_KEYS } from "@/features/auth/constants/query_key";
 import { User } from "@/features/auth/types/user";
 import { USER_ME_ENDPOINT } from "@/shared/api/api";
 import { get } from "@/shared/api/method";
 import { queryClient } from "@/shared/api/query_client";
 
 export async function AuthMiddleWare() {
-    let user = queryClient.getQueryData(["auth", "user"]);
+    let user = queryClient.getQueryData(AUTH_QUERY_KEYS.user);
 
     if (!user) {
         try {
@@ -14,7 +15,7 @@ export async function AuthMiddleWare() {
                 endpoint: USER_ME_ENDPOINT,
                 options: { skipRefresh: true },
             });
-            queryClient.setQueryData(["auth", "user"], user);
+            queryClient.setQueryData(AUTH_QUERY_KEYS.user, user);
         } catch {
             throw redirect("/landing");
         }
