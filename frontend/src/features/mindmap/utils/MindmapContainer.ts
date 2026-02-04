@@ -9,10 +9,11 @@ const ROOT_NODE_PARENT_ID = "empty";
 const ROOT_NODE_CONTENTS = "김현대의 마인드맵";
 
 export default class MindmapContainer {
-    public nodes: Map<NodeId, NodeElement>;
+    private nodes: Map<NodeId, NodeElement>;
     private quadTreeManager: QuadTreeManager;
     private broker: EventBroker<NodeId>;
     private isThrowError: boolean;
+    private rootNodeId: NodeId;
 
     constructor({
         quadTreeManager,
@@ -35,8 +36,9 @@ export default class MindmapContainer {
             },
             type: "root",
         });
-        this.addNodeToContainer(rootNodeElement);
+        this.rootNodeId = rootNodeElement.id;
 
+        this.addNodeToContainer(rootNodeElement);
         // inject dependency
         this.quadTreeManager = quadTreeManager;
         this.broker = broker;
@@ -456,5 +458,9 @@ export default class MindmapContainer {
         }
 
         return node;
+    }
+
+    getRootNode() {
+        this._getNode(this.rootNodeId);
     }
 }
