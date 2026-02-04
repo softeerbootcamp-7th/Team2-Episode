@@ -197,7 +197,7 @@ export default class MindmapContainer {
                 throw new Error("루트 노드는 삭제할 수 없습니다.");
             }
 
-            const parentNode = this._getNode(node.parentId!);
+            const parentNode = this._getNode(node.parentId);
 
             if (parentNode.firstChildId === node.id) {
                 parentNode.firstChildId = node.nextId;
