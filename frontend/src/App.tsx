@@ -1,6 +1,6 @@
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 
-import { AuthMiddleWare } from "@/features/auth/middleware/auth_middleware";
+import { authMiddleWare } from "@/features/auth/middleware/auth_middleware";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchivePage";
 import HomePage from "@/features/home/pages/HomePage";
@@ -25,7 +25,7 @@ const router = createBrowserRouter([
         children: [
             {
                 element: <HomePage />,
-                middleware: [AuthMiddleWare],
+                middleware: [authMiddleWare],
                 children: [
                     {
                         index: true,

@@ -7,7 +7,7 @@ import { get } from "@/shared/api/method";
 import { queryClient } from "@/shared/api/query_client";
 import { ROUTE_PATHS } from "@/shared/utils/route";
 
-export async function AuthMiddleWare() {
+export async function authMiddleWare() {
     let user = queryClient.getQueryData(AUTH_QUERY_KEYS.user);
 
     if (!user) {
