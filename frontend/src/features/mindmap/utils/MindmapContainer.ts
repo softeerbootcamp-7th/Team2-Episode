@@ -8,6 +8,7 @@ type QuadTreeManager = undefined;
 
 const ROOT_NODE_PARENT_ID = "empty";
 const ROOT_NODE_CONTENTS = "김현대의 마인드맵";
+const DETACHED_NODE_PARENT_ID = "detached";
 
 export default class MindmapContainer {
     private nodes: Map<NodeId, NodeElement>;
@@ -362,7 +363,7 @@ export default class MindmapContainer {
 
         node.prevId = null;
         node.nextId = null;
-        node.parentId = "detached"; // 임시 상태
+        node.parentId = DETACHED_NODE_PARENT_ID; // 임시 상태.
     }
 
     getChildIds(nodeId: NodeId): NodeId[] {
