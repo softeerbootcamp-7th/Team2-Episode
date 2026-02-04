@@ -14,10 +14,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+
 import com.yat2.episode.job.Job;
 import com.yat2.episode.user.User;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Entity

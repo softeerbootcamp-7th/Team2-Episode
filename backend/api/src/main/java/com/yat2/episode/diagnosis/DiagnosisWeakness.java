@@ -9,9 +9,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import com.yat2.episode.question.Question;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.yat2.episode.question.Question;
 
 @Entity
 @Getter
