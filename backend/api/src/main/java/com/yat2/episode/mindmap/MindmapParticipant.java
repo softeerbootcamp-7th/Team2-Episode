@@ -1,15 +1,26 @@
 package com.yat2.episode.mindmap;
 
-import com.yat2.episode.user.User;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import com.yat2.episode.user.User;
+
 @Entity
 @Getter
-@Table(name = "mindmap_participants", uniqueConstraints = @UniqueConstraint(name = "uk_mindmap_participant_user_mindmap",
-        columnNames = {"user_id", "mindmap_id"}))
+@Table(name = "mindmap_participants",
+        uniqueConstraints = @UniqueConstraint(name = "uk_mindmap_participant_user_mindmap",
+                columnNames = { "user_id", "mindmap_id" }))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MindmapParticipant {
 
