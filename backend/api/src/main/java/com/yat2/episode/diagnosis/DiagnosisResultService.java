@@ -1,5 +1,11 @@
 package com.yat2.episode.diagnosis;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
 import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
 import com.yat2.episode.diagnosis.dto.DiagnosisSimpleDto;
 import com.yat2.episode.global.exception.CustomException;
@@ -8,11 +14,6 @@ import com.yat2.episode.question.Question;
 import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -33,12 +34,12 @@ public class DiagnosisResultService {
             throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
         }
 
-        DiagnosisResult diagnosisResult =
-                diagnosisResultRepository.save(new DiagnosisResult(user, user.getJob()));
+        DiagnosisResult diagnosisResult = diagnosisResultRepository.save(new DiagnosisResult(user, user.getJob()));
 
         List<DiagnosisWeakness> weaknesses =
                 questions.stream().map(q -> new DiagnosisWeakness(diagnosisResult, q)).toList();
         diagnosisWeaknessRepository.saveAll(weaknesses);
+        //todo: save-all을 통한 개별 쿼리에서 bulk 방식으로 개선
 
         return DiagnosisSimpleDto.of(diagnosisResult, weaknesses.size());
     }
