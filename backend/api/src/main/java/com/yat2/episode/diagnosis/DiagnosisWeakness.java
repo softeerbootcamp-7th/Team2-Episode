@@ -17,7 +17,7 @@ import com.yat2.episode.question.Question;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "diagnosis_weakness")
+@Table(name = "diagnosis_weaknesses")
 public class DiagnosisWeakness {
 
     @Id

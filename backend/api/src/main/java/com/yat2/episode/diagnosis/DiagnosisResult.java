@@ -21,7 +21,7 @@ import com.yat2.episode.user.User;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "diagnosis_result")
+@Table(name = "diagnosis_results")
 public class DiagnosisResult {
 
     @Id
