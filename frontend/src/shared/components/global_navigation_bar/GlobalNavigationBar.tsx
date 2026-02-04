@@ -53,11 +53,11 @@ export default function GlobalNavigationBar({ variant = "white", rightSlot }: Pr
     );
 }
 
-const variants = cva("w-full h-18.5 py-4 px-9 flex flex-row items-center gap-10", {
+const variants = cva("w-full h-18.5 border-b py-4 px-9 flex flex-row items-center gap-10", {
     variants: {
         variant: {
-            white: "bg-white",
-            transparent: "bg-white-op-20",
+            white: "bg-white border-gray-300",
+            transparent: "bg-white-op-20 border-white",
         },
     },
 });
