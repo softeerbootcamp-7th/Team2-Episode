@@ -60,14 +60,10 @@ export default class MindmapContainer {
         this.broker.publish(nodeId);
     }
 
-    appendChild({
-        parentNodeId,
-        childNode = this.generateNewNodeElement(),
-    }: {
-        parentNodeId: NodeId;
-        childNode?: NodeElement;
-    }) {
+    appendChild({ parentNodeId, childNodeId: cId }: { parentNodeId: NodeId; childNodeId?: NodeId }) {
         try {
+            const childNode = cId ? this._getNode(cId) : this.generateNewNodeElement();
+
             const parentNode = this._getNode(parentNodeId);
             childNode.parentId = parentNodeId;
 
@@ -80,15 +76,11 @@ export default class MindmapContainer {
                 childNode.nextId = null; // 필요없긴함
 
                 parentNode.lastChildId = childNode.id;
-
-                // this.notify(lastNode.id);
             } else {
                 // 자식 0
                 parentNode.firstChildId = childNode.id;
                 parentNode.lastChildId = childNode.id;
             }
-
-            // this.notify(newNode.id);
 
             this.notify(parentNode.id);
         } catch (e) {
@@ -123,7 +115,7 @@ export default class MindmapContainer {
                     this.attachPrev({ baseNode, movingNode: newNode });
                     break;
                 case "child":
-                    this.appendChild({ parentNodeId: baseNode.id, childNode: newNode });
+                    this.appendChild({ parentNodeId: baseNode.id, childNodeId: newNode.id });
                     break;
                 default:
                     exhaustiveCheck(`${direction} 방향은 불가능합니다.`);
@@ -149,9 +141,8 @@ export default class MindmapContainer {
 
         if (baseNode.nextId) {
             const nextSibling = this._getNode(baseNode.nextId);
-            nextSibling.prevId = movingNode.id;
 
-            // this.notify(nextSibling.id);
+            nextSibling.prevId = movingNode.id;
         }
 
         baseNode.nextId = movingNode.id;
@@ -159,13 +150,8 @@ export default class MindmapContainer {
         const parentNode = this._getNode(baseNode.parentId);
         if (parentNode.lastChildId === baseNode.id) {
             parentNode.lastChildId = movingNode.id;
-
-            // this.notify(parent.id);
         }
         this.notify(parentNode.id);
-
-        // this.notify(movingNode.id);
-        // this.notify(baseNode.id);
     }
 
     private attachPrev({ baseNode, movingNode }: { baseNode: NodeElement; movingNode: NodeElement }) {
@@ -315,7 +301,7 @@ export default class MindmapContainer {
                     this.attachPrev({ baseNode, movingNode });
                     break;
                 case "child":
-                    this.appendChild({ parentNodeId: baseNode.id, childNode: movingNode });
+                    this.appendChild({ parentNodeId: baseNode.id, childNodeId: movingNode.id });
                     break;
                 default:
                     exhaustiveCheck(`${direction} 방향은 불가능합니다.`);
