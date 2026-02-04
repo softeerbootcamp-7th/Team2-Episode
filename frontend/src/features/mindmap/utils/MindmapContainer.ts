@@ -1,5 +1,6 @@
 import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/mindmapType";
 import { EventBroker } from "@/utils/eventBroker";
+import { exhaustiveCheck } from "@/utils/exhaustiveCheck";
 import generateId from "@/utils/generateId";
 
 // TODO: quadtree 준비되면 의존성 주입
@@ -37,8 +38,8 @@ export default class MindmapContainer {
             type: "root",
         });
         this.rootNodeId = rootNodeElement.id;
-
         this.addNodeToContainer(rootNodeElement);
+
         // inject dependency
         this.quadTreeManager = quadTreeManager;
         this.broker = broker;
@@ -102,7 +103,7 @@ export default class MindmapContainer {
         }
     }
 
-    attachTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: "prev" | "next" }) {
+    attachTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: "prev" | "next" | "child" }) {
         try {
             const baseNode = this._getNode(baseNodeId);
 
@@ -113,10 +114,18 @@ export default class MindmapContainer {
 
             const newNode = this.generateNewNodeElement();
 
-            if (direction === "next") {
-                this.attachNext({ baseNode, movingNode: newNode });
-            } else {
-                this.attachPrev({ baseNode, movingNode: newNode });
+            switch (direction) {
+                case "next":
+                    this.attachNext({ baseNode, movingNode: newNode });
+                    break;
+                case "prev":
+                    this.attachPrev({ baseNode, movingNode: newNode });
+                    break;
+                case "child":
+                    this.appendChild({ parentNodeId: baseNode.id, childNode: newNode });
+                    break;
+                default:
+                    exhaustiveCheck(`${direction} 방향은 불가능합니다.`);
             }
         } catch (e) {
             if (e instanceof Error) {
@@ -166,9 +175,8 @@ export default class MindmapContainer {
 
         if (baseNode.prevId) {
             const prevSibling = this._getNode(baseNode.prevId);
-            prevSibling.nextId = movingNode.id;
 
-            // this.notify(prevSibling.id);
+            prevSibling.nextId = movingNode.id;
         }
 
         baseNode.prevId = movingNode.id;
@@ -179,11 +187,7 @@ export default class MindmapContainer {
             parentNode.firstChildId = movingNode.id;
         }
 
-        // this.notify(parent.id);
         this.notify(parentNode.id);
-
-        // this.notify(movingNode.id); // 부모, prev, next 다 바뀜
-        // this.notify(baseNode.id); // prev 바뀜
     }
 
     delete({ nodeId }: { nodeId: NodeId }) {
@@ -197,31 +201,25 @@ export default class MindmapContainer {
 
             if (parentNode.firstChildId === node.id) {
                 parentNode.firstChildId = node.nextId;
-                // this.notify(parentNode.id);
             }
 
             if (parentNode.lastChildId === node.id) {
                 parentNode.lastChildId = node.prevId;
-                // this.notify(parentNode.id);
             }
 
             if (node.prevId) {
                 const prevNode = this._getNode(node.prevId);
                 prevNode.nextId = node.nextId;
-                // this.notify(prevNode.id);
             }
 
             if (node.nextId) {
                 const nextNode = this._getNode(node.nextId);
                 nextNode.prevId = node.prevId;
-                // this.notify(nextNode.id);
             }
 
             this._deleteTraverse({ nodeId });
 
             this.notify(parentNode.id);
-
-            // this.notify(nodeId);
         } catch (e) {
             if (e instanceof Error) {
                 console.error(e.message);
@@ -308,15 +306,18 @@ export default class MindmapContainer {
 
             this.detach({ node: movingNode });
 
-            // baseNode = this._getNode(baseNodeId);
-            // movingNode = this._getNode(movingNodeId);
-
-            if (direction === "prev") {
-                this.attachPrev({ baseNode, movingNode });
-            } else if (direction === "next") {
-                this.attachNext({ baseNode, movingNode });
-            } else if (direction === "child") {
-                this.appendChild({ parentNodeId: baseNode.id, childNode: movingNode });
+            switch (direction) {
+                case "next":
+                    this.attachNext({ baseNode, movingNode });
+                    break;
+                case "prev":
+                    this.attachPrev({ baseNode, movingNode });
+                    break;
+                case "child":
+                    this.appendChild({ parentNodeId: baseNode.id, childNode: movingNode });
+                    break;
+                default:
+                    exhaustiveCheck(`${direction} 방향은 불가능합니다.`);
             }
         } catch (e) {
             if (e instanceof Error) {
@@ -350,13 +351,11 @@ export default class MindmapContainer {
         if (node.prevId) {
             const prevNode = this._getNode(node.prevId);
             prevNode.nextId = node.nextId;
-            // this.notify(prevNode.id);
         }
 
         if (node.nextId) {
             const nextNode = this._getNode(node.nextId);
             nextNode.prevId = node.prevId;
-            // this.notify(nextNode.id);
         }
 
         this.notify(parentNode.id);
@@ -364,8 +363,6 @@ export default class MindmapContainer {
         node.prevId = null;
         node.nextId = null;
         node.parentId = "detached"; // 임시 상태
-
-        // this.notify(node.id);
     }
 
     getChildIds(nodeId: NodeId): NodeId[] {
