@@ -5,7 +5,7 @@ import { USER_ME_ENDPOINT } from "@/shared/api/api";
 import { get } from "@/shared/api/method";
 import { queryClient } from "@/shared/api/query_client";
 
-export async function middleWare() {
+export async function AuthMiddleWare() {
     let user = queryClient.getQueryData(["auth", "user"]);
 
     if (!user) {
