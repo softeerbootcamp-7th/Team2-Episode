@@ -1,14 +1,23 @@
 package com.yat2.episode.diagnosis;
 
-import com.yat2.episode.question.Question;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
+
+import com.yat2.episode.question.Question;
 
 @Entity
 @Getter
-@Setter
-@Table(name = "diagnosis_weakness")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "diagnosis_weaknesses")
 public class DiagnosisWeakness {
 
     @Id
@@ -22,4 +31,9 @@ public class DiagnosisWeakness {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
+
+    public DiagnosisWeakness(DiagnosisResult diagnosisResult, Question question) {
+        this.diagnosisResult = diagnosisResult;
+        this.question = question;
+    }
 }

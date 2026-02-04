@@ -1,9 +1,13 @@
 package com.yat2.episode.episode;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.mindmap.Mindmap;
-import com.yat2.episode.user.User;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,11 +15,15 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.mindmap.Mindmap;
+import com.yat2.episode.user.User;
+
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "episode")
+@Table(name = "episodes")
 public class Episode {
 
     @EmbeddedId

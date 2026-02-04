@@ -1,21 +1,24 @@
 package com.yat2.episode.mindmap;
 
-import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.dto.*;
-import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.mindmap.constants.MindmapConstants;
+import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
+import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
+import com.yat2.episode.mindmap.dto.MindmapDataDto;
+import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
+import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
 
 @RequiredArgsConstructor
 @Service
@@ -39,26 +42,19 @@ public class MindmapService {
     }
 
     private List<MindmapDataDto> getMindmapsByShared(Long userId, boolean shared) {
-        return mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, shared)
-                .stream()
-                .map(MindmapDataDto::of)
-                .toList();
+        return mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, shared).stream()
+                .map(MindmapDataDto::of).toList();
     }
 
     private List<MindmapDataDto> getAllMindmap(Long userId) {
-        return mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId)
-                .stream()
-                .map(MindmapDataDto::of)
-                .toList();
+        return mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId).stream()
+                .map(MindmapDataDto::of).toList();
     }
 
 
     @Transactional(readOnly = true)
     public List<MindmapIdentityDto> getMindmapList(Long userId) {
-        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId)
-                .stream()
-                .map(MindmapIdentityDto::of)
-                .toList();
+        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapIdentityDto::of).toList();
     }
 
 
@@ -70,14 +66,14 @@ public class MindmapService {
             if (body.isShared()) throw new CustomException(ErrorCode.MINDMAP_TITLE_REQUIRED);
             finalTitle = getPrivateMindmapName(user);
         }
-  
-  Mindmap mindmap = new Mindmap(finalTitle, body.isShared());
+
+        Mindmap mindmap = new Mindmap(finalTitle, body.isShared());
         mindmapRepository.save(mindmap);
 
         MindmapParticipant participant = new MindmapParticipant(user, mindmap);
         mindmapParticipantRepository.save(participant);
-  
-      return MindmapDataExceptDateDto.of(participant);
+
+        return MindmapDataExceptDateDto.of(participant);
     }
 
     @Transactional
@@ -85,9 +81,10 @@ public class MindmapService {
         mindmapRepository.findById(mindmapId).ifPresent(mindmapRepository::delete);
     }
 
-    public MindmapCreatedWithUrlDto getUploadInfo(MindmapDataExceptDateDto mindmapDatas){
-            Map<String, String> uploadInfo = snapshotRepository.createPresignedUploadInfo("maps/" + mindmapDatas.mindmapId());
-            return new MindmapCreatedWithUrlDto(mindmapDatas, uploadInfo);
+    public MindmapCreatedWithUrlDto getUploadInfo(MindmapDataExceptDateDto mindmapDatas) {
+        Map<String, String> uploadInfo =
+                snapshotRepository.createPresignedUploadInfo("maps/" + mindmapDatas.mindmapId());
+        return new MindmapCreatedWithUrlDto(mindmapDatas, uploadInfo);
     }
 
     //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제
@@ -171,16 +168,16 @@ public class MindmapService {
         return MindmapDataDto.of(participant);
     }
 
-    private MindmapParticipant findParticipantOrThrow(String mindmapId, long userId) {
-        return mindmapParticipantRepository
-                .findByMindmapIdAndUserId(getUUID(mindmapId), userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
+    @Transactional
+    public MindmapDataDto updateName(long userId, String mindmapId, String name) {
+        MindmapParticipant participant = findParticipantOrThrow(mindmapId, userId);
+        participant.getMindmap().updateName(name);
+
+        return MindmapDataDto.of(participant);
     }
 
-    public URI getCreatedURI(UUID mindmapId){
-        return ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{mindmapId}")
-                .buildAndExpand(mindmapId)
-                .toUri();
+    private MindmapParticipant findParticipantOrThrow(String mindmapId, long userId) {
+        return mindmapParticipantRepository.findByMindmapIdAndUserId(getUUID(mindmapId), userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 }

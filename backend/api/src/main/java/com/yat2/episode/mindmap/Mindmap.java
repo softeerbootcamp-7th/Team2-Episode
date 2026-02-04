@@ -1,7 +1,12 @@
 package com.yat2.episode.mindmap;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -10,7 +15,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "mindmap")
+@Table(name = "mindmaps")
 public class Mindmap {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
@@ -32,5 +37,9 @@ public class Mindmap {
     public Mindmap(String name, boolean shared) {
         this.name = name;
         this.shared = shared;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
     }
 }
