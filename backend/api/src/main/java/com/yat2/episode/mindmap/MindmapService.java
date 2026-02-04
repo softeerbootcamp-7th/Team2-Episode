@@ -3,9 +3,7 @@ package com.yat2.episode.mindmap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -170,12 +168,16 @@ public class MindmapService {
         return MindmapDataDto.of(participant);
     }
 
+    @Transactional
+    public MindmapDataDto updateName(long userId, String mindmapId, String name) {
+        MindmapParticipant participant = findParticipantOrThrow(mindmapId, userId);
+        participant.getMindmap().updateName(name);
+
+        return MindmapDataDto.of(participant);
+    }
+
     private MindmapParticipant findParticipantOrThrow(String mindmapId, long userId) {
         return mindmapParticipantRepository.findByMindmapIdAndUserId(getUUID(mindmapId), userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
-    }
-
-    public URI getCreatedURI(UUID mindmapId) {
-        return ServletUriComponentsBuilder.fromCurrentRequest().path("/{mindmapId}").buildAndExpand(mindmapId).toUri();
     }
 }
