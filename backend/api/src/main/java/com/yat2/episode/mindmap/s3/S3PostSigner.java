@@ -1,6 +1,7 @@
 package com.yat2.episode.mindmap.s3;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
@@ -17,6 +18,7 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsDto;
 import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class S3PostSigner {
@@ -81,6 +83,7 @@ public class S3PostSigner {
             byte[] kSigning = hmac(kService, "aws4_request");
             return toHex(hmac(kSigning, stringToSign));
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw new CustomException(ErrorCode.S3_URL_FAIL);
         }
     }
