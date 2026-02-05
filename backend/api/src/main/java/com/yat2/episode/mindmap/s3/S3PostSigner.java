@@ -29,8 +29,10 @@ public class S3PostSigner {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final S3Properties s3Properties;
 
-    public Map<String, String> generatePostFields(String bucket, String key, String region, String endpoint,
-                                                  AwsCredentials credentials) {
+    public Map<String, String> generatePostFields(
+            String bucket, String key, String region, String endpoint,
+            AwsCredentials credentials
+    ) {
 
         String accessKey = credentials.accessKeyId();
         String secretKey = credentials.secretAccessKey();
@@ -67,8 +69,10 @@ public class S3PostSigner {
         return fields;
     }
 
-    private String createPolicyJson(String bucket, String key, String credential, String xAmzDate, String sessionToken,
-                                    ZonedDateTime now) {
+    private String createPolicyJson(
+            String bucket, String key, String credential, String xAmzDate, String sessionToken,
+            ZonedDateTime now
+    ) {
         try {
             Map<String, Object> policy = new LinkedHashMap<>();
             policy.put("expiration", now.plusMinutes(10).format(DateTimeFormatter.ISO_INSTANT));
