@@ -25,26 +25,6 @@ export default class QuadTree {
         this.limit = limit;
     }
 
-    /** 현재 영역을 4개의 하위 영역으로 분할 */
-    split() {
-        const { minX, maxX, minY, maxY } = this.bounds;
-
-        const midY = (minY + maxY) / 2;
-        const midX = (minX + maxX) / 2;
-
-        const nwBounds: Rect = { minX, maxX: midX, minY, maxY: midY };
-        const neBounds: Rect = { minX: midX, maxX, minY, maxY: midY };
-        const swBounds: Rect = { minX, maxX: midX, minY: midY, maxY };
-        const seBounds: Rect = { minX: midX, maxX, minY: midY, maxY };
-
-        this.children = {
-            NW: new QuadTree(nwBounds, this.limit),
-            NE: new QuadTree(neBounds, this.limit),
-            SW: new QuadTree(swBounds, this.limit),
-            SE: new QuadTree(seBounds, this.limit),
-        };
-    }
-
     /** [Add/Drop] 점 삽입: 개수 > limit 이면, 하위 영역으로 분할하고 자식 노드로 전달 */
     insert(point: Point): boolean {
         // 삽입하려는 점이 현재 Quad 영역에 속하지 않으면 삽입 거부
@@ -113,8 +93,28 @@ export default class QuadTree {
         return found;
     }
 
+    /** 현재 영역을 4개의 하위 영역으로 분할 */
+    private split() {
+        const { minX, maxX, minY, maxY } = this.bounds;
+
+        const midY = (minY + maxY) / 2;
+        const midX = (minX + maxX) / 2;
+
+        const nwBounds: Rect = { minX, maxX: midX, minY, maxY: midY };
+        const neBounds: Rect = { minX: midX, maxX, minY, maxY: midY };
+        const swBounds: Rect = { minX, maxX: midX, minY: midY, maxY };
+        const seBounds: Rect = { minX: midX, maxX, minY: midY, maxY };
+
+        this.children = {
+            NW: new QuadTree(nwBounds, this.limit),
+            NE: new QuadTree(neBounds, this.limit),
+            SW: new QuadTree(swBounds, this.limit),
+            SE: new QuadTree(seBounds, this.limit),
+        };
+    }
+
     /** 하위 노드들의 점 개수 합 <= limit 이하일 경우, 부모 노드로 병합 */
-    tryMerge() {
+    private tryMerge() {
         if (!this.children) {
             return;
         }
@@ -166,23 +166,13 @@ export default class QuadTree {
     private delegateInsert(point: Point): boolean {
         const { NW, NE, SW, SE } = this.children!;
 
-        if (NW.isPointInBounds(point)) return NW.insert(point);
-        if (NE.isPointInBounds(point)) return NE.insert(point);
-        if (SW.isPointInBounds(point)) return SW.insert(point);
-        if (SE.isPointInBounds(point)) return SE.insert(point);
-
-        return false;
+        return NW.insert(point) || NE.insert(point) || SW.insert(point) || SE.insert(point);
     }
 
     /** 삭제 작업을 자식 노드에게 위임 */
     private delegateRemove(point: Point): boolean {
         const { NW, NE, SW, SE } = this.children!;
 
-        if (NW.isPointInBounds(point)) return NW.remove(point);
-        if (NE.isPointInBounds(point)) return NE.remove(point);
-        if (SW.isPointInBounds(point)) return SW.remove(point);
-        if (SE.isPointInBounds(point)) return SE.remove(point);
-
-        return false;
+        return NW.remove(point) || NE.remove(point) || SW.remove(point) || SE.remove(point);
     }
 }
