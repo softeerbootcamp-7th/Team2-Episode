@@ -23,8 +23,7 @@ public class S3PostSigner {
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private final S3Properties s3Properties;
 
-    public S3UploadResponseDto generatePostFields(String bucket, String key, String region, String endpoint,
-                                                  AwsCredentials credentials) throws Exception {
+    public S3UploadResponseDto generatePostFields(String key, AwsCredentials credentials) throws Exception {
 
         String accessKey = credentials.accessKeyId().trim();
         String secretKey = credentials.secretAccessKey().trim();
@@ -35,6 +34,10 @@ public class S3PostSigner {
         String dateStamp = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String xAmzDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
         String expiration = now.plusMinutes(15).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+
+        String bucket = s3Properties.getBucket().getName();
+        String region = s3Properties.getRegion();
+        String endpoint = s3Properties.getEndpoint();
 
         String credential = accessKey + "/" + dateStamp + "/" + region + "/s3/aws4_request";
         String policyJson = buildPolicy(bucket, key, credential, xAmzDate, sessionToken, expiration);
