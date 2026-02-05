@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisSimpleDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.question.Question;
@@ -25,7 +25,7 @@ public class DiagnosisResultService {
     private final UserService userService;
 
     @Transactional
-    public DiagnosisSimpleDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
+    public DiagnosisSummaryDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
         User user = userService.getUserOrThrow(userId);
         validateUserJob(user);
 
@@ -41,7 +41,7 @@ public class DiagnosisResultService {
         diagnosisWeaknessRepository.saveAll(weaknesses);
         //todo: save-all을 통한 개별 쿼리에서 bulk 방식으로 개선
 
-        return DiagnosisSimpleDto.of(diagnosisResult, weaknesses.size());
+        return DiagnosisSummaryDto.of(diagnosisResult, weaknesses.size());
     }
 
     private void validateUserJob(User user) {

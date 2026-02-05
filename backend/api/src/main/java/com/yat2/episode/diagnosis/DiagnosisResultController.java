@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 
 import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisSimpleDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -42,11 +42,11 @@ public class DiagnosisResultController {
               ErrorCode.JOB_NOT_SELECTED }
     )
     @PostMapping()
-    public ResponseEntity<DiagnosisSimpleDto> createDiagnosis(
+    public ResponseEntity<DiagnosisSummaryDto> createDiagnosis(
             @RequestAttribute(USER_ID) long userId,
             @RequestBody DiagnosisArgsReqDto reqBody
     ) {
-        DiagnosisSimpleDto resBody = diagnosisResultService.createDiagnosis(userId, reqBody);
+        DiagnosisSummaryDto resBody = diagnosisResultService.createDiagnosis(userId, reqBody);
         URI location = UriUtil.createLocationUri(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
     }
