@@ -1,6 +1,5 @@
 package com.yat2.episode.mindmap.s3;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
@@ -18,10 +17,19 @@ import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class S3PostSigner {
     private static final String HMAC_ALGORITHM = "HmacSHA256";
-    private final S3Properties s3Properties;
+    private final String bucket;
+    private final String region;
+    private final String endpoint;
+    private final long maxUploadSize;
+
+    public S3PostSigner(S3Properties s3Properties) {
+        this.bucket = s3Properties.getBucket().getName();
+        this.region = s3Properties.getRegion();
+        this.endpoint = s3Properties.getEndpoint();
+        this.maxUploadSize = s3Properties.getMaxUploadSize();
+    }
 
     public S3UploadResponseDto generatePostFields(String key, AwsCredentials credentials) throws Exception {
 
@@ -35,10 +43,6 @@ public class S3PostSigner {
         String xAmzDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
         String expiration = now.plusMinutes(15).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
 
-        String bucket = s3Properties.getBucket().getName();
-        String region = s3Properties.getRegion();
-        String endpoint = s3Properties.getEndpoint();
-
         String credential = accessKey + "/" + dateStamp + "/" + region + "/s3/aws4_request";
         String policyJson = buildPolicy(bucket, key, credential, xAmzDate, sessionToken, expiration);
         String policyBase64 = Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
@@ -51,10 +55,8 @@ public class S3PostSigner {
                                                                         sessionToken, policyBase64, signature));
     }
 
-    private String buildPolicy(
-            String bucket, String key, String credential, String xAmzDate, String sessionToken,
-            String expiration
-    ) {
+    private String buildPolicy(String bucket, String key, String credential, String xAmzDate, String sessionToken,
+                               String expiration) {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         sb.append("\"expiration\":\"").append(expiration).append("\",");
@@ -71,7 +73,7 @@ public class S3PostSigner {
             sb.append(",{\"x-amz-security-token\":\"").append(sessionToken.trim()).append("\"}");
         }
 
-        sb.append(",[\"content-length-range\",0,").append(s3Properties.getMaxUploadSize()).append("]");
+        sb.append(",[\"content-length-range\",0,").append(maxUploadSize).append("]");
 
         sb.append("]}");
         return sb.toString();
