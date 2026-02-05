@@ -14,8 +14,10 @@ public class S3SnapshotRepository {
     private final String region;
     private final String endpoint;
 
-    public S3SnapshotRepository(S3PostSigner s3PostSigner, AwsCredentialsProvider credentialsProvider,
-                                S3Properties s3Properties) {
+    public S3SnapshotRepository(
+            S3PostSigner s3PostSigner, AwsCredentialsProvider credentialsProvider,
+            S3Properties s3Properties
+    ) {
         this.s3PostSigner = s3PostSigner;
         this.credentialsProvider = credentialsProvider;
         this.bucketName = s3Properties.getBucket().getName();
