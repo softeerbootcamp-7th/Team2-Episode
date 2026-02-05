@@ -69,7 +69,7 @@ export default class QuadTree {
         // 자식 Quad가 있으면 -> 이미 4개 초과했다는 것이므로 자식 Quad 로 위임하기
         // TODO : 이때 자식의 어디로 갈지 판단
         if (this.children) {
-            return this.delegate(point);
+            return this.delegateInsert(point);
         }
 
         // 자식 Quad 가 없다면
@@ -82,12 +82,75 @@ export default class QuadTree {
         this.split(); // 자식 Quad 생성
         this.moveToChild(); // 기존 Quad에 있는 points -> 자식 Quad로 복사
 
-        return this.delegate(point); // 새로 들어온 point도 위임
+        return this.delegateInsert(point); // 새로 들어온 point도 위임
     }
 
-    // 현재 points에 추가
-    add(point: Point) {
-        this.points.add(point);
+    /**
+     * 노드 삭제
+     */
+    remove(point: Point): boolean {
+        if (!this.contains(point)) {
+            return false;
+        }
+
+        let removed = false;
+
+        if (this.children) {
+            // 자식에게 삭제 위임
+            removed = this.delegateRemove(point);
+
+            if (removed) {
+                this.tryMerge();
+            }
+        } else {
+            // 내가 leaf 노드라면 직접 삭제
+            removed = this.points.delete(point);
+        }
+        return removed;
+    }
+
+    /**
+     * 자식 Quad가 가진 점의 개수 총합 < limit 이면, 자식 Quad 삭제(null)하고 다시 부모로 회수
+     */
+    private tryMerge() {
+        if (!this.children) {
+            return;
+        }
+
+        const totalPoints = this.countAllPoints();
+
+        if (totalPoints <= this.limit) {
+            this.collectAllPoints(this.points);
+            this.children = null; // 자식 Quad 연결 해제
+        }
+    }
+
+    /**
+     * 현재 노드 이하의 모든 points 개수
+     */
+    private countAllPoints(): number {
+        if (!this.children) {
+            return 0;
+        }
+
+        const { NW, NE, SW, SE } = this.children;
+        return NW.countAllPoints() + NE.countAllPoints() + SW.countAllPoints() + SE.countAllPoints();
+    }
+
+    /**
+     * 자식 노드들에 흩어진 모든 점을 하나의 Set으로 모으기
+     */
+    private collectAllPoints(points: Set<Point>) {
+        if (!this.children) {
+            this.points.forEach((point) => points.add(point));
+            return;
+        }
+
+        const { NW, NE, SW, SE } = this.children;
+        NW.collectAllPoints(points);
+        NE.collectAllPoints(points);
+        SW.collectAllPoints(points);
+        SE.collectAllPoints(points);
     }
 
     /**
@@ -95,17 +158,28 @@ export default class QuadTree {
      *  해당 자식의 Rect에 포함되면 넘긴다.
      */
     moveToChild() {
-        this.points.forEach((point) => this.delegate(point));
+        this.points.forEach((point) => this.delegateInsert(point));
         this.points.clear();
     }
 
-    private delegate(point: Point): boolean {
+    private delegateInsert(point: Point): boolean {
         const { NW, NE, SW, SE } = this.children!;
 
         if (NW.contains(point)) return NW.insert(point);
         if (NE.contains(point)) return NE.insert(point);
         if (SW.contains(point)) return SW.insert(point);
         if (SE.contains(point)) return SE.insert(point);
+
+        return false;
+    }
+
+    private delegateRemove(point: Point): boolean {
+        const { NW, NE, SW, SE } = this.children!;
+
+        if (NW.contains(point)) return NW.remove(point);
+        if (NE.contains(point)) return NE.remove(point);
+        if (SW.contains(point)) return SW.remove(point);
+        if (SE.contains(point)) return SE.remove(point);
 
         return false;
     }
