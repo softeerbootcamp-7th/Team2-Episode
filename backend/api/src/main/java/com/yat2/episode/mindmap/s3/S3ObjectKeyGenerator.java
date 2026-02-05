@@ -10,7 +10,7 @@ public class S3ObjectKeyGenerator {
         return String.format("mindmaps/%s", mindmapId);
     }
 
-    public String generatePendingUploadKey(UUID userId, String fileName) {
+    public String generatePendingUploadKey(long userId, String fileName) {
         return String.format("temp/%s/%s", userId, fileName);
     }
 }

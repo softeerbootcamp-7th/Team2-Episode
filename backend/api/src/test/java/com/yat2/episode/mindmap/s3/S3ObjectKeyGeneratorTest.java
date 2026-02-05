@@ -23,7 +23,7 @@ class S3ObjectKeyGeneratorTest {
     @Test
     @DisplayName("임시 업로드 키 생성 확인")
     void generatePendingUploadKey_Success() {
-        UUID userId = UUID.randomUUID();
+        long userId = 12345L;
         String fileName = "test_image.png";
 
         String key = generator.generatePendingUploadKey(userId, fileName);
