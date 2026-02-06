@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +32,7 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @RestController
 @AuthRequiredErrors
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/diagnosis")
 @Tag(name = "Diagnosis", description = "역량 진단 관리 API")
 public class DiagnosisController {
