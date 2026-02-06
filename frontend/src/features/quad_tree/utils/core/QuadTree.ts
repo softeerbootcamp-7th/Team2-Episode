@@ -164,14 +164,20 @@ export default class QuadTree {
 
     /** 삽입 작업을 자식 노드에게 위임 */
     private delegateInsert(point: Point): boolean {
-        const { NW, NE, SW, SE } = this.children!;
+        if (!this.children) {
+            return false;
+        }
+        const { NW, NE, SW, SE } = this.children;
 
         return NW.insert(point) || NE.insert(point) || SW.insert(point) || SE.insert(point);
     }
 
     /** 삭제 작업을 자식 노드에게 위임 */
     private delegateRemove(point: Point): boolean {
-        const { NW, NE, SW, SE } = this.children!;
+        if (!this.children) {
+            return false;
+        }
+        const { NW, NE, SW, SE } = this.children;
 
         return NW.remove(point) || NE.remove(point) || SW.remove(point) || SE.remove(point);
     }
