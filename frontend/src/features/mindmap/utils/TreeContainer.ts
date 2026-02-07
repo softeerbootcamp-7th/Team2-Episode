@@ -391,6 +391,24 @@ export default class TreeContainer {
         return parentNode;
     }
 
+    getRootId() {
+        return this.rootNodeId;
+    }
+
+    getParentId(nodeId: NodeId): NodeId | undefined {
+        const node = this.safeGetNode(nodeId);
+        if (!node) {
+            return undefined;
+        }
+
+        const parentNode = this.safeGetNode(node.id);
+        if (!parentNode) {
+            return undefined;
+        }
+
+        return parentNode.id;
+    }
+
     update({ nodeId, newNodeData }: { nodeId: NodeId; newNodeData: Partial<Omit<NodeElement, "id">> }) {
         // TODO: newNodeData의 형을 다르게 해야할 수 있습니다. 일단은 Element로 뚫었는데 Node만 뚫어도될지도. 아직은 구현체가 확실하지 않아서 모르겠음.
         try {
