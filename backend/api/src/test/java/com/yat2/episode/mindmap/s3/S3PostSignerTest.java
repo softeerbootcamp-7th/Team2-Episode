@@ -54,7 +54,19 @@ class S3PostSignerTest {
             assertThat(response).isNotNull();
             assertThat(response.action()).contains("test-bucket");
             assertThat(response.fields().key()).isEqualTo(objectKey);
-            assertThat(response.fields().policy()).isNotBlank();
+
+            String policy = response.fields().policy();
+            assertThat(policy).isNotBlank();
+
+            String decodedPolicy = new String(java.util.Base64.getDecoder().decode(policy));
+
+            assertThat(decodedPolicy)
+                    .contains("\"bucket\":\"test-bucket\"")
+                    .contains("\"key\":\"" + objectKey + "\"")
+                    .contains("content-length-range")
+                    .contains("10485760")
+                    .contains("x-amz-algorithm")
+                    .contains("x-amz-credential");
             assertThat(response.fields().signature()).isNotBlank();
             assertThat(response.fields().algorithm()).isEqualTo("AWS4-HMAC-SHA256");
         }
