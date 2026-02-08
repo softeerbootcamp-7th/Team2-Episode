@@ -25,8 +25,24 @@ export default class QuadTree {
         this.limit = limit;
     }
 
-    /** [Add/Drop] 점 삽입: 개수 > limit 이면, 하위 영역으로 분할하고 자식 노드로 전달 */
-    insert(point: Point): boolean {
+    /** 현재 트리의 전체 경계 반환 (Renderer 참조용) */
+    getBounds(): Rect {
+        return this.bounds;
+    }
+
+    /** [Add/Drop] 점 삽입: 외부 전용 관문으로, 필요 시 영역을 확장하고 삽입을 실행 */
+    public insert(point: Point): boolean {
+        // 삽입 전, 점의 위치가 현재 전체 영역의 90%를 벗어나는지 확인하여 확장
+        if (this.isNearBoundary(point)) {
+            this.rebuild();
+        }
+
+        // 실제 삽입 로직 수행
+        return this.executeInsert(point);
+    }
+
+    /** [Internal] 실제 삽입 로직: 개수 > limit 이면, 하위 영역으로 분할하고 자식 노드로 전달 */
+    private executeInsert(point: Point): boolean {
         // 삽입하려는 점이 현재 Quad 영역에 속하지 않으면 삽입 거부
         if (!this.isPointInBounds(point)) {
             console.error(`[QuadTree 삽입 실패] 점 (${point.x}, ${point.y})이 경계 영역 밖에 있습니다.`);
@@ -59,7 +75,7 @@ export default class QuadTree {
     /** [Remove/DragStart] 점 삭제 : 삭제 후 데이터 밀도가 낮아지면 tryMerge */
     remove(point: Point): boolean {
         if (!this.isPointInBounds(point)) {
-            console.error(`[QuadTree 삽입 실패] 점 (${point.x}, ${point.y})이 경계 영역 밖에 있습니다.`);
+            console.error(`[QuadTree 삭제 실패] 점 (${point.x}, ${point.y})이 경계 영역 밖에 있습니다.`);
             return false;
         }
 
@@ -86,7 +102,53 @@ export default class QuadTree {
         return removed;
     }
 
-    /**[DragMove] 범위 탐색 : 마우스 주변의 스냅 가능한 노드 확보 */
+    /** [Rebuild] 경계를 중심점 기준 2배로 확장하고 트리를 재구축 */
+    private rebuild() {
+        // 1. 기존의 모든 점 수집
+        const currentSet = new Set<Point>();
+        this.collectAllPoints(currentSet);
+        const allPoints = Array.from(currentSet);
+
+        // 2. 영역 확장 계산
+        const { minX, maxX, minY, maxY } = this.bounds;
+        const width = maxX - minX;
+        const height = maxY - minY;
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+
+        this.bounds = {
+            minX: centerX - width,
+            maxX: centerX + width,
+            minY: centerY - height,
+            maxY: centerY + height,
+        };
+
+        // 3. 트리 초기화 및 모든 점 재배치 (재귀 방지를 위해 executeInsert 호출)
+        this.children = null;
+        this.points.clear();
+        allPoints.forEach((p) => this.executeInsert(p));
+    }
+
+    /** 삽입하려는 점이 현재 경계의 90% 영역을 벗어나는지 확인 */
+    private isNearBoundary(point: Point): boolean {
+        const { minX, maxX, minY, maxY } = this.bounds;
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        const marginX = width * 0.05;
+        const marginY = height * 0.05;
+
+        const innerBounds: Rect = {
+            minX: minX + marginX,
+            maxX: maxX - marginX,
+            minY: minY + marginY,
+            maxY: maxY - marginY,
+        };
+
+        return !isPointInRect(point, innerBounds);
+    }
+
+    /** [DragMove] 범위 탐색 : 마우스 주변의 스냅 가능한 노드 확보 */
     getPointsInRange(range: Rect, found: Point[] = []): Point[] {
         if (!isIntersected(this.bounds, range)) {
             return found;
@@ -184,7 +246,7 @@ export default class QuadTree {
         }
         const { NW, NE, SW, SE } = this.children;
 
-        return NW.insert(point) || NE.insert(point) || SW.insert(point) || SE.insert(point);
+        return NW.executeInsert(point) || NE.executeInsert(point) || SW.executeInsert(point) || SE.executeInsert(point);
     }
 
     /** 삭제 작업을 자식 노드에게 위임 */

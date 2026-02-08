@@ -106,8 +106,11 @@ export default class Renderer {
 
     /** 뷰포트의 위치와 크기를 최종 확정 */
     private updateViewBox(nextMinX: number, nextMinY: number, width: number, height: number): void {
-        this.viewBox.minX = Math.max(this.bounds.minX, Math.min(nextMinX, this.bounds.maxX - width));
-        this.viewBox.minY = Math.max(this.bounds.minY, Math.min(nextMinY, this.bounds.maxY - height));
+        // 쿼드 트리 최신 크기
+        const currentBounds = this.qt.getBounds();
+
+        this.viewBox.minX = Math.max(currentBounds.minX, Math.min(nextMinX, currentBounds.maxX - width));
+        this.viewBox.minY = Math.max(currentBounds.minY, Math.min(nextMinY, currentBounds.maxY - height));
         this.viewBox.maxX = this.viewBox.minX + width;
         this.viewBox.maxY = this.viewBox.minY + height;
 
