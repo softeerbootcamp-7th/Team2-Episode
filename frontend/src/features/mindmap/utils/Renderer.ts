@@ -58,14 +58,14 @@ export default class Renderer {
         const viewH = this.viewBox.maxY - this.viewBox.minY;
 
         // 마우스의 픽셀 이동량(px)을 현재 확대 배율(ViewBox) 기준의 거리로 변환
-        const worldDx = (dx / rect.width) * viewW;
-        const worldDy = (dy / rect.height) * viewH;
+        const sensitivity = 0.65;
+        const worldDx = (dx / rect.width) * viewW * sensitivity;
+        const worldDy = (dy / rect.height) * viewH * sensitivity;
 
-        // 이동할 목적지 계산
         const nextMinX = this.viewBox.minX - worldDx;
         const nextMinY = this.viewBox.minY - worldDy;
 
-        // 쿼드 트리 bounds 내로 제한
+        // 경계 제한 후 업데이트
         this.viewBox.minX = Math.max(this.bounds.minX, Math.min(nextMinX, this.bounds.maxX - viewW));
         this.viewBox.minY = Math.max(this.bounds.minY, Math.min(nextMinY, this.bounds.maxY - viewH));
         this.viewBox.maxX = this.viewBox.minX + viewW;
@@ -74,7 +74,7 @@ export default class Renderer {
         this.applyViewBox();
     }
 
-    /** 마우스 휠을 통해 화면을 확대/축소 (마우스 포인터 지점 고정) */
+    /** 확대/축소 (마우스 포인터 지점 고정) */
     zoomHandler(delta: number, e: WheelEvent): void {
         const rect = this.canvas.getBoundingClientRect();
         const currentW = this.viewBox.maxX - this.viewBox.minX;
@@ -120,7 +120,6 @@ export default class Renderer {
             maxX: nextMinX + nextW,
             maxY: nextMinY + nextH,
         };
-
         this.applyViewBox();
     }
 
