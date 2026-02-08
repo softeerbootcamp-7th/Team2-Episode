@@ -12,6 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,9 +44,10 @@ class QuestionRepositoryTest {
         Job fakeJob = createEntity(Job.class);
         ReflectionTestUtils.setField(fakeJob, "id", existingJobId);
 
+        String uniqueContent = "테스트 질문 " + UUID.randomUUID();
         Question q = createEntity(Question.class);
         ReflectionTestUtils.setField(q, "competencyType", ct);
-        ReflectionTestUtils.setField(q, "content", "대충 만든 테스트 질문");
+        ReflectionTestUtils.setField(q, "content", uniqueContent);
         ReflectionTestUtils.setField(q, "guidanceMessage", "가이드");
         questionRepository.save(q);
 
@@ -56,7 +58,9 @@ class QuestionRepositoryTest {
 
         List<Question> result = questionRepository.findAllWithCompetencyByJobId(existingJobId);
 
-        assertThat(result.stream().anyMatch(res -> res.getContent().equals("대충 만든 테스트 질문"))).isTrue();
+        assertThat(result)
+                .extracting(Question::getContent)
+                .contains(uniqueContent);
     }
 
     @Test
@@ -67,14 +71,17 @@ class QuestionRepositoryTest {
         ReflectionTestUtils.setField(ct, "category", CompetencyType.Category.문제해결_사고_역량);
         competencyTypeRepository.save(ct);
 
+        String uniqueContent = "유니크 질문 " + UUID.randomUUID();
         Question q = createEntity(Question.class);
         ReflectionTestUtils.setField(q, "competencyType", ct);
-        ReflectionTestUtils.setField(q, "content", "유니크 질문 123");
+        ReflectionTestUtils.setField(q, "content", uniqueContent);
         ReflectionTestUtils.setField(q, "guidanceMessage", "가이드");
         questionRepository.save(q);
 
         List<Question> result = questionRepository.findAllWithCompetency();
 
-        assertThat(result.stream().anyMatch(res -> res.getContent().equals("유니크 질문 123"))).isTrue();
+        assertThat(result)
+                .extracting(Question::getContent)
+                .contains(uniqueContent);
     }
 }
