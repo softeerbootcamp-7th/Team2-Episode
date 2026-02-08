@@ -30,13 +30,7 @@ public class JobController {
 
     @GetMapping
     @Operation(summary = "직군/직무 전체 조회", description = "직군(occupation) 목록을 가나다순으로 조회하고, 각 직군에 속한 직무(job) 목록도 함께 반환합니다.")
-    @ApiResponses(
-            { @ApiResponse(
-                    responseCode = "200", description = "조회 성공", content = @Content(
-                    array = @ArraySchema(schema = @Schema(implementation = JobsByOccupationDto.class))
-            )
-            ) }
-    )
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
     public ResponseEntity<List<JobsByOccupationDto>> getOccupationsWithJobs() {
         return ResponseEntity.ok(jobService.getOccupationsWithJobs());
