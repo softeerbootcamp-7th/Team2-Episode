@@ -4,7 +4,7 @@ import { useViewport } from "@/features/mindmap/node/hooks/useViewport";
 import { useViewportEvents } from "@/features/mindmap/node/hooks/useViewportEvents";
 import { ViewportProvider } from "@/features/mindmap/providers/ViewportProvider";
 import { NodeElement } from "@/features/mindmap/types/mindmapType";
-import Renderer from "@/features/mindmap/utils/core/Renderer";
+import Renderer from "@/features/mindmap/utils/Renderer";
 
 /**
  * 샘플 데이터 생성 로직
@@ -92,10 +92,6 @@ export const RendererContent = () => {
         rendererRef.current = new Renderer(svgRef.current, rootNode);
     }, [rootNode, rendererRef]);
 
-    const handleNodeClick = (node: NodeElement) => {
-        rendererRef.current?.focusNode(node);
-    };
-
     return (
         <div className="fixed inset-0 overflow-hidden bg-slate-50">
             <svg ref={svgRef} className="h-full w-full outline-none">
@@ -103,7 +99,6 @@ export const RendererContent = () => {
                     <g
                         key={node.id}
                         transform={`translate(${node.x - node.width / 2}, ${node.y - node.height / 2})`}
-                        onClick={() => handleNodeClick(node)}
                         style={{ cursor: "pointer" }}
                     >
                         <rect
