@@ -4,7 +4,7 @@ import { useViewport } from "@/features/mindmap/node/hooks/useViewport";
 import { useViewportEvents } from "@/features/mindmap/node/hooks/useViewportEvents";
 import { ViewportProvider } from "@/features/mindmap/providers/ViewportProvider";
 import { NodeElement } from "@/features/mindmap/types/mindmapType";
-import Renderer from "@/features/mindmap/utils/Renderer";
+import Renderer from "@/features/mindmap/utils/core/Renderer";
 
 /**
  * 샘플 데이터 생성 로직
@@ -92,18 +92,26 @@ export const RendererContent = () => {
         rendererRef.current = new Renderer(svgRef.current, rootNode);
     }, [rootNode, rendererRef]);
 
+    const handleNodeClick = (node: NodeElement) => {
+        rendererRef.current?.focusNode(node);
+    };
+
     return (
         <div className="fixed inset-0 overflow-hidden bg-slate-50">
-            <svg ref={svgRef} className="h-full w-full cursor-grab active:cursor-grabbing outline-none">
-                {/* 쿼드 트리 기반 노드 렌더링 */}
+            <svg ref={svgRef} className="h-full w-full outline-none">
                 {nodes.map((node) => (
-                    <g key={node.id} transform={`translate(${node.x - node.width / 2}, ${node.y - node.height / 2})`}>
+                    <g
+                        key={node.id}
+                        transform={`translate(${node.x - node.width / 2}, ${node.y - node.height / 2})`}
+                        onClick={() => handleNodeClick(node)}
+                        style={{ cursor: "pointer" }}
+                    >
                         <rect
                             width={node.width}
                             height={node.height}
                             rx={node.type === "root" ? 16 : 8}
                             fill={node.type === "root" ? "#4f46e5" : "#ffffff"}
-                            stroke={node.type === "root" ? "#3730a3" : "#cbd5e1"}
+                            stroke="#cbd5e1"
                             strokeWidth={2}
                         />
                         <text
@@ -111,9 +119,8 @@ export const RendererContent = () => {
                             y={node.height / 2}
                             textAnchor="middle"
                             dominantBaseline="middle"
-                            fontSize={node.type === "root" ? 18 : 14}
                             fill={node.type === "root" ? "#ffffff" : "#1e293b"}
-                            className="select-none font-sans"
+                            className="select-none pointer-events-none"
                         >
                             {node.data.contents}
                         </text>
@@ -123,7 +130,6 @@ export const RendererContent = () => {
         </div>
     );
 };
-
 /**
  * 최종 Showcase 페이지 컴포넌트
  * ViewportProvider로 감싸서 하위 컴포넌트들이 Renderer 인스턴스를 공유할 수 있게 합니다.

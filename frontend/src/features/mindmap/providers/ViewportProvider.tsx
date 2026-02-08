@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useRef } from "react";
 
-import Renderer from "@/features/mindmap/utils/Renderer";
+import Renderer from "@/features/mindmap/utils/core/Renderer";
 
 // Renderer 인스턴스를 담을 컨텍스트
 export const ViewportContext = createContext<React.RefObject<Renderer | null> | null>(null);
