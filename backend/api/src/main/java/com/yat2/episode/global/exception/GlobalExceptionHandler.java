@@ -2,6 +2,7 @@ package com.yat2.episode.global.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -44,7 +45,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingServletRequestParameterException(
-            MissingServletRequestParameterException e) {
+            MissingServletRequestParameterException e
+    ) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST, ErrorCode.INVALID_REQUEST.getMessage()));
     }
@@ -56,5 +58,14 @@ public class GlobalExceptionHandler {
                         .collect(Collectors.joining(", "));
         return ResponseEntity.status(ErrorCode.INVALID_REQUEST.getHttpStatus())
                 .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST, errorMessage));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException e
+    ) {
+        log.error("Data integrity violation", e);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(ErrorCode.CONFLICT, ErrorCode.CONFLICT.getMessage()));
     }
 }
