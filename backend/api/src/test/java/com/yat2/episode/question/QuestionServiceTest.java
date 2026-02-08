@@ -1,5 +1,12 @@
 package com.yat2.episode.question;
 
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.job.Job;
+import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,44 +21,37 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.job.Job;
-import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
-
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("QuestionService 단위 테스트")
 class QuestionServiceTest {
 
+    private final long testUserId = 12345678L;
     @Mock
     private QuestionRepository questionRepository;
-
     @Mock
     private UserService userService;
-
     @InjectMocks
     private QuestionService questionService;
-
     private User testUser;
-    private final long testUserId = 12345678L;
 
     @BeforeEach
     void setUp() {
         testUser = User.newUser(testUserId, "테스트유저");
+    }
+
+    private Question createQuestion(int id, String content, CompetencyType type) {
+        Question q = createEntity(Question.class);
+        ReflectionTestUtils.setField(q, "id", id);
+        ReflectionTestUtils.setField(q, "content", content);
+        ReflectionTestUtils.setField(q, "competencyType", type);
+        return q;
     }
 
     @Nested
@@ -102,13 +102,5 @@ class QuestionServiceTest {
             verify(userService).getUserOrThrow(testUserId);
             verify(questionRepository).findAllWithCompetencyByJobId(7);
         }
-    }
-
-    private Question createQuestion(int id, String content, CompetencyType type) {
-        Question q = createEntity(Question.class);
-        ReflectionTestUtils.setField(q, "id", id);
-        ReflectionTestUtils.setField(q, "content", content);
-        ReflectionTestUtils.setField(q, "competencyType", type);
-        return q;
     }
 }

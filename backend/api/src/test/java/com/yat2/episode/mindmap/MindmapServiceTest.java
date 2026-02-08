@@ -1,5 +1,16 @@
 package com.yat2.episode.mindmap;
 
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.mindmap.constants.MindmapConstants;
+import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
+import com.yat2.episode.mindmap.dto.MindmapDataDto;
+import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
+import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,31 +24,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
-import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
-import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
-
 import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MindmapService 단위 테스트")
 class MindmapServiceTest {
 
+    private final long testUserId = 1L;
     @Mock
     private MindmapRepository mindmapRepository;
     @Mock
@@ -48,12 +46,9 @@ class MindmapServiceTest {
     private UserService userService;
     @Mock
     private S3ObjectKeyGenerator s3ObjectKeyGenerator;
-
     @InjectMocks
     private MindmapService mindmapService;
-
     private User testUser;
-    private final long testUserId = 1L;
 
     @BeforeEach
     void setUp() {

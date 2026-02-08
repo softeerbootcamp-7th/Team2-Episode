@@ -1,5 +1,6 @@
 package com.yat2.episode.competency;
 
+import com.yat2.episode.competency.dto.CompetencyTypeDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
-
-import com.yat2.episode.competency.dto.CompetencyTypeDto;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +26,14 @@ class CompetencyTypeServiceTest {
 
     @InjectMocks
     private CompetencyTypeService competencyTypeService;
+
+    private CompetencyType createCompetencyType(Integer id, String typeName, CompetencyType.Category category) {
+        CompetencyType ct = createEntity(CompetencyType.class);
+        ReflectionTestUtils.setField(ct, "id", id);
+        ReflectionTestUtils.setField(ct, "typeName", typeName);
+        ReflectionTestUtils.setField(ct, "category", category);
+        return ct;
+    }
 
     @Nested
     @DisplayName("getAllData")
@@ -69,14 +76,6 @@ class CompetencyTypeServiceTest {
 
             verify(competencyTypeRepository).findByMindmapId(mindmapId);
         }
-    }
-
-    private CompetencyType createCompetencyType(Integer id, String typeName, CompetencyType.Category category) {
-        CompetencyType ct = createEntity(CompetencyType.class);
-        ReflectionTestUtils.setField(ct, "id", id);
-        ReflectionTestUtils.setField(ct, "typeName", typeName);
-        ReflectionTestUtils.setField(ct, "category", category);
-        return ct;
     }
 
 

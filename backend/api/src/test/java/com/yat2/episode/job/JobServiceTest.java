@@ -1,5 +1,7 @@
 package com.yat2.episode.job;
 
+import com.yat2.episode.job.dto.JobDto;
+import com.yat2.episode.job.dto.JobsByOccupationDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -7,12 +9,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
-
-import com.yat2.episode.job.dto.JobDto;
-import com.yat2.episode.job.dto.JobsByOccupationDto;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +27,22 @@ class JobServiceTest {
 
     @InjectMocks
     private JobService jobService;
+
+    private Occupation createOccupation(Integer id, String name) {
+        Occupation o = new Occupation();
+        o.setId(id);
+        o.setName(name);
+        return o;
+    }
+
+    private Job createJob(Integer id, String name, Occupation occupation) {
+        Job j = createEntity(Job.class);
+        ReflectionTestUtils.setField(j, "id", id);
+        ReflectionTestUtils.setField(j, "name", name);
+        ReflectionTestUtils.setField(j, "occupation", occupation);
+
+        return j;
+    }
 
     @Nested
     @DisplayName("getOccupationsWithJobs")
@@ -72,21 +87,5 @@ class JobServiceTest {
 
             verify(jobRepository).findAllWithOccupation();
         }
-    }
-
-    private Occupation createOccupation(Integer id, String name) {
-        Occupation o = new Occupation();
-        o.setId(id);
-        o.setName(name);
-        return o;
-    }
-
-    private Job createJob(Integer id, String name, Occupation occupation) {
-        Job j = createEntity(Job.class);
-        ReflectionTestUtils.setField(j, "id", id);
-        ReflectionTestUtils.setField(j, "name", name);
-        ReflectionTestUtils.setField(j, "occupation", occupation);
-
-        return j;
     }
 }

@@ -3,6 +3,7 @@ package com.yat2.episode.utils;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.yat2.episode.mindmap.Mindmap;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import java.lang.reflect.Constructor;
 
 public class TestEntityFactory {

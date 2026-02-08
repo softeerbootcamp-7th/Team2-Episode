@@ -1,6 +1,5 @@
 package com.yat2.episode.mindmap;
 
-import com.github.f4b6a3.uuid.UuidCreator;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
