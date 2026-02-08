@@ -12,7 +12,9 @@ import java.util.List;
 
 import com.yat2.episode.job.dto.JobDto;
 import com.yat2.episode.job.dto.JobsByOccupationDto;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -80,10 +82,11 @@ class JobServiceTest {
     }
 
     private Job createJob(Integer id, String name, Occupation occupation) {
-        Job j = new Job();
-        j.setId(id);
-        j.setName(name);
-        j.setOccupation(occupation);
+        Job j = createEntity(Job.class);
+        ReflectionTestUtils.setField(j, "id", id);
+        ReflectionTestUtils.setField(j, "name", name);
+        ReflectionTestUtils.setField(j, "occupation", occupation);
+
         return j;
     }
 }

@@ -25,6 +25,7 @@ import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
+import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -101,15 +102,14 @@ class MindmapServiceTest {
         @Test
         @DisplayName("마지막 참여자가 마인드맵을 삭제하면 실제 마인드맵 엔티티도 삭제된다")
         void should_delete_mindmap_entity_when_no_participants_left() {
-            UUID mindmapUUID = UUID.randomUUID();
-            Mindmap mindmap = new Mindmap(mindmapUUID, "삭제될 마인드맵", false);
+            Mindmap mindmap = createMindmap("삭제될 마인드맵", false);
 
-            given(mindmapRepository.findByIdWithLock(mindmapUUID)).willReturn(Optional.of(mindmap));
-            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapUUID, testUserId)).willReturn(
+            given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(), testUserId)).willReturn(
                     1);
-            given(mindmapParticipantRepository.existsByMindmap_Id(mindmapUUID)).willReturn(false);
+            given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(false);
 
-            mindmapService.deleteMindmap(testUserId, mindmapUUID.toString());
+            mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());
 
             verify(mindmapRepository).delete(mindmap);
         }
@@ -117,15 +117,14 @@ class MindmapServiceTest {
         @Test
         @DisplayName("다른 참여자가 남아있으면 참여 정보만 삭제되고 마인드맵 엔티티는 유지된다")
         void should_only_delete_participant_when_others_remain() {
-            UUID mindmapUUID = UUID.randomUUID();
-            Mindmap mindmap = new Mindmap(mindmapUUID, "유지될 마인드맵", true);
+            Mindmap mindmap = createMindmap("유지될 마인드맵", true);
 
-            given(mindmapRepository.findByIdWithLock(mindmapUUID)).willReturn(Optional.of(mindmap));
-            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapUUID, testUserId)).willReturn(
+            given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(), testUserId)).willReturn(
                     1);
-            given(mindmapParticipantRepository.existsByMindmap_Id(mindmapUUID)).willReturn(true);
+            given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(true);
 
-            mindmapService.deleteMindmap(testUserId, mindmapUUID.toString());
+            mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());
 
             verify(mindmapRepository, never()).delete(any());
         }
@@ -138,14 +137,13 @@ class MindmapServiceTest {
         @Test
         @DisplayName("마인드맵의 이름을 성공적으로 변경한다")
         void should_update_mindmap_name() {
-            UUID mindmapUUID = UUID.randomUUID();
-            Mindmap mindmap = new Mindmap(mindmapUUID, "이전 이름", false);
+            Mindmap mindmap = createMindmap("이전 이름", false);
             MindmapParticipant participant = new MindmapParticipant(testUser, mindmap);
 
-            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapUUID, testUserId)).willReturn(
+            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmap.getId(), testUserId)).willReturn(
                     Optional.of(participant));
 
-            MindmapDataDto result = mindmapService.updateName(testUserId, mindmapUUID.toString(), "새 이름");
+            MindmapDataDto result = mindmapService.updateName(testUserId, mindmap.getId().toString(), "새 이름");
 
             assertThat(result.mindmapName()).isEqualTo("새 이름");
             assertThat(mindmap.getName()).isEqualTo("새 이름");

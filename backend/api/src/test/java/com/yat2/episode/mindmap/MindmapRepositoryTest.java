@@ -1,5 +1,6 @@
 package com.yat2.episode.mindmap;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -7,12 +8,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.yat2.episode.utils.TestEntityFactory.createEntity;
+import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -36,13 +40,13 @@ class MindmapRepositoryTest {
         User user = User.newUser(12345L, "테스트유저");
         userRepository.save(user);
 
-        Mindmap m1 = new Mindmap("먼저 만든 마인드맵", false);
-        Mindmap m2 = new Mindmap("나중에 만든 마인드맵", false);
+        Mindmap m1 = createMindmap("먼저 만든 마인드맵", false);
+        Mindmap m2 = createMindmap("나중에 만든 마인드맵", false);
         mindmapRepository.save(m1);
         mindmapRepository.save(m2);
 
-        participantRepository.save(new MindmapParticipant(user, m1));
-        participantRepository.save(new MindmapParticipant(user, m2));
+        saveParticipant(user, m1);
+        saveParticipant(user, m2);
 
         List<Mindmap> result = mindmapRepository.findByUserIdOrderByCreatedDesc(12345L);
 
@@ -57,13 +61,12 @@ class MindmapRepositoryTest {
         userRepository.save(user);
 
         String baseName = "애플의 마인드맵";
-        Mindmap m1 = new Mindmap(baseName, false);
-        Mindmap m2 = new Mindmap(baseName + "(1)", false);
+        Mindmap m1 = createMindmap(baseName, false);
+        Mindmap m2 = createMindmap(baseName + "(1)", false);
 
         mindmapRepository.saveAll(List.of(m1, m2));
-        participantRepository.save(new MindmapParticipant(user, m1));
-        participantRepository.save(new MindmapParticipant(user, m2));
-
+        saveParticipant(user, m1);
+        saveParticipant(user, m2);
         List<String> names = mindmapRepository.findAllNamesByBaseName(baseName, 1L);
 
         assertThat(names).hasSize(2);
@@ -73,7 +76,7 @@ class MindmapRepositoryTest {
     @Test
     @DisplayName("비관적 잠금을 적용하여 마인드맵을 조회한다")
     void findByIdWithLock_Success() {
-        Mindmap mindmap = new Mindmap("잠금 테스트", true);
+        Mindmap mindmap = createMindmap("잠금 테스트", true);
         Mindmap saved = mindmapRepository.save(mindmap);
         UUID id = saved.getId();
 
@@ -81,5 +84,12 @@ class MindmapRepositoryTest {
 
         assertThat(result).isPresent();
         assertThat(result.get().getName()).isEqualTo("잠금 테스트");
+    }
+
+    private void saveParticipant(User user, Mindmap mindmap) {
+        MindmapParticipant participant = createEntity(MindmapParticipant.class);
+        ReflectionTestUtils.setField(participant, "user", user);
+        ReflectionTestUtils.setField(participant, "mindmap", mindmap);
+        participantRepository.save(participant);
     }
 }

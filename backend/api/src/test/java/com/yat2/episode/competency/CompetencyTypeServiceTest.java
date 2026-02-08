@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.yat2.episode.competency.dto.CompetencyTypeDto;
 
+import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -71,10 +72,12 @@ class CompetencyTypeServiceTest {
     }
 
     private CompetencyType createCompetencyType(Integer id, String typeName, CompetencyType.Category category) {
-        CompetencyType ct = new CompetencyType();
+        CompetencyType ct = createEntity(CompetencyType.class);
         ReflectionTestUtils.setField(ct, "id", id);
         ReflectionTestUtils.setField(ct, "typeName", typeName);
         ReflectionTestUtils.setField(ct, "category", category);
         return ct;
     }
+
+
 }

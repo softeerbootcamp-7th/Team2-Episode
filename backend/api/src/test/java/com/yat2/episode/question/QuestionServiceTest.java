@@ -22,6 +22,7 @@ import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
+import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -104,7 +105,7 @@ class QuestionServiceTest {
     }
 
     private Question createQuestion(int id, String content, CompetencyType type) {
-        Question q = new Question();
+        Question q = createEntity(Question.class);
         ReflectionTestUtils.setField(q, "id", id);
         ReflectionTestUtils.setField(q, "content", content);
         ReflectionTestUtils.setField(q, "competencyType", type);
