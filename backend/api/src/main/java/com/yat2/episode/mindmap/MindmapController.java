@@ -90,18 +90,7 @@ public class MindmapController {
             웹 소켓 연결은 별도 요청이 필요합니다.
             """
     )
-    @ApiResponses(
-            {@ApiResponse(responseCode = "201", description = "마인드맵 생성 성공"), @ApiResponse(
-                    responseCode = "400", description = """
-                    잘못된 요청
-                    - MINDMAP_TITLE_REQUIRED: 팀 마인드맵 생성 시 제목 누락
-                    """, content = @Content
-            ), @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
-                    @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
-                    @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
-
-            }
-    )
+    @ApiResponses({@ApiResponse(responseCode = "201", description = "마인드맵 생성 성공")})
     @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.S3_URL_FAIL, ErrorCode.MINDMAP_TITLE_REQUIRED})
     @PostMapping()
     public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(
