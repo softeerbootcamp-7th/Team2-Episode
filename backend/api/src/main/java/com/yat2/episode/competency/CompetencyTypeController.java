@@ -1,5 +1,13 @@
 package com.yat2.episode.competency;
 
+import com.yat2.episode.auth.security.Public;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.global.swagger.ApiErrorCodes;
+import com.yat2.episode.global.swagger.AuthRequiredErrors;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,17 +27,25 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/competency-type")
+@Tag(name = "competency-type", description = "역량 조회 API")
 public class CompetencyTypeController {
 
     private final CompetencyTypeService competencyTypeService;
     private final MindmapService mindmapService;
-    private final AuthService authService;
 
+    @Public
+    @Operation(summary = "역량 리스트 조회")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
+    @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
     @GetMapping
     public ResponseEntity<List<CompetencyTypeDto>> getAllCompetencies() {
         return ResponseEntity.ok(competencyTypeService.getAllData());
     }
 
+    @Operation(summary = "특정 마인드맵 내 역량 리스트 조회")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
+    @AuthRequiredErrors
+    @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
     @GetMapping("/mindmap/{mindmapId}")
     public ResponseEntity<List<CompetencyTypeDto>> getCompetenciesInMindmap(
             @RequestAttribute(USER_ID) long userId,
