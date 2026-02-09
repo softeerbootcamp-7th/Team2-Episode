@@ -25,7 +25,14 @@ export default tseslint.config(
             "react/react-in-jsx-scope": "off",
             "simple-import-sort/imports": "error",
             "simple-import-sort/exports": "error",
-
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    // under line 붙으면 안쓰는 변수라는 오류 끔
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                },
+            ],
             "no-relative-import-paths/no-relative-import-paths": [
                 "error",
                 {
