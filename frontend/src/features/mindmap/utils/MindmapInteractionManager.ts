@@ -158,7 +158,7 @@ export class MindmapInteractionManager {
         let nearestId: NodeId | null = null;
 
         for (const [id, node] of this.container.nodes) {
-            if (id === this.draggingNodeId) continue;
+            if (this.dragSubtreeIds?.has(id)) continue;
 
             const dist = calcDistance(node.x, node.y, checkX, checkY);
             if (dist < minDist && dist < BASE_NODE_DETECTION_THRESHOLD) {
