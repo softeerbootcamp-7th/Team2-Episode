@@ -24,6 +24,9 @@ public enum ErrorCode {
     INVALID_OAUTH_STATE(HttpStatus.BAD_REQUEST, "INVALID_OAUTH_STATE", "OAuth " + "state가 일치하지 않습니다."),
     INVALID_OAUTH_ID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_OAUTH_ID_TOKEN", "유효하지 않은 " + "OAuth IDToken 입니다."),
 
+    //Episode
+    EPISODE_NOT_FOUND(HttpStatus.NOT_FOUND, "EPISODE_NOT_FOUND", "존재하지 않는 에피소드입니다."),
+
     //Users
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "존재하지 않는 유저입니다."),
     JOB_NOT_SELECTED(HttpStatus.BAD_REQUEST, "JOB_NOT_SELECTED", "직무가 선택되지 않았습니다."),

@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
 
 @Service
@@ -18,6 +20,7 @@ public class EpisodeService {
     private final EpisodeRepository episodeRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
 
+    @Transactional
     public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
 
@@ -27,6 +30,16 @@ public class EpisodeService {
         }).orElseGet(() -> createNewEpisode(episodeId, mindmapId, episodeUpsertReq));
 
         return EpisodeDetailRes.of(episode);
+    }
+
+    @Transactional
+    public void updateEpisode(UUID nodeId, long userId, EpisodeUpsertReq episodeUpsertReq) {
+        EpisodeId episodeId = new EpisodeId(nodeId, userId);
+
+        Episode episode = episodeRepository.findById(episodeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+
+        episode.update(episodeUpsertReq);
     }
 
     private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId, EpisodeUpsertReq req) {
