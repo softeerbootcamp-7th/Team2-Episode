@@ -35,7 +35,7 @@ public class EpisodeController {
     private final EpisodeService episodeService;
 
     @Operation(summary = "에피소드 정보 조회", description = "에피소드 세부 정보를 조회합니다.")
-    @ApiErrorCodes({ ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
     @GetMapping
     public EpisodeDetailRes getEpisode(
             @PathVariable UUID nodeId,
@@ -48,7 +48,7 @@ public class EpisodeController {
             summary = "에피소드 부분 수정", description = "에피소드를 수정합니다. Body의 모든 필드는 Optional 입니다. " +
                                                   "String은 빈 문자열, 배열은 빈 배열, Date는 별도 API로 삭제가 가능합니다."
     )
-    @ApiErrorCodes({ ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
     @PatchMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateEpisode(
@@ -62,7 +62,7 @@ public class EpisodeController {
     }
 
     @Operation(summary = "에피소드 삭제", description = "에피소드를 삭제합니다.")
-    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR })
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR })
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteEpisode(
@@ -73,7 +73,7 @@ public class EpisodeController {
     }
 
     @Operation(summary = "에피소드 시작/끝 날짜 삭제", description = "에피소드의 시작/끝 날짜를 초기화합니다.")
-    @ApiErrorCodes({ ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
     @DeleteMapping("/dates")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearEpisodeDates(

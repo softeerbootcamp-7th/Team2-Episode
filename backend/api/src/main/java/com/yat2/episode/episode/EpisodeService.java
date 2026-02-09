@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,6 +39,7 @@ public class EpisodeService {
     @Transactional
     public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
+        validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
 
         Episode episode = episodeRepository.findById(episodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
 
@@ -49,6 +51,7 @@ public class EpisodeService {
     @Transactional
     public void updateEpisode(UUID nodeId, long userId, EpisodeUpsertReq episodeUpsertReq) {
         Episode episode = getEpisodeOrThrow(nodeId, userId);
+        validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
 
         episode.update(episodeUpsertReq);
     }
@@ -77,5 +80,11 @@ public class EpisodeService {
         Episode newEpisode = Episode.create(episodeId.getNodeId(), episodeId.getUserId(), mindmapId);
 
         return episodeRepository.save(newEpisode);
+    }
+
+    private void validateDates(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
     }
 }
