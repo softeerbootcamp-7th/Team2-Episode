@@ -11,6 +11,8 @@ import com.yat2.episode.diagnosis.dto.DiagnosisDetailDto;
 import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.job.Job;
+import com.yat2.episode.job.JobRepository;
 import com.yat2.episode.question.Question;
 import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.question.dto.QuestionDetailDto;
@@ -24,18 +26,21 @@ public class DiagnosisService {
     private final DiagnosisRepository diagnosisRepository;
     private final DiagnosisWeaknessRepository diagnosisWeaknessRepository;
     private final QuestionRepository questionRepository;
+    private final JobRepository jobRepository;
     private final UserService userService;
 
     @Transactional
     public DiagnosisSummaryDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
         User user = userService.getUserOrThrow(userId);
+        Job job =
+                jobRepository.findById(reqDto.jobId()).orElseThrow(() -> new CustomException(ErrorCode.JOB_NOT_FOUND));
 
         List<Question> questions = questionRepository.findAllById(reqDto.unansweredQuestionIds());
         if (questions.size() != reqDto.unansweredQuestionIds().size()) {
             throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
         }
 
-        DiagnosisResult diagnosisResult = diagnosisRepository.save(new DiagnosisResult(user, user.getJob()));
+        DiagnosisResult diagnosisResult = diagnosisRepository.save(new DiagnosisResult(user, job));
 
         List<DiagnosisWeakness> weaknesses =
                 questions.stream().map(q -> new DiagnosisWeakness(diagnosisResult, q)).toList();
