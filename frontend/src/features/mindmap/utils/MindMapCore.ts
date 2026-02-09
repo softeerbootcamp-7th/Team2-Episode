@@ -26,7 +26,7 @@ export default class MindMapCore {
         const rootNode = this.tree.getRootNode();
 
         // renderer 초기화
-        this.renderer = new Renderer(canvas, rootNode);
+        this.renderer = new Renderer(canvas, rootNode, () => this.quadTree.getBounds());
 
         // quadTree 초기화
         const initialBounds = this.calculateInitialBounds(rootNode);

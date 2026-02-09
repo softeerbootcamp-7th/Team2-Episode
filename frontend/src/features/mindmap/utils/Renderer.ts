@@ -1,37 +1,24 @@
 import { NodeElement } from "@/features/mindmap/types/mindmapType";
 import { Rect } from "@/features/quad_tree/types/rect";
-import QuadTree from "@/features/quad_tree/utils/QuadTree";
 
 /**
  * Renderer
  * canvas: 화면을 그리는 실제 SVG 엘리먼트
- * qt: 공간 데이터를 관리하는 쿼드 트리 인스턴스
  * bounds: 이동 및 확장이 제한되는 전체 쿼드 트리 영역
  * viewBox: 현재 사용자 화면에 보이는 가상 좌표 영역
  */
 export default class Renderer {
     private canvas: SVGSVGElement;
-    private qt: QuadTree;
     private viewBox: Rect;
 
-    private readonly INITIAL_QUAD_FACTOR = 20; // 쿼드 트리 크기: 루트 노드의 n배
+    private getWorldBounds: () => Rect;
+
     private readonly INITIAL_VIEW_FACTOR = 6; // 초기 뷰포트 크기: 루트 노드의 n배
 
     /** [Init] 루트 노드를 중앙에 배치하고 쿼드 트리와 줌인된 초기 뷰포트를 설정 */
-    constructor(canvas: SVGSVGElement, rootNode: NodeElement) {
+    constructor(canvas: SVGSVGElement, rootNode: NodeElement, getWorldBounds: () => Rect) {
         this.canvas = canvas;
-
-        //쿼드 트리 영역 설정
-        const quadW = rootNode.width * this.INITIAL_QUAD_FACTOR;
-        const quadH = rootNode.height * this.INITIAL_QUAD_FACTOR;
-
-        const initialBounds = {
-            minX: rootNode.x - quadW / 2,
-            maxX: rootNode.x + quadW / 2,
-            minY: rootNode.y - quadH / 2,
-            maxY: rootNode.y + quadH / 2,
-        };
-        this.qt = new QuadTree(initialBounds);
+        this.getWorldBounds = getWorldBounds;
 
         //초기 카메라 위치 설정
         const rect = this.canvas.getBoundingClientRect();
@@ -78,16 +65,16 @@ export default class Renderer {
         let nextH = currentH * scaleChange;
 
         //쿼드 트리 bounds 내로 줌아웃 최대 영역 제한
-        const currentBounds = this.qt.getBounds();
-        const boundsW = currentBounds.maxX - currentBounds.minX;
-        const boundsH = currentBounds.maxY - currentBounds.minY;
+        const worldBounds = this.getWorldBounds();
+        const worldW = worldBounds.maxX - worldBounds.minX;
+        const worldH = worldBounds.maxY - worldBounds.minY;
 
-        if (nextW > boundsW) {
-            nextW = boundsW;
+        if (nextW > worldW) {
+            nextW = worldW;
             nextH = nextW / (rect.width / rect.height);
         }
-        if (nextH > boundsH) {
-            nextH = boundsH;
+        if (nextH > worldH) {
+            nextH = worldH;
             nextW = nextH * (rect.width / rect.height);
         }
 
@@ -107,10 +94,10 @@ export default class Renderer {
     /** 뷰포트의 위치와 크기를 최종 확정 */
     private updateViewBox(nextMinX: number, nextMinY: number, width: number, height: number): void {
         // 매번 현재 쿼드 트리 최신 크기 참조
-        const currentBounds = this.qt.getBounds();
+        const worldBounds = this.getWorldBounds();
 
-        this.viewBox.minX = Math.max(currentBounds.minX, Math.min(nextMinX, currentBounds.maxX - width));
-        this.viewBox.minY = Math.max(currentBounds.minY, Math.min(nextMinY, currentBounds.maxY - height));
+        this.viewBox.minX = Math.max(worldBounds.minX, Math.min(nextMinX, worldBounds.maxX - width));
+        this.viewBox.minY = Math.max(worldBounds.minY, Math.min(nextMinY, worldBounds.maxY - height));
         this.viewBox.maxX = this.viewBox.minX + width;
         this.viewBox.maxY = this.viewBox.minY + height;
 
