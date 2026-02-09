@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.yat2.episode.competency.dto.CompetencyTypeDto;
 
@@ -41,7 +42,7 @@ class CompetencyTypeServiceTest {
     @Test
     @DisplayName("마인드맵 ID로 조회 시 해당 마인드맵의 역량 타입들만 반환한다")
     void getCompetencyTypesInMindmap_Success() {
-        String mindmapId = "test-uuid-string";
+        UUID mindmapId = UUID.fromString("test-uuid-string");
         CompetencyType type = createCompetencyType(10, "성장 가능성", CompetencyType.Category.실행_성장_역량);
 
         given(competencyTypeRepository.findByMindmapId(mindmapId)).willReturn(List.of(type));
