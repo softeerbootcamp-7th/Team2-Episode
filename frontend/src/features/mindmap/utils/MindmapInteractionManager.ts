@@ -165,7 +165,7 @@ export class MindmapInteractionManager {
         for (const [id, node] of this.container.nodes) {
             if (id === this.draggingNodeId) continue;
 
-            const dist = calcDistance(node.x, checkX, node.y, checkY);
+            const dist = calcDistance(node.x, node.y, checkX, checkY);
             if (dist < minDist && dist < THRESHOLD) {
                 minDist = dist;
                 nearestId = id;
