@@ -29,7 +29,6 @@ public class DiagnosisService {
     @Transactional
     public DiagnosisSummaryDto createDiagnosis(Long userId, DiagnosisArgsReqDto reqDto) {
         User user = userService.getUserOrThrow(userId);
-        validateUserJob(user);
 
         List<Question> questions = questionRepository.findAllById(reqDto.unansweredQuestionIds());
         if (questions.size() != reqDto.unansweredQuestionIds().size()) {

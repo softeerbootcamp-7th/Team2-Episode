@@ -26,6 +26,7 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.global.utils.UriUtil;
+import com.yat2.episode.user.UserService;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
@@ -37,6 +38,7 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @Tag(name = "Diagnosis", description = "역량 진단 관리 API")
 public class DiagnosisController {
     private final DiagnosisService diagnosisService;
+    private final UserService userService;
 
     @Operation(summary = "나의 진단 리스트 조회")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
@@ -77,6 +79,7 @@ public class DiagnosisController {
             @RequestBody DiagnosisArgsReqDto reqBody
     ) {
         DiagnosisSummaryDto resBody = diagnosisService.createDiagnosis(userId, reqBody);
+        userService.updateJob(userId, reqBody.jobId());
         URI location = UriUtil.createLocationUri(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
     }
