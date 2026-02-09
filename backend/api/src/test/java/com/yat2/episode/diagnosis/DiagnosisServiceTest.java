@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +38,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -119,7 +121,6 @@ class DiagnosisServiceTest {
             assertThat(result.jobName()).isEqualTo("백엔드 개발자");
             assertThat(result.weaknessCount()).isEqualTo(3);
 
-            verify(userService).updateJob(userId, jobId);
             verify(diagnosisRepository).save(any(DiagnosisResult.class));
             verify(diagnosisWeaknessRepository).saveAll(anyList());
         }
@@ -241,6 +242,32 @@ class DiagnosisServiceTest {
             List<DiagnosisSummaryDto> result = diagnosisService.getDiagnosisSummariesByUserId(userId);
 
             assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("진단 생성 시 사용자의 직무 정보가 업데이트된다")
+        void createDiagnosis_updatesUserJob() {
+            Long userId = 1L;
+            Integer jobId = 10;
+            Set<Integer> questionIds = Set.of(1, 2);
+            DiagnosisArgsReqDto reqDto = new DiagnosisArgsReqDto(questionIds, jobId);
+
+            given(userService.getUserOrThrow(userId)).willReturn(testUser);
+            given(jobRepository.findById(jobId)).willReturn(Optional.of(testJob));
+            given(questionRepository.findAllById(any())).willReturn(
+                    List.of(mock(Question.class), mock(Question.class)));
+            given(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), anyList())).willReturn(2L);
+
+            given(diagnosisRepository.save(any(DiagnosisResult.class))).willAnswer(invocation -> {
+                DiagnosisResult arg = invocation.getArgument(0);
+                ReflectionTestUtils.setField(arg, "id", 1);
+                return arg;
+            });
+            DiagnosisSummaryDto result = diagnosisService.createDiagnosis(userId, reqDto);
+
+            assertThat(result).isNotNull();
+            assertThat(testUser.getJob()).isEqualTo(testJob);
+            assertThat(result.jobName()).isEqualTo("백엔드 개발자");
         }
     }
 

@@ -53,7 +53,7 @@ public class DiagnosisService {
                 questions.stream().map(q -> new DiagnosisWeakness(diagnosisResult, q)).toList();
         diagnosisWeaknessRepository.saveAll(weaknesses);
 
-        userService.updateJob(userId, reqDto.jobId());
+        user.updateJob(job);
         //todo: save-all을 통한 개별 쿼리에서 bulk 방식으로 개선
 
         return DiagnosisSummaryDto.of(diagnosisResult, weaknesses.size());
