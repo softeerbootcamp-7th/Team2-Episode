@@ -3,15 +3,13 @@ package com.yat2.episode.episode;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.user.User;
+import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 
 @Getter
 @Setter
@@ -31,14 +29,10 @@ public class Episode {
     @EmbeddedId
     private EpisodeId id;
 
-    @MapsId("userId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
     @Column(name = "mindmap_id", nullable = false)
     private UUID mindmapId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(
             name = "competency_type_ids", columnDefinition = "json", nullable = false
     )
@@ -70,4 +64,26 @@ public class Episode {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public static Episode create(UUID nodeId, long userId, UUID mindmapId) {
+        Episode episode = new Episode();
+        episode.id = new EpisodeId(nodeId, userId);
+        episode.mindmapId = mindmapId;
+        return episode;
+    }
+
+    public void update(EpisodeUpsertReq req) {
+        if (req.content() != null) this.content = req.content();
+        if (req.situation() != null) this.situation = req.situation();
+        if (req.task() != null) this.task = req.task();
+        if (req.action() != null) this.action = req.action();
+        if (req.result() != null) this.result = req.result();
+        if (req.startDate() != null) this.startDate = req.startDate();
+        if (req.endDate() != null) this.endDate = req.endDate();
+
+        if (req.competencyTypeIds() != null) {
+            this.competencyTypeIds.clear();
+            this.competencyTypeIds.addAll(req.competencyTypeIds());
+        }
+    }
 }
