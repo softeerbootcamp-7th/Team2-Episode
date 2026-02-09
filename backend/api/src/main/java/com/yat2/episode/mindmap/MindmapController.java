@@ -4,14 +4,12 @@ import com.github.f4b6a3.uuid.UuidCreator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,9 +25,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.auth.AuthService;
 import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.global.exception.ErrorResponse;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.global.utils.UriUtil;
@@ -39,7 +35,6 @@ import com.yat2.episode.mindmap.dto.MindmapDataDto;
 import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
 import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
 import com.yat2.episode.mindmap.dto.MindmapNameUpdateReqDto;
-import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
@@ -47,12 +42,11 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
 @RequiredArgsConstructor
 @RestController
+@AuthRequiredErrors
 @RequestMapping("/mindmap")
 @Tag(name = "Mindmap", description = "마인드맵 관리 API")
 public class MindmapController {
     private final MindmapService mindmapService;
-    private final AuthService authService;
-    private final S3SnapshotRepository s3SnapshotRepository;
 
     @Operation(
             summary = "마인드맵 목록 조회 (통합)", description = """
@@ -61,21 +55,15 @@ public class MindmapController {
             파라미터가 없으면 기본값은 ALL입니다.
             """
     )
-    @ApiResponses(
-            { @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공"), @ApiResponse(
-                    responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ), @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
-              @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content) }
-    )
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공") })
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping
     public ResponseEntity<List<MindmapDataDto>> getMindmaps(
-            @CookieValue(name = "access_token", required = false) String token,
+            @RequestAttribute(USER_ID) long userId,
             @Parameter(description = "조회할 마인드맵 유형 (ALL, PRIVATE, PUBLIC)")
             @RequestParam(name = "type", required = false, defaultValue = "ALL")
             MindmapVisibility type
     ) {
-        Long userId = authService.getUserIdByToken(token);
         return ResponseEntity.ok(mindmapService.getMindmaps(userId, type));
     }
 
@@ -84,12 +72,8 @@ public class MindmapController {
             입력된 마인드맵의 UUID를 기반으로 마인드맵 데이터를 조회합니다.
             """
     )
-    @ApiResponses(
-            { @ApiResponse(responseCode = "200", description = "마인드맵 조회 성공"),
-              @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
-              @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
-              @ApiResponse(responseCode = "500", description = "서버 " + "오류", content = @Content) }
-    )
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 조회 성공") })
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/{mindmapId}")
     public ResponseEntity<MindmapDataDto> getMindmap(
             @RequestAttribute(USER_ID) long userId,
@@ -104,14 +88,8 @@ public class MindmapController {
             마인드맵 선택 드롭다운, 사이드바 등에 사용됩니다.
             """
     )
-    @ApiResponses(
-            { @ApiResponse(responseCode = "200", description = "마인드맵 이름 목록 조회 성공"),
-              @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
-              @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
-              @ApiResponse(responseCode = "500", description = "서버 " + "오류", content = @Content)
-
-            }
-    )
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 이름 목록 조회 성공") })
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping("/titles")
     public ResponseEntity<List<MindmapIdentityDto>> getMyMindmapNames(
             @RequestAttribute(USER_ID) long userId
@@ -128,17 +106,10 @@ public class MindmapController {
             웹 소켓 연결은 별도 요청이 필요합니다.
             """
     )
-    @ApiResponses(
-            { @ApiResponse(responseCode = "201", description = "마인드맵 생성 성공"), @ApiResponse(
-                    responseCode = "400", description = """
-                    잘못된 요청
-                    - MINDMAP_TITLE_REQUIRED: 팀 마인드맵 생성 시 제목 누락
-                    """, content = @Content
-            ), @ApiResponse(responseCode = "401", description = "인증 실패(토큰 없음/만료/유효하지 않음)", content = @Content),
-              @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
-              @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
-
-            }
+    @ApiResponses({ @ApiResponse(responseCode = "201", description = "마인드맵 생성 성공") })
+    @ApiErrorCodes(
+            { ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.S3_URL_FAIL,
+              ErrorCode.MINDMAP_TITLE_REQUIRED }
     )
     @PostMapping()
     public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(
@@ -155,6 +126,7 @@ public class MindmapController {
 
     @PostMapping("/connect/{mindmapId}")
     public ResponseEntity<Object> connectMindmap(
+            @RequestAttribute(USER_ID) long userId,
             @PathVariable String mindmapId
     ) {
         // todo: userId 가져오기
@@ -165,6 +137,7 @@ public class MindmapController {
 
     @PostMapping("/disconnect/{mindmapId}")
     public ResponseEntity<Object> disconnectMindmap(
+            @RequestAttribute(USER_ID) long userId,
             @PathVariable String mindmapId
     ) {
         // todo: userId 가져오기
@@ -182,7 +155,6 @@ public class MindmapController {
             """
     )
     @ApiResponses({ @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content) })
-    @AuthRequiredErrors
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @DeleteMapping("/{mindmapId}")
     public ResponseEntity<?> deleteMindmap(
@@ -194,13 +166,7 @@ public class MindmapController {
     }
 
     @Operation(summary = "마인드맵 즐겨찾기 상태 변경", description = "마인드맵의 즐겨찾기 여부를 설정하거나 해제합니다.")
-    @ApiResponses(
-            { @ApiResponse(
-                    responseCode = "200", description = "업데이트 성공",
-                    content = @Content(schema = @Schema(implementation = MindmapDataDto.class))
-            ) }
-    )
-    @AuthRequiredErrors
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "업데이트 성공") })
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/favorite")
     public ResponseEntity<MindmapDataDto> updateFavoriteStatus(
@@ -213,13 +179,7 @@ public class MindmapController {
     }
 
     @Operation(summary = "마인드맵 이름 변경", description = "마인드맵의 이름을 변경합니다. 팀 마인드맵 또한 모든 사용자에게 반영되는 수정 사항입니다.")
-    @ApiResponses(
-            { @ApiResponse(
-                    responseCode = "200", description = "업데이트 성공",
-                    content = @Content(schema = @Schema(implementation = MindmapDataDto.class))
-            ) }
-    )
-    @AuthRequiredErrors
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "업데이트 성공") })
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/name")
     public ResponseEntity<MindmapDataDto> updateName(
