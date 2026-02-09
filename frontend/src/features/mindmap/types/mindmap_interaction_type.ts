@@ -10,9 +10,4 @@ export type ViewportTransform = {
 
 export interface BaseNodeInfo {
     targetId: NodeId | null;
-    action: "append" | "next" | "prev" | null;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
 }

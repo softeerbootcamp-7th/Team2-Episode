@@ -27,11 +27,6 @@ export class MindmapInteractionManager {
 
     private baseNode: BaseNodeInfo = {
         targetId: null,
-        action: null,
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
     };
 
     constructor(
@@ -160,7 +155,7 @@ export class MindmapInteractionManager {
         const checkY = worldPos.y;
 
         let minDist = Infinity;
-        let nearestId: string | null = null;
+        let nearestId: NodeId | null = null;
 
         for (const [id, node] of this.container.nodes) {
             if (id === this.draggingNodeId) continue;
