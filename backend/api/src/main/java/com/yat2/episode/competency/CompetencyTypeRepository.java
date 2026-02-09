@@ -12,13 +12,13 @@ import java.util.UUID;
 public interface CompetencyTypeRepository extends JpaRepository<CompetencyType, Integer> {
     @Query(
             """
-                        select distinct ct
-                        from Episode e
-                        join CompetencyType ct on ct.id member of e.competencyTypeIds
-                        where e.mindmapId = :mindmapId
+                    SELECT DISTINCT ctId
+                    FROM Episode e
+                    JOIN e.competencyTypeIds ctId
+                    WHERE e.mindmapId = :mindmapId
                     """
     )
-    List<CompetencyType> findByMindmapId(
+    List<Integer> findByMindmapId(
             @Param("mindmapId") UUID mindmapId
     );
 

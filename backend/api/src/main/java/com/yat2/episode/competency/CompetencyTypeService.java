@@ -19,7 +19,7 @@ public class CompetencyTypeService {
         return competencyTypeRepository.findAll().stream().map(CompetencyTypeDto::of).toList();
     }
 
-    public List<CompetencyTypeDto> getCompetencyTypesInMindmap(UUID mindmapId) {
-        return competencyTypeRepository.findByMindmapId(mindmapId).stream().map(CompetencyTypeDto::of).toList();
+    public List<Integer> getCompetencyTypesInMindmap(UUID mindmapId) {
+        return competencyTypeRepository.findByMindmapId(mindmapId);
     }
 }

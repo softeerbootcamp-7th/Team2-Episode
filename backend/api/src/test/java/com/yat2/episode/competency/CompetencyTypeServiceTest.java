@@ -42,15 +42,15 @@ class CompetencyTypeServiceTest {
     @Test
     @DisplayName("마인드맵 ID로 조회 시 해당 마인드맵의 역량 타입들만 반환한다")
     void getCompetencyTypesInMindmap_Success() {
-        UUID mindmapId = UUID.fromString("test-uuid-string");
+        UUID mindmapId = UUID.randomUUID();
         CompetencyType type = createCompetencyType(10, "성장 가능성", CompetencyType.Category.실행_성장_역량);
 
-        given(competencyTypeRepository.findByMindmapId(mindmapId)).willReturn(List.of(type));
+        given(competencyTypeRepository.findByMindmapId(mindmapId)).willReturn(List.of(type.getId()));
 
-        List<CompetencyTypeDto> result = competencyTypeService.getCompetencyTypesInMindmap(mindmapId);
+        List<Integer> result = competencyTypeService.getCompetencyTypesInMindmap(mindmapId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).competencyType()).isEqualTo("성장 가능성");
+        assertThat(result.get(0)).isEqualTo(type.getId());
     }
 
     private CompetencyType createCompetencyType(Integer id, String typeName, CompetencyType.Category category) {

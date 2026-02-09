@@ -47,12 +47,12 @@ public class CompetencyTypeController {
     @AuthRequiredErrors
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/mindmap/{mindmapId}")
-    public ResponseEntity<List<CompetencyTypeDto>> getCompetenciesInMindmap(
+    public List<Integer> getCompetenciesInMindmap(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
-        return ResponseEntity.ok(competencyTypeService.getCompetencyTypesInMindmap(mindmapId));
+        return competencyTypeService.getCompetencyTypesInMindmap(mindmapId);
     }
 
 }
