@@ -7,21 +7,22 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Embeddable
 public class EpisodeId implements Serializable {
 
-    @Column(name = "node_id")
-    private Integer nodeId;
+    @Column(name = "node_id", columnDefinition = "BINARY(16)")
+    private UUID nodeId;
 
     @Column(name = "user_id")
     private Long userId;
 
     public EpisodeId() {}
 
-    public EpisodeId(Integer nodeId, Long userId) {
+    public EpisodeId(UUID nodeId, Long userId) {
         this.nodeId = nodeId;
         this.userId = userId;
     }

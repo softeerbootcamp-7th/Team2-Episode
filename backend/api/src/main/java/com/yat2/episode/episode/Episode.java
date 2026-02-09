@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.mindmap.Mindmap;
@@ -60,7 +61,10 @@ public class Episode {
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public static Episode create(long userId, int nodeId, Mindmap mindmap) {
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
+    public static Episode create(long userId, UUID nodeId, Mindmap mindmap) {
         Episode e = new Episode();
         e.id = new EpisodeId(nodeId, userId);
         e.mindmap = mindmap;
