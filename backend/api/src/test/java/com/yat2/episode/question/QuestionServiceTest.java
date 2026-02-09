@@ -11,15 +11,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 
 import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.job.Job;
 import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -34,18 +31,6 @@ class QuestionServiceTest {
 
     @InjectMocks
     private QuestionService questionService;
-
-    @Test
-    @DisplayName("사용자의 직무가 설정되지 않은 경우 JOB_NOT_SELECTED 예외가 발생해야 한다")
-    void getQuestionSetByUserId_Fail_JobNotSelected() {
-        long userId = 1L;
-        User user = User.newUser(userId, "테스트유저");
-
-        given(userService.getUserOrThrow(userId)).willReturn(user);
-
-        assertThatThrownBy(() -> questionService.getQuestionSetByUserId(userId)).isInstanceOf(CustomException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.JOB_NOT_SELECTED);
-    }
 
     @Test
     @DisplayName("직무가 설정된 사용자의 경우, 문항을 카테고리별로 그룹화하여 반환해야 한다")
@@ -69,7 +54,7 @@ class QuestionServiceTest {
         given(userService.getUserOrThrow(userId)).willReturn(user);
         given(questionRepository.findAllWithCompetencyByJobId(10)).willReturn(List.of(q1, q2));
 
-        List<QuestionsByCompetencyCategoryDto> result = questionService.getQuestionSetByUserId(userId);
+        List<QuestionsByCompetencyCategoryDto> result = questionService.getQuestionSetByUserId(job.getId());
 
         assertThat(result).hasSize(2);
 
