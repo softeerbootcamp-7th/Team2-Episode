@@ -65,7 +65,7 @@ class EpisodeServiceTest {
         when(episodeRepository.findById(any())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> episodeService.getEpisode(nodeId, userId)).isInstanceOf(CustomException.class)
-                .hasMessageContaining(ErrorCode.EPISODE_NOT_FOUND.name());
+                .hasMessageContaining(ErrorCode.EPISODE_NOT_FOUND.getMessage());
     }
 
     @Test
