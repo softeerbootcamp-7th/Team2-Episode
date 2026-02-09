@@ -38,9 +38,11 @@ public class RefreshToken {
     private LocalDateTime expiresAt;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    @org.hibernate.annotations.ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+    @org.hibernate.annotations.ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
     public boolean isExpired() {

@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @DisplayName("DiagnosisRepository 통합 테스트")
 class DiagnosisRepositoryTest {
 

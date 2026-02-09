@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: episode-test
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    type: com.zaxxer.hikari.HikariDataSource
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: true
+
+
+jwt:
+  secret: "this-is-a-test-secret-key-for-jwt-token-generation-minimum-32-characters"
+  access-token-expiry: 300000
+  refresh-token-expiry: 2592000000
+
+cookie:
+  domain: localhost
+  secure: false
+  same-site: Lax
+
+kakao:
+  client-id: test-id
+  client-secret: test-secret
+  redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+auth:
+  redirect: http://localhost:3000
+
+aws:
+  s3:
+    region: ap-northeast-2
+    bucket:
+      name: test-bucket
+    access-key: test-access-key
+    secret-key: test-secret-key
+    endpoint: http://localhost:8000
+    max-upload-size: 10485760
+
+cloud:
+  aws:
+    stack:
+      auto: false

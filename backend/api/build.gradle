@@ -52,28 +52,18 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    runtimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation platform('software.amazon.awssdk:bom:2.21.0')
     implementation 'software.amazon.awssdk:s3'
+
+    testRuntimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     failOnNoDiscoveredTests = false
-    def envFile = file("${rootDir}/.env")
-    if (envFile.exists()) {
-        envFile.eachLine { line ->
-            if (line.trim() && !line.startsWith("#")) {
-                def parts = line.split("=", 2)
-                if (parts.length == 2) {
-                    def key = parts[0].trim()
-                    def value = parts[1].trim().replaceAll(/^["']|["']$/, "")
-                    environment key, value
-                }
-            }
-        }
-    }
 }
 
 bootJar {

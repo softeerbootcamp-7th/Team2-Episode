@@ -41,9 +41,11 @@ public class DiagnosisResult {
     private Job job;
 
     @OneToMany(mappedBy = "diagnosisResult", fetch = FetchType.LAZY)
+    @org.hibernate.annotations.ColumnDefault("CURRENT_TIMESTAMP")
     private List<DiagnosisWeakness> weaknesses = new ArrayList<>();
 
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
+    @org.hibernate.annotations.ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     public DiagnosisResult(User user, Job job) {

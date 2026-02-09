@@ -58,6 +58,7 @@ public class Episode {
     private String content;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    @org.hibernate.annotations.ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     public static Episode create(long userId, int nodeId, Mindmap mindmap) {

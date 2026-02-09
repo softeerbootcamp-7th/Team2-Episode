@@ -21,7 +21,7 @@ public class S3Config {
     private final S3Properties s3Properties;
 
     @Bean
-    @Profile("local")
+    @Profile({ "local", "test" })
     public AwsCredentialsProvider localCredentialsProvider() {
         return StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(s3Properties.getAccessKey(), s3Properties.getSecretKey()));
@@ -35,7 +35,7 @@ public class S3Config {
 
 
     @Bean
-    @Profile("local")
+    @Profile({ "local", "test" })
     public S3Presigner localS3Presigner(AwsCredentialsProvider credentialsProvider) {
         return S3Presigner.builder().region(Region.of(s3Properties.getRegion()))
                 .endpointOverride(URI.create(s3Properties.getEndpoint())).credentialsProvider(credentialsProvider)

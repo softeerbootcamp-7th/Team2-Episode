@@ -3,6 +3,7 @@ package com.yat2.episode.competency;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.yat2.episode.competency.dto.CompetencyTypeDto;
 
@@ -18,7 +19,7 @@ public class CompetencyTypeService {
         return competencyTypeRepository.findAll().stream().map(CompetencyTypeDto::of).toList();
     }
 
-    public List<CompetencyTypeDto> getCompetencyTypesInMindmap(String mindmapId) {
+    public List<CompetencyTypeDto> getCompetencyTypesInMindmap(UUID mindmapId) {
         return competencyTypeRepository.findByMindmapId(mindmapId).stream().map(CompetencyTypeDto::of).toList();
     }
 }

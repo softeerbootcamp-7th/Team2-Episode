@@ -1,8 +1,5 @@
-ALTER TABLE mindmap
-    ADD COLUMN is_favorite TINYINT(1) NULL;
+ALTER TABLE mindmap ADD COLUMN is_favorite BOOLEAN;
 
-UPDATE mindmap
-SET is_favorite = FALSE;
+UPDATE mindmap SET is_favorite = FALSE;
 
-ALTER TABLE mindmap
-    MODIFY is_favorite TINYINT(1) NOT NULL;
+ALTER TABLE mindmap ALTER COLUMN is_favorite BOOLEAN NOT NULL DEFAULT FALSE;

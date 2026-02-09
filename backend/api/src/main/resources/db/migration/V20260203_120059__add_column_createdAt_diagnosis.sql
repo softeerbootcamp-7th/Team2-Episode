@@ -1,3 +1,3 @@
 ALTER TABLE diagnosis_result
-    ADD created_at DATETIME(6) NOT NULL
+    ADD COLUMN created_at TIMESTAMP(6) NOT NULL 
     DEFAULT CURRENT_TIMESTAMP(6);

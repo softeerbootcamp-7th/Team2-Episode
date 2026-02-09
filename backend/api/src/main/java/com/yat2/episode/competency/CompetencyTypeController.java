@@ -19,6 +19,7 @@ import com.yat2.episode.competency.dto.CompetencyTypeDto;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
+import com.yat2.episode.mindmap.MindmapParticipant;
 import com.yat2.episode.mindmap.MindmapService;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
@@ -50,8 +51,9 @@ public class CompetencyTypeController {
             @RequestAttribute(USER_ID) long userId,
             @PathVariable String mindmapId
     ) {
-        mindmapService.getMindmapByUUIDString(userId, mindmapId);
-        return ResponseEntity.ok(competencyTypeService.getCompetencyTypesInMindmap(mindmapId));
+        MindmapParticipant mindmapParticipant = mindmapService.getMindmapByUUIDString(userId, mindmapId);
+        return ResponseEntity.ok(
+                competencyTypeService.getCompetencyTypesInMindmap(mindmapParticipant.getMindmap().getId()));
     }
 
 }
