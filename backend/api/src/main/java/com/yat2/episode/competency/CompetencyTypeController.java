@@ -1,9 +1,5 @@
 package com.yat2.episode.competency;
 
-import com.yat2.episode.auth.security.Public;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.global.swagger.ApiErrorCodes;
-import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -18,8 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import com.yat2.episode.auth.AuthService;
+import com.yat2.episode.auth.security.Public;
 import com.yat2.episode.competency.dto.CompetencyTypeDto;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.global.swagger.ApiErrorCodes;
+import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.mindmap.MindmapService;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
@@ -45,7 +44,7 @@ public class CompetencyTypeController {
     @Operation(summary = "특정 마인드맵 내 역량 리스트 조회")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @AuthRequiredErrors
-    @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/mindmap/{mindmapId}")
     public ResponseEntity<List<CompetencyTypeDto>> getCompetenciesInMindmap(
             @RequestAttribute(USER_ID) long userId,

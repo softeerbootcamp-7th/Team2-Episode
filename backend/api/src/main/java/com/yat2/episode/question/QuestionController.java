@@ -1,9 +1,5 @@
 package com.yat2.episode.question;
 
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.global.swagger.ApiErrorCodes;
-import com.yat2.episode.global.swagger.AuthRequiredErrors;
-import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,6 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.global.swagger.ApiErrorCodes;
+import com.yat2.episode.global.swagger.AuthRequiredErrors;
+import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
+
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
 @RequiredArgsConstructor
@@ -29,8 +30,8 @@ public class QuestionController {
 
     @GetMapping()
     @Operation(summary = "세부 역량 별 문항 조회", description = "세부 역량 별 문항을 하나 씩 뽑아 목록으로 제공합니다.")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "조회 성공")})
-    @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.JOB_NOT_SELECTED})
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.JOB_NOT_SELECTED })
     public ResponseEntity<List<QuestionsByCompetencyCategoryDto>> getQuestionSet(
             @RequestAttribute(USER_ID) long userId
     ) {
