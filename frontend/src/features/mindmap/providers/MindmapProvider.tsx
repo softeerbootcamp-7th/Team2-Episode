@@ -5,7 +5,7 @@
  */
 import { createContext, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
-import { NodeId } from "@/features/mindmap/types/mindmapType";
+import { NodeId } from "@/features/mindmap/types/node";
 import MindmapLayoutManager from "@/features/mindmap/utils/MindmapLayoutManager";
 import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { EventBroker } from "@/utils/EventBroker";

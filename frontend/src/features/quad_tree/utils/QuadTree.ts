@@ -1,5 +1,4 @@
-import { Point } from "@/features/quad_tree/types/point";
-import { Rect } from "@/features/quad_tree/types/rect";
+import { Point, Rect } from "@/features/mindmap/types/spatial";
 import { isIntersected, isPointInRect } from "@/shared/utils/rect_helper";
 
 /**

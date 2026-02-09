@@ -1,5 +1,5 @@
-import { NodeElement } from "@/features/mindmap/types/mindmapType";
-import { Rect } from "@/features/quad_tree/types/rect";
+import { NodeElement } from "@/features/mindmap/types/node";
+import { Rect } from "@/features/mindmap/types/spatial";
 
 /**
  * Renderer

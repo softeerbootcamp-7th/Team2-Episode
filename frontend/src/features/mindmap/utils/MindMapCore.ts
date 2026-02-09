@@ -1,4 +1,4 @@
-import { NodeElement, NodeId } from "@/features/mindmap/types/mindmapType";
+import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { MindmapInteractionManager } from "@/features/mindmap/utils/MindmapInteractionManager";
 import MindmapLayoutManager from "@/features/mindmap/utils/MindmapLayoutManager";
 import Renderer from "@/features/mindmap/utils/Renderer";
