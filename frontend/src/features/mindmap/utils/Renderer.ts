@@ -12,7 +12,6 @@ import QuadTree from "@/features/quad_tree/utils/QuadTree";
 export default class Renderer {
     private canvas: SVGSVGElement;
     private qt: QuadTree;
-    private bounds: Rect;
     private viewBox: Rect;
 
     private readonly INITIAL_QUAD_FACTOR = 20; // 쿼드 트리 크기: 루트 노드의 n배
@@ -26,13 +25,13 @@ export default class Renderer {
         const quadW = rootNode.width * this.INITIAL_QUAD_FACTOR;
         const quadH = rootNode.height * this.INITIAL_QUAD_FACTOR;
 
-        this.bounds = {
+        const initialBounds = {
             minX: rootNode.x - quadW / 2,
             maxX: rootNode.x + quadW / 2,
             minY: rootNode.y - quadH / 2,
             maxY: rootNode.y + quadH / 2,
         };
-        this.qt = new QuadTree(this.bounds);
+        this.qt = new QuadTree(initialBounds);
 
         //초기 카메라 위치 설정
         const rect = this.canvas.getBoundingClientRect();
@@ -66,7 +65,7 @@ export default class Renderer {
     }
 
     /** 확대/축소 (마우스 포인터 지점 고정) */
-    zoomHandler(delta: number, e: WheelEvent): void {
+    zoomHandler(delta: number, e: { clientX: number; clientY: number }): void {
         const rect = this.canvas.getBoundingClientRect();
         const currentW = this.viewBox.maxX - this.viewBox.minX;
         const currentH = this.viewBox.maxY - this.viewBox.minY;
@@ -79,8 +78,9 @@ export default class Renderer {
         let nextH = currentH * scaleChange;
 
         //쿼드 트리 bounds 내로 줌아웃 최대 영역 제한
-        const boundsW = this.bounds.maxX - this.bounds.minX;
-        const boundsH = this.bounds.maxY - this.bounds.minY;
+        const currentBounds = this.qt.getBounds();
+        const boundsW = currentBounds.maxX - currentBounds.minX;
+        const boundsH = currentBounds.maxY - currentBounds.minY;
 
         if (nextW > boundsW) {
             nextW = boundsW;
@@ -106,7 +106,7 @@ export default class Renderer {
 
     /** 뷰포트의 위치와 크기를 최종 확정 */
     private updateViewBox(nextMinX: number, nextMinY: number, width: number, height: number): void {
-        // 쿼드 트리 최신 크기
+        // 매번 현재 쿼드 트리 최신 크기 참조
         const currentBounds = this.qt.getBounds();
 
         this.viewBox.minX = Math.max(currentBounds.minX, Math.min(nextMinX, currentBounds.maxX - width));

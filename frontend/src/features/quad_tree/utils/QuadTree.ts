@@ -173,8 +173,8 @@ export default class QuadTree {
     private split() {
         const { minX, maxX, minY, maxY } = this.bounds;
 
-        const midY = (minY + maxY) / 2;
         const midX = (minX + maxX) / 2;
+        const midY = (minY + maxY) / 2;
 
         const nwBounds: Rect = { minX, maxX: midX, minY, maxY: midY };
         const neBounds: Rect = { minX: midX, maxX, minY, maxY: midY };

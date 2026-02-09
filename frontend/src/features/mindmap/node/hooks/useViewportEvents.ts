@@ -15,7 +15,10 @@ export const useViewportEvents = (svgRef: React.RefObject<SVGSVGElement | null>)
         //[zoom] 마우스 휠
         const handleWheel = (e: WheelEvent) => {
             e.preventDefault(); // 브라우저 기본 스크롤 방지
-            rendererRef.current?.zoomHandler(e.deltaY, e);
+            rendererRef.current?.zoomHandler(e.deltaY, {
+                clientX: e.clientX,
+                clientY: e.clientY,
+            });
         };
 
         //[zoom] 키보드 (Ctrl + / -)
@@ -31,7 +34,7 @@ export const useViewportEvents = (svgRef: React.RefObject<SVGSVGElement | null>)
                 rendererRef.current?.zoomHandler(delta, {
                     clientX: rect.left + rect.width / 2,
                     clientY: rect.top + rect.height / 2,
-                } as WheelEvent);
+                });
             }
         };
 
