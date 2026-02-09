@@ -12,6 +12,7 @@ export default defineConfig({
             { find: "@/utils", replacement: path.resolve(__dirname, "src/utils") },
             { find: "@/icons", replacement: path.resolve(__dirname, "src/assets/icons") },
             { find: "@/features", replacement: path.resolve(__dirname, "src/features") },
+            { find: "@/constants", replacement: path.resolve(__dirname, "src/constants") },
         ],
     },
 });
