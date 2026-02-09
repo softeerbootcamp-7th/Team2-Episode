@@ -6,6 +6,7 @@ import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { calcDistance } from "@/utils/calc_distance";
 
 const DRAG_THRESHOLD = 5;
+const BASE_NODE_DETECTION_THRESHOLD = 100;
 
 export class MindmapInteractionManager {
     private container: TreeContainer;
@@ -160,13 +161,12 @@ export class MindmapInteractionManager {
 
         let minDist = Infinity;
         let nearestId: string | null = null;
-        const THRESHOLD = 100;
 
         for (const [id, node] of this.container.nodes) {
             if (id === this.draggingNodeId) continue;
 
             const dist = calcDistance(node.x, node.y, checkX, checkY);
-            if (dist < minDist && dist < THRESHOLD) {
+            if (dist < minDist && dist < BASE_NODE_DETECTION_THRESHOLD) {
                 minDist = dist;
                 nearestId = id;
             }
