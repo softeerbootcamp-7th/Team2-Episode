@@ -15,10 +15,10 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.mindmap.Mindmap;
 import com.yat2.episode.user.User;
 
 @Getter
@@ -36,13 +36,13 @@ public class Episode {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "mindmap_id", nullable = false)
-    private Mindmap mindmap;
+    @Column(name = "mindmap_id", nullable = false)
+    private UUID mindmapId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "competency_type_id")
-    private CompetencyType competencyType;
+    @Column(
+            name = "competency_type_ids", columnDefinition = "json", nullable = false
+    )
+    private List<Integer> competencyTypeIds = new ArrayList<>();
 
     @Column(length = 200)
     private String situation;
@@ -70,11 +70,4 @@ public class Episode {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
-
-    public static Episode create(long userId, UUID nodeId, Mindmap mindmap) {
-        Episode e = new Episode();
-        e.id = new EpisodeId(nodeId, userId);
-        e.mindmap = mindmap;
-        return e;
-    }
 }
