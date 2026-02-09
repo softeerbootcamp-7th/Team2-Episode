@@ -55,8 +55,10 @@ public class S3PostSigner {
                                                                         sessionToken, policyBase64, signature));
     }
 
-    private String buildPolicy(String bucket, String key, String credential, String xAmzDate, String sessionToken,
-                               String expiration) {
+    private String buildPolicy(
+            String bucket, String key, String credential, String xAmzDate, String sessionToken,
+            String expiration
+    ) {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         sb.append("\"expiration\":\"").append(expiration).append("\",");
