@@ -34,6 +34,6 @@ public class QuestionController {
             @RequestParam int jobId
     ) {
 
-        return ResponseEntity.ok(questionService.getQuestionSetByUserId(jobId));
+        return ResponseEntity.ok(questionService.getQuestionSetByJobId(jobId));
     }
 }

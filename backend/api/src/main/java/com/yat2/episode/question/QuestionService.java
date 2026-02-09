@@ -20,7 +20,7 @@ public class QuestionService {
     private final UserService userService;
 
     @Transactional(readOnly = true)
-    public List<QuestionsByCompetencyCategoryDto> getQuestionSetByUserId(int jobId) {
+    public List<QuestionsByCompetencyCategoryDto> getQuestionSetByJobId(int jobId) {
         List<Question> questions = questionRepository.findAllWithCompetencyByJobId(jobId);
 
         Map<CompetencyType.Category, List<Question>> questionsByCategory =

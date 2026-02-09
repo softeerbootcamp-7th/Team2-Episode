@@ -33,7 +33,7 @@ class QuestionServiceTest {
 
     @Test
     @DisplayName("문항을 카테고리별로 그룹화하여 반환해야 한다")
-    void getQuestionSetByUserId_Success() {
+    void getQuestionSetByJobId_Success() {
         Job job = new Job();
         ReflectionTestUtils.setField(job, "id", 10);
 
@@ -48,7 +48,7 @@ class QuestionServiceTest {
 
         given(questionRepository.findAllWithCompetencyByJobId(10)).willReturn(List.of(q1, q2));
 
-        List<QuestionsByCompetencyCategoryDto> result = questionService.getQuestionSetByUserId(job.getId());
+        List<QuestionsByCompetencyCategoryDto> result = questionService.getQuestionSetByJobId(job.getId());
 
         assertThat(result).hasSize(2);
 
