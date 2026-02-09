@@ -146,46 +146,46 @@ export default class MindmapLayoutManager {
                     ? parentRealX + parentNode.width + this.config.xGap
                     : parentRealX - childNode.width - this.config.xGap;
 
-            this.assignCoordinates({ node: childNode, x: realX, startY: currentY, direction });
+            this.assignCoordinates({ curNode: childNode, x: realX, startY: currentY, direction });
 
             currentY += this.getSubTreeHeight(childNode) + this.config.yGap;
         });
     }
 
     private assignCoordinates({
-        node,
+        curNode,
         x,
         startY,
         direction,
     }: {
-        node: NodeElement;
+        curNode: NodeElement;
         x: number;
         startY: number;
         direction: PartitionDirection;
     }) {
-        const subtreeHeight = this.getSubTreeHeight(node);
-        const newNodeY = startY - node.height / 2 + subtreeHeight / 2;
+        const subtreeHeight = this.getSubTreeHeight(curNode);
+        const newNodeY = startY - curNode.height / 2 + subtreeHeight / 2;
 
-        if (!isSame(node.x, x) || !isSame(node.y, newNodeY)) {
+        if (!isSame(curNode.x, x) || !isSame(curNode.y, newNodeY)) {
             this.treeContainer.update({
-                nodeId: node.id,
+                nodeId: curNode.id,
                 newNodeData: { x, y: newNodeY },
             });
         }
 
-        const childNodes = this.treeContainer.getChildNodes(node.id);
+        const childNodes = this.treeContainer.getChildNodes(curNode.id);
         if (childNodes.length === 0) {
             return;
         }
 
         const childGroupHeight = this.calcPartitionHeightWithGap(childNodes);
-        let currentChildY = newNodeY + node.height / 2 - childGroupHeight / 2;
+        let currentChildY = newNodeY + curNode.height / 2 - childGroupHeight / 2;
 
         childNodes.forEach((childNode) => {
             const nextX =
-                direction === "right" ? x + node.width + this.config.xGap : x - childNode.width - this.config.xGap;
+                direction === "right" ? x + curNode.width + this.config.xGap : x - childNode.width - this.config.xGap;
 
-            this.assignCoordinates({ node: childNode, x: nextX, startY: currentChildY, direction });
+            this.assignCoordinates({ curNode: childNode, x: nextX, startY: currentChildY, direction });
 
             currentChildY += this.getSubTreeHeight(childNode) + this.config.yGap;
         });
