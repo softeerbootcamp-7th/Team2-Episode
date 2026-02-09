@@ -1,10 +1,10 @@
-import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/mindmapType";
+import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/node";
+import QuadTree from "@/features/quad_tree/utils/QuadTree";
 import { EventBroker } from "@/utils/EventBroker";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 import generateId from "@/utils/generate_id";
 
-// TODO: quadtree 준비되면 의존성 주입
-type QuadTreeManager = undefined;
+type QuadTreeManager = QuadTree;
 
 const ROOT_NODE_PARENT_ID = "empty";
 const ROOT_NODE_CONTENTS = "김현대의 마인드맵";
@@ -12,7 +12,7 @@ const DETACHED_NODE_PARENT_ID = "detached";
 
 export default class TreeContainer {
     public nodes: Map<NodeId, NodeElement>;
-    private quadTreeManager: QuadTreeManager;
+    private quadTreeManager: QuadTreeManager | undefined;
     private broker: EventBroker<NodeId>;
     private isThrowError: boolean;
     private rootNodeId: NodeId;
@@ -25,12 +25,11 @@ export default class TreeContainer {
         // TODO: 개발 단계에서는 error boundary로 대체되면 디버깅이 어려우므로 해당 옵션을 제공.
         isThrowError = true,
     }: {
-        quadTreeManager: QuadTreeManager;
+        quadTreeManager: QuadTreeManager | undefined;
         broker: EventBroker<NodeId>;
         name?: string;
         isThrowError?: boolean;
     }) {
-        // initialization
         this.nodes = new Map();
         const rootNodeElement = this.generateNewNodeElement({
             nodeData: {
@@ -410,15 +409,17 @@ export default class TreeContainer {
     }
 
     update({ nodeId, newNodeData }: { nodeId: NodeId; newNodeData: Partial<Omit<NodeElement, "id">> }) {
-        // TODO: newNodeData의 형을 다르게 해야할 수 있습니다. 일단은 Element로 뚫었는데 Node만 뚫어도될지도. 아직은 구현체가 확실하지 않아서 모르겠음.
         try {
-            const { id, ...rest } = this._getNode(nodeId);
+            const oldNode = this._getNode(nodeId);
 
-            const newNodeElement: NodeElement = { ...rest, ...newNodeData, id };
+            if (this.quadTreeManager) {
+                this.quadTreeManager.remove(oldNode);
+            }
+
+            const newNodeElement: NodeElement = { ...oldNode, ...newNodeData, id: nodeId };
 
             this.addNodeToContainer(newNodeElement);
-
-            this.notify(id);
+            this.notify(nodeId);
         } catch (e) {
             if (e instanceof Error) {
                 console.error(e.message);
@@ -505,9 +506,17 @@ export default class TreeContainer {
 
     private addNodeToContainer(node: NodeElement) {
         this.nodes.set(node.id, node);
+
+        if (this.quadTreeManager) {
+            this.quadTreeManager.insert(node);
+        }
     }
 
     private deleteNodeFromContainer(nodeId: NodeId) {
+        const node = this.nodes.get(nodeId);
+        if (node && this.quadTreeManager) {
+            this.quadTreeManager.remove(node);
+        }
         this.nodes.delete(nodeId);
     }
 
