@@ -14,6 +14,7 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.job.Job;
 import com.yat2.episode.job.JobRepository;
 import com.yat2.episode.question.Question;
+import com.yat2.episode.question.QuestionJobMappingRepository;
 import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.question.dto.QuestionDetailDto;
 import com.yat2.episode.user.User;
@@ -27,6 +28,7 @@ public class DiagnosisService {
     private final DiagnosisWeaknessRepository diagnosisWeaknessRepository;
     private final QuestionRepository questionRepository;
     private final JobRepository jobRepository;
+    private final QuestionJobMappingRepository questionJobMappingRepository;
     private final UserService userService;
 
     @Transactional
@@ -38,6 +40,11 @@ public class DiagnosisService {
         List<Question> questions = questionRepository.findAllById(reqDto.unansweredQuestionIds());
         if (questions.size() != reqDto.unansweredQuestionIds().size()) {
             throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
+        }
+        if (questionJobMappingRepository.countByJobIdAndQuestionIds(job.getId(),
+                                                                    reqDto.unansweredQuestionIds().stream().toList()) !=
+            questions.size()) {
+            throw new CustomException(ErrorCode.INVALID_JOB);
         }
 
         DiagnosisResult diagnosisResult = diagnosisRepository.save(new DiagnosisResult(user, job));
