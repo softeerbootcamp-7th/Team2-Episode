@@ -40,7 +40,7 @@ public class MindmapEpisodeController {
     @GetMapping
     public List<EpisodeSummaryRes> getMindmapEpisodes(
             @PathVariable UUID mindmapId,
-            @RequestAttribute(USER_ID) Long userId
+            @RequestAttribute(USER_ID) long userId
     ) {
         return episodeService.getMindmapEpisodes(mindmapId, userId);
     }
