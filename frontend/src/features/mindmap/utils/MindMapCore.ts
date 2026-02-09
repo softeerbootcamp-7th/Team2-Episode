@@ -21,16 +21,22 @@ export default class MindMapCore {
     private interaction: MindmapInteractionManager;
 
     constructor(canvas: SVGSVGElement, broker: EventBroker<NodeId>) {
-        // tree 초기화
+        // tree 초기화 (rootNode 정보 얻기 위해 먼저 생성)
         this.tree = new TreeContainer({ broker, quadTreeManager: undefined });
         const rootNode = this.tree.getRootNode();
-
-        // renderer 초기화
-        this.renderer = new Renderer(canvas, rootNode, () => this.quadTree.getBounds());
 
         // quadTree 초기화
         const initialBounds = this.calculateInitialBounds(rootNode);
         this.quadTree = new QuadTree(initialBounds);
+
+        // 실제 트리 업데이트
+        this.tree = new TreeContainer({
+            quadTreeManager: this.quadTree,
+            broker,
+        });
+
+        // renderer 초기화
+        this.renderer = new Renderer(canvas, rootNode, () => this.quadTree.getBounds());
 
         // layout 초기화
         this.layout = new MindmapLayoutManager({ treeContainer: this.tree });
