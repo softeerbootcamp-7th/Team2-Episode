@@ -7,7 +7,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -20,7 +19,6 @@ import java.util.UUID;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "episodes")
@@ -85,5 +83,10 @@ public class Episode {
             this.competencyTypeIds.clear();
             this.competencyTypeIds.addAll(req.competencyTypeIds());
         }
+    }
+
+    public void clearDates() {
+        this.startDate = null;
+        this.endDate = null;
     }
 }

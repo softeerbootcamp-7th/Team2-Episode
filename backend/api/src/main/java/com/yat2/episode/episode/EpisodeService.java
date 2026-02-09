@@ -23,10 +23,7 @@ public class EpisodeService {
     private final MindmapAccessValidator mindmapAccessValidator;
 
     public EpisodeDetailRes getEpisode(UUID nodeId, long userId) {
-        EpisodeId episodeId = new EpisodeId(nodeId, userId);
-
-        Episode episode = episodeRepository.findById(episodeId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+        Episode episode = getEpisodeOrThrow(nodeId, userId);
 
         return EpisodeDetailRes.of(episode);
     }
@@ -42,29 +39,37 @@ public class EpisodeService {
     public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
 
-        Episode episode = episodeRepository.findById(episodeId).map(existingEpisode -> {
-            existingEpisode.update(episodeUpsertReq);
-            return existingEpisode;
-        }).orElseGet(() -> createNewEpisode(episodeId, mindmapId, episodeUpsertReq));
+        Episode episode = episodeRepository.findById(episodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
+
+        episode.update(episodeUpsertReq);
 
         return EpisodeDetailRes.of(episode);
     }
 
     @Transactional
     public void updateEpisode(UUID nodeId, long userId, EpisodeUpsertReq episodeUpsertReq) {
-        EpisodeId episodeId = new EpisodeId(nodeId, userId);
-
-        Episode episode = episodeRepository.findById(episodeId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+        Episode episode = getEpisodeOrThrow(nodeId, userId);
 
         episode.update(episodeUpsertReq);
     }
 
-    private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId, EpisodeUpsertReq req) {
+    @Transactional
+    public void clearEpisodeDates(UUID nodeId, long userId) {
+        Episode episode = getEpisodeOrThrow(nodeId, userId);
+        episode.clearDates();
+    }
+
+    private Episode getEpisodeOrThrow(UUID nodeId, long userId) {
+        EpisodeId episodeId = new EpisodeId(nodeId, userId);
+
+        return episodeRepository.findById(episodeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+    }
+
+    private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, episodeId.getUserId());
 
         Episode newEpisode = Episode.create(episodeId.getNodeId(), episodeId.getUserId(), mindmapId);
-        newEpisode.update(req);
 
         return episodeRepository.save(newEpisode);
     }
