@@ -41,9 +41,9 @@ public class DiagnosisService {
         if (questions.size() != reqDto.unansweredQuestionIds().size()) {
             throw new CustomException(ErrorCode.QUESTION_NOT_FOUND);
         }
-        if (questionJobMappingRepository.countByJobIdAndQuestionIds(job.getId(),
-                                                                    reqDto.unansweredQuestionIds().stream().toList()) !=
-            questions.size()) {
+        if (questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(job.getId(),
+                                                                       reqDto.unansweredQuestionIds().stream()
+                                                                               .toList()) != questions.size()) {
             throw new CustomException(ErrorCode.INVALID_JOB);
         }
 
@@ -52,6 +52,8 @@ public class DiagnosisService {
         List<DiagnosisWeakness> weaknesses =
                 questions.stream().map(q -> new DiagnosisWeakness(diagnosisResult, q)).toList();
         diagnosisWeaknessRepository.saveAll(weaknesses);
+
+        userService.updateJob(userId, reqDto.jobId());
         //todo: save-all을 통한 개별 쿼리에서 bulk 방식으로 개선
 
         return DiagnosisSummaryDto.of(diagnosisResult, weaknesses.size());

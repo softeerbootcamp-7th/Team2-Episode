@@ -106,7 +106,7 @@ class DiagnosisServiceTest {
             when(userService.getUserOrThrow(userId)).thenReturn(testUser);
             when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
             when(questionRepository.findAllById(questionIds)).thenReturn(questions);
-            when(questionJobMappingRepository.countByJobIdAndQuestionIds(anyInt(), any())).thenReturn(
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), any())).thenReturn(
                     (long) questions.size());
 
             when(diagnosisRepository.save(any(DiagnosisResult.class))).thenReturn(savedDiagnosis);
@@ -139,7 +139,7 @@ class DiagnosisServiceTest {
             when(userService.getUserOrThrow(userId)).thenReturn(testUser);
             when(questionRepository.findAllById(questionIds)).thenReturn(questions);
             when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
-            when(questionJobMappingRepository.countByJobIdAndQuestionIds(anyInt(), any())).thenReturn(
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), any())).thenReturn(
                     (long) questions.size());
 
 
@@ -169,7 +169,7 @@ class DiagnosisServiceTest {
             when(diagnosisWeaknessRepository.saveAll(anyList())).thenReturn(List.of());
 
             when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
-            when(questionJobMappingRepository.countByJobIdAndQuestionIds(anyInt(), any())).thenReturn((long) 0);
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), any())).thenReturn((long) 0);
 
             DiagnosisSummaryDto result = diagnosisService.createDiagnosis(userId, reqDto);
 
@@ -200,7 +200,7 @@ class DiagnosisServiceTest {
             when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
             when(questionRepository.findAllById(any())).thenReturn(List.of(mock(Question.class)));
 
-            when(questionJobMappingRepository.countByJobIdAndQuestionIds(eq(jobId), anyList())).thenReturn(0L);
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(eq(jobId), anyList())).thenReturn(0L);
 
             assertThatThrownBy(() -> diagnosisService.createDiagnosis(1L, reqDto)).isInstanceOf(CustomException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_JOB);

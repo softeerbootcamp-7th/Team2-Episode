@@ -79,7 +79,6 @@ public class DiagnosisController {
             @RequestBody DiagnosisArgsReqDto reqBody
     ) {
         DiagnosisSummaryDto resBody = diagnosisService.createDiagnosis(userId, reqBody);
-        userService.updateJob(userId, reqBody.jobId());
         URI location = UriUtil.createLocationUri(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
     }
