@@ -71,7 +71,7 @@ export default class MindmapLayoutManager {
 
         const { leftGroup, rightGroup } = this.getPartition(childNodes);
 
-        this.calcPartitionCoords({
+        this.layoutPartition({
             parentNode: rootNode,
             partition: rightGroup,
             parentRealX: realX,
@@ -79,7 +79,7 @@ export default class MindmapLayoutManager {
             direction: "right",
         });
 
-        this.calcPartitionCoords({
+        this.layoutPartition({
             parentNode: rootNode,
             partition: leftGroup,
             parentRealX: realX,
@@ -120,7 +120,7 @@ export default class MindmapLayoutManager {
         return calculatedHeight;
     }
 
-    private calcPartitionCoords({
+    private layoutPartition({
         parentNode,
         partition,
         parentRealX,
@@ -146,13 +146,13 @@ export default class MindmapLayoutManager {
                     ? parentRealX + parentNode.width + this.config.xGap
                     : parentRealX - childNode.width - this.config.xGap;
 
-            this.assignCoordinates({ curNode: childNode, x: realX, startY: currentY, direction });
+            this.layoutSubtree({ curNode: childNode, x: realX, startY: currentY, direction });
 
             currentY += this.getSubTreeHeight(childNode) + this.config.yGap;
         });
     }
 
-    private assignCoordinates({
+    private layoutSubtree({
         curNode,
         x,
         startY,
@@ -185,7 +185,7 @@ export default class MindmapLayoutManager {
             const nextX =
                 direction === "right" ? x + curNode.width + this.config.xGap : x - childNode.width - this.config.xGap;
 
-            this.assignCoordinates({ curNode: childNode, x: nextX, startY: currentChildY, direction });
+            this.layoutSubtree({ curNode: childNode, x: nextX, startY: currentChildY, direction });
 
             currentChildY += this.getSubTreeHeight(childNode) + this.config.yGap;
         });
