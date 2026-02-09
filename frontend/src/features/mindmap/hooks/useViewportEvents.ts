@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { useViewportRef } from "@/features/mindmap/node/hooks/useViewportRef";
+import { useViewportRef } from "@/features/mindmap/hooks/useViewportRef";
 
 /** 사용자의 입력 이벤트를 감지, 바인딩하고, Renderer에 명령을 내리는 로직 */
 export const useViewportEvents = (svgRef: React.RefObject<SVGSVGElement | null>) => {
