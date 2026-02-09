@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { ViewportContext } from "@/features/mindmap/providers/ViewportProvider";
 
 /** Provider에 접근하여 Renderer 인스턴스를 가져오는 훅 */
-export const useViewport = () => {
+export const useViewportRef = () => {
     const context = useContext(ViewportContext);
 
     if (!context) {
