@@ -1,10 +1,5 @@
 package com.yat2.episode.user;
 
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.job.Job;
-import com.yat2.episode.job.JobRepository;
-import com.yat2.episode.user.dto.UserMeDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,11 +12,19 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.job.Job;
+import com.yat2.episode.job.JobRepository;
+import com.yat2.episode.user.dto.UserMeDto;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService 단위 테스트")

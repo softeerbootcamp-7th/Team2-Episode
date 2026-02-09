@@ -1,7 +1,5 @@
 package com.yat2.episode.job;
 
-import com.yat2.episode.job.dto.JobDto;
-import com.yat2.episode.job.dto.JobsByOccupationDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+
+import com.yat2.episode.job.dto.JobDto;
+import com.yat2.episode.job.dto.JobsByOccupationDto;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;

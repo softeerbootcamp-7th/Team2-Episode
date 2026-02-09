@@ -56,9 +56,8 @@ class JobRepositoryTest {
 
         List<Job> result = jobRepository.findAllWithOccupation();
 
-        List<Job> filtered = result.stream()
-                .filter(j -> List.of("A직군", "B직군").contains(j.getOccupation().getName()))
-                .toList();
+        List<Job> filtered =
+                result.stream().filter(j -> List.of("A직군", "B직군").contains(j.getOccupation().getName())).toList();
 
         assertThat(filtered).hasSize(3);
 

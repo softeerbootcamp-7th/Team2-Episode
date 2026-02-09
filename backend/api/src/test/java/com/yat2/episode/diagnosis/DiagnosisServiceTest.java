@@ -1,16 +1,5 @@
 package com.yat2.episode.diagnosis;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisDetailDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.job.Job;
-import com.yat2.episode.question.Question;
-import com.yat2.episode.question.QuestionRepository;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,11 +16,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisDetailDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.job.Job;
+import com.yat2.episode.question.Question;
+import com.yat2.episode.question.QuestionRepository;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -174,7 +178,7 @@ class DiagnosisServiceTest {
             Long userId = 1L;
             LocalDateTime now = LocalDateTime.now();
             List<DiagnosisSummaryDto> summaries = List.of(new DiagnosisSummaryDto(1, "백엔드 개발자", now, 5),
-                    new DiagnosisSummaryDto(2, "프론트엔드 개발자", now.minusDays(1), 3));
+                                                          new DiagnosisSummaryDto(2, "프론트엔드 개발자", now.minusDays(1), 3));
 
             when(diagnosisRepository.findDiagnosisSummariesByUserId(userId)).thenReturn(summaries);
 

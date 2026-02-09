@@ -1,6 +1,5 @@
 package com.yat2.episode.mindmap.s3;
 
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,8 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 
 import java.util.Base64;
+
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -51,12 +52,8 @@ class S3PostSignerTest {
         String policyBase64 = response.fields().policy();
         String decodedPolicy = new String(Base64.getDecoder().decode(policyBase64));
 
-        assertThat(decodedPolicy)
-                .contains("\"bucket\":\"test-bucket\"")
-                .contains("\"key\":\"" + objectKey + "\"")
-                .contains("content-length-range")
-                .contains("10485760")
-                .contains("x-amz-algorithm")
+        assertThat(decodedPolicy).contains("\"bucket\":\"test-bucket\"").contains("\"key\":\"" + objectKey + "\"")
+                .contains("content-length-range").contains("10485760").contains("x-amz-algorithm")
                 .contains("x-amz-credential");
 
         assertThat(response.fields().signature()).isNotBlank();

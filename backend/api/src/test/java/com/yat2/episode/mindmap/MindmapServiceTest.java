@@ -1,16 +1,5 @@
 package com.yat2.episode.mindmap;
 
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
-import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
-import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,12 +13,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.mindmap.constants.MindmapConstants;
+import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
+import com.yat2.episode.mindmap.dto.MindmapDataDto;
+import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
+import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
+
 import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MindmapService 단위 테스트")
@@ -100,8 +103,8 @@ class MindmapServiceTest {
             Mindmap mindmap = createMindmap("삭제될 마인드맵", false);
 
             given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
-            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(), testUserId)).willReturn(
-                    1);
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
+                                                                                 testUserId)).willReturn(1);
             given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(false);
 
             mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());
@@ -115,8 +118,8 @@ class MindmapServiceTest {
             Mindmap mindmap = createMindmap("유지될 마인드맵", true);
 
             given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
-            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(), testUserId)).willReturn(
-                    1);
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
+                                                                                 testUserId)).willReturn(1);
             given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(true);
 
             mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());

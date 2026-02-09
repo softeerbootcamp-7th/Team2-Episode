@@ -1,9 +1,5 @@
 package com.yat2.episode.competency;
 
-import com.yat2.episode.episode.Episode;
-import com.yat2.episode.episode.EpisodeId;
-import com.yat2.episode.mindmap.Mindmap;
-import com.yat2.episode.user.User;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.yat2.episode.episode.Episode;
+import com.yat2.episode.episode.EpisodeId;
+import com.yat2.episode.mindmap.Mindmap;
+import com.yat2.episode.user.User;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,8 +67,7 @@ class CompetencyTypeRepositoryTest {
         List<CompetencyType> result = competencyTypeRepository.findByMindmapId(mindmapId.toString());
 
         assertThat(result).hasSize(2);
-        assertThat(result).extracting("typeName")
-                .containsExactlyInAnyOrder("소통역량", "문제해결");
+        assertThat(result).extracting("typeName").containsExactlyInAnyOrder("소통역량", "문제해결");
     }
 
     private void persistEpisode(User user, Mindmap mindmap, CompetencyType ct, int nodeId) {

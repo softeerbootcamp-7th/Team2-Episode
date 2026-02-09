@@ -1,8 +1,5 @@
 package com.yat2.episode.question;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.competency.CompetencyTypeRepository;
-import com.yat2.episode.job.Job;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.competency.CompetencyTypeRepository;
+import com.yat2.episode.job.Job;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,9 +59,7 @@ class QuestionRepositoryTest {
 
         List<Question> result = questionRepository.findAllWithCompetencyByJobId(existingJobId);
 
-        assertThat(result)
-                .extracting(Question::getContent)
-                .contains(uniqueContent);
+        assertThat(result).extracting(Question::getContent).contains(uniqueContent);
     }
 
     @Test
@@ -80,8 +79,6 @@ class QuestionRepositoryTest {
 
         List<Question> result = questionRepository.findAllWithCompetency();
 
-        assertThat(result)
-                .extracting(Question::getContent)
-                .contains(uniqueContent);
+        assertThat(result).extracting(Question::getContent).contains(uniqueContent);
     }
 }
