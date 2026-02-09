@@ -3,13 +3,13 @@ import { useEffect, useRef } from "react";
 import { useViewportRef } from "@/features/mindmap/hooks/useViewportRef";
 
 /** 사용자의 입력 이벤트를 감지, 바인딩하고, Renderer에 명령을 내리는 로직 */
-export const useViewportEvents = (svgRef: React.RefObject<SVGSVGElement | null>) => {
+export function useViewportEvents(canvasRef: React.RefObject<SVGSVGElement | null>) {
     // Provider에서 rendererRef 가져오기
     const rendererRef = useViewportRef();
     const dragRef = useRef({ isDragging: false, lastX: 0, lastY: 0 });
 
     useEffect(() => {
-        const svg = svgRef.current;
+        const svg = canvasRef.current;
         if (!svg) return;
 
         //[zoom] 마우스 휠
@@ -77,5 +77,5 @@ export const useViewportEvents = (svgRef: React.RefObject<SVGSVGElement | null>)
             window.removeEventListener("mouseup", handleMouseUp);
             window.removeEventListener("mouseleave", handleMouseUp);
         };
-    }, [svgRef, rendererRef]);
-};
+    }, [canvasRef, rendererRef]);
+}
