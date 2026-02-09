@@ -2,6 +2,7 @@ package com.yat2.episode.episode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,7 +54,9 @@ public class EpisodeController {
     public void updateEpisode(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId,
-            @RequestBody EpisodeUpsertReq req
+            @Valid
+            @RequestBody
+            EpisodeUpsertReq req
     ) {
         episodeService.updateEpisode(nodeId, userId, req);
     }

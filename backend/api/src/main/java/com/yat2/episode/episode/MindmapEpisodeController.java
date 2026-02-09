@@ -2,6 +2,7 @@ package com.yat2.episode.episode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +55,9 @@ public class MindmapEpisodeController {
             @PathVariable UUID mindmapId,
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId,
-            @RequestBody EpisodeUpsertReq episodeUpsertReq
+            @Valid
+            @RequestBody
+            EpisodeUpsertReq episodeUpsertReq
     ) {
         return episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
     }
