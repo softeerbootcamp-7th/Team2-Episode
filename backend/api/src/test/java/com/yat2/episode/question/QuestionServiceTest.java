@@ -13,7 +13,6 @@ import java.util.List;
 import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.job.Job;
 import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
-import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,14 +32,10 @@ class QuestionServiceTest {
     private QuestionService questionService;
 
     @Test
-    @DisplayName("직무가 설정된 사용자의 경우, 문항을 카테고리별로 그룹화하여 반환해야 한다")
+    @DisplayName("문항을 카테고리별로 그룹화하여 반환해야 한다")
     void getQuestionSetByUserId_Success() {
-        long userId = 1L;
-        User user = User.newUser(userId, "테스트유저");
-
         Job job = new Job();
         ReflectionTestUtils.setField(job, "id", 10);
-        user.updateJob(job);
 
         CompetencyType type1 = mock(CompetencyType.class);
         given(type1.getCategory()).willReturn(CompetencyType.Category.협업_커뮤니케이션_역량);
@@ -51,7 +46,6 @@ class QuestionServiceTest {
         Question q1 = createQuestion(1, "커뮤니케이션 질문", type1);
         Question q2 = createQuestion(2, "문제해결 질문", type2);
 
-        given(userService.getUserOrThrow(userId)).willReturn(user);
         given(questionRepository.findAllWithCompetencyByJobId(10)).willReturn(List.of(q1, q2));
 
         List<QuestionsByCompetencyCategoryDto> result = questionService.getQuestionSetByUserId(job.getId());
