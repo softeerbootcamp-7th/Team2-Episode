@@ -4,12 +4,8 @@ import { calcSum } from "@/utils/calc_sum";
  *  number[]를 두 group으로 나눌 때 sum 차이가 가장 적은 index를 반환합니다.
  */
 export function calcPartitionIndex(arr: number[]) {
-    if (arr.length === 0) {
-        return 0;
-    }
-
-    if (arr.length === 1) {
-        return 1;
+    if (arr.length <= 1) {
+        return arr.length;
     }
 
     const half = calcSum(arr) / 2;
