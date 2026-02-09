@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
@@ -27,6 +29,13 @@ public class EpisodeService {
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
 
         return EpisodeDetailRes.of(episode);
+    }
+
+    public List<EpisodeSummaryRes> getMindmapEpisodes(UUID mindmapId, long userId) {
+        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+
+        return episodeRepository.findByMindmapIdAndIdUserId(mindmapId, userId).stream().map(EpisodeSummaryRes::of)
+                .toList();
     }
 
     @Transactional
