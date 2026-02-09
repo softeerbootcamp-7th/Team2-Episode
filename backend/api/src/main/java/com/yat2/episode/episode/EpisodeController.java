@@ -2,6 +2,7 @@ package com.yat2.episode.episode;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,6 +36,14 @@ class EpisodeController {
             @RequestBody EpisodeUpsertReq episodeUpsertReq
     ) {
         return episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
+    }
+
+    @GetMapping("/episode/{nodeId}")
+    public EpisodeDetailRes getEpisode(
+            @PathVariable UUID nodeId,
+            @RequestAttribute(USER_ID) long userId
+    ) {
+        return episodeService.getEpisode(nodeId, userId);
     }
 
     @PatchMapping("/episode/{nodeId}")

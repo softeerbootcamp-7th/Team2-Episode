@@ -20,6 +20,15 @@ public class EpisodeService {
     private final EpisodeRepository episodeRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
 
+    public EpisodeDetailRes getEpisode(UUID nodeId, long userId) {
+        EpisodeId episodeId = new EpisodeId(nodeId, userId);
+
+        Episode episode = episodeRepository.findById(episodeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+
+        return EpisodeDetailRes.of(episode);
+    }
+
     @Transactional
     public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
