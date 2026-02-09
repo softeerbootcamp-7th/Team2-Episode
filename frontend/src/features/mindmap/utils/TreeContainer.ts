@@ -401,7 +401,7 @@ export default class TreeContainer {
             return undefined;
         }
 
-        const parentNode = this.safeGetNode(node.id);
+        const parentNode = this.safeGetNode(node.parentId);
         if (!parentNode) {
             return undefined;
         }
