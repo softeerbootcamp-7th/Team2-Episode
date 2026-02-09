@@ -26,7 +26,7 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/competency-type")
-@Tag(name = "competency-type", description = "역량 조회 API")
+@Tag(name = "Competency Type", description = "역량 조회 API")
 public class CompetencyTypeController {
 
     private final CompetencyTypeService competencyTypeService;
