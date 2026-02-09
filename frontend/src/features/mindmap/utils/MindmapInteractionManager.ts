@@ -112,7 +112,7 @@ export class MindmapInteractionManager {
             }
 
             case "potential_drag": {
-                const dist = calcDistance(clientX, this.startMousePos.x, clientY, this.startMousePos.y);
+                const dist = calcDistance(clientX, clientY, this.startMousePos.x, this.startMousePos.y);
                 if (dist > DRAG_THRESHOLD) {
                     this.mode = "dragging";
 
