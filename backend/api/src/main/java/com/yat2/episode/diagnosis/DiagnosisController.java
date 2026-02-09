@@ -70,8 +70,8 @@ public class DiagnosisController {
     )
     @ApiResponses({ @ApiResponse(responseCode = "201", description = "저장 성공") })
     @ApiErrorCodes(
-            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND,
-              ErrorCode.JOB_NOT_FOUND }
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND, ErrorCode.JOB_NOT_FOUND,
+              ErrorCode.QUESTION_NOT_FOUND }
     )
     @PostMapping()
     public ResponseEntity<DiagnosisSummaryDto> createDiagnosis(
