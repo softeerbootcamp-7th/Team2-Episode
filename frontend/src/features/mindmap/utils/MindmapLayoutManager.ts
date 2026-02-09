@@ -24,7 +24,7 @@ export default class MindmapLayoutManager {
 
         this.treeContainer = treeContainer;
         this.config = { ...defaultConfig, ...config };
-        this.subtreeHeightCache = new CacheMap(0);
+        this.subtreeHeightCache = new CacheMap();
     }
 
     public invalidate(nodeId: NodeId) {
@@ -100,7 +100,8 @@ export default class MindmapLayoutManager {
 
     private getSubTreeHeight(node: NodeElement): number {
         if (this.subtreeHeightCache.has(node.id)) {
-            return this.subtreeHeightCache.get(node.id);
+            // node.id가 있음이 확실하므로 !로 단언했습니다.
+            return this.subtreeHeightCache.get(node.id)!;
         }
 
         const childNodes = this.treeContainer.getChildNodes(node.id);
