@@ -27,7 +27,7 @@ public class MindmapEpisodeController {
 
     private final EpisodeService episodeService;
 
-    @GetMapping("/")
+    @GetMapping
     public List<EpisodeSummaryRes> getMindmapEpisodes(
             @PathVariable UUID mindmapId,
             @RequestAttribute(USER_ID) Long userId

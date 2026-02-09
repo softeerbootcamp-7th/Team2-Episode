@@ -54,6 +54,11 @@ public class EpisodeService {
     }
 
     @Transactional
+    public void deleteEpisode(UUID nodeId, long userId) {
+        episodeRepository.deleteById(new EpisodeId(nodeId, userId));
+    }
+
+    @Transactional
     public void clearEpisodeDates(UUID nodeId, long userId) {
         Episode episode = getEpisodeOrThrow(nodeId, userId);
         episode.clearDates();

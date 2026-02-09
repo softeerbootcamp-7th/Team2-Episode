@@ -46,6 +46,15 @@ public class EpisodeController {
         episodeService.updateEpisode(nodeId, userId, req);
     }
 
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEpisode(
+            @PathVariable UUID nodeId,
+            @RequestAttribute(USER_ID) long userId
+    ) {
+        episodeService.deleteEpisode(nodeId, userId);
+    }
+
     @DeleteMapping("/dates")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearEpisodeDates(
