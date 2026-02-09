@@ -175,7 +175,7 @@ export default class MindmapLayoutManager {
 
         const childNodes = this.treeContainer.getChildNodes(parentNode.id);
         if (childNodes.length === 0) {
-            return 0;
+            return;
         }
 
         const childGroupHeight = this.calcPartitionHeightWithGap(childNodes);
