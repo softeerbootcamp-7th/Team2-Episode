@@ -28,7 +28,7 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @RestController
 @AuthRequiredErrors
 @RequiredArgsConstructor
-@RequestMapping("/episode/{nodeId}")
+@RequestMapping("/episodes/{nodeId}")
 @Tag(name = "Episode", description = "에피소드 STAR 관련 API")
 public class EpisodeController {
 
