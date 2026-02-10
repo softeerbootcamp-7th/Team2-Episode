@@ -1,11 +1,10 @@
 package com.yat2.episode.question;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,12 +27,13 @@ public class QuestionController {
 
     @GetMapping()
     @Operation(summary = "세부 역량 별 문항 조회", description = "세부 역량 별 문항을 하나 씩 뽑아 목록으로 제공합니다.")
-    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR })
-    public ResponseEntity<List<QuestionsByCompetencyCategoryDto>> getQuestionSet(
-            @RequestParam int jobId
+    public List<QuestionsByCompetencyCategoryDto> getQuestionSet(
+            @RequestParam
+            @Positive
+            @NotNull
+            Integer jobId
     ) {
-
-        return ResponseEntity.ok(questionService.getQuestionSetByJobId(jobId));
+        return questionService.getQuestionSetByJobId(jobId);
     }
 }
