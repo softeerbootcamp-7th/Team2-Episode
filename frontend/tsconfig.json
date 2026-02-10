@@ -11,7 +11,8 @@
             "@/shared/*": ["shared/*"],
             "@/utils/*": ["utils/*"],
             "@/icons/*": ["assets/icons/*"],
-            "@/features/*": ["features/*"]
+            "@/features/*": ["features/*"],
+            "@/constants/*": ["constants/*"]
         },
         "outDir": "./dist",
         "noUncheckedIndexedAccess": true

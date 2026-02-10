@@ -15,16 +15,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 
 import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.job.Job;
 import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
-import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.mock;
@@ -78,10 +74,9 @@ class QuestionServiceTest {
         @Test
         @DisplayName("직무가 설정된 사용자의 문항들을 카테고리별로 그룹화하여 반환한다")
         void should_return_questions_grouped_by_category() {
-            Job testJob = new Job();
-            ReflectionTestUtils.setField(testJob, "id", 7);
-            testUser.updateJob(testJob);
-
+            Job job = new Job();
+            ReflectionTestUtils.setField(job, "id", 10);
+  
             CompetencyType coreComp = mock(CompetencyType.class);
             when(coreComp.getCategory()).thenReturn(CompetencyType.Category.협업_커뮤니케이션_역량);
 

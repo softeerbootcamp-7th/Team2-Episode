@@ -30,6 +30,7 @@ public enum ErrorCode {
 
     //Job
     JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "JOB_NOT_FOUND", "존재하지 않는 직무입니다."),
+    INVALID_JOB(HttpStatus.BAD_REQUEST, "INVALID_JOB", "진단 응답 데이터와 직무 데이터가 매치되지 않습니다."),
 
     //Question
     QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "존재하지 않는 문항입니다."),
