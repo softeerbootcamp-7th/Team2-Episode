@@ -20,7 +20,7 @@ import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryRes;
 @RequiredArgsConstructor
 @RestController
 @Public
-@RequestMapping("/question")
+@RequestMapping("/questions")
 @Tag(name = "Question", description = "역량 자가 진단용 문항 관련 API")
 public class QuestionController {
     private final QuestionService questionService;
