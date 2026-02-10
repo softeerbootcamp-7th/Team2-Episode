@@ -1,4 +1,4 @@
-package com.yat2.episode.question;
+package com.yat2.episode.mindmap;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -8,104 +8,164 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.job.Job;
-import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
+import com.yat2.episode.mindmap.constants.MindmapConstants;
+import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
+import com.yat2.episode.mindmap.dto.MindmapDataDto;
+import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
+import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
-import static com.yat2.episode.utils.TestEntityFactory.createEntity;
+import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-@DisplayName("QuestionService 단위 테스트")
-class QuestionServiceTest {
+@DisplayName("MindmapService 단위 테스트")
+class MindmapServiceTest {
 
-    private final long testUserId = 12345678L;
+    private final long testUserId = 1L;
     @Mock
-    private QuestionRepository questionRepository;
+    private MindmapRepository mindmapRepository;
+    @Mock
+    private MindmapParticipantRepository mindmapParticipantRepository;
+    @Mock
+    private S3SnapshotRepository snapshotRepository;
     @Mock
     private UserService userService;
+    @Mock
+    private S3ObjectKeyGenerator s3ObjectKeyGenerator;
     @InjectMocks
-    private QuestionService questionService;
+    private MindmapService mindmapService;
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        testUser = User.newUser(testUserId, "테스트유저");
-    }
-
-    private Question createQuestion(int id, String content, CompetencyType type) {
-        Question q = createEntity(Question.class);
-        ReflectionTestUtils.setField(q, "id", id);
-        ReflectionTestUtils.setField(q, "content", content);
-        ReflectionTestUtils.setField(q, "competencyType", type);
-        return q;
+        testUser = User.newUser(testUserId, "애플");
     }
 
     @Nested
-    @DisplayName("getQuestionSetByUserId")
-    class GetQuestionSetByUserIdTest {
+    @DisplayName("saveMindmapAndParticipant")
+    class SaveMindmapAndParticipant {
 
         @Test
-        @DisplayName("사용자의 직무가 설정되지 않은 경우 JOB_NOT_SELECTED 예외가 발생한다")
-        void should_throw_exception_when_job_is_not_selected() {
+        @DisplayName("팀 마인드맵 생성 시 제목이 없으면 MINDMAP_TITLE_REQUIRED 예외가 발생한다")
+        void should_throw_exception_when_shared_mindmap_has_no_title() {
+            MindmapArgsReqDto req = new MindmapArgsReqDto(true, "");
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
 
-            assertThatThrownBy(() -> questionService.getQuestionSetByUserId(testUserId)).isInstanceOf(
+            assertThatThrownBy(
+                    () -> mindmapService.saveMindmapAndParticipant(testUserId, req, UUID.randomUUID())).isInstanceOf(
                             CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.JOB_NOT_SELECTED);
-
-            verify(questionRepository, never()).findAllWithCompetencyByJobId(anyInt());
+                    .isEqualTo(ErrorCode.MINDMAP_TITLE_REQUIRED);
         }
 
         @Test
-        @DisplayName("직무가 설정된 사용자의 문항들을 카테고리별로 그룹화하여 반환한다")
-        void should_return_questions_grouped_by_category() {
-            Job testJob = new Job();
-            ReflectionTestUtils.setField(testJob, "id", 7);
-            testUser.updateJob(testJob);
-
-            CompetencyType coreComp = mock(CompetencyType.class);
-            when(coreComp.getCategory()).thenReturn(CompetencyType.Category.협업_커뮤니케이션_역량);
-
-            CompetencyType jobComp = mock(CompetencyType.class);
-            when(jobComp.getCategory()).thenReturn(CompetencyType.Category.문제해결_사고_역량);
-
-            Question q1 = createQuestion(1, "동료와 어떻게 소통하나요?", coreComp);
-            Question q2 = createQuestion(2, "기술적 난관을 어떻게 해결하나요?", jobComp);
+        @DisplayName("개인 마인드맵 생성 시 제목이 없으면 중복을 피해 순차적인 이름을 생성한다")
+        void should_generate_sequential_name_for_private_mindmap() {
+            MindmapArgsReqDto req = new MindmapArgsReqDto(false, null);
+            UUID mindmapId = UUID.randomUUID();
+            String baseName = "애플" + MindmapConstants.PRIVATE_NAME;
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(questionRepository.findAllWithCompetencyByJobId(7)).willReturn(List.of(q1, q2));
+            given(mindmapRepository.findAllNamesByBaseName(baseName, testUserId)).willReturn(
+                    List.of(baseName, baseName + "(1)"));
 
-            List<QuestionsByCompetencyCategoryDto> result = questionService.getQuestionSetByUserId(testUserId);
+            MindmapDataExceptDateDto result = mindmapService.saveMindmapAndParticipant(testUserId, req, mindmapId);
 
-            assertThat(result).hasSize(2);
+            assertThat(result.mindmapName()).isEqualTo(baseName + "(2)");
+            verify(mindmapRepository).save(any(Mindmap.class));
+            verify(mindmapParticipantRepository).save(any(MindmapParticipant.class));
+        }
+    }
 
-            assertThat(result.get(0).category()).isEqualTo(CompetencyType.Category.협업_커뮤니케이션_역량);
-            assertThat(result.get(0).questions().get(0).content()).isEqualTo("동료와 어떻게 소통하나요?");
+    @Nested
+    @DisplayName("deleteMindmap")
+    class DeleteMindmap {
 
-            assertThat(result.get(1).category()).isEqualTo(CompetencyType.Category.문제해결_사고_역량);
-            assertThat(result.get(1).questions().get(0).content()).isEqualTo("기술적 난관을 어떻게 해결하나요?");
+        @Test
+        @DisplayName("마지막 참여자가 마인드맵을 삭제하면 실제 마인드맵 엔티티도 삭제된다")
+        void should_delete_mindmap_entity_when_no_participants_left() {
+            Mindmap mindmap = createMindmap("삭제될 마인드맵", false);
 
-            verify(userService).getUserOrThrow(testUserId);
-            verify(questionRepository).findAllWithCompetencyByJobId(7);
+            given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
+                                                                                 testUserId)).willReturn(1);
+            given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(false);
+
+            mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());
+
+            verify(mindmapRepository).delete(mindmap);
+        }
+
+        @Test
+        @DisplayName("다른 참여자가 남아있으면 참여 정보만 삭제되고 마인드맵 엔티티는 유지된다")
+        void should_only_delete_participant_when_others_remain() {
+            Mindmap mindmap = createMindmap("유지될 마인드맵", true);
+
+            given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
+                                                                                 testUserId)).willReturn(1);
+            given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(true);
+
+            mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());
+
+            verify(mindmapRepository, never()).delete(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("updateName")
+    class UpdateName {
+
+        @Test
+        @DisplayName("마인드맵의 이름을 성공적으로 변경한다")
+        void should_update_mindmap_name() {
+            Mindmap mindmap = createMindmap("이전 이름", false);
+            MindmapParticipant participant = new MindmapParticipant(testUser, mindmap);
+
+            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmap.getId(), testUserId)).willReturn(
+                    Optional.of(participant));
+
+            MindmapDataDto result = mindmapService.updateName(testUserId, mindmap.getId().toString(), "새 이름");
+
+            assertThat(result.mindmapName()).isEqualTo("새 이름");
+            assertThat(mindmap.getName()).isEqualTo("새 이름");
+        }
+    }
+
+    @Nested
+    @DisplayName("getUploadInfo")
+    class GetUploadInfo {
+
+        @Test
+        @DisplayName("S3 업로드를 위한 Presigned URL 정보를 반환한다")
+        void should_return_s3_upload_info() {
+            UUID mindmapId = UUID.randomUUID();
+            String objectKey = "mindmaps/" + mindmapId;
+            S3UploadResponseDto expectedResponse = mock(S3UploadResponseDto.class);
+
+            given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(objectKey);
+            given(snapshotRepository.createPresignedUploadInfo(objectKey)).willReturn(expectedResponse);
+
+            S3UploadResponseDto result = mindmapService.getUploadInfo(mindmapId);
+
+            assertThat(result).isEqualTo(expectedResponse);
+            verify(snapshotRepository).createPresignedUploadInfo(objectKey);
         }
     }
 }

@@ -33,7 +33,7 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @AuthRequiredErrors
 @RequiredArgsConstructor
 @Validated
-@RequestMapping("/diagnosis")
+@RequestMapping("/diagnoses")
 @Tag(name = "Diagnosis", description = "역량 진단 관리 API")
 public class DiagnosisController {
     private final DiagnosisService diagnosisService;
@@ -68,8 +68,8 @@ public class DiagnosisController {
     )
     @ApiResponses({ @ApiResponse(responseCode = "201", description = "저장 성공") })
     @ApiErrorCodes(
-            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND,
-              ErrorCode.JOB_NOT_SELECTED }
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.JOB_NOT_FOUND,
+              ErrorCode.QUESTION_NOT_FOUND }
     )
     @PostMapping()
     public ResponseEntity<DiagnosisSummaryDto> createDiagnosis(
