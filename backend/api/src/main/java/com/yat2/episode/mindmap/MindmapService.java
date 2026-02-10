@@ -10,13 +10,13 @@ import java.util.UUID;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
-import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
+import com.yat2.episode.mindmap.dto.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapNameRes;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
@@ -30,12 +30,12 @@ public class MindmapService {
     private final UserService userService;
     private final S3ObjectKeyGenerator s3ObjectKeyGenerator;
 
-    public MindmapDataDto getMindmapById(Long userId, UUID mindmapId) {
-        return MindmapDataDto.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
+    public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
+        return MindmapDetailRes.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
     }
 
     @Transactional(readOnly = true)
-    public List<MindmapDataDto> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
+    public List<MindmapDetailRes> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
         return switch (type) {
             case PRIVATE -> getMindmapsByShared(userId, false);
             case PUBLIC -> getMindmapsByShared(userId, true);
@@ -43,25 +43,25 @@ public class MindmapService {
         };
     }
 
-    private List<MindmapDataDto> getMindmapsByShared(Long userId, boolean shared) {
+    private List<MindmapDetailRes> getMindmapsByShared(Long userId, boolean shared) {
         return mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, shared).stream()
-                .map(MindmapDataDto::of).toList();
+                .map(MindmapDetailRes::of).toList();
     }
 
-    private List<MindmapDataDto> getAllMindmap(Long userId) {
+    private List<MindmapDetailRes> getAllMindmap(Long userId) {
         return mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId).stream()
-                .map(MindmapDataDto::of).toList();
+                .map(MindmapDetailRes::of).toList();
     }
 
 
     @Transactional(readOnly = true)
-    public List<MindmapIdentityDto> getMindmapList(Long userId) {
-        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapIdentityDto::of).toList();
+    public List<MindmapNameRes> getMindmapList(Long userId) {
+        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapNameRes::of).toList();
     }
 
 
     @Transactional
-    public MindmapDataExceptDateDto saveMindmapAndParticipant(long userId, MindmapArgsReqDto body, UUID mindmapId) {
+    public MindmapSummaryRes saveMindmapAndParticipant(long userId, MindmapCreateReq body, UUID mindmapId) {
         User user = userService.getUserOrThrow(userId);
         String finalTitle = body.title();
         if (finalTitle == null || finalTitle.isBlank()) {
@@ -75,10 +75,10 @@ public class MindmapService {
         MindmapParticipant participant = new MindmapParticipant(user, mindmap);
         mindmapParticipantRepository.save(participant);
 
-        return MindmapDataExceptDateDto.of(participant);
+        return MindmapSummaryRes.of(participant);
     }
 
-    public S3UploadResponseDto getUploadInfo(UUID mindmapId) {
+    public S3UploadFieldsRes getUploadInfo(UUID mindmapId) {
         return snapshotRepository.createPresignedUploadInfo(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
     }
 
@@ -149,18 +149,18 @@ public class MindmapService {
     }
 
     @Transactional
-    public MindmapDataDto updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
+    public MindmapDetailRes updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.updateFavorite(status);
 
-        return MindmapDataDto.of(participant);
+        return MindmapDetailRes.of(participant);
     }
 
     @Transactional
-    public MindmapDataDto updateName(long userId, UUID mindmapId, String name) {
+    public MindmapDetailRes updateName(long userId, UUID mindmapId, String name) {
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.getMindmap().updateName(name);
 
-        return MindmapDataDto.of(participant);
+        return MindmapDetailRes.of(participant);
     }
 }

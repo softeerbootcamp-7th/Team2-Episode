@@ -7,7 +7,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 @Slf4j
 @Repository
@@ -20,7 +20,7 @@ public class S3SnapshotRepository {
         this.credentialsProvider = credentialsProvider;
     }
 
-    public S3UploadResponseDto createPresignedUploadInfo(String objectKey) {
+    public S3UploadFieldsRes createPresignedUploadInfo(String objectKey) {
         try {
             AwsCredentials credentials = credentialsProvider.resolveCredentials();
 

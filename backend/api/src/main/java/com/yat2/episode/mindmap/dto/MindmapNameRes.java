@@ -4,11 +4,11 @@ import java.util.UUID;
 
 import com.yat2.episode.mindmap.Mindmap;
 
-public record MindmapIdentityDto(
+public record MindmapNameRes(
         UUID mindmapId,
         String mindmapName
 ) {
-    public static MindmapIdentityDto of(Mindmap mindmap) {
-        return new MindmapIdentityDto(mindmap.getId(), mindmap.getName());
+    public static MindmapNameRes of(Mindmap mindmap) {
+        return new MindmapNameRes(mindmap.getId(), mindmap.getName());
     }
 }

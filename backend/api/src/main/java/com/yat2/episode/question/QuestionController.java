@@ -15,7 +15,7 @@ import java.util.List;
 import com.yat2.episode.auth.security.Public;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
-import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
+import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryRes;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,7 +28,7 @@ public class QuestionController {
     @GetMapping()
     @Operation(summary = "세부 역량 별 문항 조회", description = "세부 역량 별 문항을 하나 씩 뽑아 목록으로 제공합니다.")
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR })
-    public List<QuestionsByCompetencyCategoryDto> getQuestionSet(
+    public List<QuestionsByCompetencyCategoryRes> getQuestionSet(
             @RequestParam
             @Positive
             @NotNull

@@ -12,7 +12,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,12 +44,12 @@ class S3SnapshotRepositoryTest {
         void should_return_upload_info_when_credentials_are_valid() throws Exception {
             String objectKey = "mindmaps/test-key";
             AwsCredentials credentials = mock(AwsCredentials.class);
-            S3UploadResponseDto expectedResponse = mock(S3UploadResponseDto.class);
+            S3UploadFieldsRes expectedResponse = mock(S3UploadFieldsRes.class);
 
             given(credentialsProvider.resolveCredentials()).willReturn(credentials);
             given(s3PostSigner.generatePostFields(objectKey, credentials)).willReturn(expectedResponse);
 
-            S3UploadResponseDto result = s3SnapshotRepository.createPresignedUploadInfo(objectKey);
+            S3UploadFieldsRes result = s3SnapshotRepository.createPresignedUploadInfo(objectKey);
 
             assertThat(result).isEqualTo(expectedResponse);
             verify(credentialsProvider).resolveCredentials();

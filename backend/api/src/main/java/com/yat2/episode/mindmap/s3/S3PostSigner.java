@@ -12,8 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 
-import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsDto;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFields;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 @Slf4j
 @Component
@@ -31,7 +31,7 @@ public class S3PostSigner {
         this.maxUploadSize = s3Properties.getMaxUploadSize();
     }
 
-    public S3UploadResponseDto generatePostFields(String key, AwsCredentials credentials) throws Exception {
+    public S3UploadFieldsRes generatePostFields(String key, AwsCredentials credentials) throws Exception {
 
         String accessKey = credentials.accessKeyId().trim();
         String secretKey = credentials.secretAccessKey().trim();
@@ -51,8 +51,9 @@ public class S3PostSigner {
         String actionUrl = (endpoint != null && !endpoint.isEmpty()) ? endpoint + "/" + bucket :
                            "https://" + bucket + ".s3." + region + ".amazonaws.com";
 
-        return new S3UploadResponseDto(actionUrl, new S3UploadFieldsDto(key, "AWS4-HMAC-SHA256", credential, xAmzDate,
-                                                                        sessionToken, policyBase64, signature));
+        return new S3UploadFieldsRes(actionUrl,
+                                     new S3UploadFields(key, "AWS4-HMAC-SHA256", credential, xAmzDate, sessionToken,
+                                                        policyBase64, signature));
     }
 
     private String buildPolicy(

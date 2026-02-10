@@ -16,12 +16,12 @@ import java.util.UUID;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
+import com.yat2.episode.mindmap.dto.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
@@ -67,7 +67,7 @@ class MindmapServiceTest {
         @Test
         @DisplayName("팀 마인드맵 생성 시 제목이 없으면 MINDMAP_TITLE_REQUIRED 예외가 발생한다")
         void should_throw_exception_when_shared_mindmap_has_no_title() {
-            MindmapArgsReqDto req = new MindmapArgsReqDto(true, "");
+            MindmapCreateReq req = new MindmapCreateReq(true, "");
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
 
             assertThatThrownBy(
@@ -79,7 +79,7 @@ class MindmapServiceTest {
         @Test
         @DisplayName("개인 마인드맵 생성 시 제목이 없으면 중복을 피해 순차적인 이름을 생성한다")
         void should_generate_sequential_name_for_private_mindmap() {
-            MindmapArgsReqDto req = new MindmapArgsReqDto(false, null);
+            MindmapCreateReq req = new MindmapCreateReq(false, null);
             UUID mindmapId = UUID.randomUUID();
             String baseName = "애플" + MindmapConstants.PRIVATE_NAME;
 
@@ -87,7 +87,7 @@ class MindmapServiceTest {
             given(mindmapRepository.findAllNamesByBaseName(baseName, testUserId)).willReturn(
                     List.of(baseName, baseName + "(1)"));
 
-            MindmapDataExceptDateDto result = mindmapService.saveMindmapAndParticipant(testUserId, req, mindmapId);
+            MindmapSummaryRes result = mindmapService.saveMindmapAndParticipant(testUserId, req, mindmapId);
 
             assertThat(result.mindmapName()).isEqualTo(baseName + "(2)");
             verify(mindmapRepository).save(any(Mindmap.class));
@@ -142,7 +142,7 @@ class MindmapServiceTest {
 
             given(mindmapAccessValidator.findParticipantOrThrow(mindmap.getId(), testUserId)).willReturn(participant);
 
-            MindmapDataDto result = mindmapService.updateName(testUserId, mindmap.getId(), "새 이름");
+            MindmapDetailRes result = mindmapService.updateName(testUserId, mindmap.getId(), "새 이름");
 
             assertThat(result.mindmapName()).isEqualTo("새 이름");
             assertThat(mindmap.getName()).isEqualTo("새 이름");
@@ -158,12 +158,12 @@ class MindmapServiceTest {
         void should_return_s3_upload_info() {
             UUID mindmapId = UUID.randomUUID();
             String objectKey = "mindmaps/" + mindmapId;
-            S3UploadResponseDto expectedResponse = mock(S3UploadResponseDto.class);
+            S3UploadFieldsRes expectedResponse = mock(S3UploadFieldsRes.class);
 
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(objectKey);
             given(snapshotRepository.createPresignedUploadInfo(objectKey)).willReturn(expectedResponse);
 
-            S3UploadResponseDto result = mindmapService.getUploadInfo(mindmapId);
+            S3UploadFieldsRes result = mindmapService.getUploadInfo(mindmapId);
 
             assertThat(result).isEqualTo(expectedResponse);
             verify(snapshotRepository).createPresignedUploadInfo(objectKey);

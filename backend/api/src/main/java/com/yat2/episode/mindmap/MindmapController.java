@@ -29,13 +29,13 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.global.utils.UriUtil;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapCreatedWithUrlDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
-import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
-import com.yat2.episode.mindmap.dto.MindmapNameUpdateReqDto;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.dto.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapNameRes;
+import com.yat2.episode.mindmap.dto.MindmapNameUpdateReq;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
@@ -58,7 +58,7 @@ public class MindmapController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping
-    public ResponseEntity<List<MindmapDataDto>> getMindmaps(
+    public ResponseEntity<List<MindmapDetailRes>> getMindmaps(
             @RequestAttribute(USER_ID) long userId,
             @Parameter(description = "조회할 마인드맵 유형 (ALL, PRIVATE, PUBLIC)")
             @RequestParam(name = "type", required = false, defaultValue = "ALL")
@@ -75,7 +75,7 @@ public class MindmapController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/{mindmapId}")
-    public ResponseEntity<MindmapDataDto> getMindmap(
+    public ResponseEntity<MindmapDetailRes> getMindmap(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
@@ -91,7 +91,7 @@ public class MindmapController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 이름 목록 조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping("/titles")
-    public ResponseEntity<List<MindmapIdentityDto>> getMyMindmapNames(
+    public ResponseEntity<List<MindmapNameRes>> getMyMindmapNames(
             @RequestAttribute(USER_ID) long userId
     ) {
         return ResponseEntity.ok(mindmapService.getMindmapList(userId));
@@ -112,14 +112,14 @@ public class MindmapController {
               ErrorCode.MINDMAP_TITLE_REQUIRED }
     )
     @PostMapping()
-    public ResponseEntity<MindmapCreatedWithUrlDto> createMindmap(
+    public ResponseEntity<MindmapUploadUrlRes> createMindmap(
             @RequestAttribute(USER_ID) long userId,
-            @RequestBody MindmapArgsReqDto reqBody
+            @RequestBody MindmapCreateReq reqBody
     ) {
         UUID uuid = UuidCreator.getTimeOrderedEpoch();
-        S3UploadResponseDto presignedData = mindmapService.getUploadInfo(uuid);
-        MindmapDataExceptDateDto mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody, uuid);
-        MindmapCreatedWithUrlDto resBody = new MindmapCreatedWithUrlDto(mindmapData, presignedData);
+        S3UploadFieldsRes presignedData = mindmapService.getUploadInfo(uuid);
+        MindmapSummaryRes mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody, uuid);
+        MindmapUploadUrlRes resBody = new MindmapUploadUrlRes(mindmapData, presignedData);
         URI location = UriUtil.createLocationUri(resBody.mindmap().mindmapId());
         return ResponseEntity.created(location).body(resBody);
     }
@@ -169,12 +169,12 @@ public class MindmapController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "업데이트 성공") })
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/favorite")
-    public ResponseEntity<MindmapDataDto> updateFavoriteStatus(
+    public ResponseEntity<MindmapDetailRes> updateFavoriteStatus(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId,
             @RequestParam boolean status
     ) {
-        MindmapDataDto updatedMindmap = mindmapService.updateFavoriteStatus(userId, mindmapId, status);
+        MindmapDetailRes updatedMindmap = mindmapService.updateFavoriteStatus(userId, mindmapId, status);
         return ResponseEntity.ok(updatedMindmap);
     }
 
@@ -182,14 +182,14 @@ public class MindmapController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "업데이트 성공") })
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/name")
-    public ResponseEntity<MindmapDataDto> updateName(
+    public ResponseEntity<MindmapDetailRes> updateName(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId,
             @Valid
             @RequestBody
-            MindmapNameUpdateReqDto request
+            MindmapNameUpdateReq request
     ) {
-        MindmapDataDto updatedMindmap = mindmapService.updateName(userId, mindmapId, request.name());
+        MindmapDetailRes updatedMindmap = mindmapService.updateName(userId, mindmapId, request.name());
         return ResponseEntity.ok(updatedMindmap);
     }
 

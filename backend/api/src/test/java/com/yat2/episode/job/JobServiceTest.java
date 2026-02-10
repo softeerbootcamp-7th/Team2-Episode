@@ -11,8 +11,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
-import com.yat2.episode.job.dto.JobDto;
-import com.yat2.episode.job.dto.JobsByOccupationDto;
+import com.yat2.episode.job.dto.JobSummary;
+import com.yat2.episode.job.dto.JobsByOccupationRes;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +54,7 @@ class JobServiceTest {
         void should_return_empty_list_when_no_jobs_exist() {
             given(jobRepository.findAllWithOccupation()).willReturn(List.of());
 
-            List<JobsByOccupationDto> result = jobService.getOccupationsWithJobs();
+            List<JobsByOccupationRes> result = jobService.getOccupationsWithJobs();
 
             assertThat(result).isEmpty();
             verify(jobRepository).findAllWithOccupation();
@@ -72,19 +72,19 @@ class JobServiceTest {
 
             given(jobRepository.findAllWithOccupation()).willReturn(List.of(job1, job2, job3));
 
-            List<JobsByOccupationDto> result = jobService.getOccupationsWithJobs();
+            List<JobsByOccupationRes> result = jobService.getOccupationsWithJobs();
 
             assertThat(result).hasSize(2);
 
-            JobsByOccupationDto firstGroup = result.get(0);
+            JobsByOccupationRes firstGroup = result.get(0);
             assertThat(firstGroup.occupationId()).isEqualTo(1);
             assertThat(firstGroup.occupationName()).isEqualTo("개발");
-            assertThat(firstGroup.jobs()).extracting(JobDto::name).containsExactly("백엔드", "프론트엔드");
+            assertThat(firstGroup.jobs()).extracting(JobSummary::name).containsExactly("백엔드", "프론트엔드");
 
-            JobsByOccupationDto secondGroup = result.get(1);
+            JobsByOccupationRes secondGroup = result.get(1);
             assertThat(secondGroup.occupationId()).isEqualTo(2);
             assertThat(secondGroup.occupationName()).isEqualTo("디자인");
-            assertThat(secondGroup.jobs()).extracting(JobDto::name).containsExactly("UI/UX");
+            assertThat(secondGroup.jobs()).extracting(JobSummary::name).containsExactly("UI/UX");
 
             verify(jobRepository).findAllWithOccupation();
         }

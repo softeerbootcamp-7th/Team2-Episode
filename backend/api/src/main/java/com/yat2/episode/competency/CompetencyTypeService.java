@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.competency.dto.CompetencyTypeDto;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.EpisodeRepository;
 
 @Service
@@ -15,8 +15,8 @@ public class CompetencyTypeService {
     private final CompetencyTypeRepository competencyTypeRepository;
     private final EpisodeRepository episodeRepository;
 
-    public List<CompetencyTypeDto> getAllData() {
-        return competencyTypeRepository.findAll().stream().map(CompetencyTypeDto::of).toList();
+    public List<CompetencyTypeRes> getAllData() {
+        return competencyTypeRepository.findAll().stream().map(CompetencyTypeRes::of).toList();
     }
 
     public List<Integer> getCompetencyTypesInMindmap(UUID mindmapId) {

@@ -11,7 +11,7 @@ import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 
 import java.util.Base64;
 
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -47,7 +47,7 @@ class S3PostSignerTest {
         given(credentials.accessKeyId()).willReturn("test-access-key");
         given(credentials.secretAccessKey()).willReturn("test-secret-key");
 
-        S3UploadResponseDto response = s3PostSigner.generatePostFields(objectKey, credentials);
+        S3UploadFieldsRes response = s3PostSigner.generatePostFields(objectKey, credentials);
 
         String policyBase64 = response.fields().policy();
         String decodedPolicy = new String(Base64.getDecoder().decode(policyBase64));
@@ -67,7 +67,7 @@ class S3PostSignerTest {
         given(credentials.secretAccessKey()).willReturn("test-secret-key");
         given(credentials.sessionToken()).willReturn("test-session-token");
 
-        S3UploadResponseDto response = s3PostSigner.generatePostFields("test-key", credentials);
+        S3UploadFieldsRes response = s3PostSigner.generatePostFields("test-key", credentials);
 
         String decodedPolicy = new String(Base64.getDecoder().decode(response.fields().policy()));
         assertThat(decodedPolicy).contains("\"x-amz-security-token\":\"test-session-token\"");

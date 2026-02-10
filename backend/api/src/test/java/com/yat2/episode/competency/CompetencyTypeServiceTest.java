@@ -12,7 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.competency.dto.CompetencyTypeDto;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.EpisodeRepository;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
@@ -53,10 +53,10 @@ class CompetencyTypeServiceTest {
 
             given(competencyTypeRepository.findAll()).willReturn(List.of(type1, type2));
 
-            List<CompetencyTypeDto> result = competencyTypeService.getAllData();
+        List<CompetencyTypeRes> result = competencyTypeService.getAllData();
 
             assertThat(result).hasSize(2);
-            assertThat(result).extracting(CompetencyTypeDto::competencyType)
+            assertThat(result).extracting(CompetencyTypeRes::competencyType)
                     .containsExactlyInAnyOrder("의사소통", "논리적 사고");
 
             verify(competencyTypeRepository).findAll();
@@ -76,5 +76,4 @@ class CompetencyTypeServiceTest {
             assertThat(result.get(0)).isEqualTo(type.getId());
         }
     }
-
 }

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.auth.security.Public;
-import com.yat2.episode.competency.dto.CompetencyTypeDto;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -38,7 +38,7 @@ public class CompetencyTypeController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
     @GetMapping
-    public ResponseEntity<List<CompetencyTypeDto>> getAllCompetencies() {
+    public ResponseEntity<List<CompetencyTypeRes>> getAllCompetencies() {
         return ResponseEntity.ok(competencyTypeService.getAllData());
     }
 

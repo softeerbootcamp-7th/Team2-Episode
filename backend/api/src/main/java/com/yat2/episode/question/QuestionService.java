@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.question.dto.QuestionSummaryDto;
-import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
+import com.yat2.episode.question.dto.QuestionSummary;
+import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryRes;
 import com.yat2.episode.user.UserService;
 
 @RequiredArgsConstructor
@@ -20,7 +20,7 @@ public class QuestionService {
     private final UserService userService;
 
     @Transactional(readOnly = true)
-    public List<QuestionsByCompetencyCategoryDto> getQuestionSetByJobId(int jobId) {
+    public List<QuestionsByCompetencyCategoryRes> getQuestionSetByJobId(int jobId) {
         List<Question> questions = questionRepository.findAllWithCompetencyByJobId(jobId);
 
         Map<CompetencyType.Category, List<Question>> questionsByCategory =
@@ -28,9 +28,9 @@ public class QuestionService {
 
         return questionsByCategory.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(entry -> {
             CompetencyType.Category category = entry.getKey();
-            List<QuestionSummaryDto> questionDtos = entry.getValue().stream().map(QuestionSummaryDto::of).toList();
+            List<QuestionSummary> questionDtos = entry.getValue().stream().map(QuestionSummary::of).toList();
 
-            return new QuestionsByCompetencyCategoryDto(category, questionDtos);
+            return new QuestionsByCompetencyCategoryRes(category, questionDtos);
         }).toList();
     }
 }
