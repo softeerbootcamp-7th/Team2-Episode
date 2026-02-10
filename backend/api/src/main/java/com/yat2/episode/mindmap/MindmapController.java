@@ -33,9 +33,9 @@ import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.MindmapNameRes;
 import com.yat2.episode.mindmap.dto.MindmapNameUpdateReq;
-import com.yat2.episode.mindmap.dto.MindmapSummary;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
@@ -117,8 +117,8 @@ public class MindmapController {
             @RequestBody MindmapCreateReq reqBody
     ) {
         UUID uuid = UuidCreator.getTimeOrderedEpoch();
-        S3UploadResponseDto presignedData = mindmapService.getUploadInfo(uuid);
-        MindmapSummary mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody, uuid);
+        S3UploadFieldsRes presignedData = mindmapService.getUploadInfo(uuid);
+        MindmapSummaryRes mindmapData = mindmapService.saveMindmapAndParticipant(userId, reqBody, uuid);
         MindmapUploadUrlRes resBody = new MindmapUploadUrlRes(mindmapData, presignedData);
         URI location = UriUtil.createLocationUri(resBody.mindmap().mindmapId());
         return ResponseEntity.created(location).body(resBody);

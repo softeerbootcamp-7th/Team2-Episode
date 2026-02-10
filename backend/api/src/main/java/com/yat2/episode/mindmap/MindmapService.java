@@ -13,10 +13,10 @@ import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.MindmapNameRes;
-import com.yat2.episode.mindmap.dto.MindmapSummary;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
@@ -60,7 +60,7 @@ public class MindmapService {
 
 
     @Transactional
-    public MindmapSummary saveMindmapAndParticipant(long userId, MindmapCreateReq body, UUID mindmapId) {
+    public MindmapSummaryRes saveMindmapAndParticipant(long userId, MindmapCreateReq body, UUID mindmapId) {
         User user = userService.getUserOrThrow(userId);
         String finalTitle = body.title();
         if (finalTitle == null || finalTitle.isBlank()) {
@@ -74,10 +74,10 @@ public class MindmapService {
         MindmapParticipant participant = new MindmapParticipant(user, mindmap);
         mindmapParticipantRepository.save(participant);
 
-        return MindmapSummary.of(participant);
+        return MindmapSummaryRes.of(participant);
     }
 
-    public S3UploadResponseDto getUploadInfo(UUID mindmapId) {
+    public S3UploadFieldsRes getUploadInfo(UUID mindmapId) {
         return snapshotRepository.createPresignedUploadInfo(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
     }
 

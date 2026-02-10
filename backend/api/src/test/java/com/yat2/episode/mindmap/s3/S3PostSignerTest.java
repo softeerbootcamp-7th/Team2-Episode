@@ -7,7 +7,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 
 import java.util.Base64;
 
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,7 +36,7 @@ class S3PostSignerTest {
     void generatePostFields_Success() throws Exception {
         String key = "mindmaps/test-uuid";
         AwsBasicCredentials credentials = AwsBasicCredentials.create("test-access-key", "test-secret-key");
-        S3UploadResponseDto response = s3PostSigner.generatePostFields(key, credentials);
+        S3UploadFieldsRes response = s3PostSigner.generatePostFields(key, credentials);
 
         assertThat(response.action()).contains("episode-bucket");
         assertThat(response.fields().key()).isEqualTo(key);
@@ -53,7 +53,7 @@ class S3PostSignerTest {
         String key = "test-key";
         AwsBasicCredentials credentials = AwsBasicCredentials.create("access", "secret");
 
-        S3UploadResponseDto response = s3PostSigner.generatePostFields(key, credentials);
+        S3UploadFieldsRes response = s3PostSigner.generatePostFields(key, credentials);
         String decodedPolicy = new String(Base64.getDecoder().decode(response.fields().policy()));
 
         assertThat(decodedPolicy).contains("\"bucket\":\"episode-bucket\"");

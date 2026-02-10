@@ -2,10 +2,10 @@ package com.yat2.episode.mindmap.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 public record MindmapUploadUrlRes(
-        MindmapSummary mindmap,
+        MindmapSummaryRes mindmap,
         @Schema(
                 description = "S3 Presigned POST 업로드 정보 (form-data로 전송 필요)", example = """
                 {
@@ -18,5 +18,5 @@ public record MindmapUploadUrlRes(
                     "x-amz-signature": "a1b2..."
                 }
                 """
-        ) S3UploadResponseDto uploadInfo
+        ) S3UploadFieldsRes uploadInfo
 ) {}

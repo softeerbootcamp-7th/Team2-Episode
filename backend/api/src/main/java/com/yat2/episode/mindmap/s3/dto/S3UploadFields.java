@@ -2,7 +2,7 @@ package com.yat2.episode.mindmap.s3.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record S3UploadFieldsDto(
+public record S3UploadFields(
         String key,
 
         @JsonProperty("x-amz-algorithm") String algorithm,

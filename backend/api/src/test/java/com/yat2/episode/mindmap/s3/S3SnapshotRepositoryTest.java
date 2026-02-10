@@ -11,7 +11,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,12 +36,12 @@ class S3SnapshotRepositoryTest {
     void createPresignedUploadInfo_Success() throws Exception {
         String objectKey = "mindmaps/test-key";
         AwsBasicCredentials credentials = AwsBasicCredentials.create("access", "secret");
-        S3UploadResponseDto mockResponse = new S3UploadResponseDto("https://episode-s3.com", null);
+        S3UploadFieldsRes mockResponse = new S3UploadFieldsRes("https://episode-s3.com", null);
 
         given(credentialsProvider.resolveCredentials()).willReturn(credentials);
         given(s3PostSigner.generatePostFields(eq(objectKey), any())).willReturn(mockResponse);
 
-        S3UploadResponseDto result = s3SnapshotRepository.createPresignedUploadInfo(objectKey);
+        S3UploadFieldsRes result = s3SnapshotRepository.createPresignedUploadInfo(objectKey);
 
         assertThat(result.action()).isEqualTo("https://episode-s3.com");
     }
