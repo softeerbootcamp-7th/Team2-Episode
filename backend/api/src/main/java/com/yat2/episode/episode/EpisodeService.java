@@ -94,6 +94,10 @@ public class EpisodeService {
     }
 
     private void validateCompetencyIds(Set<Integer> competencyIds) {
+        if (competencyIds == null || competencyIds.isEmpty()) {
+            return;
+        }
+
         long count = competencyTypeRepository.countByIdIn(competencyIds);
         if (count != competencyIds.size()) {
             throw new CustomException(ErrorCode.INVALID_COMPETENCY_TYPE);
