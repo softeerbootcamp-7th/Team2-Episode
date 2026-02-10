@@ -26,8 +26,8 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/competency-type")
-@Tag(name = "Competency Type", description = "역량 조회 API")
+@RequestMapping("/competency-types")
+@Tag(name = "competency-type", description = "역량 조회 API")
 public class CompetencyTypeController {
 
     private final CompetencyTypeService competencyTypeService;
@@ -46,8 +46,8 @@ public class CompetencyTypeController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @AuthRequiredErrors
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
-    @GetMapping("/mindmap/{mindmapId}")
-    public List<Integer> getCompetenciesInMindmap(
+    @GetMapping("/mindmaps/{mindmapId}")
+    public ResponseEntity<List<CompetencyTypeDto>> getCompetenciesInMindmap(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {

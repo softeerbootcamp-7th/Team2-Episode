@@ -43,7 +43,7 @@ import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 @RequiredArgsConstructor
 @RestController
 @AuthRequiredErrors
-@RequestMapping("/mindmap")
+@RequestMapping("/mindmaps")
 @Tag(name = "Mindmap", description = "마인드맵 관리 API")
 public class MindmapController {
     private final MindmapService mindmapService;
