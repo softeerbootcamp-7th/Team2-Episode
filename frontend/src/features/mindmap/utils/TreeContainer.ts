@@ -1,10 +1,7 @@
-import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/node";
-import QuadTree from "@/features/quad_tree/utils/QuadTree";
+import { NodeData, NodeDirection, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/node";
 import { EventBroker } from "@/utils/EventBroker";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 import generateId from "@/utils/generate_id";
-
-type QuadTreeManager = QuadTree;
 
 const ROOT_NODE_PARENT_ID = "empty";
 const ROOT_NODE_CONTENTS = "김현대의 마인드맵";
@@ -12,20 +9,17 @@ const DETACHED_NODE_PARENT_ID = "detached";
 
 export default class TreeContainer {
     public nodes: Map<NodeId, NodeElement>;
-    private quadTreeManager: QuadTreeManager | undefined;
     private broker: EventBroker<NodeId>;
     private isThrowError: boolean;
     private rootNodeId: NodeId;
 
     constructor({
-        quadTreeManager,
         broker,
         name = ROOT_NODE_CONTENTS,
 
         // TODO: 개발 단계에서는 error boundary로 대체되면 디버깅이 어려우므로 해당 옵션을 제공.
         isThrowError = true,
     }: {
-        quadTreeManager: QuadTreeManager | undefined;
         broker: EventBroker<NodeId>;
         name?: string;
         isThrowError?: boolean;
@@ -41,7 +35,6 @@ export default class TreeContainer {
         this.addNodeToContainer(rootNodeElement);
 
         // inject dependency
-        this.quadTreeManager = quadTreeManager;
         this.broker = broker;
         this.isThrowError = isThrowError;
     }
@@ -91,7 +84,7 @@ export default class TreeContainer {
         }
     }
 
-    attachTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: "prev" | "next" | "child" }) {
+    attachTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: NodeDirection }) {
         try {
             const baseNode = this._getNode(baseNodeId);
 
@@ -254,7 +247,7 @@ export default class TreeContainer {
     }: {
         baseNodeId: NodeId;
         movingNodeId: NodeId;
-        direction: "prev" | "next" | "child";
+        direction: NodeDirection;
     }) {
         // 제자리
         if (direction === "child" && baseNodeId === movingNodeId) {
@@ -412,10 +405,6 @@ export default class TreeContainer {
         try {
             const oldNode = this._getNode(nodeId);
 
-            if (this.quadTreeManager) {
-                this.quadTreeManager.remove(oldNode);
-            }
-
             const newNodeElement: NodeElement = { ...oldNode, ...newNodeData, id: nodeId };
 
             this.addNodeToContainer(newNodeElement);
@@ -506,17 +495,9 @@ export default class TreeContainer {
 
     private addNodeToContainer(node: NodeElement) {
         this.nodes.set(node.id, node);
-
-        if (this.quadTreeManager) {
-            this.quadTreeManager.insert(node);
-        }
     }
 
     private deleteNodeFromContainer(nodeId: NodeId) {
-        const node = this.nodes.get(nodeId);
-        if (node && this.quadTreeManager) {
-            this.quadTreeManager.remove(node);
-        }
         this.nodes.delete(nodeId);
     }
 

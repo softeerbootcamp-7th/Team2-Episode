@@ -7,6 +7,8 @@ export type NodeId = string;
 
 export type NodeType = "root" | "normal";
 
+export type NodeDirection = "prev" | "next" | "child";
+
 export type NodeData = {
     contents: string;
     // pakxepakxe?: any; // 추가적인 확장 데이터를 위한 필드
