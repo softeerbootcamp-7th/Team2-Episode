@@ -24,13 +24,14 @@ import com.yat2.episode.user.UserService;
 @Service
 public class MindmapService {
     private final MindmapRepository mindmapRepository;
+    private final MindmapAccessValidator mindmapAccessValidator;
     private final MindmapParticipantRepository mindmapParticipantRepository;
     private final S3SnapshotRepository snapshotRepository;
     private final UserService userService;
     private final S3ObjectKeyGenerator s3ObjectKeyGenerator;
 
-    public MindmapDataDto getMindmapById(Long userId, String mindmapIdStr) {
-        return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
+    public MindmapDataDto getMindmapById(Long userId, UUID mindmapId) {
+        return MindmapDataDto.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
     }
 
     @Transactional(readOnly = true)
@@ -93,11 +94,6 @@ public class MindmapService {
         }
     }
 
-
-    public MindmapParticipant getMindmapByUUIDString(Long userId, String uuidStr) {
-        return findParticipantOrThrow(uuidStr, userId);
-    }
-
     private String getPrivateMindmapName(User user) {
         String baseName = user.getNickname() + MindmapConstants.PRIVATE_NAME;
         List<String> allNames = mindmapRepository.findAllNamesByBaseName(baseName, user.getKakaoId());
@@ -138,16 +134,14 @@ public class MindmapService {
 
 
     @Transactional
-    public void deleteMindmap(long userId, String mindmapId) {
-        UUID mindmapUUID = getUUID(mindmapId);
-
-        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapUUID)
+    public void deleteMindmap(long userId, UUID mindmapId) {
+        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
 
-        int deletedCount = mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapUUID, userId);
+        int deletedCount = mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, userId);
         if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_NOT_FOUND);
 
-        boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapUUID);
+        boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapId);
 
         if (!hasOtherParticipants) {
             mindmapRepository.delete(mindmap);
@@ -155,23 +149,18 @@ public class MindmapService {
     }
 
     @Transactional
-    public MindmapDataDto updateFavoriteStatus(long userId, String mindmapId, boolean status) {
-        MindmapParticipant participant = findParticipantOrThrow(mindmapId, userId);
+    public MindmapDataDto updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
+        MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.updateFavorite(status);
 
         return MindmapDataDto.of(participant);
     }
 
     @Transactional
-    public MindmapDataDto updateName(long userId, String mindmapId, String name) {
-        MindmapParticipant participant = findParticipantOrThrow(mindmapId, userId);
+    public MindmapDataDto updateName(long userId, UUID mindmapId, String name) {
+        MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.getMindmap().updateName(name);
 
         return MindmapDataDto.of(participant);
-    }
-
-    private MindmapParticipant findParticipantOrThrow(String mindmapId, long userId) {
-        return mindmapParticipantRepository.findByMindmapIdAndUserId(getUUID(mindmapId), userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
     }
 }

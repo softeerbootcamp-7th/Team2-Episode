@@ -18,6 +18,6 @@ public class Occupation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true, nullable = false, length = 15)
+    @Column(unique = true, nullable = false, length = 20)
     private String name;
 }
