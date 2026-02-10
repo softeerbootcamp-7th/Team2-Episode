@@ -45,9 +45,9 @@ public class CompetencyTypeController {
     @Operation(summary = "특정 마인드맵 내 역량 리스트 조회")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @AuthRequiredErrors
-    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/mindmaps/{mindmapId}")
-    public ResponseEntity<List<CompetencyTypeDto>> getCompetenciesInMindmap(
+    public List<Integer> getCompetenciesInMindmap(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
