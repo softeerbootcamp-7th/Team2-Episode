@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.competency.CompetencyTypeRepository;
-import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes;
 import com.yat2.episode.job.Job;
 import com.yat2.episode.job.JobRepository;
 import com.yat2.episode.job.Occupation;
@@ -93,7 +93,7 @@ class DiagnosisRepositoryTest {
         em.flush();
         em.clear();
 
-        List<DiagnosisSummaryDto> summaries = diagnosisRepository.findDiagnosisSummariesByUserId(123456789L);
+        List<DiagnosisSummaryRes> summaries = diagnosisRepository.findDiagnosisSummariesByUserId(123456789L);
 
         assertThat(summaries).isNotEmpty();
         assertThat(summaries.get(0).weaknessCount()).isEqualTo(2);

@@ -16,7 +16,7 @@ import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.job.Job;
 import com.yat2.episode.job.JobRepository;
-import com.yat2.episode.user.dto.UserMeDto;
+import com.yat2.episode.user.dto.UserMeRes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -81,7 +81,7 @@ class UserServiceTest {
         void should_return_user_me_dto_with_onboarded_false() {
             given(userRepository.findById(testUserId)).willReturn(Optional.of(testUser));
 
-            UserMeDto result = userService.getMe(testUserId);
+            UserMeRes result = userService.getMe(testUserId);
 
             assertThat(result.userId()).isEqualTo(testUserId);
             assertThat(result.onboarded()).isFalse();
@@ -95,7 +95,7 @@ class UserServiceTest {
             testUser.updateJob(job);
             given(userRepository.findById(testUserId)).willReturn(Optional.of(testUser));
 
-            UserMeDto result = userService.getMe(testUserId);
+            UserMeRes result = userService.getMe(testUserId);
 
             assertThat(result.onboarded()).isTrue();
         }
