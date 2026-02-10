@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.competency.dto.CompetencyTypeDto;
+import com.yat2.episode.episode.EpisodeRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -21,6 +22,9 @@ class CompetencyTypeServiceTest {
 
     @Mock
     private CompetencyTypeRepository competencyTypeRepository;
+
+    @Mock
+    private EpisodeRepository episodeRepository;
 
     @InjectMocks
     private CompetencyTypeService competencyTypeService;
@@ -45,7 +49,7 @@ class CompetencyTypeServiceTest {
         UUID mindmapId = UUID.randomUUID();
         CompetencyType type = createCompetencyType(10, "성장 가능성", CompetencyType.Category.실행_성장_역량);
 
-        given(competencyTypeRepository.findByMindmapId(mindmapId)).willReturn(List.of(type.getId()));
+        given(episodeRepository.findCompetencyTypesByMindmapId(mindmapId)).willReturn(List.of(type.getId()));
 
         List<Integer> result = competencyTypeService.getCompetencyTypesInMindmap(mindmapId);
 

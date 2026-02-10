@@ -10,8 +10,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
+import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
@@ -21,6 +23,7 @@ import com.yat2.episode.mindmap.MindmapAccessValidator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -31,6 +34,9 @@ class EpisodeServiceTest {
 
     @Mock
     private EpisodeRepository episodeRepository;
+
+    @Mock
+    private CompetencyTypeRepository competencyTypeRepository;
 
     @Mock
     private MindmapAccessValidator mindmapAccessValidator;
@@ -86,23 +92,25 @@ class EpisodeServiceTest {
         Episode episode = Episode.create(nodeId, userId, mindmapId);
 
         when(episodeRepository.findById(any())).thenReturn(Optional.of(episode));
+        when(competencyTypeRepository.countByIdIn(anySet())).thenReturn(2L);
+
 
         EpisodeUpsertReq req =
-                new EpisodeUpsertReq(List.of(1, 2), "content", null, null, null, null, LocalDate.now(), null);
+                new EpisodeUpsertReq(Set.of(1, 2), "content", null, null, null, null, LocalDate.now(), null);
 
         EpisodeDetailRes res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
         assertThat(res.content()).isEqualTo("content");
-        assertThat(episode.getCompetencyTypeIds()).containsExactly(1, 2);
+        assertThat(episode.getCompetencyTypeIds()).containsExactlyInAnyOrder(1, 2);
         verify(episodeRepository, never()).save(any());
     }
 
     @Test
     void upsertEpisode_newEpisode_createsAndSaves() {
         when(episodeRepository.findById(any())).thenReturn(Optional.empty());
-
+        when(competencyTypeRepository.countByIdIn(anySet())).thenReturn(1L);
         when(episodeRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        EpisodeUpsertReq req = new EpisodeUpsertReq(List.of(1), "content", null, null, null, null, null, null);
+        EpisodeUpsertReq req = new EpisodeUpsertReq(Set.of(1), "content", null, null, null, null, null, null);
 
         EpisodeDetailRes res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
 
