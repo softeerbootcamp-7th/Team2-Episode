@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
 
-public record MindmapCreatedWithUrlDto(
-        MindmapDataExceptDateDto mindmap,
+public record MindmapUploadUrlRes(
+        MindmapSummary mindmap,
         @Schema(
                 description = "S3 Presigned POST 업로드 정보 (form-data로 전송 필요)", example = """
                 {
