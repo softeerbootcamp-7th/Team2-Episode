@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("S3ObjectKeyGenerator 단위 테스트")
 class S3ObjectKeyGeneratorTest {
-    
+
     private final S3ObjectKeyGenerator keyGenerator = new S3ObjectKeyGenerator();
 
     @Test
