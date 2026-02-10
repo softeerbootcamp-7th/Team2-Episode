@@ -40,6 +40,8 @@ class MindmapServiceTest {
 
     private final long testUserId = 1L;
     @Mock
+    private MindmapAccessValidator mindmapAccessValidator;
+    @Mock
     private MindmapRepository mindmapRepository;
     @Mock
     private MindmapParticipantRepository mindmapParticipantRepository;
@@ -107,7 +109,7 @@ class MindmapServiceTest {
                                                                                  testUserId)).willReturn(1);
             given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(false);
 
-            mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());
+            mindmapService.deleteMindmap(testUserId, mindmap.getId());
 
             verify(mindmapRepository).delete(mindmap);
         }
@@ -122,7 +124,7 @@ class MindmapServiceTest {
                                                                                  testUserId)).willReturn(1);
             given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(true);
 
-            mindmapService.deleteMindmap(testUserId, mindmap.getId().toString());
+            mindmapService.deleteMindmap(testUserId, mindmap.getId());
 
             verify(mindmapRepository, never()).delete(any());
         }
@@ -138,10 +140,9 @@ class MindmapServiceTest {
             Mindmap mindmap = createMindmap("이전 이름", false);
             MindmapParticipant participant = new MindmapParticipant(testUser, mindmap);
 
-            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmap.getId(), testUserId)).willReturn(
-                    Optional.of(participant));
+            given(mindmapAccessValidator.findParticipantOrThrow(mindmap.getId(), testUserId)).willReturn(participant);
 
-            MindmapDataDto result = mindmapService.updateName(testUserId, mindmap.getId().toString(), "새 이름");
+            MindmapDataDto result = mindmapService.updateName(testUserId, mindmap.getId(), "새 이름");
 
             assertThat(result.mindmapName()).isEqualTo("새 이름");
             assertThat(mindmap.getName()).isEqualTo("새 이름");
