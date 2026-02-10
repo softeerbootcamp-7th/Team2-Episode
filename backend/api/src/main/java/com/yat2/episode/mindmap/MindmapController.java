@@ -111,20 +111,10 @@ public class MindmapController {
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
-        // todo: userId 가져오기
+        // todo: userId 체크
         // todo: isShared 체크
-        // todo: 기본 활동 타입 인자 기반으로 yDoc 베이스 제공 필요
-        return ResponseEntity.ok(null);
-    }
-
-    @PostMapping("/disconnect/{mindmapId}")
-    public ResponseEntity<Object> disconnectMindmap(
-            @RequestAttribute(USER_ID) long userId,
-            @PathVariable UUID mindmapId
-    ) {
-        // todo: userId 가져오기
-        // todo: 웹소켓 해제
-        // todo: 기본 활동 타입 인자 기반으로 yDoc 베이스 제공 필요
+        // todo: WS 티켓 발급
+        // todo: s3 get presigned url 반환 필요
         return ResponseEntity.ok(null);
     }
 
