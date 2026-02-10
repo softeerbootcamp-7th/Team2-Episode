@@ -1,11 +1,11 @@
 package com.yat2.episode.utils;
 
 import com.github.f4b6a3.uuid.UuidCreator;
+import com.yat2.episode.mindmap.Mindmap;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Constructor;
-
-import com.yat2.episode.mindmap.Mindmap;
+import java.time.LocalDateTime;
 
 public class TestEntityFactory {
 
@@ -24,6 +24,15 @@ public class TestEntityFactory {
         ReflectionTestUtils.setField(mindmap, "id", UuidCreator.getTimeOrderedEpoch());
         ReflectionTestUtils.setField(mindmap, "name", name);
         ReflectionTestUtils.setField(mindmap, "shared", isShared);
+        return mindmap;
+    }
+
+    public static Mindmap createMindmap(String name, boolean isShared, LocalDateTime createdAt) {
+        Mindmap mindmap = createEntity(Mindmap.class);
+        ReflectionTestUtils.setField(mindmap, "id", UuidCreator.getTimeOrderedEpoch());
+        ReflectionTestUtils.setField(mindmap, "name", name);
+        ReflectionTestUtils.setField(mindmap, "shared", isShared);
+        ReflectionTestUtils.setField(mindmap, "createdAt", createdAt);
         return mindmap;
     }
 }

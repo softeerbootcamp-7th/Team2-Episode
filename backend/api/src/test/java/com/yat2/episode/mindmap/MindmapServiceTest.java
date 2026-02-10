@@ -1,5 +1,16 @@
 package com.yat2.episode.mindmap;
 
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.mindmap.constants.MindmapConstants;
+import com.yat2.episode.mindmap.dto.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
+import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,26 +24,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.yat2.episode.global.exception.CustomException;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.mindmap.dto.MindmapCreateReq;
-import com.yat2.episode.mindmap.dto.MindmapDetailRes;
-import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
-import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
-import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserService;
-
 import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MindmapService 단위 테스트")
@@ -106,7 +103,7 @@ class MindmapServiceTest {
 
             given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
             given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
-                                                                                 testUserId)).willReturn(1);
+                    testUserId)).willReturn(1);
             given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(false);
 
             mindmapService.deleteMindmap(testUserId, mindmap.getId());
@@ -121,7 +118,7 @@ class MindmapServiceTest {
 
             given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
             given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
-                                                                                 testUserId)).willReturn(1);
+                    testUserId)).willReturn(1);
             given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(true);
 
             mindmapService.deleteMindmap(testUserId, mindmap.getId());
@@ -169,4 +166,58 @@ class MindmapServiceTest {
             verify(snapshotRepository).createPresignedUploadInfo(objectKey);
         }
     }
+
+    @Nested
+    @DisplayName("saveMindmapParticipant")
+    class SaveMindmapParticipant {
+
+        @Test
+        @DisplayName("공유된 마인드맵에 참여자를 정상적으로 추가한다")
+        void should_add_participant_when_mindmap_is_shared() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("팀 마인드맵", true);
+
+            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
+            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+
+            MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
+
+            assertThat(result).isNotNull();
+            verify(mindmapParticipantRepository).save(any(MindmapParticipant.class));
+        }
+
+        @Test
+        @DisplayName("마인드맵이 존재하지 않으면 MINDMAP_NOT_FOUND 예외가 발생한다")
+        void should_throw_exception_when_mindmap_not_found() {
+            UUID mindmapId = UUID.randomUUID();
+
+            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
+            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> mindmapService.saveMindmapParticipant(testUserId, mindmapId))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
+
+            verify(mindmapParticipantRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("개인 마인드맵이면 MINDMAP_ACCESS_FORBIDDEN 예외가 발생한다")
+        void should_throw_exception_when_mindmap_is_private() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("개인 마인드맵", false);
+
+            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
+            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+
+            assertThatThrownBy(() -> mindmapService.saveMindmapParticipant(testUserId, mindmapId))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
+
+            verify(mindmapParticipantRepository, never()).save(any());
+        }
+    }
+
 }

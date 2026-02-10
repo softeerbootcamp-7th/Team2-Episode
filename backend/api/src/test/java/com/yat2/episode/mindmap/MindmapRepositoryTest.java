@@ -1,5 +1,7 @@
 package com.yat2.episode.mindmap;
 
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,12 +9,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserRepository;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
@@ -38,8 +38,8 @@ class MindmapRepositoryTest {
         User user = User.newUser(12345L, "테스트유저");
         userRepository.save(user);
 
-        Mindmap m1 = createMindmap("먼저 만든 마인드맵", false);
-        Mindmap m2 = createMindmap("나중에 만든 마인드맵", false);
+        Mindmap m1 = createMindmap("먼저 만든 마인드맵", false, LocalDateTime.now().minusSeconds(10));
+        Mindmap m2 = createMindmap("나중에 만든 마인드맵", false, LocalDateTime.now());
         mindmapRepository.save(m1);
         mindmapRepository.save(m2);
 
