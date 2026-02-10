@@ -64,7 +64,7 @@ class CompetencyTypeRepositoryTest {
         em.flush();
         em.clear();
 
-        List<CompetencyType> result = competencyTypeRepository.findByMindmapId(mindmapId.toString());
+        List<CompetencyType> result = competencyTypeRepository.findByMindmapId(mindmapId);
 
         assertThat(result).hasSize(2);
         assertThat(result).extracting("typeName").containsExactlyInAnyOrder("소통역량", "문제해결");

@@ -6,17 +6,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface CompetencyTypeRepository extends JpaRepository<CompetencyType, Integer> {
     @Query(
-            value = "SELECT DISTINCT ct.* FROM episodes e " +
-                    "JOIN competency_types ct ON e.competency_type_id = ct.id " +
-                    "WHERE e.mindmap_id = UUID_TO_BIN(:mindmapId)", nativeQuery = true
+            "SELECT DISTINCT e.competencyType FROM Episode e " + "WHERE e.mindmap.id = :mindmapId"
     )
     List<CompetencyType> findByMindmapId(
-            @Param("mindmapId") String mindmapId
+            @Param("mindmapId") UUID mindmapId
     );
-
-
 }
