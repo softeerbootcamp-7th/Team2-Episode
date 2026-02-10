@@ -14,6 +14,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 import com.yat2.episode.user.User;
 
 @Entity
@@ -40,6 +42,12 @@ public class MindmapParticipant {
 
     @Column(name = "is_favorite", insertable = false)
     private boolean isFavorite;
+
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false, insertable = false)
+    private LocalDateTime updatedAt;
 
     public MindmapParticipant(User user, Mindmap mindmap) {
         this.user = user;

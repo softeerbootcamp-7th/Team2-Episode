@@ -3,24 +3,22 @@ package com.yat2.episode.episode;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.mindmap.Mindmap;
-import com.yat2.episode.user.User;
+import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "episodes")
@@ -29,18 +27,14 @@ public class Episode {
     @EmbeddedId
     private EpisodeId id;
 
-    @MapsId("userId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "mindmap_id", nullable = false)
+    private UUID mindmapId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "mindmap_id", nullable = false)
-    private Mindmap mindmap;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "competency_type_id")
-    private CompetencyType competencyType;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(
+            name = "competency_type_ids", columnDefinition = "json", nullable = false
+    )
+    private List<Integer> competencyTypeIds = new ArrayList<>();
 
     @Column(length = 200)
     private String situation;
@@ -57,13 +51,42 @@ public class Episode {
     @Column(length = 100)
     private String content;
 
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public static Episode create(long userId, int nodeId, Mindmap mindmap) {
-        Episode e = new Episode();
-        e.id = new EpisodeId(nodeId, userId);
-        e.mindmap = mindmap;
-        return e;
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
+    public static Episode create(UUID nodeId, long userId, UUID mindmapId) {
+        Episode episode = new Episode();
+        episode.id = new EpisodeId(nodeId, userId);
+        episode.mindmapId = mindmapId;
+        return episode;
+    }
+
+    public void update(EpisodeUpsertReq req) {
+        if (req.content() != null) this.content = req.content();
+        if (req.situation() != null) this.situation = req.situation();
+        if (req.task() != null) this.task = req.task();
+        if (req.action() != null) this.action = req.action();
+        if (req.result() != null) this.result = req.result();
+        if (req.startDate() != null) this.startDate = req.startDate();
+        if (req.endDate() != null) this.endDate = req.endDate();
+
+        if (req.competencyTypeIds() != null) {
+            this.competencyTypeIds.clear();
+            this.competencyTypeIds.addAll(req.competencyTypeIds());
+        }
+    }
+
+    public void clearDates() {
+        this.startDate = null;
+        this.endDate = null;
     }
 }

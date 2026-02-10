@@ -1,0 +1,6 @@
+ALTER TABLE mindmap_participants
+    ADD created_at DATETIME(6) NOT NULL
+        DEFAULT CURRENT_TIMESTAMP(6),
+    ADD updated_at DATETIME(6) NOT NULL
+        DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6);

@@ -77,7 +77,7 @@ public class MindmapController {
     @GetMapping("/{mindmapId}")
     public ResponseEntity<MindmapDetailRes> getMindmap(
             @RequestAttribute(USER_ID) long userId,
-            @PathVariable String mindmapId
+            @PathVariable UUID mindmapId
     ) {
         return ResponseEntity.ok(mindmapService.getMindmapById(userId, mindmapId));
     }
@@ -127,7 +127,7 @@ public class MindmapController {
     @PostMapping("/connect/{mindmapId}")
     public ResponseEntity<Object> connectMindmap(
             @RequestAttribute(USER_ID) long userId,
-            @PathVariable String mindmapId
+            @PathVariable UUID mindmapId
     ) {
         // todo: userId 가져오기
         // todo: isShared 체크
@@ -138,7 +138,7 @@ public class MindmapController {
     @PostMapping("/disconnect/{mindmapId}")
     public ResponseEntity<Object> disconnectMindmap(
             @RequestAttribute(USER_ID) long userId,
-            @PathVariable String mindmapId
+            @PathVariable UUID mindmapId
     ) {
         // todo: userId 가져오기
         // todo: 웹소켓 해제
@@ -159,7 +159,7 @@ public class MindmapController {
     @DeleteMapping("/{mindmapId}")
     public ResponseEntity<?> deleteMindmap(
             @RequestAttribute(USER_ID) long userId,
-            @PathVariable String mindmapId
+            @PathVariable UUID mindmapId
     ) {
         mindmapService.deleteMindmap(userId, mindmapId);
         return ResponseEntity.noContent().build();
@@ -171,7 +171,7 @@ public class MindmapController {
     @PatchMapping("/{mindmapId}/favorite")
     public ResponseEntity<MindmapDetailRes> updateFavoriteStatus(
             @RequestAttribute(USER_ID) long userId,
-            @PathVariable String mindmapId,
+            @PathVariable UUID mindmapId,
             @RequestParam boolean status
     ) {
         MindmapDetailRes updatedMindmap = mindmapService.updateFavoriteStatus(userId, mindmapId, status);
@@ -184,7 +184,7 @@ public class MindmapController {
     @PatchMapping("/{mindmapId}/name")
     public ResponseEntity<MindmapDetailRes> updateName(
             @RequestAttribute(USER_ID) long userId,
-            @PathVariable String mindmapId,
+            @PathVariable UUID mindmapId,
             @Valid
             @RequestBody
             MindmapNameUpdateReq request
