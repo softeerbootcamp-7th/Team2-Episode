@@ -20,7 +20,7 @@ import com.yat2.episode.job.dto.JobsByOccupationDto;
 @Public
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/job")
+@RequestMapping("/jobs")
 @Tag(name = "Job", description = "직군/직무 조회 API")
 public class JobController {
     private final JobService jobService;
