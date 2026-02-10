@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.job.Job;
-import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryDto;
+import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryRes;
 import com.yat2.episode.user.UserService;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +48,7 @@ class QuestionServiceTest {
 
         given(questionRepository.findAllWithCompetencyByJobId(10)).willReturn(List.of(q1, q2));
 
-        List<QuestionsByCompetencyCategoryDto> result = questionService.getQuestionSetByJobId(job.getId());
+        List<QuestionsByCompetencyCategoryRes> result = questionService.getQuestionSetByJobId(job.getId());
 
         assertThat(result).hasSize(2);
 

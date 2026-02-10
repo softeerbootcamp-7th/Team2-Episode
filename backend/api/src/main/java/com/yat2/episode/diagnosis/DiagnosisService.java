@@ -16,7 +16,7 @@ import com.yat2.episode.job.JobRepository;
 import com.yat2.episode.question.Question;
 import com.yat2.episode.question.QuestionJobMappingRepository;
 import com.yat2.episode.question.QuestionRepository;
-import com.yat2.episode.question.dto.QuestionDetailDto;
+import com.yat2.episode.question.dto.QuestionDetail;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
@@ -67,9 +67,8 @@ public class DiagnosisService {
         DiagnosisResult diagnosis = diagnosisRepository.findDetailByIdAndUserId(diagnosisId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.DIAGNOSIS_NOT_FOUND));
 
-        List<QuestionDetailDto> weaknesses =
-                diagnosis.getWeaknesses().stream().map(DiagnosisWeakness::getQuestion).map(QuestionDetailDto::of)
-                        .toList();
+        List<QuestionDetail> weaknesses =
+                diagnosis.getWeaknesses().stream().map(DiagnosisWeakness::getQuestion).map(QuestionDetail::of).toList();
 
         return new DiagnosisDetailRes(diagnosis.getId(), diagnosis.getJob().getName(), diagnosis.getCreatedAt(),
                                       weaknesses);
