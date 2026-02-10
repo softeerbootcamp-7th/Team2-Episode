@@ -3,7 +3,7 @@ package com.yat2.episode.question;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,13 +14,14 @@ import java.util.UUID;
 import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.job.Job;
+import com.yat2.episode.job.JobRepository;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@DataJpaTest
 @Transactional
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @DisplayName("QuestionRepository 통합 테스트")
 class QuestionRepositoryTest {
 
@@ -33,6 +34,9 @@ class QuestionRepositoryTest {
     @Autowired
     private QuestionJobMappingRepository mappingRepository;
 
+    @Autowired
+    private JobRepository jobRepository;
+
     @Test
     @DisplayName("특정 직무 ID에 매핑된 질문들만 역량 타입과 함께 조회한다")
     void findAllWithCompetencyByJobId_Success() {
@@ -43,6 +47,7 @@ class QuestionRepositoryTest {
 
         int existingJobId = 1;
         Job fakeJob = createEntity(Job.class);
+        jobRepository.save(fakeJob);
         ReflectionTestUtils.setField(fakeJob, "id", existingJobId);
 
         String uniqueContent = "테스트 질문 " + UUID.randomUUID();

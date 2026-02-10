@@ -3,7 +3,7 @@ package com.yat2.episode.diagnosis;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
 import com.yat2.episode.job.Job;
+import com.yat2.episode.job.JobRepository;
 import com.yat2.episode.question.Question;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserRepository;
@@ -21,9 +22,9 @@ import com.yat2.episode.user.UserRepository;
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@DataJpaTest
 @Transactional
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @DisplayName("DiagnosisRepository 통합 테스트")
 class DiagnosisRepositoryTest {
 
@@ -35,6 +36,8 @@ class DiagnosisRepositoryTest {
 
     @Autowired
     private DiagnosisWeaknessRepository weaknessRepository;
+    @Autowired
+    private JobRepository jobRepository;
 
     @Test
     @DisplayName("사용자 ID로 진단 요약 목록을 DTO로 조회한다")
@@ -47,6 +50,7 @@ class DiagnosisRepositoryTest {
         userRepository.save(user);
 
         Job fakeJob = createEntity(Job.class);
+        jobRepository.save(fakeJob);
         ReflectionTestUtils.setField(fakeJob, "id", 1);
         ReflectionTestUtils.setField(fakeJob, "name", "백엔드");
 
@@ -84,6 +88,7 @@ class DiagnosisRepositoryTest {
         userRepository.save(user);
 
         Job fakeJob = createEntity(Job.class);
+        jobRepository.save(fakeJob);
         ReflectionTestUtils.setField(fakeJob, "id", 1);
 
         DiagnosisResult dr = createEntity(DiagnosisResult.class);
