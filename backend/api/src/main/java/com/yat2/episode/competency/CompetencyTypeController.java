@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import com.yat2.episode.auth.security.Public;
-import com.yat2.episode.competency.dto.CompetencyTypeDto;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -37,7 +37,7 @@ public class CompetencyTypeController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
     @GetMapping
-    public ResponseEntity<List<CompetencyTypeDto>> getAllCompetencies() {
+    public ResponseEntity<List<CompetencyTypeRes>> getAllCompetencies() {
         return ResponseEntity.ok(competencyTypeService.getAllData());
     }
 
@@ -46,7 +46,7 @@ public class CompetencyTypeController {
     @AuthRequiredErrors
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/mindmap/{mindmapId}")
-    public ResponseEntity<List<CompetencyTypeDto>> getCompetenciesInMindmap(
+    public ResponseEntity<List<CompetencyTypeRes>> getCompetenciesInMindmap(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable String mindmapId
     ) {
