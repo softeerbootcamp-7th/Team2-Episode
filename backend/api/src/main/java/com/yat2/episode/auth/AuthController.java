@@ -34,7 +34,7 @@ import com.yat2.episode.global.swagger.ApiErrorCodes;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
-@Tag(name = "Auth", description = "인증 관련")
+@Tag(name = "Auth", description = "인증 관련 API")
 public class AuthController {
     private static final String SESSION_STATE = "OAUTH_STATE";
     private final KakaoProperties kakaoProperties;

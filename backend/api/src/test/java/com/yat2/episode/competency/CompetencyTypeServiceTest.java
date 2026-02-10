@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.competency.dto.CompetencyTypeDto;
+import com.yat2.episode.episode.EpisodeRepository;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +27,9 @@ class CompetencyTypeServiceTest {
 
     @Mock
     private CompetencyTypeRepository competencyTypeRepository;
+
+    @Mock
+    private EpisodeRepository episodeRepository;
 
     @InjectMocks
     private CompetencyTypeService competencyTypeService;
@@ -58,28 +62,20 @@ class CompetencyTypeServiceTest {
 
             verify(competencyTypeRepository).findAll();
         }
-    }
-
-    @Nested
-    @DisplayName("getCompetencyTypesInMindmap")
-    class GetCompetencyTypesInMindmapTest {
 
         @Test
         @DisplayName("마인드맵 ID로 조회 시 해당 마인드맵의 역량 타입들만 반환한다")
-        void should_return_competency_types_in_specific_mindmap() {
-            UUID mindmapId = UuidCreator.getTimeOrderedEpoch();
+        void getCompetencyTypesInMindmap_Success() {
+            UUID mindmapId = UUID.randomUUID();
             CompetencyType type = createCompetencyType(10, "성장 가능성", CompetencyType.Category.실행_성장_역량);
 
-            given(competencyTypeRepository.findByMindmapId(mindmapId)).willReturn(List.of(type));
+            given(episodeRepository.findCompetencyTypesByMindmapId(mindmapId)).willReturn(List.of(type.getId()));
 
-            List<CompetencyTypeDto> result = competencyTypeService.getCompetencyTypesInMindmap(mindmapId);
+            List<Integer> result = competencyTypeService.getCompetencyTypesInMindmap(mindmapId);
 
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).competencyType()).isEqualTo("성장 가능성");
-
-            verify(competencyTypeRepository).findByMindmapId(mindmapId);
+            assertThat(result.get(0)).isEqualTo(type.getId());
         }
     }
-
 
 }
