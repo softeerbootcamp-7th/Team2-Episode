@@ -1,4 +1,4 @@
-import { NodeElement, NodeId } from "@/features/mindmap/types/node";
+import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { MindmapInteractionManager } from "@/features/mindmap/utils/MindmapInteractionManager";
 import MindmapLayoutManager from "@/features/mindmap/utils/MindmapLayoutManager";
 import Renderer from "@/features/mindmap/utils/Renderer";
@@ -14,26 +14,28 @@ import { EventBroker } from "@/utils/EventBroker";
  *  interaction : 마우스/키보드 조작
  */
 export default class MindMapCore {
-    private tree: TreeContainer;
+    public tree: TreeContainer;
+    public broker: EventBroker<NodeId>;
+
     private layout: MindmapLayoutManager;
     private quadTree: QuadTree;
     private renderer: Renderer;
     private interaction: MindmapInteractionManager;
 
-    constructor(canvas: SVGSVGElement, broker: EventBroker<NodeId>) {
+    constructor(
+        canvas: SVGSVGElement,
+        broker: EventBroker<NodeId>,
+        private onGlobalUpdate: () => void,
+    ) {
+        this.broker = broker;
+
         // tree 초기화 (rootNode 정보 얻기 위해 먼저 생성)
-        this.tree = new TreeContainer({ broker, quadTreeManager: undefined });
+        this.tree = new TreeContainer({ broker });
         const rootNode = this.tree.getRootNode();
 
         // quadTree 초기화
         const initialBounds = this.calculateInitialBounds(rootNode);
         this.quadTree = new QuadTree(initialBounds);
-
-        // 실제 트리 업데이트
-        this.tree = new TreeContainer({
-            quadTreeManager: this.quadTree,
-            broker,
-        });
 
         // renderer 초기화
         this.renderer = new Renderer(canvas, rootNode, () => this.quadTree.getBounds());
@@ -44,10 +46,12 @@ export default class MindMapCore {
         // interaction 초기화
         this.interaction = new MindmapInteractionManager(
             this.tree,
-            () => this.sync(),
+            () => this.onGlobalUpdate(),
             (dx, dy) => this.renderer.panningHandler(dx, dy),
-            (target, moving) => this.moveNode(target, moving),
+            (target, moving, direction) => this.moveNode(target, moving, direction),
         );
+
+        this.sync();
     }
 
     /** 쿼드트리 초기 영역 계산 */
@@ -64,22 +68,59 @@ export default class MindMapCore {
         };
     }
 
-    private sync() {
+    private sync(affectedIds?: NodeId[]) {
         // 1. 레이아웃 업데이트
         const rootId = this.tree.getRootId();
-        this.layout.updateLayout({ rootId });
+        if (rootId) {
+            this.layout.updateLayout({ rootId });
+        }
 
-        // 2. 쿼드 트리 반영
+        // 2. 쿼드 트리 갱신
         this.quadTree.clear();
         this.tree.nodes.forEach((node) => {
             this.quadTree.insert(node);
         });
 
-        // 3. 노드 추가, etc 등 카메라를 이동시키거나 줌 조절한다면 renderer에 반영
+        // 3. broker 알림
+        if (affectedIds) {
+            affectedIds.forEach((id) => {
+                this.broker.publish(id);
+            });
+        }
+        // 전체 알림
+        else {
+            this.tree.nodes.forEach((_, id) => this.broker.publish(id));
+        }
+
+        // 4. 전역 UI 업데이트
+        this.onGlobalUpdate();
     }
 
-    private moveNode(targetId: NodeId, movingId: NodeId) {
-        this.tree.moveTo({ baseNodeId: targetId, movingNodeId: movingId, direction: "child" });
-        this.sync();
+    moveNode(targetId: NodeId, movingId: NodeId, direction: NodeDirection) {
+        this.tree.moveTo({
+            baseNodeId: targetId,
+            movingNodeId: movingId,
+            direction,
+        });
+        this.sync([targetId, movingId]);
+    }
+
+    addNode(baseNodeId: NodeId, direction: NodeDirection) {
+        const newNodeId = this.tree.attachTo({ baseNodeId, direction });
+
+        if (newNodeId) {
+            this.sync([baseNodeId, newNodeId]);
+        }
+    }
+
+    deleteNode(nodeId: NodeId) {
+        const parentId = this.tree.getParentId(nodeId);
+        this.tree.delete({ nodeId });
+        this.sync(parentId ? [parentId] : undefined);
+    }
+
+    updateNodeSize(nodeId: NodeId, width: number, height: number) {
+        this.tree.update({ nodeId, newNodeData: { width, height } });
+        this.sync([nodeId]);
     }
 }

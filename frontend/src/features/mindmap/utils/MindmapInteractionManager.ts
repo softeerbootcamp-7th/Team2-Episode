@@ -1,7 +1,7 @@
 import { MOUSE_DOWN } from "@/constants/mouse";
 import { ATTRIBUTE_NAME_OF_NODE_ID } from "@/features/mindmap/constants/node";
 import { BaseNodeInfo, InteractionMode } from "@/features/mindmap/types/interaction";
-import { NodeId } from "@/features/mindmap/types/node";
+import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { ViewportTransform } from "@/features/mindmap/types/spatial";
 import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { calcDistance } from "@/utils/calc_distance";
@@ -13,7 +13,7 @@ export class MindmapInteractionManager {
     private container: TreeContainer;
     private onUpdate: () => void;
     private onPan: (dx: number, dy: number) => void;
-    private onMoveNode: (targetId: NodeId, movingId: NodeId) => void;
+    private onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void;
 
     private mode: InteractionMode = "idle";
     private transform: ViewportTransform = { x: 0, y: 0, scale: 1 };
@@ -28,13 +28,14 @@ export class MindmapInteractionManager {
 
     private baseNode: BaseNodeInfo = {
         targetId: null,
+        direction: null,
     };
 
     constructor(
         container: TreeContainer,
         onUpdate: () => void,
         onPan: (dx: number, dy: number) => void,
-        onMoveNode: (targetId: NodeId, movingId: NodeId) => void,
+        onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void,
     ) {
         this.container = container;
         this.onUpdate = onUpdate;
@@ -136,7 +137,7 @@ export class MindmapInteractionManager {
                     y: this.dragDelta.y + dy,
                 };
 
-                this.calcBaseNode(e);
+                this.updateDropTarget(e);
 
                 this.lastMousePos = { x: clientX, y: clientY };
                 this.onUpdate();
@@ -146,40 +147,78 @@ export class MindmapInteractionManager {
         }
     };
 
-    private calcBaseNode(e: React.MouseEvent) {
+    private calculateDropDirection(mouseY: number, targetNode: NodeElement): NodeDirection {
+        if (targetNode.type === "root") {
+            return "child";
+        }
+
+        if (!targetNode.firstChildId) {
+            return "child";
+        }
+
+        if (mouseY < targetNode.y) {
+            return "prev";
+        } else {
+            return "next";
+        }
+    }
+
+    /** 마우스 위치를 기반으로 드래그 중인 노드가 어디에 어느 방향으로 드롭될지 실시간 계산, 상태 반영 */
+    private updateDropTarget(e: React.MouseEvent) {
         if (!this.draggingNodeId) {
             return;
         }
 
-        const worldPos = this.projectScreenToWorld(e.clientX, e.clientY);
-        const checkX = worldPos.x;
-        const checkY = worldPos.y;
+        const { x: mouseX, y: mouseY } = this.projectScreenToWorld(e.clientX, e.clientY);
 
         let minDist = Infinity;
         let nearestId: NodeId | null = null;
 
+        // 가장 가까운 노드 후보군 탐색
+        // TODO: 쿼드 트리 적용
         for (const [id, node] of this.container.nodes) {
             if (this.dragSubtreeIds?.has(id)) continue;
 
-            const dist = calcDistance(node.x, node.y, checkX, checkY);
+            const dist = calcDistance(node.x, node.y, mouseX, mouseY);
             if (dist < minDist && dist < BASE_NODE_DETECTION_THRESHOLD) {
                 minDist = dist;
                 nearestId = id;
             }
         }
 
-        this.baseNode.targetId = nearestId;
+        // 실시간 targetId, direction 반영
+        if (nearestId) {
+            const targetNode = this.container.safeGetNode(nearestId);
+
+            if (targetNode) {
+                this.baseNode.targetId = nearestId;
+                this.baseNode.direction = this.calculateDropDirection(mouseY, targetNode);
+            }
+        } else {
+            // 근처에 노드가 아예 없다면 고스트 정보 비우기
+            this.baseNode.targetId = null;
+            this.baseNode.direction = null;
+        }
     }
 
     public handleMouseUp = (_e: React.MouseEvent) => {
         if (this.mode === "dragging" && this.draggingNodeId && this.baseNode.targetId) {
-            if (this.baseNode.targetId !== this.draggingNodeId) {
-                this.onMoveNode(this.baseNode.targetId, this.draggingNodeId);
+            const targetNodeId = this.baseNode.targetId;
+            const movingNodeId = this.draggingNodeId;
+            const direction = this.baseNode.direction;
+
+            const isDroppingOnItseltOrDescendant = this.dragSubtreeIds?.has(targetNodeId);
+
+            if (!isDroppingOnItseltOrDescendant && direction) {
+                const targetNode = this.container.safeGetNode(targetNodeId);
+
+                if (targetNode) {
+                    this.onMoveNode(targetNodeId, movingNodeId, direction);
+                }
             }
         }
 
         this.clearStatus();
-
         this.onUpdate();
     };
 
