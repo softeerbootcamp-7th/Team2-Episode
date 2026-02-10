@@ -168,6 +168,12 @@ export default class QuadTree {
         return found;
     }
 
+    /** 트리 초기화 */
+    clear(): void {
+        this.points.clear();
+        this.children = null;
+    }
+
     /** 현재 영역을 4개의 하위 영역으로 분할 */
     private split() {
         const { minX, maxX, minY, maxY } = this.bounds;

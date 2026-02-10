@@ -65,7 +65,17 @@ export default class MindMapCore {
     }
 
     private sync() {
-        //TODO: layout -> quadTree -> renderer 순서로 업데이트
+        // 1. 레이아웃 업데이트
+        const rootId = this.tree.getRootId();
+        this.layout.updateLayout({ rootId });
+
+        // 2. 쿼드 트리 반영
+        this.quadTree.clear();
+        this.tree.nodes.forEach((node) => {
+            this.quadTree.insert(node);
+        });
+
+        // 3. 노드 추가, etc 등 카메라를 이동시키거나 줌 조절한다면 renderer에 반영
     }
 
     private moveNode(targetId: NodeId, movingId: NodeId) {
