@@ -13,7 +13,6 @@ import java.util.List;
 import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.job.Job;
 import com.yat2.episode.question.dto.QuestionsByCompetencyCategoryRes;
-import com.yat2.episode.user.UserService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -24,9 +23,6 @@ class QuestionServiceTest {
 
     @Mock
     private QuestionRepository questionRepository;
-
-    @Mock
-    private UserService userService;
 
     @InjectMocks
     private QuestionService questionService;
