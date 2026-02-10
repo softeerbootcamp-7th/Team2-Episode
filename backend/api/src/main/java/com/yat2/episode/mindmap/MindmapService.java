@@ -1,12 +1,5 @@
 package com.yat2.episode.mindmap;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
@@ -19,6 +12,12 @@ import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -160,6 +159,17 @@ public class MindmapService {
     public MindmapDetailRes updateName(long userId, UUID mindmapId, String name) {
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.getMindmap().updateName(name);
+
+        return MindmapDetailRes.of(participant);
+    }
+
+    @Transactional
+    public MindmapDetailRes saveMindmapParticipant(long userId, UUID mindmapId) {
+        User user = userService.getUserOrThrow(userId);
+        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId).orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
+        if (!mindmap.isShared()) throw new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
+        MindmapParticipant participant = new MindmapParticipant(user, mindmap);
+        mindmapParticipantRepository.save(participant);
 
         return MindmapDetailRes.of(participant);
     }

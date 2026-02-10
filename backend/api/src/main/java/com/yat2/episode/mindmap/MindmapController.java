@@ -161,6 +161,17 @@ public class MindmapController {
         return mindmapService.updateName(userId, mindmapId, request.name());
     }
 
+
+    @Operation(summary = "마인드맵 참여", description = "팀 마인드맵에 대한 참여자로 저장됩니다. 사용자의 마인드맵 리스트에 해당 마인드맵이 추가됩니다.")
+    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND, ErrorCode.MINDMAP_ACCESS_FORBIDDEN})
+    @PostMapping("/{mindmapId}")
+    public MindmapDetailRes addParticipant(
+            @RequestAttribute(USER_ID) long userId,
+            @PathVariable UUID mindmapId
+    ) {
+        return mindmapService.saveMindmapParticipant(userId, mindmapId);
+    }
+
     public enum MindmapVisibility {
         ALL, PRIVATE, PUBLIC
     }
