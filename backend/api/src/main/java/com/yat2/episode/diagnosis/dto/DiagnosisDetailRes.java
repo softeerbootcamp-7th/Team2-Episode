@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.yat2.episode.question.dto.QuestionDetailDto;
 
-public record DiagnosisDetailDto(
+public record DiagnosisDetailRes(
         int diagnosisId,
         String jobName,
         LocalDateTime createdAt,
