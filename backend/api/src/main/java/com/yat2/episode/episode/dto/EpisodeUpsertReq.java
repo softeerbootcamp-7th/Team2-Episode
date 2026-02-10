@@ -4,10 +4,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 public record EpisodeUpsertReq(
-        List<@Positive Integer> competencyTypeIds,
+        Set<@Positive Integer> competencyTypeIds,
         @Size(max = 100) String content,
         @Size(max = 200) String situation,
         @Size(max = 200) String task,
