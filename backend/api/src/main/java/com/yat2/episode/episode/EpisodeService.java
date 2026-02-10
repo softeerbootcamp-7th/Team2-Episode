@@ -6,8 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
@@ -21,6 +23,7 @@ import com.yat2.episode.mindmap.MindmapAccessValidator;
 public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
+    private final CompetencyTypeRepository competencyTypeRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
 
     public EpisodeDetailRes getEpisode(UUID nodeId, long userId) {
@@ -40,6 +43,7 @@ public class EpisodeService {
     public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
+        validateCompetencyIds(episodeUpsertReq.competencyTypeIds());
 
         Episode episode = episodeRepository.findById(episodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
 
@@ -52,6 +56,7 @@ public class EpisodeService {
     public void updateEpisode(UUID nodeId, long userId, EpisodeUpsertReq episodeUpsertReq) {
         Episode episode = getEpisodeOrThrow(nodeId, userId);
         validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
+        validateCompetencyIds(episodeUpsertReq.competencyTypeIds());
 
         episode.update(episodeUpsertReq);
     }
@@ -85,6 +90,13 @@ public class EpisodeService {
     private void validateDates(LocalDate startDate, LocalDate endDate) {
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+    }
+
+    private void validateCompetencyIds(Set<Integer> competencyIds) {
+        long count = competencyTypeRepository.countByIdIn(competencyIds);
+        if (count != competencyIds.size()) {
+            throw new CustomException(ErrorCode.INVALID_COMPETENCY_TYPE);
         }
     }
 }
