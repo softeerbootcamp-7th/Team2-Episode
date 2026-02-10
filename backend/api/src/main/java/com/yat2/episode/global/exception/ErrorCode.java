@@ -14,6 +14,10 @@ public enum ErrorCode {
     //Mindmap Participant
     MINDMAP_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MINDMAP_PARTICIPANT_NOT_FOUND", "해당 마인드맵에 사용자가 참여하고 있지 않습니다."),
 
+
+    //CompetencyType
+    INVALID_COMPETENCY_TYPE(HttpStatus.BAD_REQUEST, "INVALID_COMPETENCY_TYPE", "올바르지 않은 역량 태그입니다."),
+
     //Auth
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", "토큰이 만료되었습니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),
