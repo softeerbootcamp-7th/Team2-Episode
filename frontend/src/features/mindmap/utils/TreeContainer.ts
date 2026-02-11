@@ -1,4 +1,4 @@
-import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/mindmapType";
+import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/mindmap_type";
 import { EventBroker } from "@/utils/EventBroker";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 import generateId from "@/utils/generate_id";
