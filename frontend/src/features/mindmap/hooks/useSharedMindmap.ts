@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-// import { IndexeddbPersistence } from "y-indexeddb";
+import { toast } from "sonner";
+import { IndexeddbPersistence } from "y-indexeddb";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
 import { ENV } from "@/constants/env";
-import { NodeElement, NodeId } from "@/features/mindmap/types/mindmapType";
+import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap_type";
 import SharedMindmapLayoutManager from "@/features/mindmap/utils/SharedMindmapLayoutManager";
 import SharedTreeContainer, { ROOT_NODE_ID } from "@/features/mindmap/utils/SharedTreeContainer";
 import { EventBroker } from "@/utils/EventBroker";
@@ -22,11 +23,11 @@ const useSharedMindmap = ({ roomId }: Props) => {
         const doc = new Y.Doc();
 
         const provider = new WebsocketProvider(ENV.WS_BASE_URL, roomId, doc);
-        // const localProvider = new IndexeddbPersistence(roomId, doc);
+        const localProvider = new IndexeddbPersistence(roomId, doc);
 
-        // localProvider.on("synced", () => {
-        //     console.log("기존에 저장된 데이터를 로컬 DB에서 모두 불러왔습니다!");
-        // });
+        localProvider.on("synced", () => {
+            toast.success("오프라인 상태에서 수정한 작업 내역을 반영하였습니다.");
+        });
 
         const broker = new EventBroker<NodeId>();
         const container = new SharedTreeContainer({
