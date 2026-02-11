@@ -33,6 +33,7 @@ import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.MindmapNameRes;
 import com.yat2.episode.mindmap.dto.MindmapNameUpdateReq;
+import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
@@ -129,15 +130,13 @@ public class MindmapController {
     )
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PostMapping("/{mindmapId}/sessions/join")
-    public ResponseEntity<Object> joinMindmapSession(
+    public MindmapSessionJoinRes joinMindmapSession(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
-        // todo: userId 체크
-        // todo: isShared 체크
+        String getPresignedURL = mindmapService.joinMindmapSession(userId, mindmapId);
         // todo: WS 티켓 발급
-        // todo: s3 get presigned url 반환 필요
-        return ResponseEntity.ok(null);
+        return new MindmapSessionJoinRes("", getPresignedURL);
     }
 
     @Operation(

@@ -82,10 +82,6 @@ public class MindmapService {
         return snapshotRepository.createPresignedUploadInfo(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
     }
 
-    //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제
-    //todo: disconnect 시 마인드맵 웹소켓 연결 수가 0인 경우의 s3 데이터에 스냅샷 업로드
-    //todo: delete 시 해당 마인드맵의 mindmap_participant가 0인 경우 db 내 마인드맵 데이터 삭제
-
     private UUID getUUID(String uuidStr) {
         try {
             return UUID.fromString(uuidStr);
@@ -177,5 +173,15 @@ public class MindmapService {
                     MindmapParticipant savedParticipant = mindmapParticipantRepository.save(newParticipant);
                     return MindmapDetailRes.of(savedParticipant);
                 });
+    }
+
+    @Transactional
+    public String joinMindmapSession(long userId, UUID mindmapId) {
+        userService.getUserOrThrow(userId);
+        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
+        if (!mindmap.isShared()) throw new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
+
+        return snapshotRepository.createPresignedGetURL(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
     }
 }
