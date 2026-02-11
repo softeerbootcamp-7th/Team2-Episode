@@ -15,8 +15,9 @@ import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeInsertReq;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
-import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
@@ -95,8 +96,8 @@ class EpisodeServiceTest {
         when(competencyTypeRepository.countByIdIn(anySet())).thenReturn(2L);
 
 
-        EpisodeUpsertReq req =
-                new EpisodeUpsertReq(Set.of(1, 2), "content", null, null, null, null, LocalDate.now(), null);
+        EpisodeInsertReq req =
+                new EpisodeInsertReq(Set.of(1, 2), "content", null, null, null, null, LocalDate.now(), null);
 
         EpisodeDetailRes res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
         assertThat(res.content()).isEqualTo("content");
@@ -110,7 +111,7 @@ class EpisodeServiceTest {
         when(competencyTypeRepository.countByIdIn(anySet())).thenReturn(1L);
         when(episodeRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        EpisodeUpsertReq req = new EpisodeUpsertReq(Set.of(1), "content", null, null, null, null, null, null);
+        EpisodeInsertReq req = new EpisodeInsertReq(Set.of(1), "content", null, null, null, null, null, null);
 
         EpisodeDetailRes res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
 
@@ -124,11 +125,12 @@ class EpisodeServiceTest {
         Episode episode = Episode.create(nodeId, userId, mindmapId);
         when(episodeRepository.findById(any())).thenReturn(Optional.of(episode));
 
-        EpisodeUpsertReq req = new EpisodeUpsertReq(null, "updated", null, null, null, null, null, null);
+        EpisodeUpdateExceptContentReq req =
+                new EpisodeUpdateExceptContentReq(null, "updated", null, null, null, null, null);
 
         episodeService.updateEpisode(nodeId, userId, req);
 
-        assertThat(episode.getContent()).isEqualTo("updated");
+        assertThat(episode.getSituation()).isEqualTo("updated");
     }
 
     @Test
@@ -141,7 +143,7 @@ class EpisodeServiceTest {
     @Test
     void clearEpisodeDates_setsDatesToNull() {
         Episode episode = Episode.create(nodeId, userId, mindmapId);
-        episode.update(new EpisodeUpsertReq(null, null, null, null, null, null, LocalDate.now(), LocalDate.now()));
+        episode.update(new EpisodeInsertReq(null, null, null, null, null, null, LocalDate.now(), LocalDate.now()));
 
         when(episodeRepository.findById(any())).thenReturn(Optional.of(episode));
 

@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
 import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
-import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -57,7 +57,7 @@ public class EpisodeController {
             @RequestAttribute(USER_ID) long userId,
             @Valid
             @RequestBody
-            EpisodeUpsertReq req
+            EpisodeUpdateExceptContentReq req
     ) {
         episodeService.updateEpisode(nodeId, userId, req);
     }

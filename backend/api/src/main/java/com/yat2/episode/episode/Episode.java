@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.EpisodeInsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -70,8 +71,7 @@ public class Episode {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @CreatedDate
-    @Column(name = "updated_at_content", nullable = false)
+    @Column(name = "updated_at_content")
     private LocalDateTime updatedAtContent;
 
     public static Episode create(UUID nodeId, long userId, UUID mindmapId) {
@@ -81,7 +81,22 @@ public class Episode {
         return episode;
     }
 
-    public void update(EpisodeUpsertReq req) {
+    public void update(EpisodeInsertReq req) {
+        if (req.situation() != null) this.situation = req.situation();
+        if (req.content() != null) this.content = req.content();
+        if (req.task() != null) this.task = req.task();
+        if (req.action() != null) this.action = req.action();
+        if (req.result() != null) this.result = req.result();
+        if (req.startDate() != null) this.startDate = req.startDate();
+        if (req.endDate() != null) this.endDate = req.endDate();
+
+        if (req.competencyTypeIds() != null) {
+            this.competencyTypeIds.clear();
+            this.competencyTypeIds.addAll(req.competencyTypeIds());
+        }
+    }
+
+    public void update(EpisodeUpdateExceptContentReq req) {
         if (req.situation() != null) this.situation = req.situation();
         if (req.task() != null) this.task = req.task();
         if (req.action() != null) this.action = req.action();

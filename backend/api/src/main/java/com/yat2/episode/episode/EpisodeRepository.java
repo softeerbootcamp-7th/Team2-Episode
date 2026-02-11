@@ -29,7 +29,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, EpisodeId> {
     @Modifying(clearAutomatically = true)
     @Query(
             "UPDATE Episode e SET e.content = :content, e.updatedAtContent = :clientTime " +
-            "WHERE e.id.nodeId = :nodeId AND e.updatedAtContent < :clientTime"
+            "WHERE e.id.nodeId = :nodeId AND (e.updatedAtContent = NULL OR e.updatedAtContent < :clientTime)"
     )
     int updateContentIfNewer(
             @Param("nodeId") UUID nodeId,
