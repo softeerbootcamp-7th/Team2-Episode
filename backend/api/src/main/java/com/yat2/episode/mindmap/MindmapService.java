@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import com.yat2.episode.global.exception.CustomException;
@@ -172,15 +171,11 @@ public class MindmapService {
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
         if (!mindmap.isShared()) throw new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
 
-        Optional<MindmapParticipant> existingParticipant =
-                mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId);
-        if (existingParticipant.isPresent()) {
-            return MindmapDetailRes.of(existingParticipant.get());
-        }
-
-        MindmapParticipant participant = new MindmapParticipant(user, mindmap);
-        mindmapParticipantRepository.save(participant);
-
-        return MindmapDetailRes.of(participant);
+        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).map(MindmapDetailRes::of)
+                .orElseGet(() -> {
+                    MindmapParticipant newParticipant = new MindmapParticipant(user, mindmap);
+                    MindmapParticipant savedParticipant = mindmapParticipantRepository.save(newParticipant);
+                    return MindmapDetailRes.of(savedParticipant);
+                });
     }
 }
