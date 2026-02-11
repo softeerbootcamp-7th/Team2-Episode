@@ -1,5 +1,17 @@
 package com.yat2.episode.diagnosis;
 
+import com.yat2.episode.competency.CompetencyType;
+import com.yat2.episode.competency.CompetencyTypeRepository;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes;
+import com.yat2.episode.job.Job;
+import com.yat2.episode.job.JobRepository;
+import com.yat2.episode.job.Occupation;
+import com.yat2.episode.job.OccupationRepository;
+import com.yat2.episode.question.Question;
+import com.yat2.episode.question.QuestionRepository;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserRepository;
+import com.yat2.episode.utils.AbstractRepositoryTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,26 +24,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.competency.CompetencyTypeRepository;
-import com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes;
-import com.yat2.episode.job.Job;
-import com.yat2.episode.job.JobRepository;
-import com.yat2.episode.job.Occupation;
-import com.yat2.episode.job.OccupationRepository;
-import com.yat2.episode.question.Question;
-import com.yat2.episode.question.QuestionRepository;
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserRepository;
-
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("DiagnosisRepository 통합 테스트")
-class DiagnosisRepositoryTest {
-
+class DiagnosisRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private DiagnosisRepository diagnosisRepository;
     @Autowired

@@ -1,5 +1,8 @@
 package com.yat2.episode.mindmap;
 
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserRepository;
+import com.yat2.episode.utils.AbstractRepositoryTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +15,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.yat2.episode.user.User;
-import com.yat2.episode.user.UserRepository;
-
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,8 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("MindmapRepository 통합 테스트")
-class MindmapRepositoryTest {
-
+class MindmapRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private MindmapRepository mindmapRepository;
 

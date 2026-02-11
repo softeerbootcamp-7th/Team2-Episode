@@ -1,5 +1,6 @@
 package com.yat2.episode.competency;
 
+import com.yat2.episode.utils.AbstractRepositoryTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
-class CompetencyTypeRepositoryTest {
+class CompetencyTypeRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private CompetencyTypeRepository competencyTypeRepository;
