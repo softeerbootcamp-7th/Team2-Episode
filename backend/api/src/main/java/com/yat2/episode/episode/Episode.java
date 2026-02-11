@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
@@ -65,7 +66,8 @@ public class Episode {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     public static Episode create(UUID nodeId, long userId, UUID mindmapId) {
@@ -76,7 +78,6 @@ public class Episode {
     }
 
     public void update(EpisodeUpsertReq req) {
-        if (req.content() != null) this.content = req.content();
         if (req.situation() != null) this.situation = req.situation();
         if (req.task() != null) this.task = req.task();
         if (req.action() != null) this.action = req.action();

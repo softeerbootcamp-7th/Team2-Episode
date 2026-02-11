@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
@@ -59,6 +60,23 @@ public class EpisodeController {
             EpisodeUpsertReq req
     ) {
         episodeService.updateEpisode(nodeId, userId, req);
+    }
+
+    @Operation(
+            summary = "에피소드 제목 수정",
+            description = "에피소드의 node명(=content)을 수정합니다. " + "한 노드에 대한 수정 api 요청이 다수 들어왔을 때, 더 최근의 요청을 기준으로 반영이 됩니다."
+    )
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @PatchMapping("/content")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateEpisodeContent(
+            @PathVariable UUID nodeId,
+            @RequestAttribute(USER_ID) long userId,
+            @Valid
+            @RequestBody
+            EpisodeUpdateContentReq req
+    ) {
+        episodeService.updateContentEpisode(nodeId, userId, req);
     }
 
     @Operation(summary = "에피소드 삭제", description = "에피소드를 삭제합니다.")

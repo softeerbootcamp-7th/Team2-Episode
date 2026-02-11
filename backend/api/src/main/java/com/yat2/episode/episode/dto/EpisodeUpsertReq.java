@@ -8,7 +8,6 @@ import java.util.Set;
 
 public record EpisodeUpsertReq(
         Set<@Positive Integer> competencyTypeIds,
-        @Size(max = 100) String content,
         @Size(max = 200) String situation,
         @Size(max = 200) String task,
         @Size(max = 200) String action,

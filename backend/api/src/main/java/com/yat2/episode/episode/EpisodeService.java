@@ -12,6 +12,7 @@ import java.util.UUID;
 import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
+import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
@@ -59,6 +60,11 @@ public class EpisodeService {
         validateCompetencyIds(episodeUpsertReq.competencyTypeIds());
 
         episode.update(episodeUpsertReq);
+    }
+
+    @Transactional
+    public void updateContentEpisode(UUID nodeId, long userId, EpisodeUpdateContentReq episodeUpsertReq) {
+        Episode episode = getEpisodeOrThrow(nodeId, userId);
     }
 
     @Transactional
