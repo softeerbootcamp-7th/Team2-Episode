@@ -6,17 +6,17 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-import com.yat2.episode.auth.jwt.AuthJwtProperties;
+import com.yat2.episode.auth.jwt.JwtProperties;
 
-import static com.yat2.episode.auth.cookie.AuthCookieNames.ACCESS_COOKIE_NAME;
-import static com.yat2.episode.auth.cookie.AuthCookieNames.REFRESH_COOKIE_NAME;
+import static com.yat2.episode.auth.cookie.CookieNames.ACCESS_COOKIE_NAME;
+import static com.yat2.episode.auth.cookie.CookieNames.REFRESH_COOKIE_NAME;
 
 @Component
 @RequiredArgsConstructor
-public class AuthCookieFactory {
+public class CookieFactory {
 
-    private final AuthCookieProperties cookieProps;
-    private final AuthJwtProperties authJwtProps;
+    private final CookieProperties cookieProps;
+    private final JwtProperties authJwtProps;
 
     public ResponseCookie access(String token) {
         return build(Spec.ACCESS, token, Duration.ofMillis(authJwtProps.accessTokenExpiry()));

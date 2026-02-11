@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import com.yat2.episode.auth.jwt.AuthJwtProvider;
+import com.yat2.episode.auth.jwt.JwtProvider;
 import com.yat2.episode.auth.jwt.IssuedTokens;
 import com.yat2.episode.auth.oauth.KakaoIdTokenVerifier;
 import com.yat2.episode.auth.oauth.KakaoOAuthClient;
@@ -22,7 +22,7 @@ public class AuthService {
 
     private final KakaoOAuthClient kakaoOAuthClient;
     private final KakaoIdTokenVerifier kakaoIdTokenVerifier;
-    private final AuthJwtProvider authJwtProvider;
+    private final JwtProvider jwtProvider;
     private final RefreshTokenService refreshTokenService;
     private final UserService userService;
 
@@ -41,22 +41,22 @@ public class AuthService {
             user.changeNickname(nickname);
         }
 
-        IssuedTokens tokens = authJwtProvider.issueTokens(kakaoUserId);
+        IssuedTokens tokens = jwtProvider.issueTokens(kakaoUserId);
         refreshTokenService.save(kakaoUserId, tokens.refreshToken());
 
         return tokens;
     }
 
     public Long getUserIdByToken(String token) {
-        return authJwtProvider.verifyAccessTokenAndGetUserId(token);
+        return jwtProvider.verifyAccessTokenAndGetUserId(token);
     }
 
     @Transactional
     public IssuedTokens refresh(String refreshToken) {
-        Long userId = authJwtProvider.verifyRefreshTokenAndGetUserId(refreshToken);
+        Long userId = jwtProvider.verifyRefreshTokenAndGetUserId(refreshToken);
         refreshTokenService.validateSession(refreshToken);
 
-        IssuedTokens tokens = authJwtProvider.issueTokens(userId);
+        IssuedTokens tokens = jwtProvider.issueTokens(userId);
         refreshTokenService.save(userId, tokens.refreshToken());
 
         return tokens;

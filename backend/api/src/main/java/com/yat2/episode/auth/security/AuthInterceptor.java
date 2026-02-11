@@ -12,17 +12,17 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.Arrays;
 import java.util.Optional;
 
-import com.yat2.episode.auth.jwt.AuthJwtProvider;
+import com.yat2.episode.auth.jwt.JwtProvider;
 import com.yat2.episode.global.constant.RequestAttrs;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 
-import static com.yat2.episode.auth.cookie.AuthCookieNames.ACCESS_COOKIE_NAME;
+import static com.yat2.episode.auth.cookie.CookieNames.ACCESS_COOKIE_NAME;
 
 @Component
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
-    private final AuthJwtProvider authJwtProvider;
+    private final JwtProvider jwtProvider;
 
     @Override
     public boolean preHandle(
@@ -37,7 +37,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         String token = extractAccessToken(request).orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
 
-        Long userId = authJwtProvider.verifyAccessTokenAndGetUserId(token);
+        Long userId = jwtProvider.verifyAccessTokenAndGetUserId(token);
         request.setAttribute(RequestAttrs.USER_ID, userId);
 
         return true;

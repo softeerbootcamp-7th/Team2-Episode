@@ -8,18 +8,17 @@ import java.util.Date;
 import java.util.UUID;
 
 import com.yat2.episode.global.jwt.JwtEngine;
-import com.yat2.episode.global.jwt.JwtProperties;
 
 @Component
-public class AuthJwtProvider {
+public class JwtProvider {
 
     private static final String TYPE_ACCESS = "access";
     private static final String TYPE_REFRESH = "refresh";
 
     private final JwtEngine jwt;
-    private final AuthJwtProperties props;
+    private final JwtProperties props;
 
-    public AuthJwtProvider(AuthJwtProperties props) {
+    public JwtProvider(JwtProperties props) {
         this.props = props;
         this.jwt = new JwtEngine(props);
     }
@@ -34,7 +33,7 @@ public class AuthJwtProvider {
         Instant now = Instant.now();
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder().issuer(props.issuer()).subject(String.valueOf(userId))
-                .claim(JwtProperties.CLAIM_TOKEN_TYPE, type).issueTime(Date.from(now))
+                .claim(com.yat2.episode.global.jwt.JwtProperties.CLAIM_TOKEN_TYPE, type).issueTime(Date.from(now))
                 .expirationTime(Date.from(now.plusMillis(ttlMillis))).jwtID(UUID.randomUUID().toString()).build();
 
         return jwt.sign(claims);
