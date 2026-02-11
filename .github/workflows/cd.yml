@@ -152,10 +152,6 @@ jobs:
           set -e
           cd ~/app
           
-          echo "===== Container logs (last 100 lines) ====="
-          docker compose logs api --tail=100 || true
-          echo "==========================================="
-          
           if [ ! -f .prev_tag ]; then
              echo "No previous tag found. Cannot rollback."
              exit 1
