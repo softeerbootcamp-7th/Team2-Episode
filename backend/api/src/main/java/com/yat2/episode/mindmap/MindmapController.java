@@ -121,8 +121,15 @@ public class MindmapController {
         return ResponseEntity.created(location).body(resBody);
     }
 
-    @PostMapping("/connect/{mindmapId}")
-    public ResponseEntity<Object> connectMindmap(
+    @Operation(
+            summary = "마인드맵 공동 편집 참여", description = """
+            팀 마인드맵의 공동 편집 참여 전 인증 및 사용자 참여 정보를 생성합니다.
+            응답으로는 wss 최초 연결 시 필요한 토큰 데이터와 스냅샷용 presigned url을 제공합니다.
+            """
+    )
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @PostMapping("/{mindmapId}/sessions/join")
+    public ResponseEntity<Object> joinMindmapSession(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
