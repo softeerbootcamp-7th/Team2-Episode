@@ -12,23 +12,23 @@ import com.yat2.episode.global.jwt.JwtEngine;
 import com.yat2.episode.global.jwt.TokenTypes;
 
 @Component
-public class JwtProvider {
+public class AuthJwtProvider {
 
     private final JwtEngine jwt;
-    private final JwtProperties props;
+    private final AuthJwtProperties props;
 
-    public JwtProvider(JwtProperties props) {
+    public AuthJwtProvider(AuthJwtProperties props) {
         this.props = props;
         this.jwt = new JwtEngine(props);
     }
 
-    public IssuedTokens issueTokens(Long userId) {
+    public AuthTokens issueTokens(long userId) {
         String access = issue(userId, TokenTypes.ACCESS, props.accessTokenExpiry());
         String refresh = issue(userId, TokenTypes.REFRESH, props.refreshTokenExpiry());
-        return new IssuedTokens(access, refresh);
+        return new AuthTokens(access, refresh);
     }
 
-    private String issue(Long userId, String type, long ttlMillis) {
+    private String issue(long userId, String type, long ttlMillis) {
         Instant now = Instant.now();
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder().issuer(props.issuer()).subject(String.valueOf(userId))

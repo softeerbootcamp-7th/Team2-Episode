@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.yat2.episode.auth.cookie.CookieFactory;
-import com.yat2.episode.auth.jwt.IssuedTokens;
+import com.yat2.episode.auth.jwt.AuthTokens;
 import com.yat2.episode.auth.oauth.KakaoProperties;
 import com.yat2.episode.auth.oauth.OAuthUtil;
 import com.yat2.episode.auth.refresh.RefreshTokenService;
@@ -91,7 +91,7 @@ public class AuthController {
                 throw new CustomException(ErrorCode.INVALID_OAUTH_STATE);
             }
 
-            IssuedTokens tokens = authService.handleKakaoCallback(code);
+            AuthTokens tokens = authService.handleKakaoCallback(code);
 
             ResponseCookie accessCookie = cookieFactory.access(tokens.accessToken());
             ResponseCookie refreshCookie = cookieFactory.refresh(tokens.refreshToken());
@@ -120,7 +120,7 @@ public class AuthController {
             @CookieValue(value = "refresh_token", required = false)
             String refreshToken
     ) {
-        IssuedTokens tokens = authService.refresh(refreshToken);
+        AuthTokens tokens = authService.refresh(refreshToken);
 
         ResponseCookie accessCookie = cookieFactory.access(tokens.accessToken());
         ResponseCookie refreshCookie = cookieFactory.refresh(tokens.refreshToken());

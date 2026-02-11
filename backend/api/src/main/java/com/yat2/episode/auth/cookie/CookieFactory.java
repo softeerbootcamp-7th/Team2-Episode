@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-import com.yat2.episode.auth.jwt.JwtProperties;
+import com.yat2.episode.auth.jwt.AuthJwtProperties;
 
 import static com.yat2.episode.auth.cookie.CookieNames.ACCESS_COOKIE_NAME;
 import static com.yat2.episode.auth.cookie.CookieNames.REFRESH_COOKIE_NAME;
@@ -16,7 +16,7 @@ import static com.yat2.episode.auth.cookie.CookieNames.REFRESH_COOKIE_NAME;
 public class CookieFactory {
 
     private final CookieProperties cookieProps;
-    private final JwtProperties authJwtProps;
+    private final AuthJwtProperties authJwtProps;
 
     public ResponseCookie access(String token) {
         return build(Spec.ACCESS, token, Duration.ofMillis(authJwtProps.accessTokenExpiry()));

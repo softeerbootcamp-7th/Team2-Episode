@@ -12,7 +12,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 
-import com.yat2.episode.auth.jwt.JwtProperties;
+import com.yat2.episode.auth.jwt.AuthJwtProperties;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 
@@ -22,12 +22,12 @@ import com.yat2.episode.global.exception.ErrorCode;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtProperties jwtProperties;
+    private final AuthJwtProperties authJwtProperties;
 
     @Transactional
     public void save(Long userId, String refreshToken) {
         String tokenHash = hash(refreshToken);
-        LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMillis(jwtProperties.refreshTokenExpiry()));
+        LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMillis(authJwtProperties.refreshTokenExpiry()));
 
         refreshTokenRepository.upsertByUserId(userId, tokenHash, expiresAt);
     }
