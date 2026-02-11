@@ -1,12 +1,6 @@
 package com.yat2.episode.mindmap;
 
 import com.github.f4b6a3.uuid.UuidCreator;
-import com.yat2.episode.global.exception.ErrorCode;
-import com.yat2.episode.global.swagger.ApiErrorCodes;
-import com.yat2.episode.global.swagger.AuthRequiredErrors;
-import com.yat2.episode.global.utils.UriUtil;
-import com.yat2.episode.mindmap.dto.*;
-import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,11 +10,32 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+
+import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.global.swagger.ApiErrorCodes;
+import com.yat2.episode.global.swagger.AuthRequiredErrors;
+import com.yat2.episode.global.utils.UriUtil;
+import com.yat2.episode.mindmap.dto.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapNameRes;
+import com.yat2.episode.mindmap.dto.MindmapNameUpdateReq;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
 
@@ -40,7 +55,7 @@ public class MindmapController {
             파라미터가 없으면 기본값은 ALL입니다.
             """
     )
-    @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping
     public List<MindmapDetailRes> getMindmaps(
             @RequestAttribute(USER_ID) long userId,
@@ -56,7 +71,7 @@ public class MindmapController {
             입력된 마인드맵의 UUID를 기반으로 마인드맵 데이터를 조회합니다.
             """
     )
-    @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/{mindmapId}")
     public MindmapDetailRes getMindmap(
             @RequestAttribute(USER_ID) long userId,
@@ -71,7 +86,7 @@ public class MindmapController {
             마인드맵 선택 드롭다운, 사이드바 등에 사용됩니다.
             """
     )
-    @ApiErrorCodes({ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping("/titles")
     public List<MindmapNameRes> getMyMindmapNames(
             @RequestAttribute(USER_ID) long userId
@@ -88,10 +103,10 @@ public class MindmapController {
             웹 소켓 연결은 별도 요청이 필요합니다.
             """
     )
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "마인드맵 생성 성공")})
+    @ApiResponses({ @ApiResponse(responseCode = "201", description = "마인드맵 생성 성공") })
     @ApiErrorCodes(
-            {ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.S3_URL_FAIL,
-                    ErrorCode.MINDMAP_TITLE_REQUIRED}
+            { ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.S3_URL_FAIL,
+              ErrorCode.MINDMAP_TITLE_REQUIRED }
     )
     @PostMapping()
     public ResponseEntity<MindmapUploadUrlRes> createMindmap(
@@ -126,8 +141,8 @@ public class MindmapController {
             다른 참여자에게 영향이 가지 않습니다.
             """
     )
-    @ApiResponses({@ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content)})
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
+    @ApiResponses({ @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content) })
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @DeleteMapping("/{mindmapId}")
     public ResponseEntity<?> deleteMindmap(
             @RequestAttribute(USER_ID) long userId,
@@ -138,7 +153,7 @@ public class MindmapController {
     }
 
     @Operation(summary = "마인드맵 즐겨찾기 상태 변경", description = "마인드맵의 즐겨찾기 여부를 설정하거나 해제합니다.")
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/favorite")
     public MindmapDetailRes updateFavoriteStatus(
             @RequestAttribute(USER_ID) long userId,
@@ -149,7 +164,7 @@ public class MindmapController {
     }
 
     @Operation(summary = "마인드맵 이름 변경", description = "마인드맵의 이름을 변경합니다. 팀 마인드맵 또한 모든 사용자에게 반영되는 수정 사항입니다.")
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND})
+    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/name")
     public MindmapDetailRes updateName(
             @RequestAttribute(USER_ID) long userId,
@@ -162,9 +177,12 @@ public class MindmapController {
     }
 
 
-    @Operation(summary = "마인드맵 참여", description = "팀 마인드맵에 대한 참여자로 저장됩니다. 사용자의 마인드맵 리스트에 해당 마인드맵이 추가됩니다.")
-    @ApiErrorCodes({ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND, ErrorCode.MINDMAP_ACCESS_FORBIDDEN})
-    @PostMapping("/{mindmapId}")
+    @Operation(summary = "마인드맵 참여자 저장", description = "팀 마인드맵에 대한 참여자로 저장됩니다. 사용자의 마인드맵 리스트에 해당 마인드맵이 추가됩니다.")
+    @ApiErrorCodes(
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.MINDMAP_ACCESS_FORBIDDEN }
+    )
+    @PostMapping("/{mindmapId}/participants")
     public MindmapDetailRes addParticipant(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
