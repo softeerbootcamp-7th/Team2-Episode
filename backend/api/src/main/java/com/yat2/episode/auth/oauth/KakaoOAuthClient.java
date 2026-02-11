@@ -15,9 +15,9 @@ public class KakaoOAuthClient {
     public KakaoTokenResponse requestToken(String code) {
         return webClient.post().uri(kakaoProperties.tokenUrl()).contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData("grant_type", "authorization_code")
-                              .with("client_id", kakaoProperties.getClientId())
-                              .with("client_secret", kakaoProperties.getClientSecret())
-                              .with("redirect_uri", kakaoProperties.getRedirectUri()).with("code", code)).retrieve()
+                              .with("client_id", kakaoProperties.clientId())
+                              .with("client_secret", kakaoProperties.clientSecret())
+                              .with("redirect_uri", kakaoProperties.redirectUri()).with("code", code)).retrieve()
                 .bodyToMono(KakaoTokenResponse.class).block();
     }
 }

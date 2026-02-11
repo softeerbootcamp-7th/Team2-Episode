@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-import com.yat2.episode.auth.jwt.JwtProperties;
+import com.yat2.episode.auth.jwt.AuthJwtProperties;
 
 import static com.yat2.episode.auth.cookie.AuthCookieNames.ACCESS_COOKIE_NAME;
 import static com.yat2.episode.auth.cookie.AuthCookieNames.REFRESH_COOKIE_NAME;
@@ -16,14 +16,14 @@ import static com.yat2.episode.auth.cookie.AuthCookieNames.REFRESH_COOKIE_NAME;
 public class AuthCookieFactory {
 
     private final AuthCookieProperties cookieProps;
-    private final JwtProperties jwtProps;
+    private final AuthJwtProperties authJwtProps;
 
     public ResponseCookie access(String token) {
-        return build(Spec.ACCESS, token, Duration.ofMillis(jwtProps.getAccessTokenExpiry()));
+        return build(Spec.ACCESS, token, Duration.ofMillis(authJwtProps.accessTokenExpiry()));
     }
 
     public ResponseCookie refresh(String token) {
-        return build(Spec.REFRESH, token, Duration.ofMillis(jwtProps.getRefreshTokenExpiry()));
+        return build(Spec.REFRESH, token, Duration.ofMillis(authJwtProps.refreshTokenExpiry()));
     }
 
     public ResponseCookie deleteAccess() {
@@ -36,11 +36,11 @@ public class AuthCookieFactory {
 
     private ResponseCookie build(Spec spec, String value, Duration maxAge) {
         ResponseCookie.ResponseCookieBuilder builder =
-                ResponseCookie.from(spec.name, value).httpOnly(true).secure(cookieProps.isSecure())
-                        .sameSite(cookieProps.getSameSite()).path(spec.path).maxAge(maxAge);
+                ResponseCookie.from(spec.name, value).httpOnly(true).secure(cookieProps.secure())
+                        .sameSite(cookieProps.sameSite()).path(spec.path).maxAge(maxAge);
 
-        if (cookieProps.getDomain() != null && !cookieProps.getDomain().isBlank()) {
-            builder.domain(cookieProps.getDomain());
+        if (cookieProps.domain() != null && !cookieProps.domain().isBlank()) {
+            builder.domain(cookieProps.domain());
         }
 
         return builder.build();
@@ -48,11 +48,11 @@ public class AuthCookieFactory {
 
     private ResponseCookie delete(Spec spec) {
         ResponseCookie.ResponseCookieBuilder builder =
-                ResponseCookie.from(spec.name, "").httpOnly(true).secure(cookieProps.isSecure())
-                        .sameSite(cookieProps.getSameSite()).path(spec.path).maxAge(Duration.ZERO);
+                ResponseCookie.from(spec.name, "").httpOnly(true).secure(cookieProps.secure())
+                        .sameSite(cookieProps.sameSite()).path(spec.path).maxAge(Duration.ZERO);
 
-        if (cookieProps.getDomain() != null && !cookieProps.getDomain().isBlank()) {
-            builder.domain(cookieProps.getDomain());
+        if (cookieProps.domain() != null && !cookieProps.domain().isBlank()) {
+            builder.domain(cookieProps.domain());
         }
 
         return builder.build();

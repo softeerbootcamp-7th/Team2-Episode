@@ -50,8 +50,8 @@ public class AuthController {
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
     public ResponseEntity<Void> loginWithKakao(HttpSession session) {
         try {
-            String clientId = kakaoProperties.getClientId();
-            String redirectUri = kakaoProperties.getRedirectUri();
+            String clientId = kakaoProperties.clientId();
+            String redirectUri = kakaoProperties.redirectUri();
             String authUrl = kakaoProperties.authUrl();
 
             String state = OAuthUtil.generateState();
