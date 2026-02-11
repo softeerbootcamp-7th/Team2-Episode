@@ -177,11 +177,9 @@ public class MindmapService {
 
     @Transactional
     public String joinMindmapSession(long userId, UUID mindmapId) {
-        userService.getUserOrThrow(userId);
-        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
-        if (!mindmap.isShared()) throw new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
+        MindmapDetailRes mindmapDetailRes = this.saveMindmapParticipant(userId, mindmapId);
 
-        return snapshotRepository.createPresignedGetURL(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
+        return snapshotRepository.createPresignedGetURL(
+                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapDetailRes.mindmapId()));
     }
 }
