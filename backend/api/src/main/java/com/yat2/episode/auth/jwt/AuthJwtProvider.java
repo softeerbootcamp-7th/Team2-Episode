@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
+import com.yat2.episode.global.exception.CustomException;
+import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.jwt.JwtClaims;
 import com.yat2.episode.global.jwt.JwtEngine;
 import com.yat2.episode.global.jwt.TokenTypes;
@@ -38,13 +40,20 @@ public class AuthJwtProvider {
         return jwt.sign(claims);
     }
 
-    public Long verifyAccessTokenAndGetUserId(String token) {
-        JWTClaimsSet claims = jwt.verify(token, TokenTypes.ACCESS);
-        return Long.parseLong(claims.getSubject());
+    public long verifyAccessTokenAndGetUserId(String token) {
+        return verifyAndExtractUserId(token, TokenTypes.ACCESS);
     }
 
-    public Long verifyRefreshTokenAndGetUserId(String token) {
-        JWTClaimsSet claims = jwt.verify(token, TokenTypes.REFRESH);
-        return Long.parseLong(claims.getSubject());
+    public long verifyRefreshTokenAndGetUserId(String token) {
+        return verifyAndExtractUserId(token, TokenTypes.REFRESH);
+    }
+
+    private long verifyAndExtractUserId(String token, String expectedType) {
+        JWTClaimsSet claims = jwt.verify(token, expectedType);
+        try {
+            return Long.parseLong(claims.getSubject());
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
     }
 }
