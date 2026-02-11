@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeInsertReq;
 import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
+import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -79,7 +79,7 @@ public class Episode {
         return episode;
     }
 
-    public void update(EpisodeInsertReq req) {
+    public void update(EpisodeUpsertReq req) {
         if (req.situation() != null) this.situation = req.situation();
         if (req.content() != null) this.content = req.content();
         if (req.task() != null) this.task = req.task();

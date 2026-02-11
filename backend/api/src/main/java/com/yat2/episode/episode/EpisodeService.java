@@ -11,10 +11,10 @@ import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
-import com.yat2.episode.episode.dto.EpisodeInsertReq;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
+import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
@@ -42,14 +42,14 @@ public class EpisodeService {
     }
 
     @Transactional
-    public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeInsertReq episodeInsertReq) {
+    public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
-        validateDates(episodeInsertReq.startDate(), episodeInsertReq.endDate());
-        validateCompetencyIds(episodeInsertReq.competencyTypeIds());
+        validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
+        validateCompetencyIds(episodeUpsertReq.competencyTypeIds());
 
         Episode episode = episodeRepository.findById(episodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
 
-        episode.update(episodeInsertReq);
+        episode.update(episodeUpsertReq);
 
         return EpisodeDetailRes.of(episode);
     }

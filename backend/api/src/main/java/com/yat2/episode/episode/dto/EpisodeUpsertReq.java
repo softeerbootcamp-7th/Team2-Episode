@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.Set;
 
-public record EpisodeInsertReq(
+public record EpisodeUpsertReq(
         Set<@Positive Integer> competencyTypeIds,
         @Size(max = 100) String content,
         @Size(max = 200) String situation,
