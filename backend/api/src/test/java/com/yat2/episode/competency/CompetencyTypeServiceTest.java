@@ -53,7 +53,7 @@ class CompetencyTypeServiceTest {
 
             given(competencyTypeRepository.findAll()).willReturn(List.of(type1, type2));
 
-        List<CompetencyTypeRes> result = competencyTypeService.getAllData();
+            List<CompetencyTypeRes> result = competencyTypeService.getAllData();
 
             assertThat(result).hasSize(2);
             assertThat(result).extracting(CompetencyTypeRes::competencyType)
