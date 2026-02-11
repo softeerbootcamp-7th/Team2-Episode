@@ -7,7 +7,7 @@ import com.yat2.episode.global.jwt.JwtProperties;
 @ConfigurationProperties(prefix = "jwt")
 public record AuthJwtProperties(
         String secret,
+        String issuer,
         long accessTokenExpiry,
-        long refreshTokenExpiry,
-        String issuer
+        long refreshTokenExpiry
 ) implements JwtProperties {}
