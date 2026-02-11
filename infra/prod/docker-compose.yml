@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/softeerbootcamp-7th/episode-api:latest
+    image: ghcr.io/softeerbootcamp-7th/episode-api:${IMAGE_TAG:-latest}
     container_name: episode-api
     restart: unless-stopped
     env_file: .env

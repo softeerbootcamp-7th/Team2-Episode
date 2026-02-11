@@ -89,7 +89,7 @@ jobs:
             infra/stage/ \
             ${{ secrets.STAGE_EC2_USER }}@${{ secrets.STAGE_EC2_HOST }}:/home/${{ secrets.STAGE_EC2_USER }}/app/
 
-      - name: Deploy via SSH (Stage)
+      - name: Deploy (Stage)
         run: |
           ssh ${{ secrets.STAGE_EC2_USER }}@${{ secrets.STAGE_EC2_HOST }} << 'EOF'
             set -e
@@ -143,6 +143,10 @@ jobs:
           echo "Health check failed. Rolling back..."
           ssh ${{ secrets.STAGE_EC2_USER }}@${{ secrets.STAGE_EC2_HOST }} << 'EOF'
             cd /home/${{ secrets.STAGE_EC2_USER }}/app
+          
+            echo "===== Container logs (last 100 lines) ====="
+            docker compose logs api --tail=100 || true
+            echo "==========================================="
           
             [ -f .docker-compose.prev.yml ] && mv .docker-compose.prev.yml docker-compose.yml || echo "No previous docker-compose found"
             [ -f .Caddyfile.prev ] && mv .Caddyfile.prev Caddyfile || echo "No previous Caddyfile found"
