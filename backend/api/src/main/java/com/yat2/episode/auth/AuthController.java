@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.yat2.episode.auth.cookie.AuthCookieFactory;
-import com.yat2.episode.auth.jwt.IssuedTokens;
+import com.yat2.episode.auth.cookie.CookieFactory;
+import com.yat2.episode.auth.jwt.AuthTokens;
 import com.yat2.episode.auth.oauth.KakaoProperties;
 import com.yat2.episode.auth.oauth.OAuthUtil;
 import com.yat2.episode.auth.refresh.RefreshTokenService;
@@ -39,7 +39,7 @@ public class AuthController {
     private static final String SESSION_STATE = "OAUTH_STATE";
     private final KakaoProperties kakaoProperties;
     private final AuthService authService;
-    private final AuthCookieFactory authCookieFactory;
+    private final CookieFactory cookieFactory;
     private final RefreshTokenService refreshTokenService;
     @Value("${auth.redirect}")
     private String oauthRedirect;
@@ -50,8 +50,8 @@ public class AuthController {
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
     public ResponseEntity<Void> loginWithKakao(HttpSession session) {
         try {
-            String clientId = kakaoProperties.getClientId();
-            String redirectUri = kakaoProperties.getRedirectUri();
+            String clientId = kakaoProperties.clientId();
+            String redirectUri = kakaoProperties.redirectUri();
             String authUrl = kakaoProperties.authUrl();
 
             String state = OAuthUtil.generateState();
@@ -91,10 +91,10 @@ public class AuthController {
                 throw new CustomException(ErrorCode.INVALID_OAUTH_STATE);
             }
 
-            IssuedTokens tokens = authService.handleKakaoCallback(code);
+            AuthTokens tokens = authService.handleKakaoCallback(code);
 
-            ResponseCookie accessCookie = authCookieFactory.access(tokens.accessToken());
-            ResponseCookie refreshCookie = authCookieFactory.refresh(tokens.refreshToken());
+            ResponseCookie accessCookie = cookieFactory.access(tokens.accessToken());
+            ResponseCookie refreshCookie = cookieFactory.refresh(tokens.refreshToken());
 
             return ResponseEntity.status(302).header(HttpHeaders.LOCATION, oauthRedirect)
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
@@ -120,10 +120,10 @@ public class AuthController {
             @CookieValue(value = "refresh_token", required = false)
             String refreshToken
     ) {
-        IssuedTokens tokens = authService.refresh(refreshToken);
+        AuthTokens tokens = authService.refresh(refreshToken);
 
-        ResponseCookie accessCookie = authCookieFactory.access(tokens.accessToken());
-        ResponseCookie refreshCookie = authCookieFactory.refresh(tokens.refreshToken());
+        ResponseCookie accessCookie = cookieFactory.access(tokens.accessToken());
+        ResponseCookie refreshCookie = cookieFactory.refresh(tokens.refreshToken());
 
         return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString()).build();
@@ -140,8 +140,8 @@ public class AuthController {
     ) {
         refreshTokenService.deleteByRefreshToken(refreshToken);
 
-        ResponseCookie expiredAccess = authCookieFactory.deleteAccess();
-        ResponseCookie expiredRefresh = authCookieFactory.deleteRefresh();
+        ResponseCookie expiredAccess = cookieFactory.deleteAccess();
+        ResponseCookie expiredRefresh = cookieFactory.deleteRefresh();
 
         return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, expiredAccess.toString())
                 .header(HttpHeaders.SET_COOKIE, expiredRefresh.toString()).build();
