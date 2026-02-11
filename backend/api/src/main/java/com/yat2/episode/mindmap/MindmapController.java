@@ -33,6 +33,7 @@ import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.MindmapNameRes;
 import com.yat2.episode.mindmap.dto.MindmapNameUpdateReq;
+import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
@@ -55,16 +56,15 @@ public class MindmapController {
             파라미터가 없으면 기본값은 ALL입니다.
             """
     )
-    @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 목록 조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping
-    public ResponseEntity<List<MindmapDetailRes>> getMindmaps(
+    public List<MindmapDetailRes> getMindmaps(
             @RequestAttribute(USER_ID) long userId,
             @Parameter(description = "조회할 마인드맵 유형 (ALL, PRIVATE, PUBLIC)")
             @RequestParam(name = "type", required = false, defaultValue = "ALL")
             MindmapVisibility type
     ) {
-        return ResponseEntity.ok(mindmapService.getMindmaps(userId, type));
+        return mindmapService.getMindmaps(userId, type);
     }
 
     @Operation(
@@ -72,14 +72,13 @@ public class MindmapController {
             입력된 마인드맵의 UUID를 기반으로 마인드맵 데이터를 조회합니다.
             """
     )
-    @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/{mindmapId}")
-    public ResponseEntity<MindmapDetailRes> getMindmap(
+    public MindmapDetailRes getMindmap(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
-        return ResponseEntity.ok(mindmapService.getMindmapById(userId, mindmapId));
+        return mindmapService.getMindmapById(userId, mindmapId);
     }
 
     @Operation(
@@ -88,13 +87,12 @@ public class MindmapController {
             마인드맵 선택 드롭다운, 사이드바 등에 사용됩니다.
             """
     )
-    @ApiResponses({ @ApiResponse(responseCode = "200", description = "마인드맵 이름 목록 조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping("/titles")
-    public ResponseEntity<List<MindmapNameRes>> getMyMindmapNames(
+    public List<MindmapNameRes> getMyMindmapNames(
             @RequestAttribute(USER_ID) long userId
     ) {
-        return ResponseEntity.ok(mindmapService.getMindmapList(userId));
+        return mindmapService.getMindmapList(userId);
     }
 
     @Operation(
@@ -124,26 +122,24 @@ public class MindmapController {
         return ResponseEntity.created(location).body(resBody);
     }
 
-    @PostMapping("/connect/{mindmapId}")
-    public ResponseEntity<Object> connectMindmap(
+    @Operation(
+            summary = "마인드맵 공동 편집 참여", description = """
+            팀 마인드맵의 공동 편집 참여 전 인증 및 사용자 참여 정보를 생성합니다.
+            응답으로는 wss 최초 연결 시 필요한 토큰 데이터와 스냅샷용 presigned url을 제공합니다.
+            """
+    )
+    @ApiErrorCodes(
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.MINDMAP_ACCESS_FORBIDDEN }
+    )
+    @PostMapping("/{mindmapId}/sessions/join")
+    public MindmapSessionJoinRes joinMindmapSession(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
-        // todo: userId 가져오기
-        // todo: isShared 체크
-        // todo: 기본 활동 타입 인자 기반으로 yDoc 베이스 제공 필요
-        return ResponseEntity.ok(null);
-    }
-
-    @PostMapping("/disconnect/{mindmapId}")
-    public ResponseEntity<Object> disconnectMindmap(
-            @RequestAttribute(USER_ID) long userId,
-            @PathVariable UUID mindmapId
-    ) {
-        // todo: userId 가져오기
-        // todo: 웹소켓 해제
-        // todo: 기본 활동 타입 인자 기반으로 yDoc 베이스 제공 필요
-        return ResponseEntity.ok(null);
+        String getPresignedURL = mindmapService.joinMindmapSession(userId, mindmapId);
+        // todo: WS 티켓 발급
+        return new MindmapSessionJoinRes("", getPresignedURL);
     }
 
     @Operation(
@@ -166,31 +162,41 @@ public class MindmapController {
     }
 
     @Operation(summary = "마인드맵 즐겨찾기 상태 변경", description = "마인드맵의 즐겨찾기 여부를 설정하거나 해제합니다.")
-    @ApiResponses({ @ApiResponse(responseCode = "200", description = "업데이트 성공") })
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/favorite")
-    public ResponseEntity<MindmapDetailRes> updateFavoriteStatus(
+    public MindmapDetailRes updateFavoriteStatus(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId,
             @RequestParam boolean status
     ) {
-        MindmapDetailRes updatedMindmap = mindmapService.updateFavoriteStatus(userId, mindmapId, status);
-        return ResponseEntity.ok(updatedMindmap);
+        return mindmapService.updateFavoriteStatus(userId, mindmapId, status);
     }
 
     @Operation(summary = "마인드맵 이름 변경", description = "마인드맵의 이름을 변경합니다. 팀 마인드맵 또한 모든 사용자에게 반영되는 수정 사항입니다.")
-    @ApiResponses({ @ApiResponse(responseCode = "200", description = "업데이트 성공") })
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/name")
-    public ResponseEntity<MindmapDetailRes> updateName(
+    public MindmapDetailRes updateName(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId,
             @Valid
             @RequestBody
             MindmapNameUpdateReq request
     ) {
-        MindmapDetailRes updatedMindmap = mindmapService.updateName(userId, mindmapId, request.name());
-        return ResponseEntity.ok(updatedMindmap);
+        return mindmapService.updateName(userId, mindmapId, request.name());
+    }
+
+
+    @Operation(summary = "마인드맵 참여자 저장", description = "팀 마인드맵에 대한 참여자로 저장됩니다. 사용자의 마인드맵 리스트에 해당 마인드맵이 추가됩니다.")
+    @ApiErrorCodes(
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.MINDMAP_ACCESS_FORBIDDEN }
+    )
+    @PostMapping("/{mindmapId}/participants")
+    public MindmapDetailRes addParticipant(
+            @RequestAttribute(USER_ID) long userId,
+            @PathVariable UUID mindmapId
+    ) {
+        return mindmapService.saveMindmapParticipant(userId, mindmapId);
     }
 
     public enum MindmapVisibility {
