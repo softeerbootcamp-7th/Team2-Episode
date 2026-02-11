@@ -244,4 +244,50 @@ class MindmapServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("joinMindmapSession")
+    class JoinMindmapSession {
+
+        @Test
+        @DisplayName("성공: 공유된 마인드맵이면 스냅샷 조회를 위한 Presigned URL을 반환한다")
+        void should_return_presigned_url_when_mindmap_is_shared() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("공유 마인드맵", true);
+            String objectKey = "snapshots/" + mindmapId;
+            String expectedUrl = "https://s3.amazonaws.com/test-bucket/" + objectKey + "?token=abc";
+
+            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+            given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(objectKey);
+            given(snapshotRepository.createPresignedGetURL(objectKey)).willReturn(expectedUrl);
+
+            String result = mindmapService.joinMindmapSession(testUserId, mindmapId);
+
+            assertThat(result).isEqualTo(expectedUrl);
+            verify(userService).getUserOrThrow(testUserId);
+            verify(snapshotRepository).createPresignedGetURL(objectKey);
+        }
+
+        @Test
+        @DisplayName("실패: 존재하지 않는 마인드맵이면 MINDMAP_NOT_FOUND 예외가 발생한다")
+        void should_throw_exception_when_mindmap_not_found() {
+            UUID mindmapId = UUID.randomUUID();
+            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> mindmapService.joinMindmapSession(testUserId, mindmapId)).isInstanceOf(
+                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("실패: 개인 마인드맵(공유안됨)이면 MINDMAP_ACCESS_FORBIDDEN 예외가 발생한다")
+        void should_throw_exception_when_mindmap_is_private() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("개인 마인드맵", false);
+            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+
+            assertThatThrownBy(() -> mindmapService.joinMindmapSession(testUserId, mindmapId)).isInstanceOf(
+                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
+        }
+    }
 }
