@@ -128,7 +128,10 @@ public class MindmapController {
             응답으로는 wss 최초 연결 시 필요한 토큰 데이터와 스냅샷용 presigned url을 제공합니다.
             """
     )
-    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @ApiErrorCodes(
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.MINDMAP_ACCESS_FORBIDDEN }
+    )
     @PostMapping("/{mindmapId}/sessions/join")
     public MindmapSessionJoinRes joinMindmapSession(
             @RequestAttribute(USER_ID) long userId,
