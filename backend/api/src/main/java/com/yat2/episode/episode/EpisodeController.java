@@ -66,7 +66,10 @@ public class EpisodeController {
             summary = "에피소드 제목 수정",
             description = "에피소드의 node명(=content)을 수정합니다. " + "한 노드에 대한 수정 api 요청이 다수 들어왔을 때, 더 최근의 요청을 기준으로 반영이 됩니다."
     )
-    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @ApiErrorCodes(
+            { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
+              ErrorCode.MINDMAP_NOT_FOUND }
+    )
     @PatchMapping("/content")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateEpisodeContent(
