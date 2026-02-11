@@ -19,6 +19,7 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
@@ -252,9 +253,9 @@ class MindmapServiceTest {
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(objectKey);
             given(snapshotRepository.createPresignedGetURL(objectKey)).willReturn(expectedUrl);
 
-            String result = mindmapService.joinMindmapSession(testUserId, mindmapId);
+            MindmapSessionJoinRes result = mindmapService.joinMindmapSession(testUserId, mindmapId);
 
-            assertThat(result).isEqualTo(expectedUrl);
+            assertThat(result.presignedUrl()).isEqualTo(expectedUrl);
         }
 
         @Test

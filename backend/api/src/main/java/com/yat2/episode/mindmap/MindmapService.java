@@ -13,7 +13,9 @@ import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.MindmapNameRes;
+import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
@@ -29,6 +31,7 @@ public class MindmapService {
     private final S3SnapshotRepository snapshotRepository;
     private final UserService userService;
     private final S3ObjectKeyGenerator s3ObjectKeyGenerator;
+    private final MindmapJwtProvider mindmapJwtProvider;
 
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
         return MindmapDetailRes.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
@@ -174,10 +177,10 @@ public class MindmapService {
     }
 
     @Transactional
-    public String joinMindmapSession(long userId, UUID mindmapId) {
+    public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
         MindmapDetailRes mindmapDetailRes = this.saveMindmapParticipant(userId, mindmapId);
-
-        return snapshotRepository.createPresignedGetURL(
-                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapDetailRes.mindmapId()));
+        String ticket = mindmapJwtProvider.issue(userId, mindmapId);
+        return new MindmapSessionJoinRes(ticket, snapshotRepository.createPresignedGetURL(
+                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapDetailRes.mindmapId())));
     }
 }
