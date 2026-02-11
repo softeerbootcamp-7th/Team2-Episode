@@ -70,6 +70,10 @@ public class Episode {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @CreatedDate
+    @Column(name = "updated_at_content", nullable = false)
+    private LocalDateTime updatedAtContent;
+
     public static Episode create(UUID nodeId, long userId, UUID mindmapId) {
         Episode episode = new Episode();
         episode.id = new EpisodeId(nodeId, userId);

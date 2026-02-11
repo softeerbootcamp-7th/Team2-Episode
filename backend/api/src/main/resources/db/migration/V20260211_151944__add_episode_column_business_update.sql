@@ -1,0 +1,3 @@
+ALTER TABLE episodes
+    ADD updated_at_content DATETIME(6) NOT NULL
+    DEFAULT CURRENT_TIMESTAMP(6);
