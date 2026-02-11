@@ -63,8 +63,12 @@ public class EpisodeService {
     }
 
     @Transactional
-    public void updateContentEpisode(UUID nodeId, long userId, EpisodeUpdateContentReq episodeUpsertReq) {
+    public void updateContentEpisode(UUID nodeId, long userId, EpisodeUpdateContentReq episodeUpdateContentReq) {
         Episode episode = getEpisodeOrThrow(nodeId, userId);
+
+        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
+        episodeRepository.updateContentIfNewer(nodeId, episodeUpdateContentReq.content(),
+                                               episodeUpdateContentReq.localDateTime());
     }
 
     @Transactional
