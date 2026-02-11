@@ -182,11 +182,34 @@ class MindmapServiceTest {
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
             given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
+                    Optional.empty());
+            given(mindmapParticipantRepository.save(any(MindmapParticipant.class))).willAnswer(
+                    invocation -> invocation.getArgument(0));
 
             MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
 
             assertThat(result).isNotNull();
             verify(mindmapParticipantRepository).save(any(MindmapParticipant.class));
+        }
+
+        @Test
+        @DisplayName("이미 참여 중인 사용자가 참여 요청을 하면 새로운 참여 정보를 생성하지 않고 기존 정보를 반환한다")
+        void should_return_existing_participant_if_already_joined() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("이미 참여 중인 맵", true);
+            MindmapParticipant existingParticipant = new MindmapParticipant(testUser, mindmap);
+
+            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
+            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+
+            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
+                    Optional.of(existingParticipant));
+
+            MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
+
+            assertThat(result).isNotNull();
+            verify(mindmapParticipantRepository, never()).save(any(MindmapParticipant.class));
         }
 
         @Test
