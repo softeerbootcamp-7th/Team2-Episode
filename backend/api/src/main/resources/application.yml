@@ -97,6 +97,8 @@ aws:
     secret-key: ${S3_SECRET_KEY}
     endpoint: ${S3_ENDPOINT}
     max-upload-size: 10485760
+    post-url-expiry: 15
+    get-url-expiry: 10
 
 cloud:
   aws:
