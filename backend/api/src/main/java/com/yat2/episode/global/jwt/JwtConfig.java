@@ -1,9 +1,7 @@
 package com.yat2.episode.global.jwt;
 
-public interface JwtProperties {
+public interface JwtConfig {
     String secret();
 
     String issuer();
-
-    String CLAIM_TOKEN_TYPE = "typ";
 }

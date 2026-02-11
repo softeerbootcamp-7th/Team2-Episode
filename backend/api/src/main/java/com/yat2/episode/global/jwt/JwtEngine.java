@@ -19,7 +19,7 @@ public class JwtEngine {
     private final byte[] secretBytes;
     private final String issuer;
 
-    public JwtEngine(JwtProperties props) {
+    public JwtEngine(JwtConfig props) {
         this.secretBytes = props.secret().getBytes(StandardCharsets.UTF_8);
         this.issuer = props.issuer();
 
@@ -56,7 +56,7 @@ public class JwtEngine {
                 throw new CustomException(ErrorCode.TOKEN_EXPIRED);
             }
 
-            String type = (String) claims.getClaim(JwtProperties.CLAIM_TOKEN_TYPE);
+            String type = (String) claims.getClaim(JwtClaims.TOKEN_TYPE);
             if (!expectedType.equals(type)) {
                 throw new CustomException(ErrorCode.INVALID_TOKEN_TYPE);
             }
