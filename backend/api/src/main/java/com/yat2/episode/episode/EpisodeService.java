@@ -55,12 +55,12 @@ public class EpisodeService {
     }
 
     @Transactional
-    public void updateEpisode(UUID nodeId, long userId, EpisodeUpdateExceptContentReq episodeInsertReq) {
+    public void updateEpisode(UUID nodeId, long userId, EpisodeUpdateExceptContentReq episodeUpdateExceptContentReq) {
         Episode episode = getEpisodeOrThrow(nodeId, userId);
-        validateDates(episodeInsertReq.startDate(), episodeInsertReq.endDate());
-        validateCompetencyIds(episodeInsertReq.competencyTypeIds());
+        validateDates(episodeUpdateExceptContentReq.startDate(), episodeUpdateExceptContentReq.endDate());
+        validateCompetencyIds(episodeUpdateExceptContentReq.competencyTypeIds());
 
-        episode.update(episodeInsertReq);
+        episode.update(episodeUpdateExceptContentReq);
     }
 
     @Transactional
