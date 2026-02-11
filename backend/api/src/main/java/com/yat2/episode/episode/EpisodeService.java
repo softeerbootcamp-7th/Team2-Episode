@@ -68,8 +68,7 @@ public class EpisodeService {
         Episode episode = getEpisodeOrThrow(nodeId, userId);
 
         mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
-        episodeRepository.updateContentIfNewer(nodeId, episodeUpdateContentReq.content(),
-                                               episodeUpdateContentReq.localDateTime());
+        episode.update(episodeUpdateContentReq);
     }
 
     @Transactional

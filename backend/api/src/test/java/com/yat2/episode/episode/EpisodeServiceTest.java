@@ -1,6 +1,8 @@
 package com.yat2.episode.episode;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,6 +19,7 @@ import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.episode.dto.EpisodeDetailRes;
 import com.yat2.episode.episode.dto.EpisodeInsertReq;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
+import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
@@ -26,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -151,5 +155,43 @@ class EpisodeServiceTest {
 
         assertThat(episode.getStartDate()).isNull();
         assertThat(episode.getEndDate()).isNull();
+    }
+
+    @Nested
+    @DisplayName("updateContentEpisode")
+    class UpdateContentEpisode {
+
+        @Test
+        @DisplayName("에피소드 내용(Content)을 성공적으로 수정한다")
+        void should_update_episode_content_successfully() {
+            String newContent = "수정된 새로운 에피소드 내용입니다.";
+            Episode episode = Episode.create(nodeId, userId, mindmapId);
+            EpisodeUpdateContentReq req = new EpisodeUpdateContentReq(newContent);
+
+            when(episodeRepository.findById(any())).thenReturn(Optional.of(episode));
+
+            episodeService.updateContentEpisode(nodeId, userId, req);
+
+            assertThat(episode.getContent()).isEqualTo(newContent);
+            verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
+        }
+
+        @Test
+        @DisplayName("마인드맵 참여 권한이 없는 사용자가 수정을 시도하면 예외가 발생한다")
+        void should_throw_exception_when_user_is_not_participant() {
+            Episode episode = Episode.create(nodeId, userId, mindmapId);
+            EpisodeUpdateContentReq req = new EpisodeUpdateContentReq("내용 수정 시도");
+
+            when(episodeRepository.findById(any())).thenReturn(Optional.of(episode));
+
+            doThrow(new CustomException(ErrorCode.MINDMAP_NOT_FOUND)).when(mindmapAccessValidator)
+                    .findParticipantOrThrow(mindmapId, userId);
+
+            assertThatThrownBy(() -> episodeService.updateContentEpisode(nodeId, userId, req)).isInstanceOf(
+                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
+
+            assertThat(episode.getContent()).isNotEqualTo("내용 수정 시도");
+        }
     }
 }

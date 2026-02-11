@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeInsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
 
 @Getter
@@ -71,9 +72,6 @@ public class Episode {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "updated_at_content")
-    private LocalDateTime updatedAtContent;
-
     public static Episode create(UUID nodeId, long userId, UUID mindmapId) {
         Episode episode = new Episode();
         episode.id = new EpisodeId(nodeId, userId);
@@ -108,6 +106,10 @@ public class Episode {
             this.competencyTypeIds.clear();
             this.competencyTypeIds.addAll(req.competencyTypeIds());
         }
+    }
+
+    public void update(EpisodeUpdateContentReq req) {
+        this.content = req.content();
     }
 
     public void clearDates() {
