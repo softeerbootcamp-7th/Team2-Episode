@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -179,9 +180,10 @@ class MindmapServiceTest {
         void should_add_participant_when_mindmap_is_shared() {
             UUID mindmapId = UUID.randomUUID();
             Mindmap mindmap = createMindmap("팀 마인드맵", true);
+            ReflectionTestUtils.setField(mindmap, "id", mindmapId);
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willReturn(mindmap);
             given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
                     Optional.empty());
             given(mindmapParticipantRepository.save(any(MindmapParticipant.class))).willAnswer(
@@ -189,7 +191,7 @@ class MindmapServiceTest {
 
             MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
 
-            assertThat(result).isNotNull();
+            assertThat(result.mindmapId()).isEqualTo(mindmapId);
             verify(mindmapParticipantRepository).save(any(MindmapParticipant.class));
         }
 
@@ -198,17 +200,17 @@ class MindmapServiceTest {
         void should_return_existing_participant_if_already_joined() {
             UUID mindmapId = UUID.randomUUID();
             Mindmap mindmap = createMindmap("이미 참여 중인 맵", true);
+            ReflectionTestUtils.setField(mindmap, "id", mindmapId);
             MindmapParticipant existingParticipant = new MindmapParticipant(testUser, mindmap);
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
-
+            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willReturn(mindmap);
             given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
                     Optional.of(existingParticipant));
 
             MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
 
-            assertThat(result).isNotNull();
+            assertThat(result.mindmapId()).isEqualTo(mindmapId);
             verify(mindmapParticipantRepository, never()).save(any(MindmapParticipant.class));
         }
 
@@ -218,29 +220,12 @@ class MindmapServiceTest {
             UUID mindmapId = UUID.randomUUID();
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.empty());
+            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willThrow(
+                    new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
 
             assertThatThrownBy(() -> mindmapService.saveMindmapParticipant(testUserId, mindmapId)).isInstanceOf(
                             CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
-
-            verify(mindmapParticipantRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("개인 마인드맵이면 MINDMAP_ACCESS_FORBIDDEN 예외가 발생한다")
-        void should_throw_exception_when_mindmap_is_private() {
-            UUID mindmapId = UUID.randomUUID();
-            Mindmap mindmap = createMindmap("개인 마인드맵", false);
-
-            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
-
-            assertThatThrownBy(() -> mindmapService.saveMindmapParticipant(testUserId, mindmapId)).isInstanceOf(
-                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
-
-            verify(mindmapParticipantRepository, never()).save(any());
         }
     }
 
@@ -249,29 +234,36 @@ class MindmapServiceTest {
     class JoinMindmapSession {
 
         @Test
-        @DisplayName("성공: 공유된 마인드맵이면 스냅샷 조회를 위한 Presigned URL을 반환한다")
+        @DisplayName("성공: 공유된 마인드맵이면 참여 정보를 저장/확인하고 Presigned URL을 반환한다")
         void should_return_presigned_url_when_mindmap_is_shared() {
             UUID mindmapId = UUID.randomUUID();
             Mindmap mindmap = createMindmap("공유 마인드맵", true);
+            ReflectionTestUtils.setField(mindmap, "id", mindmapId);
+
+            MindmapParticipant participant = new MindmapParticipant(testUser, mindmap);
             String objectKey = "snapshots/" + mindmapId;
             String expectedUrl = "https://s3.amazonaws.com/test-bucket/" + objectKey + "?token=abc";
 
-            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
+            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willReturn(mindmap);
+            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
+                    Optional.of(participant));
+
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(objectKey);
             given(snapshotRepository.createPresignedGetURL(objectKey)).willReturn(expectedUrl);
 
             String result = mindmapService.joinMindmapSession(testUserId, mindmapId);
 
             assertThat(result).isEqualTo(expectedUrl);
-            verify(userService).getUserOrThrow(testUserId);
-            verify(snapshotRepository).createPresignedGetURL(objectKey);
         }
 
         @Test
         @DisplayName("실패: 존재하지 않는 마인드맵이면 MINDMAP_NOT_FOUND 예외가 발생한다")
         void should_throw_exception_when_mindmap_not_found() {
             UUID mindmapId = UUID.randomUUID();
-            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.empty());
+            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
+            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willThrow(
+                    new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
 
             assertThatThrownBy(() -> mindmapService.joinMindmapSession(testUserId, mindmapId)).isInstanceOf(
                             CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
@@ -282,8 +274,9 @@ class MindmapServiceTest {
         @DisplayName("실패: 개인 마인드맵(공유안됨)이면 MINDMAP_ACCESS_FORBIDDEN 예외가 발생한다")
         void should_throw_exception_when_mindmap_is_private() {
             UUID mindmapId = UUID.randomUUID();
-            Mindmap mindmap = createMindmap("개인 마인드맵", false);
-            given(mindmapRepository.findByIdWithLock(mindmapId)).willReturn(Optional.of(mindmap));
+            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
+            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willThrow(
+                    new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN));
 
             assertThatThrownBy(() -> mindmapService.joinMindmapSession(testUserId, mindmapId)).isInstanceOf(
                             CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())

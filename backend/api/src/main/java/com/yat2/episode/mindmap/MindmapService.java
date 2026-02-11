@@ -163,9 +163,7 @@ public class MindmapService {
     @Transactional
     public MindmapDetailRes saveMindmapParticipant(long userId, UUID mindmapId) {
         User user = userService.getUserOrThrow(userId);
-        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
-        if (!mindmap.isShared()) throw new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
+        Mindmap mindmap = mindmapAccessValidator.validateTeamMindmap(mindmapId);
 
         return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).map(MindmapDetailRes::of)
                 .orElseGet(() -> {
