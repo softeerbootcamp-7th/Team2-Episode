@@ -17,6 +17,7 @@ import com.yat2.episode.job.Job;
 import com.yat2.episode.job.JobRepository;
 import com.yat2.episode.job.Occupation;
 import com.yat2.episode.job.OccupationRepository;
+import com.yat2.episode.utils.AbstractRepositoryTest;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("QuestionRepository 통합 테스트")
-class QuestionRepositoryTest {
+class QuestionRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private QuestionRepository questionRepository;
@@ -96,6 +97,6 @@ class QuestionRepositoryTest {
         List<Question> result = questionRepository.findAllWithCompetency();
 
         assertThat(result).extracting(Question::getContent).contains(uniqueContent);
-        assertThat(result.get(0).getCompetencyType().getTypeName()).isEqualTo("페치조인 테스트");
+        assertThat(result).extracting(qt -> qt.getCompetencyType().getTypeName()).contains("페치조인 테스트");
     }
 }

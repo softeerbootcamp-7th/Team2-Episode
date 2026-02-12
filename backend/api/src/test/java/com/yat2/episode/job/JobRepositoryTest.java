@@ -7,19 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import com.yat2.episode.utils.AbstractRepositoryTest;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Transactional
 @ActiveProfiles("test")
 @DisplayName("JobRepository 통합 테스트")
-class JobRepositoryTest {
-
+class JobRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private JobRepository jobRepository;
 
