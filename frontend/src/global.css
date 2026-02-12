@@ -169,4 +169,8 @@
         visibility: hidden;
         transition: opacity 0.2s;
     }
+
+    .moving-fragment-group {
+        pointer-events: none;
+    }
 }
