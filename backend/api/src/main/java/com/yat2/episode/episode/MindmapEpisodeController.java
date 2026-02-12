@@ -54,7 +54,7 @@ public class MindmapEpisodeController {
     )
     @ApiErrorCodes(
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
-              ErrorCode.MINDMAP_NOT_FOUND }
+              ErrorCode.MINDMAP_NOT_FOUND, ErrorCode.MINDMAP_AND_EPISODE_NOT_MATCHED }
     )
     @PutMapping("/{nodeId}")
     public EpisodeDetail createEpisode(

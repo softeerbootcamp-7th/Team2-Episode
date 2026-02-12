@@ -29,6 +29,9 @@ public class EpisodeService {
     private final MindmapAccessValidator mindmapAccessValidator;
 
     public EpisodeDetail getEpisodeDetail(UUID nodeId, long userId) {
+        Episode episode = getEpisodeOrThrow(nodeId);
+        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
+
         return getEpisodeAndStarOrThrow(nodeId, userId);
     }
 
@@ -47,8 +50,8 @@ public class EpisodeService {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
-        EpisodeStar episodeStar =
-                episodeStarRepository.findById(episodeId).orElseGet(() -> createNewStar(episodeId, mindmapId));
+        if (mindmapId != episode.getMindmapId()) throw new CustomException(ErrorCode.MINDMAP_AND_EPISODE_NOT_MATCHED);
+        EpisodeStar episodeStar = episodeStarRepository.findById(episodeId).orElseGet(() -> createNewStar(episodeId));
         episode.update(episodeUpsertReq);
 
         return EpisodeDetail.of(episode, episodeStar);
@@ -111,7 +114,7 @@ public class EpisodeService {
         return episodeRepository.save(newEpisode);
     }
 
-    private EpisodeStar createNewStar(EpisodeId episodeId, UUID mindmapId) {
+    private EpisodeStar createNewStar(EpisodeId episodeId) {
         EpisodeStar newEpisodeStar = EpisodeStar.create(episodeId.getNodeId(), episodeId.getUserId());
 
         return episodeStarRepository.save(newEpisodeStar);
