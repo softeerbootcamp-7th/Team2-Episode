@@ -14,16 +14,16 @@ public class RelayHandler extends AbstractWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        //TODO
+        messageService.handleConnect(session);
     }
 
     @Override
     public void handleBinaryMessage(WebSocketSession session, BinaryMessage message) {
-        //TODO
+        messageService.processMessage(session, message);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) {
-        //TODO
+        messageService.handleDisconnect(session);
     }
 }
