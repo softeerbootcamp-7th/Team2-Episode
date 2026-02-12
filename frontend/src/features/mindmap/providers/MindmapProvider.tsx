@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import MindMapCore from "@/features/mindmap/core/MindMapCore";
 import { MindMapRefContext, MindMapStateContext } from "@/features/mindmap/providers/MindmapContext";
@@ -11,55 +11,59 @@ export const MindMapProvider = ({
     children: React.ReactNode;
     canvasRef: React.RefObject<SVGSVGElement | null>;
 }) => {
-    const coreRef = useRef<MindMapCore | null>(null);
+    // 1. 엔진 인스턴스는 즉시 생성
+    // 리렌더링 시 인스턴스가 유지되도록 useMemo 사용
+    const core = useMemo(() => new MindMapCore(() => setVersion((v) => v + 1)), []);
+
+    // 리액트 UI를 갱신하기 위한 버전 상태
     const [version, setVersion] = useState(0);
 
     useEffect(() => {
         const svg = canvasRef.current;
-        if (!svg || coreRef.current) return;
 
+        // 이미 초기화되었거나 SVG가 아직 없다면 중단
+        if (!svg || core.isReady) return;
+
+        // 2. SVG의 실제 크기를 감시
         const observer = new ResizeObserver((entries) => {
-            // entries가 배열이므로 안전하게 첫 번째 요소를 가져옵니다.
             const entry = entries[0];
-            if (!entry) return; // entry가 없으면 중단
+            if (!entry) return;
 
             const { width, height } = entry.contentRect;
 
+            // 실제 픽셀 크기가 확보된 시점에 엔진 초기화
             if (width > 0 && height > 0) {
-                coreRef.current = new MindMapCore(svg, () => setVersion((v) => v + 1));
+                core.initialize(svg);
+
+                // 초기화가 완료되었음을 리액트에 알려 Renderer를 마운트시킴
                 setVersion((v) => v + 1);
 
+                // 초기화는 한 번이면 족하므로 감시 중단
                 observer.disconnect();
             }
         });
 
         observer.observe(svg);
         return () => observer.disconnect();
-    }, [canvasRef]);
+    }, [canvasRef, core]);
 
+    // 3. 외부 노출용 액션 (core가 상수로 존재하므로 내부 체크 생략 가능)
     const actions = useMemo(
         () => ({
             addNode: (parentId: NodeId, direction: NodeDirection, addNodeDirection: AddNodeDirection) => {
-                if (coreRef.current) {
-                    coreRef.current.addNode(parentId, direction, addNodeDirection);
-                } else {
-                    console.error("Core가 아직 준비되지 않았습니다!");
-                }
+                core.addNode(parentId, direction, addNodeDirection);
             },
-            deleteNode: (nodeId: NodeId) => coreRef.current?.deleteNode(nodeId),
+            deleteNode: (nodeId: NodeId) => core.deleteNode(nodeId),
             updateNodeSize: (nodeId: NodeId, width: number, height: number) =>
-                coreRef.current?.updateNodeSize(nodeId, width, height),
+                core.updateNodeSize(nodeId, width, height),
             moveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) =>
-                coreRef.current?.moveNode(targetId, movingId, direction),
+                core.moveNode(targetId, movingId, direction),
         }),
-        [],
+        [core],
     );
 
     // core가 인스턴스화 되었을 때 컨텍스트 값 생성
-    const controller = useMemo(() => {
-        return { core: coreRef.current as MindMapCore, actions };
-    }, [version]);
-
+    const controller = useMemo(() => ({ core, actions }), [core, actions]);
     const stateValue = useMemo(() => ({ version }), [version]);
 
     return (

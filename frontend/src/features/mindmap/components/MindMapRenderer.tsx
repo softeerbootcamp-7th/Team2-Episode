@@ -2,30 +2,29 @@ import DropIndicator from "@/features/mindmap/components/DropIndicator";
 import EdgeLayer from "@/features/mindmap/components/EdgeLayer";
 import InteractionLayer from "@/features/mindmap/components/InteractionLayer";
 import { useMindMapCore, useMindMapVersion } from "@/features/mindmap/hooks/useMindmapContext";
+import { useViewportEvents } from "@/features/mindmap/hooks/useViewportEvents";
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
 
-/**
- * 마인드맵의 모든 시각적 요소를 통합 관리
- *  MindmapCore가 관리하는 트리의 데이터(nodeMap)를 읽어서, 실제 SVG 요소(노드와 선)로 변환
- */
-export default function MindMapRenderer() {
-    const mindmap = useMindMapCore(); // 현재 트리에 어떤 노드들이 있는지 인터랙션 실시간 관찰
-    const version = useMindMapVersion(); //version 업데이트 시 Renderer 다시 그리기
+/** core 내부 엔진이 모두 초기화된 후 */
+function MindMapInnerRenderer() {
+    const mindmap = useMindMapCore();
+    const version = useMindMapVersion();
 
-    if (!mindmap) {
-        console.log("Renderer: Core 준비 대기 중...");
-        return null;
-    }
+    if (!mindmap) return null;
+    useViewportEvents();
 
-    // 전체 마인드맵, 상태 가져오기
+    // 전체 마인드맵 상태 가져오기
     const status = mindmap.getInteractionStatus();
+
+    if (!status) return null;
+
     const { baseNode, dragSubtreeIds } = status;
     const nodeMap = mindmap.tree.nodes;
 
     const allNodes = Array.from(nodeMap.values());
-    // MindMapRenderer 내부
     const staticNodes = allNodes.filter((n) => !dragSubtreeIds?.has(n.id));
     const shadowNodes = allNodes.filter((n) => dragSubtreeIds?.has(n.id));
+
     return (
         <g className="mindmap-render-root" data-version={version}>
             {/* 정적 노드 그룹 */}
@@ -53,4 +52,16 @@ export default function MindMapRenderer() {
             <InteractionLayer status={status} nodeMap={nodeMap} />
         </g>
     );
+}
+
+export default function MindMapRenderer() {
+    const mindmap = useMindMapCore();
+
+    if (!mindmap || !mindmap.isReady) {
+        console.log("Renderer: 엔진 초기화 대기 중...");
+        return null;
+    }
+
+    // 엔진이 준비되었다면 실제 로직 컴포넌트를 반환
+    return <MindMapInnerRenderer />;
 }

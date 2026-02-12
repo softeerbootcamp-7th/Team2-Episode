@@ -3,18 +3,16 @@ import { useEffect } from "react";
 import { useMindMapCore } from "@/features/mindmap/hooks/useMindmapContext";
 
 /** 브라우저 외부 이벤트를 감지하고 mindmap 내부 broker로 전달 */
-export function useViewportEvents(canvasRef: React.RefObject<SVGSVGElement | null>) {
+export function useViewportEvents() {
     const mindmap = useMindMapCore(); // 코어에서 broker를 가져오기 위함
 
     useEffect(() => {
-        const svg = canvasRef.current;
-        if (!svg || !mindmap) {
-            console.error("svg || mindmap null");
-            return;
-        }
+        if (!mindmap || !mindmap.isReady) return;
+
+        const svg = mindmap.getCanvas();
+        if (!svg) return;
 
         const broker = mindmap.getBroker();
-
         // 1. 휠 이벤트 전달
         const handleWheel = (e: WheelEvent) => {
             e.preventDefault();
@@ -28,12 +26,20 @@ export function useViewportEvents(canvasRef: React.RefObject<SVGSVGElement | nul
         };
 
         // 3. 마우스 이벤트 전달
-        const handleMouseDown = (e: MouseEvent) => broker.publish("RAW_MOUSE_DOWN", e);
+        const handleMouseDown = (e: MouseEvent) => {
+            broker.publish("RAW_MOUSE_DOWN", e);
+        };
+
+        // 우클릭 기본 동작 차단, 패닝으로 사용
+        const handleContextMenu = (e: MouseEvent) => {
+            e.preventDefault();
+        };
         const handleMouseMove = (e: MouseEvent) => broker.publish("RAW_MOUSE_MOVE", e);
         const handleMouseUp = (e: MouseEvent) => broker.publish("RAW_MOUSE_UP", e);
 
         // 이벤트 등록
         svg.addEventListener("wheel", handleWheel, { passive: false });
+        svg.addEventListener("contextmenu", handleContextMenu);
         window.addEventListener("keydown", handleKeyDown);
         svg.addEventListener("mousedown", handleMouseDown);
         window.addEventListener("mousemove", handleMouseMove);
@@ -48,5 +54,5 @@ export function useViewportEvents(canvasRef: React.RefObject<SVGSVGElement | nul
             window.removeEventListener("mouseup", handleMouseUp);
             window.removeEventListener("mouseleave", handleMouseUp);
         };
-    }, [canvasRef, mindmap]);
+    }, [mindmap]);
 }

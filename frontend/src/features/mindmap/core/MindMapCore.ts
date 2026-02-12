@@ -4,7 +4,7 @@ import QuadTree from "@/features/mindmap/core/QuadTree";
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
 import ViewportManager from "@/features/mindmap/core/ViewportManager";
 import { MindMapEvents } from "@/features/mindmap/types/events";
-import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
+import { AddNodeDirection, NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { EventBroker } from "@/utils/EventBroker";
 
 /**
@@ -15,44 +15,58 @@ import { EventBroker } from "@/utils/EventBroker";
  *  interaction : 마우스/키보드 조작
  */
 export default class MindMapCore {
-    // TODO: private으로 하고 getter
     public tree: TreeContainer;
     private broker = new EventBroker<MindMapEvents>();
-
     private layout: MindmapLayoutManager;
-    private viewport: ViewportManager;
-    private quadTree: QuadTree;
-    private interaction: MindmapInteractionManager;
 
-    constructor(
-        canvas: SVGSVGElement,
-        private onGlobalUpdate: () => void,
-    ) {
-        // tree 초기화 (rootNode 정보 얻기 위해 먼저 생성)
+    // ! 나 ? 없이 사용하기 위해, 초기화 전에는 접근을 막는 구조
+    private canvas: SVGSVGElement | null = null;
+    private viewport: ViewportManager | null = null;
+    private quadTree: QuadTree | null = null;
+    private interaction: MindmapInteractionManager | null = null;
+
+    private _isInitialized = false;
+
+    constructor(private onGlobalUpdate: () => void) {
         this.tree = new TreeContainer();
-        const rootNode = this.tree.getRootNode();
-
-        // quadTree 초기화
-        const initialBounds = this.calculateInitialBounds(rootNode);
-        this.quadTree = new QuadTree(initialBounds);
-
-        // viewport 초기화
-        this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree.getBounds());
-
-        // layout 초기화
         this.layout = new MindmapLayoutManager({ treeContainer: this.tree });
+    }
 
-        // interaction 초기화
+    /** 2단계 결합을 위한 초기화 메서드 */
+    public initialize(canvas: SVGSVGElement) {
+        if (this._isInitialized) return;
+
+        const rootNode = this.tree.getRootNode();
+        const initialBounds = this.calculateInitialBounds(rootNode);
+
+        // 여기서 할당이 완료됨
+        this.canvas = canvas;
+        this.quadTree = new QuadTree(initialBounds);
+        this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree!.getBounds());
+
         this.interaction = new MindmapInteractionManager(
             this.broker,
             this.tree,
             this.quadTree,
             () => this.onGlobalUpdate(),
-            (dx, dy) => this.viewport.panningHandler(dx, dy),
+            (dx, dy) => {
+                // 내부 콜백에서도 null 체크 후 실행 (안정성 확보)
+                if (this.viewport) this.viewport.panningHandler(dx, dy);
+            },
             (target, moving, direction) => this.moveNode(target, moving, direction),
         );
 
+        this._isInitialized = true;
         this.sync();
+    }
+
+    public get isReady(): boolean {
+        return this._isInitialized;
+    }
+
+    /** 엔진이 소유하고 있는 SVG 엘리먼트를 반환 */
+    public getCanvas(): SVGSVGElement | null {
+        return this.canvas;
     }
 
     /** 쿼드트리 초기 영역 계산 */
@@ -61,26 +75,38 @@ export default class MindMapCore {
         const quadWidth = rootNode.width * FACTOR;
         const quadHeight = rootNode.height * FACTOR;
 
+        console.log(rootNode.x);
+        console.log(rootNode.y);
+        console.log(quadWidth);
+        console.log(quadHeight);
+
         return {
-            minX: rootNode.x - quadWidth / 2,
-            maxX: rootNode.x + quadWidth / 2,
-            minY: rootNode.y - quadHeight / 2,
-            maxY: rootNode.y + quadHeight / 2,
+            minX: -10000,
+            maxX: 10000,
+            minY: -10000,
+            maxY: 10000,
         };
     }
 
     private sync(affectedIds?: NodeId[]) {
+        const { quadTree, viewport, _isInitialized } = this;
+
+        // 💡 quadTree뿐만 아니라 viewport도 확인해야 안전하게 화면을 갱신합니다.
+        if (!_isInitialized || !quadTree || !viewport) return;
+
         // 1. 레이아웃 업데이트
         const rootId = this.tree.getRootId();
         if (rootId) {
             this.layout.updateLayout({ rootId });
         }
+        console.log("레이아웃 업데이트");
 
         // 2. 쿼드 트리 갱신
-        this.quadTree.clear();
+        quadTree.clear();
         this.tree.nodes.forEach((node) => {
-            this.quadTree.insert(node);
+            quadTree.insert(node);
         });
+        console.log("쿼드 트리 갱신");
 
         // 3. broker 알림
         if (affectedIds) {
@@ -98,6 +124,9 @@ export default class MindMapCore {
     }
 
     getInteractionStatus() {
+        if (!this._isInitialized || !this.interaction) {
+            return;
+        }
         return this.interaction.getInteractionStatus();
     }
 
@@ -110,8 +139,8 @@ export default class MindMapCore {
         this.sync([targetId, movingId]);
     }
 
-    addNode(baseNodeId: NodeId, direction: NodeDirection) {
-        const newNodeId = this.tree.attachTo({ baseNodeId, direction });
+    addNode(baseNodeId: NodeId, direction: NodeDirection, addNodeDirection: AddNodeDirection) {
+        const newNodeId = this.tree.attachTo({ baseNodeId, direction: direction, addNodeDirection: addNodeDirection });
 
         if (newNodeId) {
             this.sync([baseNodeId, newNodeId]);

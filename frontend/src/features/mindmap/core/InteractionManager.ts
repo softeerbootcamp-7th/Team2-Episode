@@ -184,7 +184,10 @@ export class MindmapInteractionManager {
 
     /** 배경 클릭 */
     handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button !== MOUSE_DOWN.left) return;
+        const isPanningButton =
+            e.button === MOUSE_DOWN.left || e.button === MOUSE_DOWN.wheel || e.button === MOUSE_DOWN.right;
+
+        if (!isPanningButton) return;
 
         this.startMousePos = { x: e.clientX, y: e.clientY };
         this.lastMousePos = { x: e.clientX, y: e.clientY };
@@ -207,7 +210,7 @@ export class MindmapInteractionManager {
                 break;
 
             case "panning":
-                if (e.buttons === MOUSE_DOWN.left) {
+                if (e.buttons > 0) {
                     this.onPan(dx, dy);
                 }
                 break;

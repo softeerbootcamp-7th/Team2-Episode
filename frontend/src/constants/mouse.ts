@@ -1,4 +1,5 @@
 export const MOUSE_DOWN = {
-    left: 1,
+    left: 0,
+    wheel: 1,
     right: 2,
 };
