@@ -1,6 +1,5 @@
 package com.yat2.episode.competency;
 
-import com.yat2.episode.utils.AbstractRepositoryTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +8,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Set;
+
+import com.yat2.episode.utils.AbstractRepositoryTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

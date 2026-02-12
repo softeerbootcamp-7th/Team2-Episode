@@ -1,6 +1,5 @@
 package com.yat2.episode.job;
 
-import com.yat2.episode.utils.AbstractRepositoryTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +9,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+
+import com.yat2.episode.utils.AbstractRepositoryTest;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;

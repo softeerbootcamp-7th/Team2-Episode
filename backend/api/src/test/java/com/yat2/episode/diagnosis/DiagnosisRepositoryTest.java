@@ -1,5 +1,17 @@
 package com.yat2.episode.diagnosis;
 
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import com.yat2.episode.competency.CompetencyType;
 import com.yat2.episode.competency.CompetencyTypeRepository;
 import com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes;
@@ -12,17 +24,6 @@ import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserRepository;
 import com.yat2.episode.utils.AbstractRepositoryTest;
-import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
