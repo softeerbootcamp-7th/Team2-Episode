@@ -12,6 +12,8 @@ public class S3Properties {
     private String endpoint;
     private String accessKey;
     private String secretKey;
+    private long postUrlExpiry;
+    private long getUrlExpiry;
 
     private long maxUploadSize = 10485760L;
 

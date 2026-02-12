@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -19,7 +20,11 @@ import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.jwt.MindmapJwtProperties;
+import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
+import com.yat2.episode.mindmap.jwt.MindmapTicketPayload;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
@@ -52,6 +57,11 @@ class MindmapServiceTest {
     private UserService userService;
     @Mock
     private S3ObjectKeyGenerator s3ObjectKeyGenerator;
+    @Spy
+    private MindmapJwtProvider mindmapJwtProvider = new MindmapJwtProvider(
+            new MindmapJwtProperties("testSecret383701492837409822312425132412341234123", "issuer", 30000));
+
+
     @InjectMocks
     private MindmapService mindmapService;
     private User testUser;
@@ -174,7 +184,6 @@ class MindmapServiceTest {
     @Nested
     @DisplayName("saveMindmapParticipant")
     class SaveMindmapParticipant {
-
         @Test
         @DisplayName("공유된 마인드맵에 참여자를 정상적으로 추가한다")
         void should_add_participant_when_mindmap_is_shared() {
@@ -232,7 +241,6 @@ class MindmapServiceTest {
     @Nested
     @DisplayName("joinMindmapSession")
     class JoinMindmapSession {
-
         @Test
         @DisplayName("성공: 공유된 마인드맵이면 참여 정보를 저장/확인하고 Presigned URL을 반환한다")
         void should_return_presigned_url_when_mindmap_is_shared() {
@@ -252,9 +260,12 @@ class MindmapServiceTest {
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(objectKey);
             given(snapshotRepository.createPresignedGetURL(objectKey)).willReturn(expectedUrl);
 
-            String result = mindmapService.joinMindmapSession(testUserId, mindmapId);
+            MindmapSessionJoinRes result = mindmapService.joinMindmapSession(testUserId, mindmapId);
 
-            assertThat(result).isEqualTo(expectedUrl);
+            assertThat(result.presignedUrl()).isEqualTo(expectedUrl);
+            MindmapTicketPayload payload = mindmapJwtProvider.verify(result.token());
+            assertThat(payload.mindmapId()).isEqualTo(mindmapId);
+            assertThat(payload.userId()).isEqualTo(testUserId);
         }
 
         @Test

@@ -137,9 +137,7 @@ public class MindmapController {
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
-        String getPresignedURL = mindmapService.joinMindmapSession(userId, mindmapId);
-        // todo: WS 티켓 발급
-        return new MindmapSessionJoinRes("", getPresignedURL);
+        return mindmapService.joinMindmapSession(userId, mindmapId);
     }
 
     @Operation(
