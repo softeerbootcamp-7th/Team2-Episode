@@ -7,6 +7,8 @@ export type NodeId = string;
 
 export type NodeType = "root" | "normal";
 
+export type AddNodeDirection = "left" | "right";
+
 export type NodeDirection = "prev" | "next" | "child";
 
 export type NodeData = {
@@ -29,4 +31,6 @@ export type NodeElement = Node & {
     lastChildId: NodeId | null;
     nextId: NodeId | null;
     prevId: NodeId | null;
+
+    addNodeDirection: AddNodeDirection;
 };

@@ -1,7 +1,6 @@
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { CacheMap } from "@/utils/CacheMap";
-import { calcPartitionIndex } from "@/utils/calc_partition";
 import { isSame } from "@/utils/is_same";
 
 type LayoutConfig = {
@@ -89,13 +88,46 @@ export default class MindmapLayoutManager {
         });
     }
 
+    // TODO: 좌우 균형 일단 적용 X, 사용자 조작대로만 위치
     private getPartition(childNodes: NodeElement[]) {
-        const heightArr = childNodes.map((node) => this.getSubTreeHeight(node));
-        const partitionIndex = calcPartitionIndex(heightArr);
+        // 1. 데이터에 기반한 필터링 (사용자 의도 존중)
+        const currentLeft = childNodes.filter((n) => n.addNodeDirection === "left");
+        const currentRight = childNodes.filter((n) => n.addNodeDirection === "right");
+
+        // const leftHeight = this.calcPartitionHeightWithGap(currentLeft);
+        // const rightHeight = this.calcPartitionHeightWithGap(currentRight);
+
+        // // 2. 임계치 체크
+        // const imbalanceThreshold = 2.0;
+        // const ratio = Math.max(leftHeight, rightHeight) / (Math.min(leftHeight, rightHeight) || 1);
+
+        // // 균형이 깨지지 않았다면 사용자의 의도(데이터에 박힌 값)를 그대로 믿고 반환
+        // if (ratio <= imbalanceThreshold) {
+        //     return {
+        //         leftGroup: currentLeft,
+        //         rightGroup: currentRight,
+        //     };
+        // }
+
+        // // 3. 균형이 너무 깨졌을 때만 Rebalancing (여기서 slice 기준을 다시 잡음)
+        // const heightArr = childNodes.map((node) => this.getSubTreeHeight(node));
+        // const partitionIndex = calcPartitionIndex(heightArr);
+
+        // // 재배치 시: 앞쪽 절반은 오른쪽으로, 뒤쪽 절반은 왼쪽으로 보냄
+        // const newRight = childNodes.slice(0, partitionIndex);
+        // const newLeft = childNodes.slice(partitionIndex);
+
+        // // 재배치된 노드들의 데이터를 실제 물리적 방향과 동기화 (업데이트)
+        // newRight.forEach((n) => {
+        //     n.addNodeDirection = "right";
+        // });
+        // newLeft.forEach((n) => {
+        //     n.addNodeDirection = "left";
+        // });
 
         return {
-            rightGroup: childNodes.slice(0, partitionIndex),
-            leftGroup: childNodes.slice(partitionIndex),
+            rightGroup: currentRight,
+            leftGroup: currentLeft,
         };
     }
 
@@ -167,10 +199,14 @@ export default class MindmapLayoutManager {
         const subtreeHeight = this.getSubTreeHeight(curNode);
         const newNodeY = startY - curNode.height / 2 + subtreeHeight / 2;
 
-        if (!isSame(curNode.x, x) || !isSame(curNode.y, newNodeY)) {
+        if (!isSame(curNode.x, x) || !isSame(curNode.y, newNodeY) || curNode.addNodeDirection !== direction) {
             this.treeContainer.update({
                 nodeId: curNode.id,
-                newNodeData: { x, y: newNodeY },
+                newNodeData: {
+                    x,
+                    y: newNodeY,
+                    // addNodeDirection: direction //좌우 균형 정렬 적용 x
+                },
             });
         }
 

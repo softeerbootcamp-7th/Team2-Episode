@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import MindMapCore from "@/features/mindmap/core/MindMapCore";
 import { MindMapRefContext, MindMapStateContext } from "@/features/mindmap/providers/MindmapContext";
-import { NodeDirection, NodeId } from "@/features/mindmap/types/node";
+import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
 
 export const MindMapProvider = ({
     children,
@@ -39,7 +39,13 @@ export const MindMapProvider = ({
 
     const actions = useMemo(
         () => ({
-            addNode: (parentId: NodeId, direction: NodeDirection) => coreRef.current?.addNode(parentId, direction),
+            addNode: (parentId: NodeId, direction: NodeDirection, addNodeDirection: AddNodeDirection) => {
+                if (coreRef.current) {
+                    coreRef.current.addNode(parentId, direction, addNodeDirection);
+                } else {
+                    console.error("Core가 아직 준비되지 않았습니다!");
+                }
+            },
             deleteNode: (nodeId: NodeId) => coreRef.current?.deleteNode(nodeId),
             updateNodeSize: (nodeId: NodeId, width: number, height: number) =>
                 coreRef.current?.updateNodeSize(nodeId, width, height),

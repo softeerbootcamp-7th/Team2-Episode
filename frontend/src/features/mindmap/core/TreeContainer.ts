@@ -1,9 +1,16 @@
-import { NodeData, NodeDirection, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/node";
+import {
+    AddNodeDirection,
+    NodeData,
+    NodeDirection,
+    NodeElement,
+    NodeId,
+    NodeType,
+} from "@/features/mindmap/types/node";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 import generateId from "@/utils/generate_id";
 
 const ROOT_NODE_PARENT_ID = "empty";
-const ROOT_NODE_CONTENTS = "김현대의 마인드맵";
+const ROOT_NODE_CONTENTS = "김현대";
 const DETACHED_NODE_PARENT_ID = "detached";
 
 export default class TreeContainer {
@@ -37,13 +44,15 @@ export default class TreeContainer {
     private generateNewNodeElement({
         nodeData = { contents: "" },
         type = "normal",
-    }: { nodeData?: NodeData; type?: NodeType } = {}) {
+        addNodeDirection = "left",
+    }: { nodeData?: NodeData; type?: NodeType; addNodeDirection?: AddNodeDirection } = {}) {
         const node: NodeElement = {
             id: generateId(),
             x: 0,
             y: 0,
             width: 0,
             height: 0,
+            addNodeDirection,
 
             parentId: ROOT_NODE_PARENT_ID,
             firstChildId: null,
@@ -70,21 +79,48 @@ export default class TreeContainer {
     }
 
     // ====== 구조 변경 CD =======
-    appendChild({ parentNodeId, childNodeId: cId }: { parentNodeId: NodeId; childNodeId?: NodeId }) {
+    appendChild({
+        parentNodeId,
+        childNodeId: cId,
+        addNodeDirection,
+    }: {
+        parentNodeId: NodeId;
+        childNodeId?: NodeId;
+        addNodeDirection?: AddNodeDirection;
+    }) {
         try {
-            const childNode = cId ? this._getNode(cId) : this.generateNewNodeElement();
             const parentNode = this._getNode(parentNodeId);
-            childNode.parentId = parentNodeId;
+            console.log("최종 엔진 도착 : ", addNodeDirection);
+            // [방향 결정 로직]
+            // 1. 부모가 루트면: UI에서 전달받은 direction 사용
+            // 2. 부모가 일반 노드면: 부모의 direction을 상속
+            const finalDirection =
+                parentNode.type === "root" ? addNodeDirection || "right" : parentNode.addNodeDirection;
 
+            // 노드 생성 (또는 기존 노드 가져오기)
+            const childNode = cId
+                ? this._getNode(cId)
+                : this.generateNewNodeElement({ addNodeDirection: finalDirection });
+
+            childNode.parentId = parentNodeId;
+            childNode.addNodeDirection = finalDirection;
+
+            // [Double Linked List 연결: 항상 맨 뒤에 추가]
             if (parentNode.lastChildId) {
+                // 이미 자식이 있는 경우: 기존 막내의 뒤에 붙임
                 const lastNode = this._getNode(parentNode.lastChildId);
                 lastNode.nextId = childNode.id;
                 childNode.prevId = lastNode.id;
+
+                // 부모의 막내 정보를 새 노드로 갱신
                 parentNode.lastChildId = childNode.id;
+                childNode.nextId = null; // 막내이므로 다음은 없음
             } else {
-                // 자식 0
+                // 첫 번째 자식인 경우: 첫째이자 막내가 됨
                 parentNode.firstChildId = childNode.id;
                 parentNode.lastChildId = childNode.id;
+                childNode.prevId = null;
+                childNode.nextId = null;
             }
         } catch (e) {
             if (e instanceof Error) {
@@ -223,16 +259,22 @@ export default class TreeContainer {
         }
     }
 
-    attachTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: NodeDirection }) {
+    attachTo({
+        baseNodeId,
+        direction,
+        addNodeDirection,
+    }: {
+        baseNodeId: NodeId;
+        direction: NodeDirection;
+        addNodeDirection: AddNodeDirection;
+    }) {
         try {
             const baseNode = this._getNode(baseNodeId);
+            console.log("attachTo: ", addNodeDirection);
 
-            // Root 노드 옆에는 추가할 수 없음
-            if (baseNode.type === "root") {
-                throw new Error("루트 노드의 형제로는 노드를 추가할 수 없습니다.");
-            }
-
-            const newNode = this.generateNewNodeElement();
+            const newNode = this.generateNewNodeElement({
+                addNodeDirection: addNodeDirection,
+            });
 
             switch (direction) {
                 case "next":
@@ -242,7 +284,11 @@ export default class TreeContainer {
                     this.attachPrev({ baseNode, movingNode: newNode });
                     break;
                 case "child":
-                    this.appendChild({ parentNodeId: baseNode.id, childNodeId: newNode.id });
+                    this.appendChild({
+                        parentNodeId: baseNode.id,
+                        childNodeId: newNode.id,
+                        addNodeDirection: addNodeDirection,
+                    });
                     break;
                 default:
                     exhaustiveCheck(`${direction} 방향은 불가능합니다.`);

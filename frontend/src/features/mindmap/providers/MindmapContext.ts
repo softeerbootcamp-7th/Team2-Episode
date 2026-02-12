@@ -1,12 +1,12 @@
 import { createContext } from "react";
 
 import MindMapCore from "@/features/mindmap/core/MindMapCore";
-import { NodeDirection, NodeId } from "@/features/mindmap/types/node";
+import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
 
 export type MindMapRefContextType = {
     core: MindMapCore;
     actions: {
-        addNode: (baseId: NodeId, dir: NodeDirection) => void;
+        addNode: (baseId: NodeId, dir: NodeDirection, addNode: AddNodeDirection) => void;
         deleteNode: (nodeId: NodeId) => void;
         moveNode: (targetId: NodeId, movingId: NodeId, dir: NodeDirection) => void;
         updateNodeSize: (nodeId: NodeId, w: number, h: number) => void;

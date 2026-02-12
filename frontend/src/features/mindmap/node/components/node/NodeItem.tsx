@@ -32,13 +32,13 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
 
     return (
         <foreignObject
-            x={x - width / 2}
-            y={y - height / 2}
-            width={width || 500}
-            height={height || 500} // NodeCenter는 원형이라 높이가 더 클 수 있음
+            x={x}
+            y={y}
+            width={width || 200}
+            height={height || 200} // NodeCenter는 원형이라 높이가 더 클 수 있음
             className="overflow-visible"
         >
-            <div ref={contentRef} className="inline-block p-1">
+            <div ref={contentRef} className="inline-block">
                 {isRoot ? (
                     /* 루트 노드일 때 */
                     <NodeCenter username={data.contents} onAdd={(direction) => addNode(nodeId, "child", direction)} />
