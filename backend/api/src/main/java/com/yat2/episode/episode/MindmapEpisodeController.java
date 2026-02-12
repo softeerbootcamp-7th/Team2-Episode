@@ -17,7 +17,7 @@ import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
-import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -57,7 +57,7 @@ public class MindmapEpisodeController {
             @RequestAttribute(USER_ID) long userId,
             @Valid
             @RequestBody
-            EpisodeUpsertReq episodeUpsertReq
+            EpisodeUpsertContentReq episodeUpsertReq
     ) {
         return episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
     }

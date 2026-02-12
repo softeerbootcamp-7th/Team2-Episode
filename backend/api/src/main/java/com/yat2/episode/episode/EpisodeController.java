@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetail;
-import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
+import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
 import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
@@ -42,7 +42,7 @@ public class EpisodeController {
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId
     ) {
-        return episodeService.getEpisode(nodeId, userId);
+        return episodeService.getEpisodeDetail(nodeId, userId);
     }
 
     @Operation(
@@ -77,7 +77,7 @@ public class EpisodeController {
             @RequestAttribute(USER_ID) long userId,
             @Valid
             @RequestBody
-            EpisodeUpdateContentReq req
+            EpisodeUpsertContentReq req
     ) {
         episodeService.updateContentEpisode(nodeId, userId, req);
     }

@@ -12,8 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
-import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -38,11 +37,7 @@ public class Episode {
         return episode;
     }
 
-    public void update(EpisodeUpsertReq req) {
-        if (req.content() != null) this.content = req.content();
-    }
-
-    public void update(EpisodeUpdateContentReq req) {
+    public void update(EpisodeUpsertContentReq req) {
         this.content = req.content();
     }
 }
