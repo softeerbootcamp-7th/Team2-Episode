@@ -40,7 +40,7 @@ class EpisodeServiceTest {
     @Mock
     private EpisodeRepository episodeRepository;
     @Mock
-    private StarRepository starRepository;
+    private EpisodeStarRepository episodeStarRepository;
 
     @Mock
     private CompetencyTypeRepository competencyTypeRepository;
@@ -128,14 +128,14 @@ class EpisodeServiceTest {
 
     @Test
     void updateEpisode_success() {
-        Star star = Star.create(nodeId, userId);
-        when(starRepository.findById(any())).thenReturn(Optional.of(star));
+        EpisodeStar episodeStar = EpisodeStar.create(nodeId, userId);
+        when(episodeStarRepository.findById(any())).thenReturn(Optional.of(episodeStar));
 
         StarUpdateReq req = new StarUpdateReq(null, "updated", null, null, null, null, null);
 
         episodeService.updateStar(nodeId, userId, req);
 
-        assertThat(star.getSituation()).isEqualTo("updated");
+        assertThat(episodeStar.getSituation()).isEqualTo("updated");
     }
 
     @Test

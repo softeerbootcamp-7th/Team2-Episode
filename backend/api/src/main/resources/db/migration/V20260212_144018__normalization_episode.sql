@@ -1,8 +1,8 @@
-ALTER TABLE episodes RENAME TO stars;
+ALTER TABLE episodes RENAME TO episode_stars;
 
-ALTER TABLE stars DROP FOREIGN KEY episode2mindmap;
-ALTER TABLE stars DROP COLUMN mindmap_id;
-ALTER TABLE stars DROP COLUMN content;
+ALTER TABLE episode_stars DROP FOREIGN KEY episode2mindmap;
+ALTER TABLE episode_stars DROP COLUMN mindmap_id;
+ALTER TABLE episode_stars DROP COLUMN content;
 
 CREATE TABLE `episodes` (
     node_id BINARY(16) NOT NULL,

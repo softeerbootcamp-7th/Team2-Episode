@@ -27,8 +27,8 @@ import com.yat2.episode.episode.dto.StarUpdateReq;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "stars")
-public class Star {
+@Table(name = "episode_stars")
+public class EpisodeStar {
 
     @EmbeddedId
     private EpisodeId id;
@@ -65,10 +65,10 @@ public class Star {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public static Star create(UUID nodeId, long userId) {
-        Star star = new Star();
-        star.id = new EpisodeId(nodeId, userId);
-        return star;
+    public static EpisodeStar create(UUID nodeId, long userId) {
+        EpisodeStar episodeStar = new EpisodeStar();
+        episodeStar.id = new EpisodeId(nodeId, userId);
+        return episodeStar;
     }
 
     public void update(EpisodeUpsertReq req) {

@@ -38,7 +38,7 @@ public class EpisodeController {
     @Operation(summary = "에피소드 정보 조회", description = "에피소드 세부 정보를 조회합니다.")
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
     @GetMapping
-    public EpisodeDetail getEpisode(
+    public EpisodeDetail getEpisodeDetail(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId
     ) {

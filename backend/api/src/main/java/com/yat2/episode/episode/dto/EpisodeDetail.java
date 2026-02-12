@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.episode.Episode;
-import com.yat2.episode.episode.Star;
+import com.yat2.episode.episode.EpisodeStar;
 
 public record EpisodeDetail(
         UUID nodeId,
@@ -22,7 +22,7 @@ public record EpisodeDetail(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static EpisodeDetail of(Episode e, Star s) {
+    public static EpisodeDetail of(Episode e, EpisodeStar s) {
         if (s == null) {
             return new EpisodeDetail(e.getId(), e.getMindmapId(), List.of(), e.getContent(), null, null, null, null,
                                      null, null, null, null);

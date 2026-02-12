@@ -17,7 +17,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
             """
                         SELECT e
                         FROM Episode e
-                        JOIN Star s ON s.id.nodeId = e.id
+                        JOIN EpisodeStar s ON s.id.nodeId = e.id
                         WHERE e.mindmapId = :mindmapId
                           AND s.id.userId = :userId
                     """
@@ -42,7 +42,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
                             s.updatedAt
                         )
                         FROM Episode e
-                        LEFT JOIN Star s
+                        LEFT JOIN EpisodeStar s
                             ON e.id = s.id.nodeId
                            AND s.id.userId = :userId
                         WHERE e.mindmapId = :mindmapId
@@ -55,7 +55,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
             """
                         SELECT DISTINCT ctId
                         FROM Episode e
-                        JOIN Star s
+                        JOIN EpisodeStar s
                             ON e.id = s.id.nodeId
                         JOIN s.competencyTypeIds ctId
                         WHERE e.mindmapId = :mindmapId
@@ -83,7 +83,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
                             s.updatedAt
                         )
                         FROM Episode e
-                        LEFT JOIN Star s
+                        LEFT JOIN EpisodeStar s
                             ON e.id = s.id.nodeId
                            AND s.id.userId = :userId
                         WHERE e.id = :nodeId
