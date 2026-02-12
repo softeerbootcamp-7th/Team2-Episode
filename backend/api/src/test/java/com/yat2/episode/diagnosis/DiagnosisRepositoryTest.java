@@ -23,6 +23,7 @@ import com.yat2.episode.question.Question;
 import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserRepository;
+import com.yat2.episode.utils.AbstractRepositoryTest;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,8 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("DiagnosisRepository 통합 테스트")
-class DiagnosisRepositoryTest {
-
+class DiagnosisRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private DiagnosisRepository diagnosisRepository;
     @Autowired
