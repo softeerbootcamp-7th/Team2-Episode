@@ -1,10 +1,10 @@
+import { MindmapInteractionManager } from "@/features/mindmap/core/InteractionManager";
+import MindmapLayoutManager from "@/features/mindmap/core/LayoutManager";
+import QuadTree from "@/features/mindmap/core/QuadTree";
+import TreeContainer from "@/features/mindmap/core/TreeContainer";
+import ViewportManager from "@/features/mindmap/core/ViewportManager";
 import { MindMapEvents } from "@/features/mindmap/types/events";
 import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
-import { MindmapInteractionManager } from "@/features/mindmap/utils/InteractionManager";
-import MindmapLayoutManager from "@/features/mindmap/utils/LayoutManager";
-import TreeContainer from "@/features/mindmap/utils/TreeContainer";
-import ViewportManager from "@/features/mindmap/utils/ViewportManager";
-import QuadTree from "@/features/quad_tree/utils/QuadTree";
 import { EventBroker } from "@/utils/EventBroker";
 
 /**
@@ -29,7 +29,7 @@ export default class MindMapCore {
         private onGlobalUpdate: () => void,
     ) {
         // tree 초기화 (rootNode 정보 얻기 위해 먼저 생성)
-        this.tree = new TreeContainer({ broker: this.broker });
+        this.tree = new TreeContainer();
         const rootNode = this.tree.getRootNode();
 
         // quadTree 초기화
@@ -46,6 +46,7 @@ export default class MindMapCore {
         this.interaction = new MindmapInteractionManager(
             this.broker,
             this.tree,
+            this.quadTree,
             () => this.onGlobalUpdate(),
             (dx, dy) => this.viewport.panningHandler(dx, dy),
             (target, moving, direction) => this.moveNode(target, moving, direction),
@@ -147,5 +148,9 @@ export default class MindMapCore {
 
     getBroker() {
         return this.broker;
+    }
+
+    getTree() {
+        return this.tree;
     }
 }

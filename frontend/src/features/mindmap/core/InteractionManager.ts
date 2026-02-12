@@ -1,47 +1,73 @@
 import { MOUSE_DOWN } from "@/constants/mouse";
-import { ATTRIBUTE_NAME_OF_NODE_ID } from "@/features/mindmap/constants/node";
+import QuadTree from "@/features/mindmap/core/QuadTree";
+import TreeContainer from "@/features/mindmap/core/TreeContainer";
+import { MindMapEvents } from "@/features/mindmap/types/events";
 import { BaseNodeInfo, InteractionMode } from "@/features/mindmap/types/interaction";
 import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { ViewportTransform } from "@/features/mindmap/types/spatial";
-import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { calcDistance } from "@/utils/calc_distance";
+import { EventBroker } from "@/utils/EventBroker";
 
 const DRAG_THRESHOLD = 5;
 const BASE_NODE_DETECTION_THRESHOLD = 100;
 
 export class MindmapInteractionManager {
+    private broker: EventBroker<MindMapEvents>;
     private container: TreeContainer;
+
+    private quadTree: QuadTree;
     private onUpdate: () => void;
     private onPan: (dx: number, dy: number) => void;
     private onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void;
 
+    // 상태 변수
     private mode: InteractionMode = "idle";
     private transform: ViewportTransform = { x: 0, y: 0, scale: 1 };
-
     private startMousePos = { x: 0, y: 0 };
     private lastMousePos = { x: 0, y: 0 };
-
     private draggingNodeId: NodeId | null = null;
     private dragDelta = { x: 0, y: 0 };
     private mousePos = { x: 0, y: 0 };
-
     private dragSubtreeIds: Set<NodeId> | null = null;
-
     private baseNode: BaseNodeInfo = {
         targetId: null,
         direction: null,
     };
 
     constructor(
+        broker: EventBroker<MindMapEvents>,
         container: TreeContainer,
+        quadTree: QuadTree,
         onUpdate: () => void,
         onPan: (dx: number, dy: number) => void,
         onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void,
     ) {
+        this.broker = broker;
         this.container = container;
+        this.quadTree = quadTree;
         this.onUpdate = onUpdate;
         this.onPan = onPan;
         this.onMoveNode = onMoveNode;
+
+        this.setupEventListeners();
+    }
+
+    private setupEventListeners() {
+        this.broker.subscribe({ key: "RAW_MOUSE_DOWN", callback: (e) => this.handleMouseDown(e as React.MouseEvent) });
+        this.broker.subscribe({ key: "RAW_MOUSE_MOVE", callback: (e) => this.handleMouseMove(e as React.MouseEvent) });
+        this.broker.subscribe({ key: "RAW_MOUSE_UP", callback: (e) => this.handleMouseUp(e as React.MouseEvent) });
+
+        this.broker.subscribe({
+            key: "NODE_CLICK",
+            callback: ({ nodeId, event }) => this.handleNodeClick(nodeId, event as React.MouseEvent),
+        });
+
+        this.broker.subscribe({
+            key: "VIEWPORT_CHANGED",
+            callback: (transform) => {
+                this.transform = transform;
+            },
+        });
     }
 
     private projectScreenToWorld(clientX: number, clientY: number) {
@@ -76,12 +102,23 @@ export class MindmapInteractionManager {
 
         const { x: mouseX, y: mouseY } = this.projectScreenToWorld(e.clientX, e.clientY);
 
+        const searchRange = {
+            minX: mouseX - BASE_NODE_DETECTION_THRESHOLD,
+            maxX: mouseX + BASE_NODE_DETECTION_THRESHOLD,
+            minY: mouseY - BASE_NODE_DETECTION_THRESHOLD,
+            maxY: mouseY + BASE_NODE_DETECTION_THRESHOLD,
+        };
+
+        const candidates = this.quadTree.getPointsInRange(searchRange);
+
         let minDist = Infinity;
         let nearestId: NodeId | null = null;
 
         // 가장 가까운 노드 후보군 탐색
         // TODO: 쿼드 트리 적용
-        for (const [id, node] of this.container.nodes) {
+        for (const node of candidates) {
+            const id = node.id;
+
             if (this.mode === "dragging" && this.dragSubtreeIds?.has(id)) continue;
 
             const dist = calcDistance(node.x, node.y, mouseX, mouseY);
@@ -132,30 +169,26 @@ export class MindmapInteractionManager {
         };
     }
 
+    /** 노드 클릭 */
+    // TODO: 노드 리액트 컴포넌트에서 마우스 누를때 e.stopPropabation 추가 필수
+    private handleNodeClick = (nodeId: NodeId, e: React.MouseEvent) => {
+        const node = this.container.safeGetNode(nodeId);
+        if (!node || node.type === "root") return;
+
+        this.draggingNodeId = nodeId;
+        this.mode = "potential_drag";
+        this.startMousePos = { x: e.clientX, y: e.clientY };
+        this.lastMousePos = { x: e.clientX, y: e.clientY };
+        this.dragDelta = { x: 0, y: 0 };
+    };
+
+    /** 배경 클릭 */
     handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button !== MOUSE_DOWN.left) {
-            return;
-        }
+        if (e.button !== MOUSE_DOWN.left) return;
 
         this.startMousePos = { x: e.clientX, y: e.clientY };
         this.lastMousePos = { x: e.clientX, y: e.clientY };
-
-        // TODO:
-        const targetEl = (e.target as HTMLElement).closest(`[${ATTRIBUTE_NAME_OF_NODE_ID}]`);
-        const nodeId = targetEl?.getAttribute(ATTRIBUTE_NAME_OF_NODE_ID);
-
-        if (nodeId) {
-            const node = this.container.safeGetNode(nodeId);
-            if (!node || node.type === "root") {
-                return;
-            }
-
-            this.draggingNodeId = nodeId;
-            this.mode = "potential_drag";
-            this.dragDelta = { x: 0, y: 0 };
-        } else {
-            this.mode = "panning";
-        }
+        this.mode = "panning";
     };
 
     handleMouseMove(e: React.MouseEvent): { dx: number; dy: number } {

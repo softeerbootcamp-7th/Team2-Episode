@@ -1,5 +1,5 @@
+import TreeContainer from "@/features/mindmap/core/TreeContainer";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
-import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { CacheMap } from "@/utils/CacheMap";
 import { calcPartitionIndex } from "@/utils/calc_partition";
 import { isSame } from "@/utils/is_same";
@@ -27,6 +27,7 @@ export default class MindmapLayoutManager {
         this.subtreeHeightCache = new CacheMap();
     }
 
+    /** 캐시 무효화 : 특정 노드 변경 시 상위 부모들의 높이 계산 초기화 */
     public invalidate(nodeId: NodeId) {
         let currentId: NodeId | undefined = nodeId;
 

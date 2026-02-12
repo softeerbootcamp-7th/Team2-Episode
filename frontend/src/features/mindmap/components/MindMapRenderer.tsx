@@ -1,16 +1,16 @@
+import DropIndicator from "@/features/mindmap/components/DropIndicator";
 import EdgeLayer from "@/features/mindmap/components/EdgeLayer";
-import DropIndicator from "@/features/mindmap/components/interaction/DropIndicator";
-import InteractionLayer from "@/features/mindmap/components/interaction/InteractionLayer";
+import InteractionLayer from "@/features/mindmap/components/InteractionLayer";
+import { useMindMapCore, useMindMapVersion } from "@/features/mindmap/hooks/useMindmapContext";
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
-import { useMindmapCore, useMindmapVersion } from "@/features/mindmap/providers/MindmapProvider";
 
 /**
  * 마인드맵의 모든 시각적 요소를 통합 관리
  *  MindmapCore가 관리하는 트리의 데이터(nodeMap)를 읽어서, 실제 SVG 요소(노드와 선)로 변환
  */
 export default function MindMapRenderer() {
-    const mindmap = useMindmapCore(); // 현재 트리에 어떤 노드들이 있는지 인터랙션 실시간 관찰
-    const version = useMindmapVersion(); //version 업데이트 시 Renderer 다시 그리기
+    const mindmap = useMindMapCore(); // 현재 트리에 어떤 노드들이 있는지 인터랙션 실시간 관찰
+    const version = useMindMapVersion(); //version 업데이트 시 Renderer 다시 그리기
 
     // 전체 마인드맵, 상태 가져오기
     const status = mindmap.getInteractionStatus();

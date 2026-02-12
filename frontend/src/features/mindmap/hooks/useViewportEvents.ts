@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
-import { useMindmapCore } from "@/features/mindmap/providers/MindmapProvider";
+import { useMindMapCore } from "@/features/mindmap/hooks/useMindmapContext";
 
 /** 브라우저 외부 이벤트를 감지하고 mindmap 내부 broker로 전달 */
 export function useViewportEvents(canvasRef: React.RefObject<SVGSVGElement | null>) {
-    const mindmap = useMindmapCore(); // 코어에서 broker를 가져오기 위함
+    const mindmap = useMindMapCore(); // 코어에서 broker를 가져오기 위함
     const broker = mindmap.getBroker();
 
     useEffect(() => {

@@ -1,11 +1,12 @@
+import { useMindMapActions } from "@/features/mindmap/hooks/useMindmapContext";
+import { useMindMapNode } from "@/features/mindmap/hooks/useMindmapNode";
 import { Node } from "@/features/mindmap/node/components/node/Node";
-import { useMindmapActions, useNode } from "@/features/mindmap/providers/MindmapProvider";
 import { NodeId } from "@/features/mindmap/types/node";
 
 export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
-    const nodeData = useNode(nodeId);
+    const nodeData = useMindMapNode(nodeId);
     // TODO: 나머지 action도 추가
-    const { addNode } = useMindmapActions();
+    const { addNode } = useMindMapActions();
 
     if (!nodeData) {
         return null;

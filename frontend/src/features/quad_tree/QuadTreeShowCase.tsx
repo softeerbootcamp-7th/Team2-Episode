@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import QuadTree from "@/features/quad_tree/utils/QuadTree";
+import QuadTree from "@/features/mindmap/core/QuadTree";
 
 import { Point } from "./types/point";
 import { Rect } from "./types/rect";

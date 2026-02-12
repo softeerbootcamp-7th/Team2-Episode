@@ -1,5 +1,5 @@
-import DropIndicator from "@/features/mindmap/components/interaction/DropIndicator";
-import MovingNodeFragment from "@/features/mindmap/components/interaction/MovingNodeFragment";
+import DropIndicator from "@/features/mindmap/components/DropIndicator";
+import MovingNodeFragment from "@/features/mindmap/components/MovingNodeFragment";
 import { BaseNodeInfo, InteractionMode } from "@/features/mindmap/types/interaction";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
