@@ -23,12 +23,14 @@ public class S3PostSigner {
     private final String region;
     private final String endpoint;
     private final long maxUploadSize;
+    private final long expiryMinute;
 
     public S3PostSigner(S3Properties s3Properties) {
         this.bucket = s3Properties.getBucket().getName();
         this.region = s3Properties.getRegion();
         this.endpoint = s3Properties.getEndpoint();
         this.maxUploadSize = s3Properties.getMaxUploadSize();
+        this.expiryMinute = s3Properties.getPostUrlExpiry();
     }
 
     public S3UploadFieldsRes generatePostFields(String key, AwsCredentials credentials) throws Exception {
@@ -41,7 +43,8 @@ public class S3PostSigner {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS);
         String dateStamp = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String xAmzDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
-        String expiration = now.plusMinutes(15).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+        String expiration =
+                now.plusMinutes(expiryMinute).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
 
         String credential = accessKey + "/" + dateStamp + "/" + region + "/s3/aws4_request";
         String policyJson = buildPolicy(bucket, key, credential, xAmzDate, sessionToken, expiration);

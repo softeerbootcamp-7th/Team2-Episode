@@ -11,17 +11,19 @@ import java.time.Duration;
 public class S3GetSigner {
     private final S3Presigner s3Presigner;
     private final String bucket;
+    private final long expiryMinute;
 
     public S3GetSigner(S3Presigner s3Presigner, S3Properties s3Properties) {
         this.s3Presigner = s3Presigner;
         this.bucket = s3Properties.getBucket().getName();
+        this.expiryMinute = s3Properties.getGetUrlExpiry();
     }
 
     public String generateGetUrl(String key) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder().bucket(this.bucket).key(key).build();
 
         GetObjectPresignRequest presignRequest =
-                GetObjectPresignRequest.builder().signatureDuration(Duration.ofMinutes(10))
+                GetObjectPresignRequest.builder().signatureDuration(Duration.ofMinutes(this.expiryMinute))
                         .getObjectRequest(getObjectRequest).build();
 
         return s3Presigner.presignGetObject(presignRequest).url().toString();
