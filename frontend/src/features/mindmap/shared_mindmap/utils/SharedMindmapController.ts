@@ -11,12 +11,15 @@ export default class SharedMindMapController {
     private layoutManager: SharedMindmapLayoutManager;
 
     constructor(doc: Y.Doc, broker: EventBroker<NodeId>, roomId: MindmapRoomId) {
-        this.container = new SharedTreeContainer({ doc, broker, roomId });
+        this.container = new SharedTreeContainer({
+            doc,
+            broker,
+            roomId,
+            onTransaction: (event, origin) => {
+                this.handleTransaction(event, origin);
+            },
+        });
         this.layoutManager = new SharedMindmapLayoutManager({ xGap: 140, yGap: 60 });
-
-        this.container.onTransaction = (event, origin) => {
-            this.handleTransaction(event, origin);
-        };
     }
 
     private handleTransaction(event: Y.YMapEvent<NodeElement>, origin: TransactionOrigin) {
@@ -40,13 +43,7 @@ export default class SharedMindMapController {
     private refreshLayout() {
         const updates = this.layoutManager.calculateLayout(this.container);
 
-        if (updates.size > 0) {
-            this.container.doc.transact(() => {
-                updates.forEach((pos, nodeId) => {
-                    this.container.updateNode(nodeId, { x: pos.x, y: pos.y }, "layout");
-                });
-            }, "layout");
-        }
+        this.container.updateNodes(updates, "layout");
     }
 
     public addChildNode(parentId: NodeId) {
@@ -78,7 +75,7 @@ export default class SharedMindMapController {
         this.container.updateNode(nodeId, { data: { contents } }, "user_action");
     }
 
-    // 지금 지원 안함
+    // TODO: 이후 추가할예정. 지금 지원 안함
     public undo() {
         // this.container.undoManager.undo();
     }

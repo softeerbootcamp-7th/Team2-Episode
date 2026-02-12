@@ -1,7 +1,7 @@
 import SharedTreeContainer from "@/features/mindmap/shared_mindmap/utils/SharedTreeContainer";
 import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
-import { calcPartitionIndex } from "@/utils/calc_partition"; // 기존 유틸 사용
-import { isSame } from "@/utils/is_same"; // 기존 유틸 사용
+import { calcPartitionIndex } from "@/utils/calc_partition";
+import { isSame } from "@/utils/is_same";
 
 type LayoutConfig = {
     xGap: number;
@@ -9,8 +9,6 @@ type LayoutConfig = {
 };
 
 type PartitionDirection = "right" | "left";
-
-export type LayoutResult = Map<NodeId, { x: number; y: number }>;
 
 export default class SharedMindmapLayoutManager {
     private config: LayoutConfig;
@@ -21,6 +19,7 @@ export default class SharedMindmapLayoutManager {
             xGap: 200,
             yGap: 16,
         };
+
         this.config = { ...defaultConfig, ...config };
         this.subtreeHeightCache = new Map();
     }
@@ -44,11 +43,11 @@ export default class SharedMindmapLayoutManager {
         container: SharedTreeContainer,
         rootCenterX: number = 0,
         rootCenterY: number = 0,
-    ): LayoutResult {
+    ): Map<NodeId, Partial<NodeElement>> {
         const rootId = container.getRootId();
         const rootNode = container.safeGetNode(rootId);
 
-        const updates: LayoutResult = new Map();
+        const updates: Map<NodeId, Partial<NodeElement>> = new Map();
 
         if (!rootNode) {
             return updates;
@@ -141,7 +140,7 @@ export default class SharedMindmapLayoutManager {
         parentRealX: number;
         parentRealY: number;
         direction: PartitionDirection;
-        updates: LayoutResult;
+        updates: Map<NodeId, Partial<NodeElement>>;
     }) {
         if (partition.length === 0) {
             return;
@@ -182,7 +181,7 @@ export default class SharedMindmapLayoutManager {
         x: number;
         startY: number;
         direction: PartitionDirection;
-        updates: LayoutResult;
+        updates: Map<NodeId, Partial<NodeElement>>;
     }) {
         const subtreeHeight = this.getSubTreeHeight(curNode, container);
         const newNodeY = startY - curNode.height / 2 + subtreeHeight / 2;

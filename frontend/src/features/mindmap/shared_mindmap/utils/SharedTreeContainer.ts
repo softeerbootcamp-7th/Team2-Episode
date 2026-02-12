@@ -23,16 +23,16 @@ export const ROOT_NODE_ID = "root";
 const DETACHED_NODE_PARENT_ID = "detached";
 
 export default class SharedTreeContainer {
-    public undoManager: Y.UndoManager;
-    public doc: Y.Doc;
-    public yNodes: Y.Map<NodeElement>;
+    private undoManager: Y.UndoManager;
+    private doc: Y.Doc;
+    private yNodes: Y.Map<NodeElement>;
     private cachedNodes: Map<NodeId, NodeElement>;
 
-    public broker: EventBroker<NodeId>;
+    private broker: EventBroker<NodeId>;
     private isThrowError: boolean;
     private rootNodeId: NodeId = ROOT_NODE_ID;
 
-    public onTransaction?: (event: Y.YMapEvent<NodeElement>, origin: TransactionOrigin) => void;
+    private onTransaction: (event: Y.YMapEvent<NodeElement>, origin: TransactionOrigin) => void;
 
     constructor({
         isThrowError = true,
@@ -40,17 +40,20 @@ export default class SharedTreeContainer {
         broker,
         doc,
         roomId,
+        onTransaction,
     }: {
         broker: EventBroker<NodeId>;
         name?: string;
         isThrowError?: boolean;
         doc: Y.Doc;
         roomId: MindmapRoomId;
+        onTransaction: (event: Y.YMapEvent<NodeElement>, origin: TransactionOrigin) => void;
     }) {
         // initialization
         this.doc = doc;
         this.broker = broker;
         this.yNodes = this.doc.getMap(roomId);
+        this.onTransaction = onTransaction;
 
         this.cachedNodes = new Map();
         this.yNodes.forEach((value, key) => {
@@ -403,6 +406,14 @@ export default class SharedTreeContainer {
             if (!prev) return;
             this.yNodes.set(nodeId, { ...prev, ...patch });
             this.cachedNodes.set(nodeId, { ...prev, ...patch });
+        }, origin);
+    }
+
+    public updateNodes(nodes: Map<NodeId, Partial<NodeElement>>, origin: TransactionOrigin = "user_action") {
+        this.doc.transact(() => {
+            nodes.forEach((value, key) => {
+                this.updateNode(key, value, "layout");
+            });
         }, origin);
     }
 

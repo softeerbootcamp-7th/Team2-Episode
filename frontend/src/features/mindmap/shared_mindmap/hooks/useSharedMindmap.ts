@@ -20,15 +20,14 @@ type UseSharedMindmapProps = {
 export const useSharedMindmap = ({ roomId }: UseSharedMindmapProps) => {
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
 
-    const { controller, provider } = useMemo(() => {
+    const { controller, provider, broker } = useMemo(() => {
         const doc = new Y.Doc();
 
         const provider = new WebsocketProvider(ENV.WS_BASE_URL, roomId, doc);
-
         const broker = new EventBroker<NodeId>();
         const controller = new SharedMindMapController(doc, broker, roomId);
 
-        return { controller, provider };
+        return { controller, provider, broker };
     }, [roomId]);
 
     useEffect(() => {
@@ -52,6 +51,8 @@ export const useSharedMindmap = ({ roomId }: UseSharedMindmapProps) => {
         controller,
 
         container: controller.container,
+
+        broker,
 
         connectionStatus,
     };

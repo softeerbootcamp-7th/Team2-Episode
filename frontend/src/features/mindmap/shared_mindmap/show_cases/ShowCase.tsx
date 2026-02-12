@@ -5,6 +5,7 @@ import { useNodeResizeObserver } from "@/features/mindmap/shared_mindmap/hooks/u
 import { useSharedMindmap } from "@/features/mindmap/shared_mindmap/hooks/useSharedMindmap";
 import SharedMindMapController from "@/features/mindmap/shared_mindmap/utils/SharedMindmapController";
 import { NodeId } from "@/features/mindmap/types/mindmap";
+import { EventBroker } from "@/utils/EventBroker";
 
 // [Read Hook] 특정 노드의 데이터 변경을 구독
 
@@ -13,10 +14,11 @@ import { NodeId } from "@/features/mindmap/types/mindmap";
 type NodeItemProps = {
     nodeId: NodeId;
     controller: SharedMindMapController;
+    broker: EventBroker<NodeId>;
 };
 
-const NodeItem = ({ nodeId, controller }: NodeItemProps) => {
-    const node = useNode(nodeId, controller);
+const NodeItem = ({ nodeId, controller, broker }: NodeItemProps) => {
+    const node = useNode(nodeId, controller, broker);
 
     const nodeRef = useNodeResizeObserver({
         nodeId,
@@ -88,7 +90,7 @@ const NodeItem = ({ nodeId, controller }: NodeItemProps) => {
 
             {/* 자식 노드 재귀 렌더링 */}
             {controller.container.getChildIds(nodeId).map((childId) => (
-                <NodeItem key={childId} nodeId={childId} controller={controller} />
+                <NodeItem key={childId} nodeId={childId} controller={controller} broker={broker} />
             ))}
         </>
     );
@@ -105,7 +107,7 @@ const btnStyle: React.CSSProperties = {
 
 const DUMMY_ROOM_ID = "ㅁ";
 export default function MindmapShowcaseV3() {
-    const { controller, connectionStatus } = useSharedMindmap({ roomId: DUMMY_ROOM_ID });
+    const { controller, connectionStatus, broker } = useSharedMindmap({ roomId: DUMMY_ROOM_ID });
 
     // 2. Canvas Panning State
     const [pan, setPan] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -226,7 +228,7 @@ export default function MindmapShowcaseV3() {
                     }}
                 >
                     {/* Root Node 렌더링 시작 */}
-                    <NodeItem nodeId={controller.container.getRootId()} controller={controller} />
+                    <NodeItem broker={broker} nodeId={controller.container.getRootId()} controller={controller} />
                 </div>
             </div>
         </>
