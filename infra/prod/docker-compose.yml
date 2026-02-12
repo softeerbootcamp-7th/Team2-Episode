@@ -6,6 +6,13 @@ services:
     env_file: .env
     networks:
       - web
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-northeast-2
+        awslogs-group: episode-api-prod
+        awslogs-stream: api
+        awslogs-create-group: "true"
 
   caddy:
     image: caddy:2.10.2-alpine
