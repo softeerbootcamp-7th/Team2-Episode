@@ -31,8 +31,8 @@ public record EpisodeDetail(
         List<Integer> competencyIds =
                 (s.getCompetencyTypeIds() == null) ? List.of() : List.copyOf(s.getCompetencyTypeIds());
 
-        return new EpisodeDetail(e.getId(), e.getMindmapId(), List.copyOf(competencyIds), e.getContent(),
-                                 s.getSituation(), s.getTask(), s.getAction(), s.getResult(), s.getStartDate(),
-                                 s.getEndDate(), s.getCreatedAt(), s.getUpdatedAt());
+        return new EpisodeDetail(e.getId(), e.getMindmapId(), competencyIds, e.getContent(), s.getSituation(),
+                                 s.getTask(), s.getAction(), s.getResult(), s.getStartDate(), s.getEndDate(),
+                                 s.getCreatedAt(), s.getUpdatedAt());
     }
 }
