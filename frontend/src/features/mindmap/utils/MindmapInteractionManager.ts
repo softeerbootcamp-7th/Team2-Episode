@@ -1,7 +1,7 @@
 import { MOUSE_DOWN } from "@/constants/mouse";
 import { ATTRIBUTE_NAME_OF_NODE_ID } from "@/features/mindmap/constants/node";
-import { BaseNodeInfo, InteractionMode, ViewportTransform } from "@/features/mindmap/types/mindmap_interaction_type";
-import { NodeId } from "@/features/mindmap/types/mindmap_type";
+import { NodeId } from "@/features/mindmap/types/mindmap";
+import { BaseNodeInfo, InteractionMode, ViewportTransform } from "@/features/mindmap/types/mindmap_interaction";
 import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { calcDistance } from "@/utils/calc_distance";
 

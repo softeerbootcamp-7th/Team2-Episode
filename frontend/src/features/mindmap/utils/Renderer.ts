@@ -1,4 +1,4 @@
-import { NodeElement } from "@/features/mindmap/types/mindmap_type";
+import { NodeElement } from "@/features/mindmap/types/mindmap";
 import { Rect } from "@/features/quad_tree/types/rect";
 import QuadTree from "@/features/quad_tree/utils/QuadTree";
 

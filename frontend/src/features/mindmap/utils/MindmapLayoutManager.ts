@@ -1,4 +1,4 @@
-import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap_type";
+import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
 import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { CacheMap } from "@/utils/CacheMap";
 import { calcPartitionIndex } from "@/utils/calc_partition";
@@ -146,6 +146,7 @@ export default class MindmapLayoutManager {
                     ? parentRealX + parentNode.width + this.config.xGap
                     : parentRealX - childNode.width - this.config.xGap;
 
+            console.log(realX, childNode);
             this.layoutSubtree({ curNode: childNode, x: realX, startY: currentY, direction });
 
             currentY += this.getSubTreeHeight(childNode) + this.config.yGap;
