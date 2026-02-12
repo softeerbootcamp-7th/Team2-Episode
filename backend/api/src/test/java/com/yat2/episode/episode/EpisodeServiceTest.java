@@ -111,7 +111,7 @@ class EpisodeServiceTest {
 
             episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
 
-            verify(mindmapAccessValidator, times(2)).findParticipantOrThrow(mindmapId, userId);
+            verify(mindmapAccessValidator, times(1)).findParticipantOrThrow(mindmapId, userId);
             verify(episodeRepository).save(any(Episode.class));
             verify(episodeStarRepository).save(any(EpisodeStar.class));
         }

@@ -106,15 +106,12 @@ public class EpisodeService {
     }
 
     private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId) {
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, episodeId.getUserId());
-
         Episode newEpisode = Episode.create(episodeId.getNodeId(), mindmapId);
 
         return episodeRepository.save(newEpisode);
     }
 
     private EpisodeStar createNewStar(EpisodeId episodeId, UUID mindmapId) {
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, episodeId.getUserId());
         EpisodeStar newEpisodeStar = EpisodeStar.create(episodeId.getNodeId(), episodeId.getUserId());
 
         return episodeStarRepository.save(newEpisodeStar);
