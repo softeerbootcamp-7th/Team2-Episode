@@ -36,21 +36,33 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
             y={y}
             width={width || 200}
             height={height || 200} // NodeCenter는 원형이라 높이가 더 클 수 있음
+            data-node-id={nodeId}
             className="overflow-visible"
         >
             <div ref={contentRef} className="inline-block">
                 {isRoot ? (
                     /* 루트 노드일 때 */
-                    <NodeCenter username={data.contents} onAdd={(direction) => addNode(nodeId, "child", direction)} />
+                    <NodeCenter
+                        data-action="select"
+                        username={data.contents}
+                        onAdd={(direction) => addNode(nodeId, "child", direction)}
+                    />
                 ) : (
                     /* 일반 노드일 때 */
                     <Node>
                         <Node.AddNode
+                            data-direction={addNodeDirection}
+                            data-action="add-child"
                             direction={addNodeDirection}
                             color={"blue"}
                             onClick={() => addNode(nodeId, "child", addNodeDirection)}
                         />
-                        <Node.Content size={"sm"} color={"blue"} onClick={() => console.log(`클릭: ${data.contents}`)}>
+                        <Node.Content
+                            data-action="select"
+                            size={"sm"}
+                            color={"blue"}
+                            onClick={() => console.log(`클릭: ${data.contents}`)}
+                        >
                             {data.contents || "하위 내용"}
                         </Node.Content>
                     </Node>

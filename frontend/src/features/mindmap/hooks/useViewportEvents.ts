@@ -27,7 +27,8 @@ export function useViewportEvents() {
 
         // 3. 마우스 이벤트 전달
         const handleMouseDown = (e: MouseEvent) => {
-            broker.publish("RAW_MOUSE_DOWN", e);
+            // broker.publish("RAW_MOUSE_DOWN", e);
+            mindmap.handleMouseDown(e as unknown as React.MouseEvent);
         };
 
         // 우클릭 기본 동작 차단, 패닝으로 사용

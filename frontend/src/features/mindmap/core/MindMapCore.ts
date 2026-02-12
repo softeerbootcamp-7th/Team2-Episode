@@ -168,7 +168,25 @@ export default class MindMapCore {
     }
 
     handleMouseDown(e: React.MouseEvent) {
-        this.broker.publish("RAW_MOUSE_DOWN", e);
+        const target = e.target as HTMLElement;
+        const nodeEl = target.closest("[data-node-id]");
+
+        if (nodeEl) {
+            const nodeId = nodeEl.getAttribute("data-node-id")!;
+            const actionEl = target.closest("[data-action]");
+
+            if (actionEl && actionEl.getAttribute("data-action") === "add-child") {
+                const direction = actionEl.getAttribute("data-direction") as AddNodeDirection;
+                this.addNode(nodeId, "child", direction);
+                return;
+            }
+
+            // 노드 본체 클릭 시 (드래그 준비)
+            this.broker.publish("NODE_CLICK", { nodeId, event: e });
+        } else {
+            // 배경 클릭 시 (패닝)
+            this.broker.publish("RAW_MOUSE_DOWN", e);
+        }
     }
 
     handleMouseUp(e: React.MouseEvent) {

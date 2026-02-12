@@ -115,7 +115,6 @@ export class MindmapInteractionManager {
         let nearestId: NodeId | null = null;
 
         // 가장 가까운 노드 후보군 탐색
-        // TODO: 쿼드 트리 적용
         for (const node of candidates) {
             const id = node.id;
 

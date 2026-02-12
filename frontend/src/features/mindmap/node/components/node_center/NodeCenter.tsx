@@ -15,9 +15,11 @@ export default function NodeCenter({ username = "", onAdd, className }: NodeCent
     const label = username ? `${username}의\n마인드맵` : "마인드맵";
 
     return (
-        <div className={cn("group relative flex items-center gap-2", className)}>
+        <div className={cn("group relative flex items-center gap-2 cursor-pointer", className)}>
             {/* 왼쪽 버튼: 항상 존재 */}
             <AddNode
+                data-direction="left"
+                data-action="add-child"
                 color={PRIMARY_COLOR}
                 direction="left"
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto"
@@ -33,6 +35,8 @@ export default function NodeCenter({ username = "", onAdd, className }: NodeCent
 
             {/* 오른쪽 버튼: 항상 존재 */}
             <AddNode
+                data-direction="right"
+                data-action="add-child"
                 color={PRIMARY_COLOR}
                 direction="right"
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto"
