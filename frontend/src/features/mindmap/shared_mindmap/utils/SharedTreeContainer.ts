@@ -8,13 +8,13 @@ import generateId from "@/utils/generate_id";
 
 // TODO: quadtree 준비되면 의존성 주입
 
-const TRANSACTION_ORIGINS = {
-    USER_ACTION: "user_action",
-    LAYOUT: "layout",
-    REMOTE: "remote",
-} as const;
+// const TRANSACTION_ORIGINS = {
+//     USER_ACTION: "user_action",
+//     LAYOUT: "layout",
+//     REMOTE: "remote",
+// } as const;
 
-export type TransactionOrigin = (typeof TRANSACTION_ORIGINS)[keyof typeof TRANSACTION_ORIGINS];
+// export type TransactionOrigin = (typeof TRANSACTION_ORIGINS)[keyof typeof TRANSACTION_ORIGINS];
 
 const ROOT_NODE_PARENT_ID = "empty";
 const ROOT_NODE_CONTENTS = "김현대의 마인드맵";
@@ -23,7 +23,7 @@ export const ROOT_NODE_ID = "root";
 const DETACHED_NODE_PARENT_ID = "detached";
 
 export default class SharedTreeContainer {
-    private undoManager: Y.UndoManager;
+    // private undoManager: Y.UndoManager;
     private doc: Y.Doc;
     private yNodes: Y.Map<NodeElement>;
     private cachedNodes: Map<NodeId, NodeElement>;
@@ -32,7 +32,7 @@ export default class SharedTreeContainer {
     private isThrowError: boolean;
     private rootNodeId: NodeId = ROOT_NODE_ID;
 
-    private onTransaction: (event: Y.YMapEvent<NodeElement>, origin: TransactionOrigin) => void;
+    private onTransaction: (event: Y.YMapEvent<NodeElement>) => void;
 
     constructor({
         isThrowError = true,
@@ -47,7 +47,7 @@ export default class SharedTreeContainer {
         isThrowError?: boolean;
         doc: Y.Doc;
         roomId: MindmapRoomId;
-        onTransaction: (event: Y.YMapEvent<NodeElement>, origin: TransactionOrigin) => void;
+        onTransaction: (event: Y.YMapEvent<NodeElement>) => void;
     }) {
         // initialization
         this.doc = doc;
@@ -64,16 +64,14 @@ export default class SharedTreeContainer {
             this.initRootNode(name);
         }
 
-        this.undoManager = new Y.UndoManager(this.yNodes, {
-            captureTimeout: 500,
-            trackedOrigins: new Set([TRANSACTION_ORIGINS.USER_ACTION]),
-        });
+        // this.undoManager = new Y.UndoManager(this.yNodes, {
+        //     captureTimeout: 500,
+        //     trackedOrigins: new Set([TRANSACTION_ORIGINS.USER_ACTION]),
+        // });
 
         this.isThrowError = isThrowError;
 
         this.yNodes.observe((event) => {
-            const origin = event.transaction.origin as TransactionOrigin;
-
             event.keysChanged.forEach((nodeId) => {
                 const newValue = this.yNodes.get(nodeId);
 
@@ -87,29 +85,24 @@ export default class SharedTreeContainer {
             });
 
             if (this.onTransaction) {
-                this.onTransaction(event, origin);
+                this.onTransaction(event);
             }
         });
     }
 
     private initRootNode(contents: string) {
-        this.doc.transact(() => {
-            this.generateNewNodeElement({
-                nodeData: { contents },
-                id: this.rootNodeId,
-                type: "root",
-            });
-        }, TRANSACTION_ORIGINS.USER_ACTION);
+        this.generateNewNodeElement({
+            nodeData: { contents },
+            id: this.rootNodeId,
+            type: "root",
+        });
     }
 
     public getDoc() {
         return this.doc;
     }
 
-    appendChild(
-        { parentNodeId, childNodeId }: { parentNodeId: NodeId; childNodeId?: NodeId },
-        origin: TransactionOrigin = "user_action",
-    ) {
+    appendChild({ parentNodeId, childNodeId }: { parentNodeId: NodeId; childNodeId?: NodeId }) {
         this.doc.transact(() => {
             try {
                 let childNode: NodeElement;
@@ -141,7 +134,7 @@ export default class SharedTreeContainer {
             } catch (e) {
                 this.handleError(e);
             }
-        }, origin);
+        });
     }
 
     attachTo({ baseNodeId, direction }: { baseNodeId: NodeId; direction: "prev" | "next" | "child" }) {
@@ -224,7 +217,7 @@ export default class SharedTreeContainer {
         }
     }
 
-    delete({ nodeId, origin = "user_action" }: { nodeId: NodeId; origin?: TransactionOrigin }) {
+    delete({ nodeId }: { nodeId: NodeId }) {
         this.doc.transact(() => {
             try {
                 const node = this._getNode(nodeId);
@@ -254,7 +247,7 @@ export default class SharedTreeContainer {
             } catch (e) {
                 this.handleError(e);
             }
-        }, origin);
+        });
     }
 
     private _deleteTraverse({ nodeId }: { nodeId: NodeId }) {
@@ -387,48 +380,42 @@ export default class SharedTreeContainer {
         this.cachedNodes.set(nodeId, { ...prev, ...patch });
     }
 
-    public clear(origin: TransactionOrigin = "user_action") {
-        this.doc.transact(() => {
-            this.yNodes.clear();
-            this.cachedNodes.clear();
+    public clear() {
+        this.yNodes.clear();
+        this.cachedNodes.clear();
 
-            this.generateNewNodeElement({
-                nodeData: { contents: "새로운 마인드맵" },
-                id: this.rootNodeId,
-                type: "root",
-            });
-        }, origin);
+        this.initRootNode("");
     }
 
-    public updateNode(nodeId: NodeId, patch: Partial<NodeElement>, origin: TransactionOrigin = "user_action") {
+    public updateNode(nodeId: NodeId, patch: Partial<NodeElement>) {
         this.doc.transact(() => {
             const prev = this.cachedNodes.get(nodeId);
             if (!prev) return;
             this.yNodes.set(nodeId, { ...prev, ...patch });
             this.cachedNodes.set(nodeId, { ...prev, ...patch });
-        }, origin);
+        });
     }
 
-    public updateNodes(nodes: Map<NodeId, Partial<NodeElement>>, origin: TransactionOrigin = "user_action") {
+    public updateNodes(nodes: Map<NodeId, Partial<NodeElement>>) {
         this.doc.transact(() => {
             nodes.forEach((value, key) => {
-                this.updateNode(key, value, "layout");
+                this.updateNode(key, value);
             });
-        }, origin);
+        });
     }
 
-    public setNode(nodeId: NodeId, node: NodeElement, origin: TransactionOrigin = "user_action") {
+    public setNode(nodeId: NodeId, node: NodeElement) {
         this.doc.transact(() => {
             this.yNodes.set(nodeId, node);
             this.cachedNodes.set(nodeId, node);
-        }, origin);
+        });
     }
 
-    public deleteNode(nodeId: NodeId, origin: TransactionOrigin = "user_action") {
+    public deleteNode(nodeId: NodeId) {
         this.doc.transact(() => {
             this.yNodes.delete(nodeId);
             this.cachedNodes.delete(nodeId);
-        }, origin);
+        });
     }
 
     private generateNewNodeElement({

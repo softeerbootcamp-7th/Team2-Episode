@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 
 import SharedMindmapLayoutManager from "@/features/mindmap/shared_mindmap/utils/SharedMindmapLayoutManager";
-import SharedTreeContainer, { TransactionOrigin } from "@/features/mindmap/shared_mindmap/utils/SharedTreeContainer";
+import SharedTreeContainer from "@/features/mindmap/shared_mindmap/utils/SharedTreeContainer";
 import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
 import { MindmapRoomId } from "@/features/mindmap/types/mindmap_room";
 import { EventBroker } from "@/utils/EventBroker";
@@ -15,64 +15,79 @@ export default class SharedMindMapController {
             doc,
             broker,
             roomId,
-            onTransaction: (event, origin) => {
-                this.handleTransaction(event, origin);
+            onTransaction: (event) => {
+                this.handleTransaction(event);
             },
         });
         this.layoutManager = new SharedMindmapLayoutManager({ xGap: 140, yGap: 60 });
     }
 
-    private handleTransaction(event: Y.YMapEvent<NodeElement>, origin: TransactionOrigin) {
-        if (origin === "layout") {
+    private handleTransaction(event: Y.YMapEvent<NodeElement>) {
+        if (event.transaction.local) {
             return;
         }
 
-        if (!event.transaction.local) {
-            return;
-        }
+        event.keysChanged.forEach((nodeId) => {
+            this.layoutManager.invalidate(nodeId, this.container);
+        });
 
-        if (origin === "user_action") {
-            event.keysChanged.forEach((nodeId) => {
-                this.layoutManager.invalidate(nodeId, this.container);
-            });
-
-            this.refreshLayout();
-        }
+        this.refreshLayout();
     }
 
     private refreshLayout() {
         const updates = this.layoutManager.calculateLayout(this.container);
 
-        this.container.updateNodes(updates, "layout");
+        this.container.updateNodes(updates);
     }
 
     public addChildNode(parentId: NodeId) {
-        const parent = this.container.safeGetNode(parentId);
+        this.container.getDoc().transact(() => {
+            const parent = this.container.safeGetNode(parentId);
 
-        if (!parent) {
-            console.error("Parent node not found");
-            return;
-        }
+            if (!parent) {
+                console.error("Parent node not found");
+                return;
+            }
 
-        this.container.appendChild({ parentNodeId: parentId }, "user_action");
+            this.container.appendChild({ parentNodeId: parentId });
+            this.refreshLayout();
+        });
     }
 
     public resetMindMap() {
-        if (confirm("정말로 모든 내용을 삭제하고 초기화하시겠습니까?")) {
-            this.container.clear("user_action");
-        }
+        this.container.getDoc().transact(() => {
+            if (confirm("정말로 모든 내용을 삭제하고 초기화하시겠습니까?")) {
+                this.container.clear();
+
+                this.refreshLayout();
+            }
+        });
     }
 
     public deleteNode(nodeId: NodeId) {
-        this.container.delete({ nodeId });
+        this.container.getDoc().transact(() => {
+            this.container.delete({ nodeId });
+        });
     }
 
     public updateNodeSize({ nodeId, width, height }: { nodeId: NodeId; width: number; height: number }) {
-        this.container.updateNode(nodeId, { width, height }, "user_action");
+        this.container.getDoc().transact(() => {
+            this.layoutManager.invalidate(nodeId, this.container);
+
+            this.container.updateNode(nodeId, { width, height });
+
+            this.refreshLayout();
+        });
     }
 
     public updateNodeContents(nodeId: NodeId, contents: string) {
-        this.container.updateNode(nodeId, { data: { contents } }, "user_action");
+        this.container.getDoc().transact(() => {
+            this.layoutManager.invalidate(nodeId, this.container);
+
+            this.container.updateNode(nodeId, { data: { contents } });
+
+            this.refreshLayout();
+        });
     }
 
     // TODO: 이후 추가할예정. 지금 지원 안함

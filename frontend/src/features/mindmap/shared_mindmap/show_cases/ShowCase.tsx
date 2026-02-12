@@ -68,7 +68,7 @@ const NodeItem = ({ nodeId, controller, broker }: NodeItemProps) => {
                 onPointerDown={(e) => e.stopPropagation()} // 드래그 방지
             >
                 {/* 노드 내용 */}
-                <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                <div style={{ fontWeight: "bold", marginBottom: "5px", width: "200px" }}>
                     {node.id}
                     <br />
                     {node.parentId}

@@ -21,7 +21,6 @@ export function useNodeResizeObserver({ nodeId, node, onResize }: Props) {
 
         const rect = nodeRef.current.getBoundingClientRect();
 
-        // 안잘리게 ceil
         const newWidth = Math.ceil(rect.width);
         const newHeight = Math.ceil(rect.height);
 
@@ -29,7 +28,7 @@ export function useNodeResizeObserver({ nodeId, node, onResize }: Props) {
         if (isChanged) {
             onResize({ height: newHeight, width: newWidth });
         }
-    }, [nodeId]);
+    }, [nodeId, node?.x, node?.y]);
 
     return nodeRef;
 }
