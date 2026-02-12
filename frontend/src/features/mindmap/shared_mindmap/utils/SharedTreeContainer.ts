@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 
 import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/mindmap";
+import { MindmapRoomId } from "@/features/mindmap/types/mindmap_room";
 import { EventBroker } from "@/utils/EventBroker";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 import generateId from "@/utils/generate_id";
@@ -20,7 +21,6 @@ const ROOT_NODE_CONTENTS = "김현대의 마인드맵";
 export const ROOT_NODE_ID = "root";
 
 const DETACHED_NODE_PARENT_ID = "detached";
-const ROOM_NAME = "mindmap-nodes";
 
 export default class SharedTreeContainer {
     public undoManager: Y.UndoManager;
@@ -39,16 +39,18 @@ export default class SharedTreeContainer {
         name = ROOT_NODE_CONTENTS,
         broker,
         doc,
+        roomId,
     }: {
         broker: EventBroker<NodeId>;
         name?: string;
         isThrowError?: boolean;
         doc: Y.Doc;
+        roomId: MindmapRoomId;
     }) {
         // initialization
         this.doc = doc;
         this.broker = broker;
-        this.yNodes = this.doc.getMap(ROOM_NAME);
+        this.yNodes = this.doc.getMap(roomId);
 
         this.cachedNodes = new Map();
         this.yNodes.forEach((value, key) => {
@@ -61,7 +63,7 @@ export default class SharedTreeContainer {
 
         this.undoManager = new Y.UndoManager(this.yNodes, {
             captureTimeout: 500,
-            trackedOrigins: new Set(["user-action"]),
+            trackedOrigins: new Set([TRANSACTION_ORIGINS.USER_ACTION]),
         });
 
         this.isThrowError = isThrowError;
