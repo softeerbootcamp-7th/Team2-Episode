@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.yat2.episode.collaboration.config.WebSocketProperties;
+
 @RequiredArgsConstructor
 @Component
 public class SessionRegistry {
@@ -53,8 +55,6 @@ public class SessionRegistry {
             } catch (Exception e) {
                 removeSession(mindmapId, session);
             }
-
-
         }
     }
 }

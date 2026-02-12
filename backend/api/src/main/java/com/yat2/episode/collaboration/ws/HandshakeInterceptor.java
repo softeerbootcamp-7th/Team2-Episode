@@ -1,4 +1,4 @@
-package com.yat2.episode.collaboration;
+package com.yat2.episode.collaboration.ws;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.server.ServerHttpRequest;
@@ -21,7 +21,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             Map attributes
     ) {
         //TODO
-        return false;
+        return true;
     }
 
     @Override

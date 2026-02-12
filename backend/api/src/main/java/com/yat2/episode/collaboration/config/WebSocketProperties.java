@@ -1,4 +1,4 @@
-package com.yat2.episode.collaboration;
+package com.yat2.episode.collaboration.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
