@@ -44,6 +44,7 @@ public class EpisodeService {
             UUID nodeId, long userId, UUID mindmapId,
             EpisodeUpsertContentReq episodeUpsertReq
     ) {
+        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
         EpisodeStar episodeStar =
@@ -101,7 +102,7 @@ public class EpisodeService {
     private EpisodeStar getStarOrThrow(UUID nodeId, long userId) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         return episodeStarRepository.findById(episodeId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND));
     }
 
     private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId) {
