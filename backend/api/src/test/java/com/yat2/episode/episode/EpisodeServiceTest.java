@@ -101,7 +101,7 @@ class EpisodeServiceTest {
         }
 
         @Test
-        @DisplayName("성공: 신규 에피소드 및 별점 생성")
+        @DisplayName("성공: 신규 에피소드 및 빈 STAR 생성")
         void upsertEpisode_createNew() {
             EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("신규 생성");
 
@@ -119,10 +119,10 @@ class EpisodeServiceTest {
     }
 
     @Nested
-    @DisplayName("별점(STAR) 업데이트 및 삭제")
+    @DisplayName("STAR 업데이트 및 삭제")
     class StarOperations {
         @Test
-        @DisplayName("성공: 별점 정보 수정 및 날짜/역량 유효성 검사")
+        @DisplayName("성공: STAR 정보 수정 및 날짜/역량 유효성 검사")
         void updateStar_success() {
             Episode episode = Episode.create(nodeId, mindmapId);
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
@@ -140,7 +140,7 @@ class EpisodeServiceTest {
         }
 
         @Test
-        @DisplayName("실패: 별점이 존재하지 않을 때 삭제 시도 시 예외 발생")
+        @DisplayName("실패: STAR가 존재하지 않을 때 삭제 시도 시 예외 발생")
         void deleteStar_fail_starNotFound() {
             Episode episode = Episode.create(nodeId, mindmapId);
             when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
