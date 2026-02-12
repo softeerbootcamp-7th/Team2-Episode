@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
+import { CollaboratorList } from "@/features/mindmap/shared_mindmap/components/CollaboratorList";
+import { CursorOverlay } from "@/features/mindmap/shared_mindmap/components/CursorsOverlay";
 import { useNode } from "@/features/mindmap/shared_mindmap/hooks/useNode";
 import { useNodeResizeObserver } from "@/features/mindmap/shared_mindmap/hooks/useNodeResizeObserver";
 import { useSharedMindmap } from "@/features/mindmap/shared_mindmap/hooks/useSharedMindmap";
+import CollaboratorsManager from "@/features/mindmap/shared_mindmap/utils/CollaboratorManager";
 import SharedMindMapController from "@/features/mindmap/shared_mindmap/utils/SharedMindmapController";
 import { NodeId } from "@/features/mindmap/types/mindmap";
 import { EventBroker } from "@/utils/EventBroker";
@@ -107,7 +110,7 @@ const btnStyle: React.CSSProperties = {
 
 const DUMMY_ROOM_ID = "ㅁ";
 export default function MindmapShowcaseV3() {
-    const { controller, connectionStatus, broker } = useSharedMindmap({ roomId: DUMMY_ROOM_ID });
+    const { controller, connectionStatus, broker, collaboratorsManager } = useSharedMindmap({ roomId: DUMMY_ROOM_ID });
 
     // 2. Canvas Panning State
     const [pan, setPan] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -143,6 +146,13 @@ export default function MindmapShowcaseV3() {
     };
 
     const handlePointerMove = (e: React.PointerEvent) => {
+        // [핵심 수정] 화면 좌표에서 Pan을 빼서 "World 좌표"로 변환하여 전송
+        const worldX = e.clientX - pan.x;
+        const worldY = e.clientY - pan.y;
+
+        collaboratorsManager.updateCursor(worldX, worldY);
+
+        // 2. Panning 로직 (기존 동일)
         if (!isPanning) return;
         e.preventDefault();
         const dx = e.clientX - lastPos.current.x;
@@ -173,6 +183,8 @@ export default function MindmapShowcaseV3() {
             >
                 초기화 (Reset)
             </button>
+            <CursorOverlay manager={collaboratorsManager} pan={pan} />
+            <CollaboratorList manager={collaboratorsManager} />
             <div
                 style={{
                     width: "100vw",
