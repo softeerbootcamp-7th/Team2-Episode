@@ -26,7 +26,7 @@ export const useSharedMindmap = ({ roomId }: UseSharedMindmapProps) => {
         const provider = new WebsocketProvider(ENV.WS_BASE_URL, roomId, doc);
 
         const broker = new EventBroker<NodeId>();
-        const controller = new SharedMindMapController(doc, broker);
+        const controller = new SharedMindMapController(doc, broker, roomId);
 
         return { controller, provider };
     }, [roomId]);

@@ -3,14 +3,15 @@ import * as Y from "yjs";
 import SharedMindmapLayoutManager from "@/features/mindmap/shared_mindmap/utils/SharedMindmapLayoutManager";
 import SharedTreeContainer, { TransactionOrigin } from "@/features/mindmap/shared_mindmap/utils/SharedTreeContainer";
 import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
+import { MindmapRoomId } from "@/features/mindmap/types/mindmap_room";
 import { EventBroker } from "@/utils/EventBroker";
 
 export default class SharedMindMapController {
     public container: SharedTreeContainer;
     private layoutManager: SharedMindmapLayoutManager;
 
-    constructor(doc: Y.Doc, broker: EventBroker<NodeId>) {
-        this.container = new SharedTreeContainer({ doc, broker });
+    constructor(doc: Y.Doc, broker: EventBroker<NodeId>, roomId: MindmapRoomId) {
+        this.container = new SharedTreeContainer({ doc, broker, roomId });
         this.layoutManager = new SharedMindmapLayoutManager({ xGap: 140, yGap: 60 });
 
         this.container.onTransaction = (event, origin) => {
@@ -44,7 +45,6 @@ export default class SharedMindMapController {
                 updates.forEach((pos, nodeId) => {
                     this.container.updateNode(nodeId, { x: pos.x, y: pos.y }, "layout");
                 });
-                console.log(updates);
             }, "layout");
         }
     }
@@ -78,11 +78,12 @@ export default class SharedMindMapController {
         this.container.updateNode(nodeId, { data: { contents } }, "user_action");
     }
 
+    // 지금 지원 안함
     public undo() {
-        this.container.undoManager.undo();
+        // this.container.undoManager.undo();
     }
 
     public redo() {
-        this.container.undoManager.redo();
+        // this.container.undoManager.redo();
     }
 }
