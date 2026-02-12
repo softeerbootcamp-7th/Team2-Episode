@@ -50,9 +50,16 @@ kakao:
   redirect-uri: ${KAKAO_REDIRECT_URI}
 
 jwt:
-  secret: ${JWT_SECRET}
-  access-token-expiry: 300000 # 5 min
-  refresh-token-expiry: 2592000000 # 30 days
+  auth:
+    issuer: episode
+    secret: ${JWT_AUTH_SECRET}
+    access-token-expiry: 300000 # 5 min
+    refresh-token-expiry: 2592000000 # 30 days
+
+  mindmap:
+    issuer: episode
+    secret: ${JWT_MINDMAP_SECRET}
+    token-expiry: 30000 # 30 sec
 
 cookie:
   domain: ${COOKIE_DOMAIN}
@@ -90,6 +97,8 @@ aws:
     secret-key: ${S3_SECRET_KEY}
     endpoint: ${S3_ENDPOINT}
     max-upload-size: 10485760
+    post-url-expiry: 3
+    get-url-expiry: 3
 
 cloud:
   aws:

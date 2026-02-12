@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import com.yat2.episode.auth.jwt.IssuedTokens;
-import com.yat2.episode.auth.jwt.JwtProvider;
+import com.yat2.episode.auth.jwt.AuthJwtProvider;
+import com.yat2.episode.auth.jwt.AuthTokens;
 import com.yat2.episode.auth.oauth.KakaoIdTokenVerifier;
 import com.yat2.episode.auth.oauth.KakaoOAuthClient;
 import com.yat2.episode.auth.oauth.KakaoTokenResponse;
@@ -22,12 +22,12 @@ public class AuthService {
 
     private final KakaoOAuthClient kakaoOAuthClient;
     private final KakaoIdTokenVerifier kakaoIdTokenVerifier;
-    private final JwtProvider jwtProvider;
+    private final AuthJwtProvider authJwtProvider;
     private final RefreshTokenService refreshTokenService;
     private final UserService userService;
 
     @Transactional
-    public IssuedTokens handleKakaoCallback(String code) {
+    public AuthTokens handleKakaoCallback(String code) {
         KakaoTokenResponse kakaoResponse = kakaoOAuthClient.requestToken(code);
         JWTClaimsSet claims = kakaoIdTokenVerifier.verify(kakaoResponse.idToken());
 
@@ -41,22 +41,22 @@ public class AuthService {
             user.changeNickname(nickname);
         }
 
-        IssuedTokens tokens = jwtProvider.issueTokens(kakaoUserId);
+        AuthTokens tokens = authJwtProvider.issueTokens(kakaoUserId);
         refreshTokenService.save(kakaoUserId, tokens.refreshToken());
 
         return tokens;
     }
 
     public Long getUserIdByToken(String token) {
-        return jwtProvider.verifyAccessTokenAndGetUserId(token);
+        return authJwtProvider.verifyAccessTokenAndGetUserId(token);
     }
 
     @Transactional
-    public IssuedTokens refresh(String refreshToken) {
-        Long userId = jwtProvider.verifyRefreshTokenAndGetUserId(refreshToken);
+    public AuthTokens refresh(String refreshToken) {
+        Long userId = authJwtProvider.verifyRefreshTokenAndGetUserId(refreshToken);
         refreshTokenService.validateSession(refreshToken);
 
-        IssuedTokens tokens = jwtProvider.issueTokens(userId);
+        AuthTokens tokens = authJwtProvider.issueTokens(userId);
         refreshTokenService.save(userId, tokens.refreshToken());
 
         return tokens;

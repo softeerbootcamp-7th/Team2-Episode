@@ -13,7 +13,9 @@ import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.mindmap.dto.MindmapCreateReq;
 import com.yat2.episode.mindmap.dto.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.MindmapNameRes;
+import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
@@ -29,6 +31,7 @@ public class MindmapService {
     private final S3SnapshotRepository snapshotRepository;
     private final UserService userService;
     private final S3ObjectKeyGenerator s3ObjectKeyGenerator;
+    private final MindmapJwtProvider mindmapJwtProvider;
 
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
         return MindmapDetailRes.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
@@ -81,10 +84,6 @@ public class MindmapService {
     public S3UploadFieldsRes getUploadInfo(UUID mindmapId) {
         return snapshotRepository.createPresignedUploadInfo(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
     }
-
-    //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제
-    //todo: disconnect 시 마인드맵 웹소켓 연결 수가 0인 경우의 s3 데이터에 스냅샷 업로드
-    //todo: delete 시 해당 마인드맵의 mindmap_participant가 0인 경우 db 내 마인드맵 데이터 삭제
 
     private UUID getUUID(String uuidStr) {
         try {
@@ -162,5 +161,26 @@ public class MindmapService {
         participant.getMindmap().updateName(name);
 
         return MindmapDetailRes.of(participant);
+    }
+
+    @Transactional
+    public MindmapDetailRes saveMindmapParticipant(long userId, UUID mindmapId) {
+        User user = userService.getUserOrThrow(userId);
+        Mindmap mindmap = mindmapAccessValidator.validateTeamMindmap(mindmapId);
+
+        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).map(MindmapDetailRes::of)
+                .orElseGet(() -> {
+                    MindmapParticipant newParticipant = new MindmapParticipant(user, mindmap);
+                    MindmapParticipant savedParticipant = mindmapParticipantRepository.save(newParticipant);
+                    return MindmapDetailRes.of(savedParticipant);
+                });
+    }
+
+    @Transactional
+    public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
+        MindmapDetailRes mindmapDetailRes = this.saveMindmapParticipant(userId, mindmapId);
+        String ticket = mindmapJwtProvider.issue(userId, mindmapId);
+        return new MindmapSessionJoinRes(ticket, snapshotRepository.createPresignedGetURL(
+                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapDetailRes.mindmapId())));
     }
 }
