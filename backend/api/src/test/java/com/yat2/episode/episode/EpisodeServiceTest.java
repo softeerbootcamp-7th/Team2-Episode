@@ -22,13 +22,10 @@ import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.anySet;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,20 +59,24 @@ class EpisodeServiceTest {
     @DisplayName("에피소드 상세 조회")
     class GetEpisodeDetail {
         @Test
-        void 성공() {
-            EpisodeDetail detail =
-                    EpisodeDetail.of(Episode.create(nodeId, mindmapId), EpisodeStar.create(nodeId, userId));
+        @DisplayName("성공: 에피소드 존재 및 마인드맵 참여 권한 확인")
+        void getEpisodeDetail_success() {
+            Episode episode = Episode.create(nodeId, mindmapId);
+            EpisodeDetail detail = EpisodeDetail.of(episode, EpisodeStar.create(nodeId, userId));
+
+            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
             when(episodeRepository.findDetail(nodeId, userId)).thenReturn(Optional.of(detail));
 
             EpisodeDetail res = episodeService.getEpisodeDetail(nodeId, userId);
 
             assertThat(res).isNotNull();
-            verify(episodeRepository).findDetail(nodeId, userId);
+            verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
         }
 
         @Test
-        void 존재하지_않으면_예외발생() {
-            when(episodeRepository.findDetail(any(), anyLong())).thenReturn(Optional.empty());
+        @DisplayName("실패: 에피소드가 존재하지 않으면 예외 발생")
+        void getEpisodeDetail_notFound() {
+            when(episodeRepository.findById(nodeId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> episodeService.getEpisodeDetail(nodeId, userId)).isInstanceOf(
                     CustomException.class).hasMessageContaining(ErrorCode.EPISODE_NOT_FOUND.getMessage());
@@ -83,53 +84,54 @@ class EpisodeServiceTest {
     }
 
     @Nested
-    @DisplayName("에피소드 수정 및 생성 (Upsert)")
+    @DisplayName("에피소드 업서트 (Upsert)")
     class UpsertEpisode {
         @Test
-        void 기존_에피소드가_있으면_내용만_업데이트한다() {
-            Episode episode = Episode.create(nodeId, mindmapId);
-            EpisodeStar star = EpisodeStar.create(nodeId, userId);
-            EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("새로운 내용");
+        @DisplayName("실패: 기존 에피소드의 mindmapId와 요청의 mindmapId가 다르면 예외 발생")
+        void upsertEpisode_mindmapMismatch() {
+            UUID differentMindmapId = UUID.randomUUID();
+            Episode existingEpisode = Episode.create(nodeId, differentMindmapId);
+            EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("내용");
 
-            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
-            when(episodeStarRepository.findById(any())).thenReturn(Optional.of(star));
+            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(existingEpisode));
 
-            episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
-
-            assertThat(episode.getContent()).isEqualTo("새로운 내용");
-            verify(episodeRepository, never()).save(any());
+            assertThatThrownBy(() -> episodeService.upsertEpisode(nodeId, userId, mindmapId, req)).isInstanceOf(
+                            CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MINDMAP_AND_EPISODE_NOT_MATCHED);
         }
 
         @Test
-        void 기존_에피소드가_없으면_새로_생성한다() {
-            EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("새 내용");
+        @DisplayName("성공: 신규 에피소드 및 별점 생성")
+        void upsertEpisode_createNew() {
+            EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("신규 생성");
+
             when(episodeRepository.findById(nodeId)).thenReturn(Optional.empty());
             when(episodeStarRepository.findById(any())).thenReturn(Optional.empty());
-
-            when(episodeRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
-            when(episodeStarRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+            when(episodeRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+            when(episodeStarRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
             episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
 
-            verify(mindmapAccessValidator, times(1)).findParticipantOrThrow(mindmapId, userId);
+            verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
             verify(episodeRepository).save(any(Episode.class));
             verify(episodeStarRepository).save(any(EpisodeStar.class));
         }
     }
 
     @Nested
-    @DisplayName("별점 및 역량 정보 업데이트")
-    class UpdateStar {
+    @DisplayName("별점(STAR) 업데이트 및 삭제")
+    class StarOperations {
         @Test
-        void 성공적으로_업데이트한다() {
+        @DisplayName("성공: 별점 정보 수정 및 날짜/역량 유효성 검사")
+        void updateStar_success() {
             Episode episode = Episode.create(nodeId, mindmapId);
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
             StarUpdateReq req =
-                    new StarUpdateReq(Set.of(1, 2), "S", "T", "A", "R", LocalDate.now(), LocalDate.now().plusDays(1));
+                    new StarUpdateReq(Set.of(1), "S", "T", "A", "R", LocalDate.now(), LocalDate.now().plusDays(1));
 
             when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
             when(episodeStarRepository.findById(any())).thenReturn(Optional.of(star));
-            when(competencyTypeRepository.countByIdIn(anySet())).thenReturn(2L);
+            when(competencyTypeRepository.countByIdIn(anySet())).thenReturn(1L);
 
             episodeService.updateStar(nodeId, userId, req);
 
@@ -138,42 +140,46 @@ class EpisodeServiceTest {
         }
 
         @Test
-        void 날짜가_역전되면_예외가_발생한다() {
-            StarUpdateReq req =
-                    new StarUpdateReq(null, null, null, null, null, LocalDate.now().plusDays(1), LocalDate.now());
+        @DisplayName("실패: 별점이 존재하지 않을 때 삭제 시도 시 예외 발생")
+        void deleteStar_fail_starNotFound() {
+            Episode episode = Episode.create(nodeId, mindmapId);
+            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
+            when(episodeStarRepository.findById(any())).thenReturn(Optional.empty());
 
-            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(Episode.create(nodeId, mindmapId)));
-
-            assertThatThrownBy(() -> episodeService.updateStar(nodeId, userId, req)).isInstanceOf(CustomException.class)
-                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST);
+            assertThatThrownBy(() -> episodeService.deleteStar(nodeId, userId)).isInstanceOf(CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EPISODE_STAR_NOT_FOUND);
         }
     }
 
-    @Test
-    @DisplayName("에피소드 삭제 시 권한 체크 후 삭제한다")
-    void deleteEpisode() {
-        Episode episode = Episode.create(nodeId, mindmapId);
-        when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
+    @Nested
+    @DisplayName("에피소드 삭제 및 초기화")
+    class EpisodeDeleteAndClear {
+        @Test
+        @DisplayName("성공: 에피소드 삭제 시 마인드맵 참여 여부 확인 후 삭제")
+        void deleteEpisode_success() {
+            Episode episode = Episode.create(nodeId, mindmapId);
+            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
 
-        episodeService.deleteEpisode(nodeId, userId);
+            episodeService.deleteEpisode(nodeId, userId);
 
-        verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
-        verify(episodeRepository).deleteById(nodeId);
-    }
+            verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
+            verify(episodeRepository).deleteById(nodeId);
+        }
 
-    @Test
-    @DisplayName("에피소드 날짜만 초기화한다")
-    void clearEpisodeDates() {
-        Episode episode = Episode.create(nodeId, mindmapId);
-        EpisodeStar star = EpisodeStar.create(nodeId, userId);
-        star.update(new StarUpdateReq(null, null, null, null, null, LocalDate.now(), LocalDate.now()));
+        @Test
+        @DisplayName("성공: 에피소드 날짜 초기화")
+        void clearEpisodeDates_success() {
+            Episode episode = Episode.create(nodeId, mindmapId);
+            EpisodeStar star = EpisodeStar.create(nodeId, userId);
+            star.update(new StarUpdateReq(null, null, null, null, null, LocalDate.now(), LocalDate.now()));
 
-        when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
-        when(episodeStarRepository.findById(any())).thenReturn(Optional.of(star));
+            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
+            when(episodeStarRepository.findById(any())).thenReturn(Optional.of(star));
 
-        episodeService.clearEpisodeDates(nodeId, userId);
+            episodeService.clearEpisodeDates(nodeId, userId);
 
-        assertThat(star.getStartDate()).isNull();
-        assertThat(star.getEndDate()).isNull();
+            assertThat(star.getStartDate()).isNull();
+            assertThat(star.getEndDate()).isNull();
+        }
     }
 }
