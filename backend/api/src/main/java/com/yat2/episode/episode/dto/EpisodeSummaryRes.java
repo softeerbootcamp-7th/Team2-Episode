@@ -15,7 +15,9 @@ public record EpisodeSummaryRes(
         LocalDate endDate
 ) {
     public static EpisodeSummaryRes of(Episode e, EpisodeStar s) {
-        return new EpisodeSummaryRes(e.getId(), e.getMindmapId(), e.getContent(), s.getStartDate(), s.getEndDate());
+        LocalDate startDate = (s != null) ? s.getStartDate() : null;
+        LocalDate endDate = (s != null) ? s.getEndDate() : null;
+        return new EpisodeSummaryRes(e.getId(), e.getMindmapId(), e.getContent(), startDate, endDate);
     }
 
     public static EpisodeSummaryRes of(EpisodeDetail e) {
