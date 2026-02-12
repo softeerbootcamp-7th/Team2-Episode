@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetail;
-import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
 import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
@@ -50,7 +49,7 @@ public class EpisodeController {
                                                   "String은 빈 문자열, 배열은 빈 배열, Date는 별도 API로 삭제가 가능합니다."
     )
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
-    @PatchMapping("/star")
+    @PatchMapping("/stars")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateEpisode(
             @PathVariable UUID nodeId,
@@ -62,26 +61,6 @@ public class EpisodeController {
         episodeService.updateStar(nodeId, userId, req);
     }
 
-    @Operation(
-            summary = "에피소드 제목 수정",
-            description = "에피소드의 node명(=content)을 수정합니다. " + "한 노드에 대한 수정 api 요청이 다수 들어왔을 때, 더 최근의 요청을 기준으로 반영이 됩니다."
-    )
-    @ApiErrorCodes(
-            { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
-              ErrorCode.MINDMAP_NOT_FOUND }
-    )
-    @PatchMapping("/content")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateEpisodeContent(
-            @PathVariable UUID nodeId,
-            @RequestAttribute(USER_ID) long userId,
-            @Valid
-            @RequestBody
-            EpisodeUpsertContentReq req
-    ) {
-        episodeService.updateContentEpisode(nodeId, userId, req);
-    }
-
     @Operation(summary = "에피소드 삭제", description = "에피소드를 삭제합니다.")
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR })
     @DeleteMapping
@@ -91,6 +70,17 @@ public class EpisodeController {
             @RequestAttribute(USER_ID) long userId
     ) {
         episodeService.deleteEpisode(nodeId, userId);
+    }
+
+    @Operation(summary = "에피소드 STAR 삭제", description = "에피소드 내의 STAR/태그 등의 내용을 비웁니다.")
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR })
+    @DeleteMapping("/stars")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteStar(
+            @PathVariable UUID nodeId,
+            @RequestAttribute(USER_ID) long userId
+    ) {
+        episodeService.deleteStar(nodeId, userId);
     }
 
     @Operation(summary = "에피소드 시작/끝 날짜 삭제", description = "에피소드의 시작/끝 날짜를 초기화합니다.")

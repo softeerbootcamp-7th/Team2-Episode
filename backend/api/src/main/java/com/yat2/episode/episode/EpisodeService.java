@@ -66,21 +66,26 @@ public class EpisodeService {
     }
 
     @Transactional
-    public void updateContentEpisode(UUID nodeId, long userId, EpisodeUpsertContentReq episodeUpsertContentReq) {
+    public void deleteStar(UUID nodeId, long userId) {
         Episode episode = getEpisodeOrThrow(nodeId);
         mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
 
-        episode.update(episodeUpsertContentReq);
+        EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
+        episodeStar.clearAll();
+        episodeStarRepository.save(episodeStar);
     }
 
     @Transactional
     public void deleteEpisode(UUID nodeId, long userId) {
-        episodeStarRepository.deleteById(new EpisodeId(nodeId, userId));
+        Episode episode = getEpisodeOrThrow(nodeId);
+        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
+        episodeRepository.deleteById(nodeId);
     }
 
     @Transactional
     public void clearEpisodeDates(UUID nodeId, long userId) {
         Episode episode = getEpisodeOrThrow(nodeId);
+        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
         episodeStar.clearDates();
     }

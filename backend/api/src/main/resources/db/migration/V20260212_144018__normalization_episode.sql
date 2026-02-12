@@ -18,3 +18,7 @@ CREATE TABLE `episodes` (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+ALTER TABLE `episode_stars`
+ADD CONSTRAINT `fk_star2episode`
+FOREIGN KEY (`node_id`) REFERENCES `episodes` (`node_id`)
+ON UPDATE CASCADE ON DELETE CASCADE;

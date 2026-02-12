@@ -88,4 +88,15 @@ public class EpisodeStar {
         this.startDate = null;
         this.endDate = null;
     }
+
+    public void clearAll() {
+        this.situation = null;
+        this.task = null;
+        this.action = null;
+        this.result = null;
+        this.startDate = null;
+        this.endDate = null;
+
+        this.competencyTypeIds.clear();
+    }
 }
