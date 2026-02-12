@@ -25,7 +25,8 @@ export function useNodeResizeObserver({ nodeId, node, onResize }: Props) {
         const newWidth = Math.ceil(rect.width);
         const newHeight = Math.ceil(rect.height);
 
-        if (!isSame(node.width, newWidth) || !isSame(node.height, newHeight)) {
+        const isChanged = !isSame(node.width, newWidth) || !isSame(node.height, newHeight);
+        if (isChanged) {
             onResize({ height: newHeight, width: newWidth });
         }
     }, [nodeId]);
