@@ -1,7 +1,6 @@
 package com.yat2.episode.episode;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +60,7 @@ public class EpisodeService {
         validateDates(starUpdateReq.startDate(), starUpdateReq.endDate());
         validateCompetencyIds(starUpdateReq.competencyTypeIds());
 
-        EpisodeStar episodeStar = getOrCreateStar(nodeId, userId);
+        EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
         episodeStar.update(starUpdateReq);
     }
 
@@ -118,15 +117,6 @@ public class EpisodeService {
         EpisodeStar newEpisodeStar = EpisodeStar.create(episodeId.getNodeId(), episodeId.getUserId());
 
         return episodeStarRepository.save(newEpisodeStar);
-    }
-
-    private EpisodeStar getOrCreateStar(UUID nodeId, long userId) {
-        try {
-            return episodeStarRepository.save(EpisodeStar.create(nodeId, userId));
-        } catch (DataIntegrityViolationException e) {
-            return episodeStarRepository.findById(new EpisodeId(nodeId, userId))
-                    .orElseThrow(() -> new CustomException(ErrorCode.CONFLICT));
-        }
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate) {
