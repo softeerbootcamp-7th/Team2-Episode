@@ -34,11 +34,14 @@ class JwtEngineTest {
         jwtEngine = new JwtEngine(config);
     }
 
+    private JWTClaimsSet createClaims(int seconds) {
+        return new JWTClaimsSet.Builder().issuer("episode").subject("1").claim(JwtClaims.TOKEN_TYPE, "test")
+                .expirationTime(Date.from(Instant.now().plusSeconds(seconds))).build();
+    }
+
     @Test
     void signAndVerify_success() {
-        JWTClaimsSet claims =
-                new JWTClaimsSet.Builder().issuer("episode").subject("1").claim(JwtClaims.TOKEN_TYPE, "test")
-                        .expirationTime(Date.from(Instant.now().plusSeconds(60))).build();
+        JWTClaimsSet claims = createClaims(300);
 
         String token = jwtEngine.sign(claims);
 
@@ -49,11 +52,24 @@ class JwtEngineTest {
 
     @Test
     void verify_invalidSignature() {
-        JWTClaimsSet claims =
-                new JWTClaimsSet.Builder().issuer("episode").subject("1").claim(JwtClaims.TOKEN_TYPE, "test")
-                        .expirationTime(Date.from(Instant.now().plusSeconds(60))).build();
 
-        String token = jwtEngine.sign(claims);
+        JwtConfig wrongConfig = new JwtConfig() {
+            @Override
+            public String secret() {
+                return "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+            }
+
+            @Override
+            public String issuer() {
+                return "episode";
+            }
+        };
+
+        JwtEngine wrongEngine = new JwtEngine(wrongConfig);
+
+        JWTClaimsSet claims = createClaims(300);
+
+        String token = wrongEngine.sign(claims);
 
         String hacked = token.substring(0, token.length() - 1) + "x";
 
@@ -64,9 +80,7 @@ class JwtEngineTest {
 
     @Test
     void verify_expired() {
-        JWTClaimsSet claims =
-                new JWTClaimsSet.Builder().issuer("episode").subject("1").claim(JwtClaims.TOKEN_TYPE, "test")
-                        .expirationTime(Date.from(Instant.now().minusSeconds(10))).build();
+        JWTClaimsSet claims = createClaims(0);
 
         String token = jwtEngine.sign(claims);
 
