@@ -31,6 +31,7 @@ public class CollaborationService {
     }
 
     public void handleDisconnect(WebSocketSession session) {
+        //TODO: Collaboration room 세션 수 0일때 스냅샷 트리거
         sessionRegistry.removeSession(getMindmapId(session), session);
     }
 
