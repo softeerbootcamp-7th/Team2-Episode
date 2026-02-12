@@ -24,12 +24,12 @@ public record EpisodeDetail(
 ) {
     public static EpisodeDetail of(Episode e, EpisodeStar s) {
 
-        List<Integer> competencyIds =
-                (s.getCompetencyTypeIds() == null) ? List.of() : List.copyOf(s.getCompetencyTypeIds());
         if (s == null) {
             return new EpisodeDetail(e.getId(), e.getMindmapId(), List.of(), e.getContent(), null, null, null, null,
                                      null, null, null, null);
         }
+        List<Integer> competencyIds =
+                (s.getCompetencyTypeIds() == null) ? List.of() : List.copyOf(s.getCompetencyTypeIds());
 
         return new EpisodeDetail(e.getId(), e.getMindmapId(), List.copyOf(competencyIds), e.getContent(),
                                  s.getSituation(), s.getTask(), s.getAction(), s.getResult(), s.getStartDate(),
