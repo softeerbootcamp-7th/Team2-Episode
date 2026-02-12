@@ -6,6 +6,8 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -40,21 +42,28 @@ public class SessionRegistry {
 
         BinaryMessage message = new BinaryMessage(payload);
 
+        final List<WebSocketSession> deadSessions = new ArrayList<>();
+
         for (WebSocketSession session : sessions) {
+
             if (session.getId().equals(sender.getId())) {
                 continue;
             }
 
             if (!session.isOpen()) {
-                removeSession(mindmapId, session);
+                deadSessions.add(session);
                 continue;
             }
 
             try {
                 session.sendMessage(message);
             } catch (Exception e) {
-                removeSession(mindmapId, session);
+                deadSessions.add(session);
             }
+        }
+
+        for (WebSocketSession dead : deadSessions) {
+            removeSession(mindmapId, dead);
         }
     }
 }
