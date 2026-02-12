@@ -30,9 +30,10 @@ export default class ViewportManager {
 
         //초기 카메라 위치 설정
         const rect = this.canvas.getBoundingClientRect();
-        const canvasRatio = rect.width / rect.height;
+        const canvasRatio = rect.width / rect.height || 16 / 9; // 0 방지
 
-        const viewHeight = rootNode.height * this.INITIAL_VIEW_FACTOR;
+        const baseHeight = rootNode.height > 0 ? rootNode.height : 100;
+        const viewHeight = baseHeight * this.INITIAL_VIEW_FACTOR;
         const viewWidth = viewHeight * canvasRatio;
 
         this.viewBox = {

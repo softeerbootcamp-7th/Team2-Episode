@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import MindMapCore from "@/features/mindmap/core/MindMapCore";
 import { MindMapRefContext, MindMapStateContext } from "@/features/mindmap/providers/MindmapContext";
@@ -9,16 +9,33 @@ export const MindMapProvider = ({
     canvasRef,
 }: {
     children: React.ReactNode;
-    canvasRef: React.RefObject<SVGSVGElement>;
+    canvasRef: React.RefObject<SVGSVGElement | null>;
 }) => {
     const coreRef = useRef<MindMapCore | null>(null);
     const [version, setVersion] = useState(0);
 
-    // Core 초기화: 이제 Core 내부에서 broker와 tree를 스스로 만듭니다.
-    if (!coreRef.current && canvasRef.current) {
-        // Core 생성자 인자가 (canvas, onGlobalUpdate) 2개로 줄어든 것을 반영
-        coreRef.current = new MindMapCore(canvasRef.current, () => setVersion((v) => v + 1));
-    }
+    useEffect(() => {
+        const svg = canvasRef.current;
+        if (!svg || coreRef.current) return;
+
+        const observer = new ResizeObserver((entries) => {
+            // entries가 배열이므로 안전하게 첫 번째 요소를 가져옵니다.
+            const entry = entries[0];
+            if (!entry) return; // entry가 없으면 중단
+
+            const { width, height } = entry.contentRect;
+
+            if (width > 0 && height > 0) {
+                coreRef.current = new MindMapCore(svg, () => setVersion((v) => v + 1));
+                setVersion((v) => v + 1);
+
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(svg);
+        return () => observer.disconnect();
+    }, [canvasRef]);
 
     const actions = useMemo(
         () => ({
@@ -34,18 +51,14 @@ export const MindMapProvider = ({
 
     // core가 인스턴스화 되었을 때 컨텍스트 값 생성
     const controller = useMemo(() => {
-        if (!coreRef.current) return null;
-        return { core: coreRef.current, actions };
-    }, [coreRef.current]); // version 대신 coreRef.current 존재 여부로 판단
+        return { core: coreRef.current as MindMapCore, actions };
+    }, [version]);
 
     const stateValue = useMemo(() => ({ version }), [version]);
 
     return (
         <MindMapRefContext.Provider value={controller}>
-            <MindMapStateContext.Provider value={stateValue}>
-                {/* Core가 준비된 후에만 자식(Renderer 등)을 보여줍니다 */}
-                {coreRef.current ? children : null}
-            </MindMapStateContext.Provider>
+            <MindMapStateContext.Provider value={stateValue}>{children}</MindMapStateContext.Provider>
         </MindMapRefContext.Provider>
     );
 };
