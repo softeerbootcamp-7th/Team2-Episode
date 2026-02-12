@@ -113,3 +113,8 @@ management:
   endpoint:
     health:
       show-details: never
+
+collaboration:
+  ws:
+    send-timeout: 10000
+    buffer-size: 524288
