@@ -36,16 +36,24 @@ export default function EdgeLayer({ nodeMap, color, type = "active", filterNode 
     return (
         <g className="edge-layer">
             {filterNode.map((node) => {
+                if (!node.parentId || node.parentId === "empty") {
+                    return null;
+                }
                 const parent = nodeMap.get(node.parentId);
 
                 if (!parent) {
                     return null;
                 }
 
+                const startX = parent.x + parent.width / 2;
+                const startY = parent.y + parent.height / 2;
+                const endX = node.x + node.width / 2;
+                const endY = node.y + node.height / 2;
+
                 return (
                     <path
                         key={`edge-${node.id}`}
-                        d={getBezierPath(parent.x + parent.width / 2, parent.y, node.x - node.width / 2, node.y)}
+                        d={getBezierPath(startX, startY, endX, endY)}
                         className={cn(edgeVariants({ type, color }))}
                     />
                 );

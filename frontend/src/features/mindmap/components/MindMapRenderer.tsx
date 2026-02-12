@@ -25,11 +25,12 @@ function MindMapInnerRenderer() {
     const staticNodes = allNodes.filter((n) => !dragSubtreeIds?.has(n.id));
     const shadowNodes = allNodes.filter((n) => dragSubtreeIds?.has(n.id));
 
+    //TODO: EdegLayer color
     return (
         <g className="mindmap-render-root" data-version={version}>
             {/* 정적 노드 그룹 */}
             <g className="static-layer">
-                <EdgeLayer nodeMap={nodeMap} filterNode={staticNodes} />
+                <EdgeLayer nodeMap={nodeMap} filterNode={staticNodes} color="violet" />
                 {staticNodes.map((node) => (
                     <NodeItem key={`${node.id}-${version}`} nodeId={node.id} />
                 ))}
@@ -37,7 +38,7 @@ function MindMapInnerRenderer() {
 
             {/* 섀도우 노드 덩어리 */}
             <g className="shadow-fragment opacity-20">
-                <EdgeLayer nodeMap={nodeMap} filterNode={shadowNodes} />
+                <EdgeLayer nodeMap={nodeMap} filterNode={shadowNodes} color="violet" />
                 {shadowNodes.map((node) => (
                     <NodeItem key={`${node.id}-${version}`} nodeId={node.id} />
                 ))}

@@ -54,13 +54,13 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
                             data-direction={addNodeDirection}
                             data-action="add-child"
                             direction={addNodeDirection}
-                            color={"blue"}
+                            color={"violet"}
                             onClick={() => addNode(nodeId, "child", addNodeDirection)}
                         />
                         <Node.Content
                             data-action="select"
                             size={"sm"}
-                            color={"blue"}
+                            color={"violet"}
                             onClick={() => console.log(`클릭: ${data.contents}`)}
                         >
                             {data.contents || "하위 내용"}
