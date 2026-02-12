@@ -1,8 +1,9 @@
+import { MindMapEvents } from "@/features/mindmap/types/events";
 import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
-import { MindmapInteractionManager } from "@/features/mindmap/utils/MindmapInteractionManager";
-import MindmapLayoutManager from "@/features/mindmap/utils/MindmapLayoutManager";
-import Renderer from "@/features/mindmap/utils/Renderer";
+import { MindmapInteractionManager } from "@/features/mindmap/utils/InteractionManager";
+import MindmapLayoutManager from "@/features/mindmap/utils/LayoutManager";
 import TreeContainer from "@/features/mindmap/utils/TreeContainer";
+import ViewportManager from "@/features/mindmap/utils/ViewportManager";
 import QuadTree from "@/features/quad_tree/utils/QuadTree";
 import { EventBroker } from "@/utils/EventBroker";
 
@@ -10,44 +11,43 @@ import { EventBroker } from "@/utils/EventBroker";
  *  tree : 마인드맵의 계급도
  *  layout : 트리 layout 배치
  *  quadTree : 마우스 주변 노드 후보군 탐색
- *  renderer : 실제 svg 화면 그리기
+ *  viewport : 실제 svg 화면 그리기
  *  interaction : 마우스/키보드 조작
  */
 export default class MindMapCore {
+    // TODO: private으로 하고 getter
     public tree: TreeContainer;
-    public broker: EventBroker<NodeId>;
+    private broker = new EventBroker<MindMapEvents>();
 
     private layout: MindmapLayoutManager;
+    private viewport: ViewportManager;
     private quadTree: QuadTree;
-    private renderer: Renderer;
     private interaction: MindmapInteractionManager;
 
     constructor(
         canvas: SVGSVGElement,
-        broker: EventBroker<NodeId>,
         private onGlobalUpdate: () => void,
     ) {
-        this.broker = broker;
-
         // tree 초기화 (rootNode 정보 얻기 위해 먼저 생성)
-        this.tree = new TreeContainer({ broker });
+        this.tree = new TreeContainer({ broker: this.broker });
         const rootNode = this.tree.getRootNode();
 
         // quadTree 초기화
         const initialBounds = this.calculateInitialBounds(rootNode);
         this.quadTree = new QuadTree(initialBounds);
 
-        // renderer 초기화
-        this.renderer = new Renderer(canvas, rootNode, () => this.quadTree.getBounds());
+        // viewport 초기화
+        this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree.getBounds());
 
         // layout 초기화
         this.layout = new MindmapLayoutManager({ treeContainer: this.tree });
 
         // interaction 초기화
         this.interaction = new MindmapInteractionManager(
+            this.broker,
             this.tree,
             () => this.onGlobalUpdate(),
-            (dx, dy) => this.renderer.panningHandler(dx, dy),
+            (dx, dy) => this.viewport.panningHandler(dx, dy),
             (target, moving, direction) => this.moveNode(target, moving, direction),
         );
 
@@ -84,16 +84,20 @@ export default class MindMapCore {
         // 3. broker 알림
         if (affectedIds) {
             affectedIds.forEach((id) => {
-                this.broker.publish(id);
+                this.broker.publish(id, undefined);
             });
         }
         // 전체 알림
         else {
-            this.tree.nodes.forEach((_, id) => this.broker.publish(id));
+            this.broker.publish("RENDER_UPDATE", undefined);
         }
 
         // 4. 전역 UI 업데이트
         this.onGlobalUpdate();
+    }
+
+    getInteractionStatus() {
+        return this.interaction.getInteractionStatus();
     }
 
     moveNode(targetId: NodeId, movingId: NodeId, direction: NodeDirection) {
@@ -122,5 +126,26 @@ export default class MindMapCore {
     updateNodeSize(nodeId: NodeId, width: number, height: number) {
         this.tree.update({ nodeId, newNodeData: { width, height } });
         this.sync([nodeId]);
+    }
+
+    /** ========== Interaction ========== */
+    handleMouseMove(e: React.MouseEvent) {
+        this.broker.publish("RAW_MOUSE_MOVE", e);
+    }
+
+    handleWheel(e: React.WheelEvent) {
+        this.broker.publish("RAW_WHEEL", e);
+    }
+
+    handleMouseDown(e: React.MouseEvent) {
+        this.broker.publish("RAW_MOUSE_DOWN", e);
+    }
+
+    handleMouseUp(e: React.MouseEvent) {
+        this.broker.publish("RAW_MOUSE_UP", e);
+    }
+
+    getBroker() {
+        return this.broker;
     }
 }
