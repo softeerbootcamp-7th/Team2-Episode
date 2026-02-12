@@ -54,7 +54,7 @@ public class EpisodeController {
     )
     @PatchMapping("/stars")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateEpisode(
+    public void updateStar(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId,
             @Valid
