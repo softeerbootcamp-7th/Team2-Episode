@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,13 +18,15 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisDetailDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisCreateReq;
+import com.yat2.episode.diagnosis.dto.DiagnosisDetailRes;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.job.Job;
+import com.yat2.episode.job.JobRepository;
 import com.yat2.episode.question.Question;
+import com.yat2.episode.question.QuestionJobMappingRepository;
 import com.yat2.episode.question.QuestionRepository;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
@@ -31,7 +34,11 @@ import com.yat2.episode.user.UserService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,6 +59,12 @@ class DiagnosisServiceTest {
     private QuestionRepository questionRepository;
 
     @Mock
+    private JobRepository jobRepository;
+
+    @Mock
+    private QuestionJobMappingRepository questionJobMappingRepository;
+
+    @Mock
     private UserService userService;
 
     @InjectMocks
@@ -64,6 +77,7 @@ class DiagnosisServiceTest {
     void setUp() {
         testJob = mock(Job.class);
         when(testJob.getName()).thenReturn("백엔드 개발자");
+        when(testJob.getId()).thenReturn(10);
 
         testUser = User.newUser(123456789L, "테스트유저");
         testUser.updateJob(testJob);
@@ -77,8 +91,9 @@ class DiagnosisServiceTest {
         @DisplayName("진단 결과를 성공적으로 생성")
         void createDiagnosis_success() {
             Long userId = 1L;
+            int jobId = 10;
             Set<Integer> questionIds = Set.of(1, 2, 3);
-            DiagnosisArgsReqDto reqDto = new DiagnosisArgsReqDto(questionIds);
+            DiagnosisCreateReq reqDto = new DiagnosisCreateReq(questionIds, jobId);
 
             Question question1 = mock(Question.class);
             Question question2 = mock(Question.class);
@@ -91,11 +106,15 @@ class DiagnosisServiceTest {
             when(savedDiagnosis.getCreatedAt()).thenReturn(LocalDateTime.now());
 
             when(userService.getUserOrThrow(userId)).thenReturn(testUser);
+            when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
             when(questionRepository.findAllById(questionIds)).thenReturn(questions);
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), any())).thenReturn(
+                    (long) questions.size());
+
             when(diagnosisRepository.save(any(DiagnosisResult.class))).thenReturn(savedDiagnosis);
             when(diagnosisWeaknessRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
 
-            DiagnosisSummaryDto result = diagnosisService.createDiagnosis(userId, reqDto);
+            DiagnosisSummaryRes result = diagnosisService.createDiagnosis(userId, reqDto);
 
             assertThat(result).isNotNull();
             assertThat(result.diagnosisId()).isEqualTo(1);
@@ -107,28 +126,12 @@ class DiagnosisServiceTest {
         }
 
         @Test
-        @DisplayName("사용자가 직무를 선택하지 않았으면 예외가 발생")
-        void createDiagnosis_jobNotSelected_throwsException() {
-            Long userId = 1L;
-            DiagnosisArgsReqDto reqDto = new DiagnosisArgsReqDto(Set.of(1, 2));
-
-            User userWithoutJob = User.newUser(987654321L, "직무없는유저");
-
-            when(userService.getUserOrThrow(userId)).thenReturn(userWithoutJob);
-
-            assertThatThrownBy(() -> diagnosisService.createDiagnosis(userId, reqDto)).isInstanceOf(
-                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.JOB_NOT_SELECTED);
-
-            verify(diagnosisRepository, never()).save(any());
-        }
-
-        @Test
         @DisplayName("존재하지 않는 질문 ID가 있으면 예외가 발생")
         void createDiagnosis_questionNotFound_throwsException() {
             Long userId = 1L;
+            Integer jobId = 10;
             Set<Integer> questionIds = Set.of(1, 2, 999);
-            DiagnosisArgsReqDto reqDto = new DiagnosisArgsReqDto(questionIds);
+            DiagnosisCreateReq reqDto = new DiagnosisCreateReq(questionIds, jobId);
 
             Question question1 = mock(Question.class);
             Question question2 = mock(Question.class);
@@ -136,6 +139,10 @@ class DiagnosisServiceTest {
 
             when(userService.getUserOrThrow(userId)).thenReturn(testUser);
             when(questionRepository.findAllById(questionIds)).thenReturn(questions);
+            when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), any())).thenReturn(
+                    (long) questions.size());
+
 
             assertThatThrownBy(() -> diagnosisService.createDiagnosis(userId, reqDto)).isInstanceOf(
                             CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
@@ -148,8 +155,9 @@ class DiagnosisServiceTest {
         @DisplayName("빈 질문 목록으로 진단 생성")
         void createDiagnosis_emptyQuestions_success() {
             Long userId = 1L;
+            Integer jobId = 10;
             Set<Integer> questionIds = Set.of();
-            DiagnosisArgsReqDto reqDto = new DiagnosisArgsReqDto(questionIds);
+            DiagnosisCreateReq reqDto = new DiagnosisCreateReq(questionIds, jobId);
 
             DiagnosisResult savedDiagnosis = mock(DiagnosisResult.class);
             when(savedDiagnosis.getId()).thenReturn(1);
@@ -161,10 +169,42 @@ class DiagnosisServiceTest {
             when(diagnosisRepository.save(any(DiagnosisResult.class))).thenReturn(savedDiagnosis);
             when(diagnosisWeaknessRepository.saveAll(anyList())).thenReturn(List.of());
 
-            DiagnosisSummaryDto result = diagnosisService.createDiagnosis(userId, reqDto);
+            when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), any())).thenReturn((long) 0);
+
+            DiagnosisSummaryRes result = diagnosisService.createDiagnosis(userId, reqDto);
 
             assertThat(result).isNotNull();
             assertThat(result.weaknessCount()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 직무 ID가 입력되면 JOB_NOT_FOUND 예외가 발생한다")
+        void createDiagnosis_jobNotFound_throwsException() {
+            Integer invalidJobId = 999;
+            DiagnosisCreateReq reqDto = new DiagnosisCreateReq(Set.of(1), invalidJobId);
+
+            when(userService.getUserOrThrow(anyLong())).thenReturn(testUser);
+            when(jobRepository.findById(invalidJobId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> diagnosisService.createDiagnosis(1L, reqDto)).isInstanceOf(CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.JOB_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("질문이 선택한 직무와 매핑되지 않으면 INVALID_JOB 예외가 발생한다")
+        void createDiagnosis_invalidMapping_throwsException() {
+            Integer jobId = 10;
+            DiagnosisCreateReq reqDto = new DiagnosisCreateReq(Set.of(1), jobId);
+
+            when(userService.getUserOrThrow(anyLong())).thenReturn(testUser);
+            when(jobRepository.findById(jobId)).thenReturn(Optional.of(testJob));
+            when(questionRepository.findAllById(any())).thenReturn(List.of(mock(Question.class)));
+
+            when(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(eq(jobId), anyList())).thenReturn(0L);
+
+            assertThatThrownBy(() -> diagnosisService.createDiagnosis(1L, reqDto)).isInstanceOf(CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_JOB);
         }
     }
 
@@ -177,12 +217,12 @@ class DiagnosisServiceTest {
         void getDiagnosisSummaries_success() {
             Long userId = 1L;
             LocalDateTime now = LocalDateTime.now();
-            List<DiagnosisSummaryDto> summaries = List.of(new DiagnosisSummaryDto(1, "백엔드 개발자", now, 5),
-                                                          new DiagnosisSummaryDto(2, "프론트엔드 개발자", now.minusDays(1), 3));
+            List<DiagnosisSummaryRes> summaries = List.of(new DiagnosisSummaryRes(1, "백엔드 개발자", now, 5),
+                                                          new DiagnosisSummaryRes(2, "프론트엔드 개발자", now.minusDays(1), 3));
 
             when(diagnosisRepository.findDiagnosisSummariesByUserId(userId)).thenReturn(summaries);
 
-            List<DiagnosisSummaryDto> result = diagnosisService.getDiagnosisSummariesByUserId(userId);
+            List<DiagnosisSummaryRes> result = diagnosisService.getDiagnosisSummariesByUserId(userId);
 
             assertThat(result).hasSize(2);
             assertThat(result.get(0).diagnosisId()).isEqualTo(1);
@@ -199,9 +239,35 @@ class DiagnosisServiceTest {
             Long userId = 1L;
             when(diagnosisRepository.findDiagnosisSummariesByUserId(userId)).thenReturn(List.of());
 
-            List<DiagnosisSummaryDto> result = diagnosisService.getDiagnosisSummariesByUserId(userId);
+            List<DiagnosisSummaryRes> result = diagnosisService.getDiagnosisSummariesByUserId(userId);
 
             assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("진단 생성 시 사용자의 직무 정보가 업데이트된다")
+        void createDiagnosis_updatesUserJob() {
+            Long userId = 1L;
+            Integer jobId = 10;
+            Set<Integer> questionIds = Set.of(1, 2);
+            DiagnosisCreateReq reqDto = new DiagnosisCreateReq(questionIds, jobId);
+
+            given(userService.getUserOrThrow(userId)).willReturn(testUser);
+            given(jobRepository.findById(jobId)).willReturn(Optional.of(testJob));
+            given(questionRepository.findAllById(any())).willReturn(
+                    List.of(mock(Question.class), mock(Question.class)));
+            given(questionJobMappingRepository.countByJob_IdAndQuestion_IdIn(anyInt(), anyList())).willReturn(2L);
+
+            given(diagnosisRepository.save(any(DiagnosisResult.class))).willAnswer(invocation -> {
+                DiagnosisResult arg = invocation.getArgument(0);
+                ReflectionTestUtils.setField(arg, "id", 1);
+                return arg;
+            });
+            DiagnosisSummaryRes result = diagnosisService.createDiagnosis(userId, reqDto);
+
+            assertThat(result).isNotNull();
+            assertThat(testUser.getJob()).isEqualTo(testJob);
+            assertThat(result.jobName()).isEqualTo("백엔드 개발자");
         }
     }
 
@@ -238,7 +304,7 @@ class DiagnosisServiceTest {
 
             when(diagnosisRepository.findDetailByIdAndUserId(diagnosisId, userId)).thenReturn(Optional.of(diagnosis));
 
-            DiagnosisDetailDto result = diagnosisService.getDiagnosisDetailById(diagnosisId, userId);
+            DiagnosisDetailRes result = diagnosisService.getDiagnosisDetailById(diagnosisId, userId);
 
             assertThat(result).isNotNull();
             assertThat(result.diagnosisId()).isEqualTo(diagnosisId);
@@ -289,7 +355,7 @@ class DiagnosisServiceTest {
 
             when(diagnosisRepository.findDetailByIdAndUserId(diagnosisId, userId)).thenReturn(Optional.of(diagnosis));
 
-            DiagnosisDetailDto result = diagnosisService.getDiagnosisDetailById(diagnosisId, userId);
+            DiagnosisDetailRes result = diagnosisService.getDiagnosisDetailById(diagnosisId, userId);
 
             assertThat(result).isNotNull();
             assertThat(result.weaknesses()).isEmpty();

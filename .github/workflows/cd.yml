@@ -6,11 +6,8 @@ concurrency:
 
 on:
   push:
-    branches: [ release ]
-    paths:
-      - "backend/**"
-      - "infra/prod/**"
-      - ".github/workflows/cd.yml"
+    tags:
+      - 'v*.*.*'
 
 jobs:
   deploy:
@@ -28,6 +25,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tag is on default branch
+        run: |
+          git fetch origin ${{ github.event.repository.default_branch }}
+          git merge-base --is-ancestor $GITHUB_SHA origin/${{ github.event.repository.default_branch }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -52,7 +56,7 @@ jobs:
       - name: Build & Push Image
         run: |
           IMAGE=ghcr.io/${{ github.repository_owner }}/episode-api
-          TAG=${GITHUB_SHA::7}
+          TAG=${{ github.ref_name }}
 
           docker buildx build \
             --cache-from type=gha \
@@ -73,7 +77,7 @@ jobs:
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
-            cd /home/${{ secrets.EC2_USER }}/app
+            cd ~/app
           
             [ -f docker-compose.yml ] && cp docker-compose.yml .docker-compose.prev.yml || echo "No docker-compose to backup"
             [ -f Caddyfile ] && cp Caddyfile .Caddyfile.prev || echo "No Caddyfile to backup"
@@ -89,27 +93,34 @@ jobs:
             infra/prod/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/app/
 
-      - name: Deploy via SSH
+      - name: Deploy
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          TAG=${{ github.ref_name }}
+
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             set -e
-            cd /home/${{ secrets.EC2_USER }}/app
+            cd ~/app
 
-            CURRENT_ID=$(docker inspect episode-api \
-              --format '{{.Image}}' 2>/dev/null || true)
+            CURRENT_IMAGE=\$(docker inspect episode-api \
+              --format '{{.Config.Image}}' 2>/dev/null || true)
 
-            if [ ! -z "$CURRENT_ID" ]; then
-              echo "$CURRENT_ID" > .prev_image_id
-              echo "Saved previous image ID: $CURRENT_ID"
+            if [ -n "\$CURRENT_IMAGE" ]; then
+              CURRENT_TAG=\${CURRENT_IMAGE##*:}
+              echo "\$CURRENT_TAG" > .prev_tag
+              echo "Saved previous tag: \$CURRENT_TAG"
             else
-              rm -f .prev_image_id || true
+              echo "No running container found"
+              rm -f .prev_tag || true
             fi
+
+            NEW_TAG=$TAG
+            echo "Deploying new tag: \$NEW_TAG"
+            export IMAGE_TAG=\$NEW_TAG
 
             docker compose pull
             docker compose up -d
             docker compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile
             docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
-
           EOF
 
       - name: Health check
@@ -141,31 +152,36 @@ jobs:
         if: failure() && steps.health_check.outcome == 'failure'
         run: |
           echo "Health check failed. Rolling back..."
+          
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/${{ secrets.EC2_USER }}/app
-
-            [ -f .docker-compose.prev.yml ] && mv .docker-compose.prev.yml docker-compose.yml || echo "No previous docker-compose found"
-            [ -f .Caddyfile.prev ] && mv .Caddyfile.prev Caddyfile || echo "No previous Caddyfile found"
-
-            if [ ! -f .prev_image_id ]; then
-              echo "No previous image ID found."
-              exit 1
-            fi
-
-            TARGET_ID=$(cat .prev_image_id)
-
-            echo "Restoring Image ID: $TARGET_ID"
-            docker tag $TARGET_ID ghcr.io/${{ github.repository_owner }}/episode-api:latest
-
-            docker compose up -d
-            docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
-
-            echo "Rollback completed."
+          set -e
+          cd ~/app
+          
+          if [ ! -f .prev_tag ]; then
+             echo "No previous tag found. Cannot rollback."
+             exit 1
+          fi
+          
+          PREV_TAG=$(cat .prev_tag)
+          echo "Rolling back to $PREV_TAG"
+          
+          [ -f .docker-compose.prev.yml ] && mv .docker-compose.prev.yml docker-compose.yml || true
+          [ -f .Caddyfile.prev ] && mv .Caddyfile.prev Caddyfile || true
+          
+          export IMAGE_TAG=$PREV_TAG
+          
+          docker compose pull
+          docker compose up -d
+          docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
+          
+          echo "Rollback completed."
           EOF
 
-      - name: Cleanup Images
+      - name: Cleanup Temporary Files & Images
         if: always()
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/app
+            rm -f .prev_tag .docker-compose.prev.yml .Caddyfile.prev
             docker image prune -f
           EOF

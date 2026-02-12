@@ -8,13 +8,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes;
 
 @Repository
 public interface DiagnosisRepository extends JpaRepository<DiagnosisResult, Integer> {
     @Query(
             """
-                    SELECT NEW com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto(
+                    SELECT NEW com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes(
                         d.id,
                         d.job.name,
                         d.createdAt,
@@ -27,7 +27,7 @@ public interface DiagnosisRepository extends JpaRepository<DiagnosisResult, Inte
                     ORDER BY d.createdAt DESC
                     """
     )
-    List<DiagnosisSummaryDto> findDiagnosisSummariesByUserId(
+    List<DiagnosisSummaryRes> findDiagnosisSummariesByUserId(
             @Param("userId") Long userId
     );
 

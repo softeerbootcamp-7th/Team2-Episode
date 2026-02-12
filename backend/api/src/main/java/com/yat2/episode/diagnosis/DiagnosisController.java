@@ -19,21 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.util.List;
 
-import com.yat2.episode.diagnosis.dto.DiagnosisArgsReqDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisDetailDto;
-import com.yat2.episode.diagnosis.dto.DiagnosisSummaryDto;
+import com.yat2.episode.diagnosis.dto.DiagnosisCreateReq;
+import com.yat2.episode.diagnosis.dto.DiagnosisDetailRes;
+import com.yat2.episode.diagnosis.dto.DiagnosisSummaryRes;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.global.utils.UriUtil;
 
-import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
+import static com.yat2.episode.global.constant.AttributeKeys.USER_ID;
 
 @RestController
 @AuthRequiredErrors
 @RequiredArgsConstructor
 @Validated
-@RequestMapping("/diagnosis")
+@RequestMapping("/diagnoses")
 @Tag(name = "Diagnosis", description = "역량 진단 관리 API")
 public class DiagnosisController {
     private final DiagnosisService diagnosisService;
@@ -42,7 +42,7 @@ public class DiagnosisController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
     @GetMapping()
-    public List<DiagnosisSummaryDto> getDiagnosisSummaries(
+    public List<DiagnosisSummaryRes> getDiagnosisSummaries(
             @RequestAttribute(USER_ID) Long userId
     ) {
         return diagnosisService.getDiagnosisSummariesByUserId(userId);
@@ -52,7 +52,7 @@ public class DiagnosisController {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.INVALID_REQUEST })
     @GetMapping("/{diagnosisId}")
-    public DiagnosisDetailDto getDiagnosisDetailById(
+    public DiagnosisDetailRes getDiagnosisDetailById(
             @PathVariable
             @Positive(message = "Id는 1 이상의 정수여야 합니다.")
             Integer diagnosisId,
@@ -68,15 +68,15 @@ public class DiagnosisController {
     )
     @ApiResponses({ @ApiResponse(responseCode = "201", description = "저장 성공") })
     @ApiErrorCodes(
-            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.QUESTION_NOT_FOUND,
-              ErrorCode.JOB_NOT_SELECTED }
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.JOB_NOT_FOUND,
+              ErrorCode.QUESTION_NOT_FOUND }
     )
     @PostMapping()
-    public ResponseEntity<DiagnosisSummaryDto> createDiagnosis(
+    public ResponseEntity<DiagnosisSummaryRes> createDiagnosis(
             @RequestAttribute(USER_ID) long userId,
-            @RequestBody DiagnosisArgsReqDto reqBody
+            @RequestBody DiagnosisCreateReq reqBody
     ) {
-        DiagnosisSummaryDto resBody = diagnosisService.createDiagnosis(userId, reqBody);
+        DiagnosisSummaryRes resBody = diagnosisService.createDiagnosis(userId, reqBody);
         URI location = UriUtil.createLocationUri(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
     }

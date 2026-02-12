@@ -10,13 +10,15 @@ import java.util.UUID;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.mindmap.dto.MindmapArgsReqDto;
-import com.yat2.episode.mindmap.dto.MindmapDataDto;
-import com.yat2.episode.mindmap.dto.MindmapDataExceptDateDto;
-import com.yat2.episode.mindmap.dto.MindmapIdentityDto;
+import com.yat2.episode.mindmap.dto.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.MindmapNameRes;
+import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
+import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
@@ -24,17 +26,19 @@ import com.yat2.episode.user.UserService;
 @Service
 public class MindmapService {
     private final MindmapRepository mindmapRepository;
+    private final MindmapAccessValidator mindmapAccessValidator;
     private final MindmapParticipantRepository mindmapParticipantRepository;
     private final S3SnapshotRepository snapshotRepository;
     private final UserService userService;
     private final S3ObjectKeyGenerator s3ObjectKeyGenerator;
+    private final MindmapJwtProvider mindmapJwtProvider;
 
-    public MindmapDataDto getMindmapById(Long userId, String mindmapIdStr) {
-        return MindmapDataDto.of(getMindmapByUUIDString(userId, mindmapIdStr));
+    public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
+        return MindmapDetailRes.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
     }
 
     @Transactional(readOnly = true)
-    public List<MindmapDataDto> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
+    public List<MindmapDetailRes> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
         return switch (type) {
             case PRIVATE -> getMindmapsByShared(userId, false);
             case PUBLIC -> getMindmapsByShared(userId, true);
@@ -42,25 +46,25 @@ public class MindmapService {
         };
     }
 
-    private List<MindmapDataDto> getMindmapsByShared(Long userId, boolean shared) {
+    private List<MindmapDetailRes> getMindmapsByShared(Long userId, boolean shared) {
         return mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, shared).stream()
-                .map(MindmapDataDto::of).toList();
+                .map(MindmapDetailRes::of).toList();
     }
 
-    private List<MindmapDataDto> getAllMindmap(Long userId) {
+    private List<MindmapDetailRes> getAllMindmap(Long userId) {
         return mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId).stream()
-                .map(MindmapDataDto::of).toList();
+                .map(MindmapDetailRes::of).toList();
     }
 
 
     @Transactional(readOnly = true)
-    public List<MindmapIdentityDto> getMindmapList(Long userId) {
-        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapIdentityDto::of).toList();
+    public List<MindmapNameRes> getMindmapList(Long userId) {
+        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapNameRes::of).toList();
     }
 
 
     @Transactional
-    public MindmapDataExceptDateDto saveMindmapAndParticipant(long userId, MindmapArgsReqDto body, UUID mindmapId) {
+    public MindmapSummaryRes saveMindmapAndParticipant(long userId, MindmapCreateReq body, UUID mindmapId) {
         User user = userService.getUserOrThrow(userId);
         String finalTitle = body.title();
         if (finalTitle == null || finalTitle.isBlank()) {
@@ -74,16 +78,12 @@ public class MindmapService {
         MindmapParticipant participant = new MindmapParticipant(user, mindmap);
         mindmapParticipantRepository.save(participant);
 
-        return MindmapDataExceptDateDto.of(participant);
+        return MindmapSummaryRes.of(participant);
     }
 
-    public S3UploadResponseDto getUploadInfo(UUID mindmapId) {
+    public S3UploadFieldsRes getUploadInfo(UUID mindmapId) {
         return snapshotRepository.createPresignedUploadInfo(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
     }
-
-    //todo: S3로 스냅샷이 들어오지 않거나.. 잘못된 데이터가 들어온 경우 체크 후 db에서 삭제
-    //todo: disconnect 시 마인드맵 웹소켓 연결 수가 0인 경우의 s3 데이터에 스냅샷 업로드
-    //todo: delete 시 해당 마인드맵의 mindmap_participant가 0인 경우 db 내 마인드맵 데이터 삭제
 
     private UUID getUUID(String uuidStr) {
         try {
@@ -91,11 +91,6 @@ public class MindmapService {
         } catch (IllegalArgumentException e) {
             throw new CustomException(ErrorCode.INVALID_MINDMAP_UUID);
         }
-    }
-
-
-    public MindmapParticipant getMindmapByUUIDString(Long userId, String uuidStr) {
-        return findParticipantOrThrow(uuidStr, userId);
     }
 
     private String getPrivateMindmapName(User user) {
@@ -138,16 +133,14 @@ public class MindmapService {
 
 
     @Transactional
-    public void deleteMindmap(long userId, String mindmapId) {
-        UUID mindmapUUID = getUUID(mindmapId);
-
-        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapUUID)
+    public void deleteMindmap(long userId, UUID mindmapId) {
+        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
 
-        int deletedCount = mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapUUID, userId);
+        int deletedCount = mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, userId);
         if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_NOT_FOUND);
 
-        boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapUUID);
+        boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapId);
 
         if (!hasOtherParticipants) {
             mindmapRepository.delete(mindmap);
@@ -155,23 +148,39 @@ public class MindmapService {
     }
 
     @Transactional
-    public MindmapDataDto updateFavoriteStatus(long userId, String mindmapId, boolean status) {
-        MindmapParticipant participant = findParticipantOrThrow(mindmapId, userId);
+    public MindmapDetailRes updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
+        MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.updateFavorite(status);
 
-        return MindmapDataDto.of(participant);
+        return MindmapDetailRes.of(participant);
     }
 
     @Transactional
-    public MindmapDataDto updateName(long userId, String mindmapId, String name) {
-        MindmapParticipant participant = findParticipantOrThrow(mindmapId, userId);
+    public MindmapDetailRes updateName(long userId, UUID mindmapId, String name) {
+        MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.getMindmap().updateName(name);
 
-        return MindmapDataDto.of(participant);
+        return MindmapDetailRes.of(participant);
     }
 
-    private MindmapParticipant findParticipantOrThrow(String mindmapId, long userId) {
-        return mindmapParticipantRepository.findByMindmapIdAndUserId(getUUID(mindmapId), userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
+    @Transactional
+    public MindmapDetailRes saveMindmapParticipant(long userId, UUID mindmapId) {
+        User user = userService.getUserOrThrow(userId);
+        Mindmap mindmap = mindmapAccessValidator.validateTeamMindmap(mindmapId);
+
+        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).map(MindmapDetailRes::of)
+                .orElseGet(() -> {
+                    MindmapParticipant newParticipant = new MindmapParticipant(user, mindmap);
+                    MindmapParticipant savedParticipant = mindmapParticipantRepository.save(newParticipant);
+                    return MindmapDetailRes.of(savedParticipant);
+                });
+    }
+
+    @Transactional
+    public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
+        MindmapDetailRes mindmapDetailRes = this.saveMindmapParticipant(userId, mindmapId);
+        String ticket = mindmapJwtProvider.issue(userId, mindmapId);
+        return new MindmapSessionJoinRes(ticket, snapshotRepository.createPresignedGetURL(
+                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapDetailRes.mindmapId())));
     }
 }
