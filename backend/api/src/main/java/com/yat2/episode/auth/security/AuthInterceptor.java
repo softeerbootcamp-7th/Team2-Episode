@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import com.yat2.episode.auth.jwt.AuthJwtProvider;
-import com.yat2.episode.global.constant.RequestAttrs;
+import com.yat2.episode.global.constant.AttributeKeys;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 
@@ -38,7 +38,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         String token = extractAccessToken(request).orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
 
         Long userId = authJwtProvider.verifyAccessTokenAndGetUserId(token);
-        request.setAttribute(RequestAttrs.USER_ID, userId);
+        request.setAttribute(AttributeKeys.USER_ID, userId);
 
         return true;
     }
