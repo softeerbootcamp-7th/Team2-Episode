@@ -16,11 +16,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeRepository;
-import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
-import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
@@ -39,6 +39,8 @@ class EpisodeServiceTest {
 
     @Mock
     private EpisodeRepository episodeRepository;
+    @Mock
+    private StarRepository starRepository;
 
     @Mock
     private CompetencyTypeRepository competencyTypeRepository;
@@ -65,7 +67,7 @@ class EpisodeServiceTest {
         Episode episode = Episode.create(nodeId, userId, mindmapId);
         when(episodeRepository.findById(new EpisodeId(nodeId, userId))).thenReturn(Optional.of(episode));
 
-        EpisodeDetailRes res = episodeService.getEpisode(nodeId, userId);
+        EpisodeDetail res = episodeService.getEpisode(nodeId, userId);
 
         assertThat(res.nodeId()).isEqualTo(nodeId);
         verify(episodeRepository).findById(any());
@@ -81,10 +83,10 @@ class EpisodeServiceTest {
 
     @Test
     void getMindmapEpisodes_success() {
-        Episode e1 = Episode.create(UUID.randomUUID(), userId, mindmapId);
-        Episode e2 = Episode.create(UUID.randomUUID(), userId, mindmapId);
+        Episode e1 = Episode.create(UUID.randomUUID(), mindmapId);
+        Episode e2 = Episode.create(UUID.randomUUID(), mindmapId);
 
-        when(episodeRepository.findByMindmapIdAndIdUserId(mindmapId, userId)).thenReturn(List.of(e1, e2));
+        when(episodeRepository.findEpisodesByMindmapIdAndUserId(mindmapId, userId)).thenReturn(List.of(e1, e2));
 
         List<EpisodeSummaryRes> result = episodeService.getMindmapEpisodes(mindmapId, userId);
 
@@ -103,7 +105,7 @@ class EpisodeServiceTest {
         EpisodeUpsertReq req =
                 new EpisodeUpsertReq(Set.of(1, 2), "content", null, null, null, null, LocalDate.now(), null);
 
-        EpisodeDetailRes res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
+        EpisodeDetail res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
         assertThat(res.content()).isEqualTo("content");
         assertThat(episode.getCompetencyTypeIds()).containsExactlyInAnyOrder(1, 2);
         verify(episodeRepository, never()).save(any());
@@ -117,7 +119,7 @@ class EpisodeServiceTest {
 
         EpisodeUpsertReq req = new EpisodeUpsertReq(Set.of(1), "content", null, null, null, null, null, null);
 
-        EpisodeDetailRes res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
+        EpisodeDetail res = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
 
         assertThat(res.content()).isEqualTo("content");
         verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
@@ -126,15 +128,14 @@ class EpisodeServiceTest {
 
     @Test
     void updateEpisode_success() {
-        Episode episode = Episode.create(nodeId, userId, mindmapId);
-        when(episodeRepository.findById(any())).thenReturn(Optional.of(episode));
+        Star star = Star.create(nodeId, userId);
+        when(starRepository.findById(any())).thenReturn(Optional.of(star));
 
-        EpisodeUpdateExceptContentReq req =
-                new EpisodeUpdateExceptContentReq(null, "updated", null, null, null, null, null);
+        StarUpdateReq req = new StarUpdateReq(null, "updated", null, null, null, null, null);
 
-        episodeService.updateEpisode(nodeId, userId, req);
+        episodeService.updateStar(nodeId, userId, req);
 
-        assertThat(episode.getSituation()).isEqualTo("updated");
+        assertThat(star.getSituation()).isEqualTo("updated");
     }
 
     @Test

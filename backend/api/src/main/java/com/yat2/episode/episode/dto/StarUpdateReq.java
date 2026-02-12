@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.Set;
 
-public record EpisodeUpdateExceptContentReq(
+public record StarUpdateReq(
         Set<@Positive Integer> competencyTypeIds,
         @Size(max = 200) String situation,
         @Size(max = 200) String task,

@@ -10,11 +10,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeRepository;
-import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
-import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
@@ -26,41 +26,41 @@ public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
     private final CompetencyTypeRepository competencyTypeRepository;
+    private final StarRepository starRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
 
-    public EpisodeDetailRes getEpisode(UUID nodeId, long userId) {
-        Episode episode = getEpisodeOrThrow(nodeId, userId);
-
-        return EpisodeDetailRes.of(episode);
+    public EpisodeDetail getEpisode(UUID nodeId, long userId) {
+        return getEpisodeAndStarOrThrow(nodeId, userId);
     }
 
     public List<EpisodeSummaryRes> getMindmapEpisodes(UUID mindmapId, long userId) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
 
-        return episodeRepository.findByMindmapIdAndIdUserId(mindmapId, userId).stream().map(EpisodeSummaryRes::of)
+        return episodeRepository.findDetailsByMindmapIdAndUserId(mindmapId, userId).stream().map(EpisodeSummaryRes::of)
                 .toList();
     }
 
     @Transactional
-    public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
+    public EpisodeDetail upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
         validateCompetencyIds(episodeUpsertReq.competencyTypeIds());
 
-        Episode episode = episodeRepository.findById(episodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
-
+        Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
+        Star star = starRepository.findById(episodeId).orElseGet(() -> createNewStar(episodeId, mindmapId));
         episode.update(episodeUpsertReq);
+        star.update(episodeUpsertReq);
 
-        return EpisodeDetailRes.of(episode);
+        return EpisodeDetail.of(episode, star);
     }
 
     @Transactional
-    public void updateEpisode(UUID nodeId, long userId, EpisodeUpdateExceptContentReq episodeUpdateExceptContentReq) {
-        Episode episode = getEpisodeOrThrow(nodeId, userId);
-        validateDates(episodeUpdateExceptContentReq.startDate(), episodeUpdateExceptContentReq.endDate());
-        validateCompetencyIds(episodeUpdateExceptContentReq.competencyTypeIds());
-
-        episode.update(episodeUpdateExceptContentReq);
+    public void updateStar(UUID nodeId, long userId, StarUpdateReq starUpdateReq) {
+        getEpisodeOrThrow(nodeId, userId);
+        Star star = getStarOrThrow(nodeId, userId);
+        validateDates(starUpdateReq.startDate(), starUpdateReq.endDate());
+        validateCompetencyIds(starUpdateReq.competencyTypeIds());
+        star.update(starUpdateReq);
     }
 
     @Transactional
@@ -73,28 +73,46 @@ public class EpisodeService {
 
     @Transactional
     public void deleteEpisode(UUID nodeId, long userId) {
-        episodeRepository.deleteById(new EpisodeId(nodeId, userId));
+        starRepository.deleteById(new EpisodeId(nodeId, userId));
     }
 
     @Transactional
     public void clearEpisodeDates(UUID nodeId, long userId) {
         Episode episode = getEpisodeOrThrow(nodeId, userId);
-        episode.clearDates();
+        Star star = getStarOrThrow(nodeId, userId);
+        star.clearDates();
     }
 
     private Episode getEpisodeOrThrow(UUID nodeId, long userId) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
 
-        return episodeRepository.findById(episodeId)
+        return episodeRepository.findById(nodeId).orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+    }
+
+    private EpisodeDetail getEpisodeAndStarOrThrow(UUID nodeId, long userId) {
+        return episodeRepository.findDetail(nodeId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+    }
+
+    private Star getStarOrThrow(UUID nodeId, long userId) {
+        EpisodeId episodeId = new EpisodeId(nodeId, userId);
+        return starRepository.findById(episodeId).orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
     }
 
     private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, episodeId.getUserId());
 
-        Episode newEpisode = Episode.create(episodeId.getNodeId(), episodeId.getUserId(), mindmapId);
+        Episode newEpisode = Episode.create(episodeId.getNodeId(), mindmapId);
 
         return episodeRepository.save(newEpisode);
+    }
+
+    private Star createNewStar(EpisodeId episodeId, UUID mindmapId) {
+        mindmapAccessValidator.findParticipantOrThrow(mindmapId, episodeId.getUserId());
+
+        Star newStar = Star.create(episodeId.getNodeId(), episodeId.getUserId());
+
+        return starRepository.save(newStar);
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate) {

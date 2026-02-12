@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertReq;
 import com.yat2.episode.global.exception.ErrorCode;
@@ -51,7 +51,7 @@ public class MindmapEpisodeController {
     )
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
     @PutMapping("/{nodeId}")
-    public EpisodeDetailRes createEpisode(
+    public EpisodeDetail createEpisode(
             @PathVariable UUID mindmapId,
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId,

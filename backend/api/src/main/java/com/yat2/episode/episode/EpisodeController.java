@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeUpdateContentReq;
-import com.yat2.episode.episode.dto.EpisodeUpdateExceptContentReq;
+import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -38,7 +38,7 @@ public class EpisodeController {
     @Operation(summary = "에피소드 정보 조회", description = "에피소드 세부 정보를 조회합니다.")
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
     @GetMapping
-    public EpisodeDetailRes getEpisode(
+    public EpisodeDetail getEpisode(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId
     ) {
@@ -50,16 +50,16 @@ public class EpisodeController {
                                                   "String은 빈 문자열, 배열은 빈 배열, Date는 별도 API로 삭제가 가능합니다."
     )
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
-    @PatchMapping
+    @PatchMapping("/star")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateEpisode(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId,
             @Valid
             @RequestBody
-            EpisodeUpdateExceptContentReq req
+            StarUpdateReq req
     ) {
-        episodeService.updateEpisode(nodeId, userId, req);
+        episodeService.updateStar(nodeId, userId, req);
     }
 
     @Operation(
