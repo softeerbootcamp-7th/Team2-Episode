@@ -25,7 +25,7 @@ export default function InteractionLayer({ status, nodeMap }: InteractionLayerPr
     return (
         <g className="interaction-layer">
             {/* 덩어리는 드래그 중이라면 '항상' 마우스를 따라다님 */}
-            <MovingNodeFragment subtreeIds={dragSubtreeIds} nodeMap={nodeMap} delta={dragDelta} />
+            <MovingNodeFragment filterIds={dragSubtreeIds} nodeMap={nodeMap} delta={dragDelta} />
 
             {/* 타겟이 있을 때만 가이드 띄움 */}
             {baseNode.targetId && baseNode.direction && (

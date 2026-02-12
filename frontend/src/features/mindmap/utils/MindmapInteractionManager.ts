@@ -100,9 +100,11 @@ export class MindmapInteractionManager {
                 this.baseNode.direction = this.calculateDropDirection(mouseY, targetNode);
             }
         } else {
-            // 근처에 노드가 아예 없다면 고스트 정보 비우기
-            this.baseNode.targetId = null;
-            this.baseNode.direction = null;
+            // 근처에 노드가 아예 없다면 고스트 정보 한번에 비우기
+            this.baseNode = {
+                targetId: null,
+                direction: null,
+            };
         }
     }
 
