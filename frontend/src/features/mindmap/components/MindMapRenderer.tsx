@@ -12,6 +12,11 @@ export default function MindMapRenderer() {
     const mindmap = useMindMapCore(); // 현재 트리에 어떤 노드들이 있는지 인터랙션 실시간 관찰
     const version = useMindMapVersion(); //version 업데이트 시 Renderer 다시 그리기
 
+    if (!mindmap) {
+        console.log("Renderer: Core 준비 대기 중...");
+        return null;
+    }
+
     // 전체 마인드맵, 상태 가져오기
     const status = mindmap.getInteractionStatus();
     const { baseNode, dragSubtreeIds } = status;
@@ -19,8 +24,8 @@ export default function MindMapRenderer() {
 
     const allNodes = Array.from(nodeMap.values());
     // MindMapRenderer 내부
-    const staticNodes = allNodes.filter((n) => !dragSubtreeIds?.has(n.id) && n.type !== "root");
-    const shadowNodes = allNodes.filter((n) => dragSubtreeIds?.has(n.id) && n.type !== "root");
+    const staticNodes = allNodes.filter((n) => !dragSubtreeIds?.has(n.id));
+    const shadowNodes = allNodes.filter((n) => dragSubtreeIds?.has(n.id));
     return (
         <g className="mindmap-render-root" data-version={version}>
             {/* 정적 노드 그룹 */}

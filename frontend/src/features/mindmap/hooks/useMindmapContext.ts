@@ -10,8 +10,12 @@ export const useMindMapActions = () => {
 
 export const useMindMapCore = () => {
     const context = useContext(MindMapRefContext);
-    if (!context) throw new Error("Provider missing!");
-    return context.core;
+
+    if (context === undefined) {
+        throw new Error("useMindMapCore must be used within a MindMapProvider");
+    }
+
+    return context?.core;
 };
 
 export const useMindMapVersion = () => {
