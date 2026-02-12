@@ -15,13 +15,7 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
     const { x, y, width, height } = nodeData;
 
     return (
-        <foreignObject
-            x={x - width / 2}
-            y={y - height / 2}
-            width={width}
-            height={height}
-            style={{ overflow: "visible" }}
-        >
+        <foreignObject x={x - width / 2} y={y - height / 2} width={width} height={height} className="overflow-hidden">
             <Node>
                 <Node.AddNode direction={"left"} color={"blue"} onClick={() => addNode(nodeId, "child")} />
                 <Node.Content size={"sm"} color={"blue"} onClick={() => console.log(`클릭!`)}>

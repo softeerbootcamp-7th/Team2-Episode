@@ -7,7 +7,9 @@ import { cn } from "@/utils/cn";
 
 type EdgeLayerProps = {
     nodeMap: Map<NodeId, NodeElement>;
+    filterNode: NodeElement[]; //이번 레이어에서 그릴 노드 ID(선명하게, 투명하게 그려야 하는 경우가 나뉨)
     color?: NodeColor;
+    type?: "active" | "ghost";
 } & VariantProps<typeof edgeVariants>;
 
 export const edgeVariants = cva("fill-none stroke-2 transition-all duration-300", {
@@ -29,15 +31,11 @@ export const edgeVariants = cva("fill-none stroke-2 transition-all duration-300"
     },
 });
 
-export default function EdgeLayer({ nodeMap, color, type = "active" }: EdgeLayerProps) {
-    const nodeArray = Array.from(nodeMap.values());
-
+/** 노드 사이 모든 '선' 담당 */
+export default function EdgeLayer({ nodeMap, color, type = "active", filterNode }: EdgeLayerProps) {
     return (
         <g className="edge-layer">
-            {nodeArray.map((node) => {
-                if (node.type === "root") {
-                    return null;
-                }
+            {filterNode.map((node) => {
                 const parent = nodeMap.get(node.parentId);
 
                 if (!parent) {
