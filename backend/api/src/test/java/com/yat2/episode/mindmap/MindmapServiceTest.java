@@ -37,6 +37,8 @@ import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -190,29 +192,43 @@ class MindmapServiceTest {
     @Nested
     @DisplayName("saveMindmapParticipant")
     class SaveMindmapParticipant {
+
         @Test
-        @DisplayName("공유된 마인드맵에 참여자를 정상적으로 추가한다")
-        void should_add_participant_when_mindmap_is_shared() {
+        @DisplayName("공유된 마인드맵에 신규 참여 시 참여 정보를 저장하고, 기존 에피소드들에 대한 Star 데이터를 일괄 생성한다")
+        void should_add_participant_and_create_stars_for_existing_episodes() {
             UUID mindmapId = UUID.randomUUID();
             Mindmap mindmap = createMindmap("팀 마인드맵", true);
             ReflectionTestUtils.setField(mindmap, "id", mindmapId);
+
+            List<UUID> existingEpisodeIds = List.of(UUID.randomUUID(), UUID.randomUUID());
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
             given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willReturn(mindmap);
             given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
                     Optional.empty());
+
             given(mindmapParticipantRepository.save(any(MindmapParticipant.class))).willAnswer(
                     invocation -> invocation.getArgument(0));
+
+            given(episodeRepository.findNodeIdsByMindmapId(mindmapId)).willReturn(existingEpisodeIds);
 
             MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
 
             assertThat(result.mindmapId()).isEqualTo(mindmapId);
+
             verify(mindmapParticipantRepository).save(any(MindmapParticipant.class));
+
+            verify(episodeRepository).findNodeIdsByMindmapId(mindmapId);
+
+            verify(episodeStarRepository).saveAll(argThat(stars -> {
+                List<?> starList = (List<?>) stars;
+                return starList.size() == existingEpisodeIds.size();
+            }));
         }
 
         @Test
-        @DisplayName("이미 참여 중인 사용자가 참여 요청을 하면 새로운 참여 정보를 생성하지 않고 기존 정보를 반환한다")
-        void should_return_existing_participant_if_already_joined() {
+        @DisplayName("이미 참여 중인 사용자가 참여 요청을 하면 Star 데이터를 추가로 생성하지 않고 기존 정보를 반환한다")
+        void should_return_existing_participant_and_never_create_stars_again() {
             UUID mindmapId = UUID.randomUUID();
             Mindmap mindmap = createMindmap("이미 참여 중인 맵", true);
             ReflectionTestUtils.setField(mindmap, "id", mindmapId);
@@ -226,7 +242,10 @@ class MindmapServiceTest {
             MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
 
             assertThat(result.mindmapId()).isEqualTo(mindmapId);
+
             verify(mindmapParticipantRepository, never()).save(any(MindmapParticipant.class));
+            verify(episodeRepository, never()).findNodeIdsByMindmapId(any());
+            verify(episodeStarRepository, never()).saveAll(anyList());
         }
 
         @Test
