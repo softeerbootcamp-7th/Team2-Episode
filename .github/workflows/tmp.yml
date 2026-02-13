@@ -1,6 +1,7 @@
 name: Debug ref on PR
 
 on:
+  workflow_dispatch:
   pull_request:
 
 permissions:
