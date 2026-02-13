@@ -29,9 +29,6 @@ public class EpisodeService {
     private final MindmapAccessValidator mindmapAccessValidator;
 
     public EpisodeDetail getEpisodeDetail(UUID nodeId, long userId) {
-        Episode episode = getEpisodeOrThrow(nodeId);
-        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
-
         return getEpisodeAndStarOrThrow(nodeId, userId);
     }
 
