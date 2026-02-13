@@ -2,6 +2,7 @@ package com.yat2.episode.collaboration.ws;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -40,6 +41,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             return true;
         } catch (Exception e) {
             log.warn("WebSocket handshake 실패", e);
+            response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
     }
