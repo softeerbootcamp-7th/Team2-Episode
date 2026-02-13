@@ -57,11 +57,8 @@ public class EpisodeService {
 
     @Transactional
     public void updateStar(UUID nodeId, long userId, StarUpdateReq starUpdateReq) {
-        Episode episode = getEpisodeOrThrow(nodeId);
-        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
         validateDates(starUpdateReq.startDate(), starUpdateReq.endDate());
         validateCompetencyIds(starUpdateReq.competencyTypeIds());
-
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
         episodeStar.update(starUpdateReq);
     }
