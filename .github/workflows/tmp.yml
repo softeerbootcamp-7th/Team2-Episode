@@ -1,7 +1,7 @@
-name: Debug OIDC ref/repo
+name: Debug ref on PR
 
 on:
-  workflow_dispatch:
+  pull_request:
 
 permissions:
   contents: read
@@ -10,8 +10,7 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
-      - name: Print canonical repo/ref
-        run: |
+      - run: |
           echo "repo=${{ github.repository }}"
           echo "ref=$GITHUB_REF"
           echo "ref_name=$GITHUB_REF_NAME"
