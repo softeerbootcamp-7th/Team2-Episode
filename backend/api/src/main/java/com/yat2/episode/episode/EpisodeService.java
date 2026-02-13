@@ -61,7 +61,8 @@ public class EpisodeService {
             return newEpisode;
         });
         if (!mindmapId.equals(episode.getMindmapId())) throw new CustomException(ErrorCode.EPISODE_NOT_FOUND);
-        EpisodeStar episodeStar = episodeStarRepository.findById(episodeId).orElseGet(() -> createNewStar(episodeId));
+        EpisodeStar episodeStar = episodeStarRepository.findById(episodeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND));
         episode.update(episodeUpsertReq);
 
         return EpisodeDetail.of(episode, episodeStar);
