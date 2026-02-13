@@ -24,6 +24,10 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
     )
     List<Episode> findEpisodesByMindmapIdAndUserId(UUID mindmapId, long userId);
 
+    @Query("SELECT e.id FROM Episode e WHERE e.mindmapId = :mindmapId")
+    List<UUID> findNodeIdsByMindmapId(
+            @Param("mindmapId") UUID mindmapId
+    );
 
     @Query(
             """

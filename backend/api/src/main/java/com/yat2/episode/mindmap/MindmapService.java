@@ -7,6 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import com.yat2.episode.episode.EpisodeRepository;
+import com.yat2.episode.episode.EpisodeStar;
+import com.yat2.episode.episode.EpisodeStarRepository;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
@@ -32,6 +35,8 @@ public class MindmapService {
     private final UserService userService;
     private final S3ObjectKeyGenerator s3ObjectKeyGenerator;
     private final MindmapJwtProvider mindmapJwtProvider;
+    private final EpisodeRepository episodeRepository;
+    private final EpisodeStarRepository episodeStarRepository;
 
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
         return MindmapDetailRes.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
@@ -83,14 +88,6 @@ public class MindmapService {
 
     public S3UploadFieldsRes getUploadInfo(UUID mindmapId) {
         return snapshotRepository.createPresignedUploadInfo(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
-    }
-
-    private UUID getUUID(String uuidStr) {
-        try {
-            return UUID.fromString(uuidStr);
-        } catch (IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.INVALID_MINDMAP_UUID);
-        }
     }
 
     private String getPrivateMindmapName(User user) {
@@ -172,6 +169,15 @@ public class MindmapService {
                 .orElseGet(() -> {
                     MindmapParticipant newParticipant = new MindmapParticipant(user, mindmap);
                     MindmapParticipant savedParticipant = mindmapParticipantRepository.save(newParticipant);
+
+                    List<UUID> existingEpisodeNodeIds = episodeRepository.findNodeIdsByMindmapId(mindmapId);
+
+                    if (!existingEpisodeNodeIds.isEmpty()) {
+                        List<EpisodeStar> starsToCreate =
+                                existingEpisodeNodeIds.stream().map(nodeId -> EpisodeStar.create(nodeId, userId))
+                                        .toList();
+                        episodeStarRepository.saveAll(starsToCreate);
+                    }
                     return MindmapDetailRes.of(savedParticipant);
                 });
     }

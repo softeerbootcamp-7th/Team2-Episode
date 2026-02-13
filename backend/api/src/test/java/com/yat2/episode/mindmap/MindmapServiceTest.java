@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.yat2.episode.episode.EpisodeRepository;
+import com.yat2.episode.episode.EpisodeStarRepository;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
@@ -53,6 +55,10 @@ class MindmapServiceTest {
     private MindmapParticipantRepository mindmapParticipantRepository;
     @Mock
     private S3SnapshotRepository snapshotRepository;
+    @Mock
+    private EpisodeRepository episodeRepository;
+    @Mock
+    private EpisodeStarRepository episodeStarRepository;
     @Mock
     private UserService userService;
     @Mock
