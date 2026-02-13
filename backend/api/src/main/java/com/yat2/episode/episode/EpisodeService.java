@@ -84,8 +84,6 @@ public class EpisodeService {
 
     @Transactional
     public void clearEpisodeDates(UUID nodeId, long userId) {
-        Episode episode = getEpisodeOrThrow(nodeId);
-        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
         episodeStar.clearDates();
     }
