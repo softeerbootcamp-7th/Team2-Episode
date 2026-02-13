@@ -61,13 +61,6 @@ export class MindmapInteractionManager {
             key: "NODE_CLICK",
             callback: ({ nodeId, event }) => this.handleNodeClick(nodeId, event as React.MouseEvent),
         });
-
-        this.broker.subscribe({
-            key: "VIEWPORT_CHANGED",
-            callback: (transform) => {
-                this.transform = transform;
-            },
-        });
     }
 
     private projectScreenToWorld(clientX: number, clientY: number) {
@@ -271,12 +264,22 @@ export class MindmapInteractionManager {
             }
         }
 
+        // 리렌더링이 필요한 모드인지
+        const shouldUpdateReact = this.mode === "dragging";
+
         this.clearStatus();
-        this.onUpdate();
+
+        if (shouldUpdateReact) {
+            this.onUpdate();
+        }
     };
 
     // 새로운 노드 추가 TODO: 외부에서 버튼 클릭 시 이 모드가 되어야 함
     public startCreating = () => {
         this.mode = "pending_creation";
     };
+
+    public getInteractionMode() {
+        return this.mode;
+    }
 }

@@ -4,7 +4,7 @@ import QuadTree from "@/features/mindmap/core/QuadTree";
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
 import ViewportManager from "@/features/mindmap/core/ViewportManager";
 import { MindMapEvents } from "@/features/mindmap/types/events";
-import { AddNodeDirection, NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
+import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
 import { EventBroker } from "@/utils/EventBroker";
 
 /**
@@ -37,7 +37,7 @@ export default class MindMapCore {
         if (this._isInitialized) return;
 
         const rootNode = this.tree.getRootNode();
-        const initialBounds = this.calculateInitialBounds(rootNode);
+        const initialBounds = this.calculateInitialBounds();
 
         // 여기서 할당이 완료됨
         this.canvas = canvas;
@@ -70,21 +70,12 @@ export default class MindMapCore {
     }
 
     /** 쿼드트리 초기 영역 계산 */
-    private calculateInitialBounds(rootNode: NodeElement) {
-        const FACTOR = 20;
-        const quadWidth = rootNode.width * FACTOR;
-        const quadHeight = rootNode.height * FACTOR;
-
-        console.log(rootNode.x);
-        console.log(rootNode.y);
-        console.log(quadWidth);
-        console.log(quadHeight);
-
+    private calculateInitialBounds() {
         return {
-            minX: -1000,
-            maxX: 1000,
-            minY: -1000,
-            maxY: 1000,
+            minX: -10000,
+            maxX: 10000,
+            minY: -10000,
+            maxY: 10000,
         };
     }
 
@@ -154,6 +145,8 @@ export default class MindMapCore {
     }
 
     updateNodeSize(nodeId: NodeId, width: number, height: number) {
+        console.log("사이즈 변함");
+        if (!this.interaction) return;
         this.tree.update({ nodeId, newNodeData: { width, height } });
         this.sync([nodeId]);
     }
@@ -199,5 +192,9 @@ export default class MindMapCore {
 
     getTree() {
         return this.tree;
+    }
+
+    getViewport() {
+        return this.viewport;
     }
 }

@@ -45,17 +45,21 @@ export default function EdgeLayer({ nodeMap, color, type = "active", filterNode 
                     return null;
                 }
 
-                const startX = parent.x + parent.width / 2;
-                const startY = parent.y + parent.height / 2;
-                const endX = node.x + node.width / 2;
-                const endY = node.y + node.height / 2;
+                const startX = parent.x;
+                const startY = parent.y;
+                const endX = node.x;
+                const endY = node.y;
 
                 return (
-                    <path
-                        key={`edge-${node.id}`}
-                        d={getBezierPath(startX, startY, endX, endY)}
-                        className={cn(edgeVariants({ type, color }))}
-                    />
+                    <g key={`edge-${node.id}`}>
+                        <path
+                            key={`edge-${node.id}`}
+                            d={getBezierPath(startX, startY, endX, endY)}
+                            className={cn(edgeVariants({ type, color }))}
+                        />
+                        <circle cx={startX} cy={startY} r={4} fill="red" />
+                        <circle cx={endX} cy={endY} r={4} fill="lime" />
+                    </g>
                 );
             })}
         </g>

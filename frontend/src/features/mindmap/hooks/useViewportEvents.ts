@@ -27,7 +27,6 @@ export function useViewportEvents() {
 
         // 3. 마우스 이벤트 전달
         const handleMouseDown = (e: MouseEvent) => {
-            // broker.publish("RAW_MOUSE_DOWN", e);
             mindmap.handleMouseDown(e as unknown as React.MouseEvent);
         };
 

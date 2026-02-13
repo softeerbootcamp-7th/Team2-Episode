@@ -21,7 +21,6 @@ type StaticEvents = {
     NODE_MOVE_REQUEST: { targetId: NodeId; movingId: NodeId; direction: NodeDirection };
 
     // 4. 상태 알림
-    VIEWPORT_CHANGED: { x: number; y: number; scale: number };
     RENDER_UPDATE: undefined;
 };
 

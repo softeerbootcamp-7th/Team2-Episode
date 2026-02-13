@@ -11,9 +11,12 @@ import { EventBroker } from "@/utils/EventBroker";
  */
 export default class ViewportManager {
     private canvas: SVGSVGElement;
-    private viewBox: Rect;
     private broker: EventBroker<MindMapEvents>;
     private getWorldBounds: () => Rect;
+
+    private panX = 0;
+    private panY = 0;
+    private zoom = 1;
 
     private readonly INITIAL_VIEW_FACTOR = 6; // 초기 뷰포트 크기: 루트 노드의 n배
 
@@ -28,23 +31,12 @@ export default class ViewportManager {
         this.canvas = canvas;
         this.getWorldBounds = getWorldBounds;
 
-        //초기 카메라 위치 설정
-        const rect = this.canvas.getBoundingClientRect();
-        const canvasRatio = rect.width / rect.height || 16 / 9; // 0 방지
-
-        const baseHeight = rootNode.height > 0 ? rootNode.height : 100;
-        const viewHeight = baseHeight * this.INITIAL_VIEW_FACTOR;
-        const viewWidth = viewHeight * canvasRatio;
-
-        this.viewBox = {
-            minX: rootNode.x - viewWidth / 2,
-            maxX: rootNode.x + viewWidth / 2,
-            minY: rootNode.y - viewHeight / 2,
-            maxY: rootNode.y + viewHeight / 2,
-        };
+        // 초기 상태: 루트 노드가 (0,0)에 있으므로 카메라 중심도 (0,0)
+        this.panX = 0;
+        this.panY = 0;
+        this.zoom = 1;
 
         this.setupEventListeners();
-
         this.applyViewBox();
     }
 
@@ -73,91 +65,83 @@ export default class ViewportManager {
     }
 
     /** 뷰포트의 위치와 크기를 최종 확정 */
-    private updateViewBox(nextMinX: number, nextMinY: number, width: number, height: number): void {
-        // 매번 현재 쿼드 트리 최신 크기 참조
-        const worldBounds = this.getWorldBounds();
+    // private updateViewBox(nextMinX: number, nextMinY: number, width: number, height: number): void {
+    //     // 매번 현재 쿼드 트리 최신 크기 참조
+    //     const worldBounds = this.getWorldBounds();
 
-        this.viewBox.minX = Math.max(worldBounds.minX, Math.min(nextMinX, worldBounds.maxX - width));
-        this.viewBox.minY = Math.max(worldBounds.minY, Math.min(nextMinY, worldBounds.maxY - height));
-        this.viewBox.maxX = this.viewBox.minX + width;
-        this.viewBox.maxY = this.viewBox.minY + height;
+    //     this.viewBox.minX = Math.max(worldBounds.minX, Math.min(nextMinX, worldBounds.maxX - width));
+    //     this.viewBox.minY = Math.max(worldBounds.minY, Math.min(nextMinY, worldBounds.maxY - height));
+    //     this.viewBox.maxX = this.viewBox.minX + width;
+    //     this.viewBox.maxY = this.viewBox.minY + height;
+
+    //     this.applyViewBox();
+    //     this.broker.publish("VIEWPORT_CHANGED", this.getCurrentTransform());
+    // }
+    /** [1번 수정] ViewBox 적용 로직: 항상 카메라 중심(panX, panY)을 기준으로 계산 */
+    public applyViewBox(): void {
+        const rect = this.canvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+
+        // 1. 현재 줌 배율에 따라 화면에 보여줄 World 단위의 너비/높이 계산
+        const viewWidth = rect.width / this.zoom;
+        const viewHeight = rect.height / this.zoom;
+
+        // 2. 카메라 중심(panX, panY)에서 시야의 절반만큼 이동하여 왼쪽 상단(minX, minY) 결정
+        const minX = this.panX - viewWidth / 2;
+        const minY = this.panY - viewHeight / 2;
+
+        this.canvas.setAttribute("viewBox", `${minX} ${minY} ${viewWidth} ${viewHeight}`);
+
+        // 리액트 등 외부 레이어에 변경 알림
+        // this.broker.publish("VIEWPORT_CHANGED", this.getCurrentTransform());
+    }
+
+    /** [4번 수정] 마우스 드래그: 카메라의 중심점(panX, panY)을 이동 */
+    panningHandler(dx: number, dy: number): void {
+        // 현재 줌 배율에 맞춰 마우스 픽셀 이동량을 World 좌표 이동량으로 변환
+        this.panX -= dx / this.zoom;
+        this.panY -= dy / this.zoom;
 
         this.applyViewBox();
-        this.broker.publish("VIEWPORT_CHANGED", this.getCurrentTransform());
     }
 
-    /** [Apply] 계산된 viewBox 데이터를 실제 SVG viewBox 속성 형식으로 변환하여 적용 */
-    private applyViewBox(): void {
-        const width = this.viewBox.maxX - this.viewBox.minX;
-        const height = this.viewBox.maxY - this.viewBox.minY;
-        this.canvas.setAttribute("viewBox", `${this.viewBox.minX} ${this.viewBox.minY} ${width} ${height}`);
-    }
-
-    /** 마우스 드래그를 통해 카메라 위치를 이동 */
-    panningHandler(dx: number, dy: number): void {
-        const rect = this.canvas.getBoundingClientRect();
-        const viewW = this.viewBox.maxX - this.viewBox.minX;
-        const viewH = this.viewBox.maxY - this.viewBox.minY;
-
-        // 마우스의 픽셀 이동량(px)을 현재 확대 배율(ViewBox) 기준의 거리로 변환
-        const sensitivity = 0.65;
-        const worldDx = (dx / rect.width) * viewW * sensitivity;
-        const worldDy = (dy / rect.height) * viewH * sensitivity;
-
-        this.updateViewBox(this.viewBox.minX - worldDx, this.viewBox.minY - worldDy, viewW, viewH);
-    }
-
-    /** 확대/축소 (마우스 포인터 지점 고정) */
+    /** [4번 수정] 줌 핸들러: 마우스 포인터 지점을 고정하며 줌 인/아웃 */
     zoomHandler(delta: number, e: { clientX: number; clientY: number }): void {
         const rect = this.canvas.getBoundingClientRect();
-        const currentW = this.viewBox.maxX - this.viewBox.minX;
-        const currentH = this.viewBox.maxY - this.viewBox.minY;
 
-        //줌 배율 결정
+        // 1. 줌 전의 마우스 월드 좌표 계산
+        const beforeZoomMouseX = this.panX + (e.clientX - rect.left - rect.width / 2) / this.zoom;
+        const beforeZoomMouseY = this.panY + (e.clientY - rect.top - rect.height / 2) / this.zoom;
+
+        // 2. 줌 배율 변경
         const zoomSpeed = 0.001;
-        const scaleChange = Math.exp(delta * zoomSpeed);
+        const scaleChange = Math.exp(-delta * zoomSpeed); // 휠 방향 보정
+        const nextZoom = Math.min(Math.max(this.zoom * scaleChange, 0.1), 5); // 0.1배 ~ 5배 제한
 
-        let nextW = currentW * scaleChange;
-        let nextH = currentH * scaleChange;
+        // 3. 마우스 지점 고정을 위한 새로운 panX, panY 역계산
+        // 줌 후에도 마우스 아래의 월드 좌표가 동일하게 유지되도록 중심점을 이동
+        this.zoom = nextZoom;
+        this.panX = beforeZoomMouseX - (e.clientX - rect.left - rect.width / 2) / this.zoom;
+        this.panY = beforeZoomMouseY - (e.clientY - rect.top - rect.height / 2) / this.zoom;
 
-        //쿼드 트리 bounds 내로 줌아웃 최대 영역 제한
-        const worldBounds = this.getWorldBounds();
-        const worldW = worldBounds.maxX - worldBounds.minX;
-        const worldH = worldBounds.maxY - worldBounds.minY;
-
-        if (nextW > worldW) {
-            nextW = worldW;
-            nextH = nextW / (rect.width / rect.height);
-        }
-        if (nextH > worldH) {
-            nextH = worldH;
-            nextW = nextH * (rect.width / rect.height);
-        }
-
-        //마우스 좌표 고정
-        const mouseRatioX = (e.clientX - rect.left) / rect.width;
-        const mouseRatioY = (e.clientY - rect.top) / rect.height;
-
-        const worldMouseX = this.viewBox.minX + mouseRatioX * currentW;
-        const worldMouseY = this.viewBox.minY + mouseRatioY * currentH;
-
-        const nextMinX = worldMouseX - mouseRatioX * nextW;
-        const nextMinY = worldMouseY - mouseRatioY * nextH;
-
-        this.updateViewBox(nextMinX, nextMinY, nextW, nextH);
+        this.applyViewBox();
     }
 
-    /** 현재 카메라 상태 반환 */
+    /** 현재 카메라 상태 반환 (NodeItem 등에 전달될 값) */
     getCurrentTransform() {
         const rect = this.canvas.getBoundingClientRect();
-        const viewWidth = this.viewBox.maxX - this.viewBox.minX;
-
-        const scale = rect.width / viewWidth;
+        const viewWidth = rect.width / this.zoom;
+        const viewHeight = rect.height / this.zoom;
 
         return {
-            x: -this.viewBox.minX,
-            y: -this.viewBox.minY,
-            scale,
+            x: -(this.panX - viewWidth / 2),
+            y: -(this.panY - viewHeight / 2),
+            scale: this.zoom,
         };
+    }
+
+    /** 외부(ResizeObserver)에서 호출할 수 있도록 제공 */
+    public handleResize() {
+        this.applyViewBox();
     }
 }

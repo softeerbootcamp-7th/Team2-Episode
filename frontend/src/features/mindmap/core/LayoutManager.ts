@@ -42,27 +42,22 @@ export default class MindmapLayoutManager {
         }
     }
 
-    public updateLayout({
-        rootId,
-        rootCenterX = 0,
-        rootCenterY = 0,
-    }: {
-        rootId: NodeId;
-        rootCenterX?: number;
-        rootCenterY?: number;
-    }) {
+    public updateLayout({ rootId }: { rootId: NodeId }) {
         const rootNode = this.treeContainer.safeGetNode(rootId);
         if (!rootNode) {
             return;
         }
 
-        const realX = rootCenterX - rootNode.width / 2;
-        const realY = rootCenterY - rootNode.height / 2;
-
-        this.treeContainer.update({
-            nodeId: rootId,
-            newNodeData: { x: realX, y: realY },
+        console.log(`[Layout Debug] Root State:`, {
+            id: rootId,
+            dataX: rootNode.x, // 우리가 기대하는 값은 항상 0 근처 (또는 -w/2)
+            dataY: rootNode.y,
+            measuredW: rootNode.width, // 👈 이 값이 노드 추가 시 변하는지 확인
+            measuredH: rootNode.height,
         });
+
+        rootNode.x = 0;
+        rootNode.y = 0;
 
         const childNodes = this.treeContainer.getChildNodes(rootId);
         if (childNodes.length === 0) {
@@ -74,16 +69,12 @@ export default class MindmapLayoutManager {
         this.layoutPartition({
             parentNode: rootNode,
             partition: rightGroup,
-            parentRealX: realX,
-            parentRealY: realY,
             direction: "right",
         });
 
         this.layoutPartition({
             parentNode: rootNode,
             partition: leftGroup,
-            parentRealX: realX,
-            parentRealY: realY,
             direction: "left",
         });
     }
@@ -132,8 +123,10 @@ export default class MindmapLayoutManager {
     }
 
     private getSubTreeHeight(node: NodeElement): number {
+        // 1. 실제 측정값이 0이라면, 기본 노드 높이(예: 40)를 사용하도록 보정합니다.
+        const effectiveNodeHeight = node.height > 0 ? node.height : 60;
+
         if (this.subtreeHeightCache.has(node.id)) {
-            // node.id가 있음이 확실하므로 !로 단언했습니다.
             return this.subtreeHeightCache.get(node.id)!;
         }
 
@@ -141,12 +134,14 @@ export default class MindmapLayoutManager {
         let calculatedHeight = 0;
 
         if (childNodes.length === 0) {
-            calculatedHeight = node.height;
+            // 2. 자식이 없는 노드도 0이 아닌 기본 높이를 반환합니다.
+            calculatedHeight = effectiveNodeHeight;
         } else {
             const gapHeight = (childNodes.length - 1) * this.config.yGap;
-            const childrenHeightSum = childNodes.reduce((acc, child) => acc + this.getSubTreeHeight(child), gapHeight);
+            // 3. 재귀적으로 자식들의 높이를 합산할 때도 0이 나오지 않도록 합니다.
+            const childrenHeightSum = childNodes.reduce((acc, child) => acc + this.getSubTreeHeight(child), 0);
 
-            calculatedHeight = Math.max(node.height, childrenHeightSum);
+            calculatedHeight = Math.max(effectiveNodeHeight, childrenHeightSum + gapHeight);
         }
 
         this.subtreeHeightCache.set(node.id, calculatedHeight);
@@ -156,14 +151,10 @@ export default class MindmapLayoutManager {
     private layoutPartition({
         parentNode,
         partition,
-        parentRealX,
-        parentRealY,
         direction,
     }: {
         parentNode: NodeElement;
         partition: NodeElement[];
-        parentRealX: number;
-        parentRealY: number;
         direction: PartitionDirection;
     }) {
         if (partition.length === 0) {
@@ -171,40 +162,47 @@ export default class MindmapLayoutManager {
         }
 
         const partitionHeight = this.calcPartitionHeightWithGap(partition);
-        let currentY = parentRealY + parentNode.height / 2 - partitionHeight / 2;
+        let currentStartY = parentNode.y - partitionHeight / 2;
 
         partition.forEach((childNode) => {
-            const realX =
+            const childWidth = childNode.width || 200;
+
+            const childCenterX =
                 direction === "right"
-                    ? parentRealX + parentNode.width + this.config.xGap
-                    : parentRealX - childNode.width - this.config.xGap;
+                    ? parentNode.x + parentNode.width / 2 + this.config.xGap + childWidth / 2
+                    : parentNode.x - parentNode.width / 2 - this.config.xGap - childWidth / 2;
 
-            this.layoutSubtree({ curNode: childNode, x: realX, startY: currentY, direction });
+            this.layoutSubtree({
+                curNode: childNode,
+                centerX: childCenterX,
+                startY: currentStartY,
+                direction,
+            });
 
-            currentY += this.getSubTreeHeight(childNode) + this.config.yGap;
+            currentStartY += this.getSubTreeHeight(childNode) + this.config.yGap;
         });
     }
 
     private layoutSubtree({
         curNode,
-        x,
+        centerX,
         startY,
         direction,
     }: {
         curNode: NodeElement;
-        x: number;
+        centerX: number;
         startY: number;
         direction: PartitionDirection;
     }) {
         const subtreeHeight = this.getSubTreeHeight(curNode);
-        const newNodeY = startY - curNode.height / 2 + subtreeHeight / 2;
+        const centerY = startY + subtreeHeight / 2;
 
-        if (!isSame(curNode.x, x) || !isSame(curNode.y, newNodeY) || curNode.addNodeDirection !== direction) {
+        if (!isSame(curNode.x, centerX) || !isSame(curNode.y, centerY) || curNode.addNodeDirection !== direction) {
             this.treeContainer.update({
                 nodeId: curNode.id,
                 newNodeData: {
-                    x,
-                    y: newNodeY,
+                    x: centerX,
+                    y: centerY,
                     // addNodeDirection: direction //좌우 균형 정렬 적용 x
                 },
             });
@@ -216,15 +214,24 @@ export default class MindmapLayoutManager {
         }
 
         const childGroupHeight = this.calcPartitionHeightWithGap(childNodes);
-        let currentChildY = newNodeY + curNode.height / 2 - childGroupHeight / 2;
+        let currentChildStartY = centerY - childGroupHeight / 2;
 
         childNodes.forEach((childNode) => {
-            const nextX =
-                direction === "right" ? x + curNode.width + this.config.xGap : x - childNode.width - this.config.xGap;
+            const childWidth = childNode.width || 200;
 
-            this.layoutSubtree({ curNode: childNode, x: nextX, startY: currentChildY, direction });
+            const nextCenterX =
+                direction === "right"
+                    ? centerX + curNode.width / 2 + this.config.xGap + childWidth / 2
+                    : centerX - curNode.width / 2 - this.config.xGap - childWidth / 2;
 
-            currentChildY += this.getSubTreeHeight(childNode) + this.config.yGap;
+            this.layoutSubtree({
+                curNode: childNode,
+                centerX: nextCenterX,
+                startY: currentChildStartY,
+                direction,
+            });
+
+            currentChildStartY += this.getSubTreeHeight(childNode) + this.config.yGap;
         });
     }
 
