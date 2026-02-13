@@ -20,6 +20,32 @@ jobs:
           echo "ref_type=${{ github.ref_type }}"
           echo "event=${{ github.event_name }}"
 
+      - name: Install jq (safe)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Print OIDC claims (sub/aud/iss)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TOKEN_JSON=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+
+          JWT=$(echo "$TOKEN_JSON" | jq -r .value)
+
+          python - <<'PY'
+          import os, json, base64
+          jwt=os.environ["JWT"]
+          payload=jwt.split(".")[1]
+          payload += "=" * (-len(payload) % 4)  # pad
+          data=json.loads(base64.urlsafe_b64decode(payload).decode())
+          for k in ["iss","aud","sub","repository","ref","job_workflow_ref","actor"]:
+            if k in data:
+              print(f"{k}={data[k]}")
+          PY
+        env:
+          JWT: ${{ '' }}
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
