@@ -50,7 +50,8 @@ public class EpisodeService {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
-        if (mindmapId != episode.getMindmapId()) throw new CustomException(ErrorCode.MINDMAP_AND_EPISODE_NOT_MATCHED);
+        if (!mindmapId.equals(episode.getMindmapId()))
+            throw new CustomException(ErrorCode.MINDMAP_AND_EPISODE_NOT_MATCHED);
         EpisodeStar episodeStar = episodeStarRepository.findById(episodeId).orElseGet(() -> createNewStar(episodeId));
         episode.update(episodeUpsertReq);
 
