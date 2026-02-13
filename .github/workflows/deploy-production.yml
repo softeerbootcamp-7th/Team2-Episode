@@ -12,23 +12,23 @@ on:
   workflow_dispatch:
 
 permissions:
+  id-token: write
   contents: read
   packages: write
 
 jobs:
   resolve_tag:
-    name: Resolve Tag & FE Commit
+    name: Resolve Tag
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.out.outputs.tag }}
-      fe_sha: ${{ steps.out.outputs.fe_sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Resolve Tag and FE SHA
+      - name: Resolve Tag
         id: out
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -38,17 +38,19 @@ jobs:
             TAG='${{ github.ref_name }}'
           fi
           
-          FE_SHA=$(git log "$TAG" --grep='^\[FE\]' -n 1 --format='%H')
-          
-          if [ -z "$FE_SHA" ]; then
-            echo "No [FE] commit found. Falling back to tag: $TAG"
-            FE_SHA=$TAG
-          else
-            echo "Found latest [FE] commit: $FE_SHA"
-          fi
-          
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "fe_sha=$FE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure tag is on default branch
+        run: |
+          set -e
+          git fetch --force --tags origin "${{ github.event.repository.default_branch }}"
+
+          TAG_SHA="$(git rev-list -n 1 "${{ steps.out.outputs.tag }}")"
+
+          git merge-base --is-ancestor \
+            "$TAG_SHA" \
+            "origin/${{ github.event.repository.default_branch }}" \
+            || (echo "Error: Tag ${{ steps.out.outputs.tag }} ($TAG_SHA) is not on origin/${{ github.event.repository.default_branch }}!" && exit 1)
 
   debug:
     runs-on: ubuntu-latest
@@ -74,11 +76,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ needs.resolve_tag.outputs.tag }}
-
-      - name: Ensure tag is on default branch
-        run: |
-          git fetch origin ${{ github.event.repository.default_branch }}
-          git merge-base --is-ancestor HEAD origin/${{ github.event.repository.default_branch }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -245,22 +242,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: resolve_tag
 
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ needs.resolve_tag.outputs.fe_sha }}
-
-      - name: Ensure tag is on default branch
-        run: |
-          git fetch origin ${{ github.event.repository.default_branch }}
-          git merge-base --is-ancestor HEAD origin/${{ github.event.repository.default_branch }}
+          ref: ${{ needs.resolve_tag.outputs.tag }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -274,23 +261,26 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: ./frontend/pnpm-lock.yaml
 
+      - name: Inject ENV
+        working-directory: ./frontend
+        run: |
+          cat > .env.production << 'EOF'
+          ${{ secrets.FRONTEND_ENV_PRODUCTION }}
+          EOF
+
       - name: Install Dependencies
         working-directory: ./frontend
         run: pnpm install --frozen-lockfile
 
-      - name: Vercel Pull
+      - name: Build
         working-directory: ./frontend
-        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm build
 
-      - name: Vercel Build
-        working-directory: ./frontend
-        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Upload prebuilt output
+      - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
-          name: vercel-prebuilt-output
-          path: frontend/.vercel/output
+          name: frontend-dist
+          path: frontend/dist
           if-no-files-found: error
 
   frontend_deploy:
@@ -299,33 +289,25 @@ jobs:
     needs: [ resolve_tag, backend, frontend_build ]
     if: needs.backend.result == 'success' && needs.frontend_build.result == 'success'
 
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_GIT_COMMIT_AUTHOR_LOGIN: ${{ secrets.VERCEL_AUTHOR_LOGIN }}
-      VERCEL_GIT_COMMIT_AUTHOR_NAME: ${{ secrets.VERCEL_AUTHOR_NAME }}
-
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.resolve_tag.outputs.fe_sha }}
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Vercel Pull
-        working-directory: ./frontend
-        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Download prebuilt output
+      - name: Download build output
         uses: actions/download-artifact@v4
         with:
-          name: vercel-prebuilt-output
-          path: frontend/.vercel/output
+          name: frontend-dist
+          path: dist
 
-      - name: Deploy to Vercel
-        working-directory: ./frontend
-        run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          aws s3 sync ./dist s3://${{ vars.PROD_S3_BUCKET }}/ --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} \
+            --paths "/*"
