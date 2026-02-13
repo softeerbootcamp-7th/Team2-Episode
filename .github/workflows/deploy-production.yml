@@ -9,6 +9,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -98,7 +99,12 @@ jobs:
       - name: Deploy
         id: deploy
         run: |
-          TAG='${{ github.ref_name }}'
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger: getting latest tag..."
+            TAG=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+          else
+            TAG='${{ github.ref_name }}'
+          fi
 
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "TAG=$TAG bash -s" <<'EOF'
             set -e
