@@ -44,11 +44,12 @@ public class EpisodeService {
             UUID nodeId, long userId, UUID mindmapId,
             EpisodeUpsertContentReq episodeUpsertReq
     ) {
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
-        Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
-        if (!mindmapId.equals(episode.getMindmapId()))
-            throw new CustomException(ErrorCode.MINDMAP_AND_EPISODE_NOT_MATCHED);
+        Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> {
+            mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+            return createNewEpisode(episodeId, mindmapId);
+        });
+        if (!mindmapId.equals(episode.getMindmapId())) throw new CustomException(ErrorCode.EPISODE_NOT_FOUND);
         EpisodeStar episodeStar = episodeStarRepository.findById(episodeId).orElseGet(() -> createNewStar(episodeId));
         episode.update(episodeUpsertReq);
 
