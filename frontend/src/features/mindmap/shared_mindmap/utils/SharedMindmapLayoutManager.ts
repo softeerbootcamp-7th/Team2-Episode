@@ -220,8 +220,6 @@ export default class SharedMindmapLayoutManager {
             return 0;
         }
 
-        console.log(partition);
-
         const totalGap = this.config.yGap * (partition.length - 1);
         const totalNodesHeight = partition.reduce(
             (acc, node) => acc + this.getSubTreeHeight(node, container),

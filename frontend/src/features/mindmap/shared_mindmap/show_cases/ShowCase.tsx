@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 import { CollaboratorList } from "@/features/mindmap/shared_mindmap/components/CollaboratorList";
 import { CursorOverlay } from "@/features/mindmap/shared_mindmap/components/CursorsOverlay";
@@ -32,7 +32,7 @@ const NodeItem = ({ nodeId, controller, broker }: NodeItemProps) => {
     if (!node) return null;
 
     const handleAddChild = (e: React.MouseEvent) => {
-        e.stopPropagation(); // 캔버스 Pan 방지
+        e.stopPropagation();
         controller.addChildNode(nodeId);
     };
 
@@ -43,13 +43,10 @@ const NodeItem = ({ nodeId, controller, broker }: NodeItemProps) => {
         }
     };
 
-    // --- Style ---
     const style: React.CSSProperties = {
         position: "absolute",
-        left: node.x, // Controller가 계산해준 좌표 사용
+        left: node.x,
         top: node.y,
-
-        // 스타일링
         minWidth: "100px",
         minHeight: "40px",
         backgroundColor: node.type === "root" ? "#FFB74D" : "#FFFFFF",
@@ -57,28 +54,25 @@ const NodeItem = ({ nodeId, controller, broker }: NodeItemProps) => {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        transition: "left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)", // 부드러운 애니메이션
+        transition: "left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
         zIndex: node.type === "root" ? 10 : 1,
         whiteSpace: "nowrap",
         padding: "20px",
+        border: "1px solid #ddd", // 가시성을 위해 살짝 추가
+        borderRadius: "8px",
     };
 
     return (
         <>
-            <div
-                ref={nodeRef}
-                style={style}
-                onPointerDown={(e) => e.stopPropagation()} // 드래그 방지
-            >
-                {/* 노드 내용 */}
-                <div style={{ fontWeight: "bold", marginBottom: "5px", width: "200px" }}>
+            <div ref={nodeRef} style={style} onPointerDown={(e) => e.stopPropagation()}>
+                <div style={{ fontWeight: "bold", marginBottom: "5px", width: "200px", textAlign: "center" }}>
                     {node.id}
                     <br />
-                    {node.parentId}
-                    <br />({node.x}, {node.y})
+                    <span style={{ fontSize: "10px", color: "#666" }}>
+                        Parent: {node.parentId || "None"} <br />({Math.round(node.x)}, {Math.round(node.y)})
+                    </span>
                 </div>
 
-                {/* 컨트롤 버튼 */}
                 <div style={{ display: "flex", gap: "5px" }}>
                     <button onClick={handleAddChild} style={btnStyle}>
                         +
@@ -91,13 +85,23 @@ const NodeItem = ({ nodeId, controller, broker }: NodeItemProps) => {
                 </div>
             </div>
 
-            {/* 자식 노드 재귀 렌더링 */}
+            {/* 3. 자식 노드 렌더링 시 controller.container를 직접 참조하므로 
+                이미 등록된 자식 리스트가 변경될 때만 리렌더링됩니다. */}
             {controller.container.getChildIds(nodeId).map((childId) => (
                 <NodeItem key={childId} nodeId={childId} controller={controller} broker={broker} />
             ))}
         </>
     );
 };
+// (prevProps, nextProps) => {
+//     // 4. props 비교 로직 (선택 사항)
+//     // controller와 broker는 인스턴스이므로 보통 참조가 유지됩니다.
+//     // nodeId가 같다면 굳이 다시 그릴 필요가 없습니다.
+//     return prevProps.nodeId === nextProps.nodeId && prevProps.controller === nextProps.controller;
+// },
+// 표시 이름 설정 (디버깅 용이)
+
+NodeItem.displayName = "NodeItem";
 
 const btnStyle: React.CSSProperties = {
     cursor: "pointer",
@@ -109,35 +113,50 @@ const btnStyle: React.CSSProperties = {
 };
 
 const DUMMY_ROOM_ID = "ㅁ";
-export default function MindmapShowcaseV3() {
-    const { controller, connectionStatus, broker, collaboratorsManager } = useSharedMindmap({ roomId: DUMMY_ROOM_ID });
 
-    // 2. Canvas Panning State
+// ... (NodeItem 컴포넌트와 btnStyle은 기존과 동일하므로 생략)
+
+export default function MindmapShowcaseV3() {
+    const { controller, broker, collaboratorsManager } = useSharedMindmap({ roomId: DUMMY_ROOM_ID });
+
+    // 1. Zoom & Pan State
     const [pan, setPan] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    const [scale, setScale] = useState(1);
     const [isPanning, setIsPanning] = useState(false);
     const lastPos = useRef({ x: 0, y: 0 });
 
-    // 3. Keyboard Shortcuts (Undo/Redo)
+    // [추가] 컨테이너 참조를 위한 Ref
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // 2. Zoom Handler (useEffect를 이용한 수동 등록)
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) return;
+        const handleWheelNative = (e: WheelEvent) => {
+            // 브라우저의 기본 스크롤 동작을 방지 (passive: false 설정 덕분에 에러가 나지 않음)
+            e.preventDefault();
 
-            const isCtrl = e.ctrlKey || e.metaKey;
+            const zoomSpeed = 0.001;
+            const delta = -e.deltaY;
 
-            if (isCtrl && e.key === "z" && !e.shiftKey) {
-                e.preventDefault();
-                controller.undo(); // Controller에게 위임
-            }
-            if ((isCtrl && e.key === "y") || (isCtrl && e.key === "z" && e.shiftKey)) {
-                e.preventDefault();
-                controller.redo(); // Controller에게 위임
+            setScale((prevScale) => {
+                const newScale = Math.min(Math.max(prevScale + delta * zoomSpeed, 0.2), 3);
+                return newScale;
+            });
+        };
+
+        const container = containerRef.current;
+        if (container) {
+            // passive: false를 명시하여 preventDefault() 허용
+            container.addEventListener("wheel", handleWheelNative, { passive: false });
+        }
+
+        return () => {
+            if (container) {
+                container.removeEventListener("wheel", handleWheelNative);
             }
         };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [controller]);
+    }, []); // scale 의존성을 제거하기 위해 setScale 내부에서 함수형 업데이트 사용
 
-    // --- Panning Handlers ---
+    // 3. Panning Handlers
     const handlePointerDown = (e: React.PointerEvent) => {
         if (e.button !== 0) return;
         (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
@@ -146,17 +165,16 @@ export default function MindmapShowcaseV3() {
     };
 
     const handlePointerMove = (e: React.PointerEvent) => {
-        // [핵심 수정] 화면 좌표에서 Pan을 빼서 "World 좌표"로 변환하여 전송
-        const worldX = e.clientX - pan.x;
-        const worldY = e.clientY - pan.y;
+        const worldX = (e.clientX - pan.x) / scale;
+        const worldY = (e.clientY - pan.y) / scale;
 
         collaboratorsManager.updateCursor(worldX, worldY);
 
-        // 2. Panning 로직 (기존 동일)
         if (!isPanning) return;
-        e.preventDefault();
+
         const dx = e.clientX - lastPos.current.x;
         const dy = e.clientY - lastPos.current.y;
+
         setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
         lastPos.current = { x: e.clientX, y: e.clientY };
     };
@@ -168,24 +186,40 @@ export default function MindmapShowcaseV3() {
 
     return (
         <>
-            <button
-                onClick={() => controller.resetMindMap()}
-                style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#FF5252",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                }}
-            >
-                초기화 (Reset)
-            </button>
-            <CursorOverlay manager={collaboratorsManager} pan={pan} />
+            {/* UI 컨트롤러 */}
+            <div style={{ position: "fixed", top: 20, right: 20, zIndex: 1000, display: "flex", gap: "10px" }}>
+                <div
+                    style={{
+                        background: "white",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                    }}
+                >
+                    Zoom: <b>{Math.round(scale * 100)}%</b>
+                </div>
+                <button
+                    onClick={() => {
+                        setScale(1);
+                        setPan({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+                    }}
+                    style={topBtnStyle}
+                >
+                    Center
+                </button>
+                <button
+                    onClick={() => controller.resetMindMap()}
+                    style={{ ...topBtnStyle, backgroundColor: "#FF5252" }}
+                >
+                    Reset
+                </button>
+            </div>
+
+            <CursorOverlay manager={collaboratorsManager} pan={pan} scale={scale} />
             <CollaboratorList manager={collaboratorsManager} />
+
             <div
+                ref={containerRef} // [수정] ref 연결
                 style={{
                     width: "100vw",
                     height: "100vh",
@@ -193,56 +227,35 @@ export default function MindmapShowcaseV3() {
                     background: "#f0f2f5",
                     cursor: isPanning ? "grabbing" : "grab",
                     touchAction: "none",
-                    userSelect: "none",
                 }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
+                /* [수정] onWheel 제거 (useEffect에서 처리) */
             >
-                {/* Status Indicator */}
-                <div
-                    style={{
-                        position: "absolute",
-                        top: 20,
-                        left: 20,
-                        padding: "8px 12px",
-                        background: "white",
-                        borderRadius: "8px",
-                        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                        zIndex: 100,
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                    }}
-                >
-                    <div
-                        style={{
-                            width: "10px",
-                            height: "10px",
-                            borderRadius: "50%",
-                            backgroundColor: connectionStatus === "connected" ? "#4CAF50" : "#FF5252",
-                        }}
-                    />
-
-                    <span>
-                        Status: <b>{connectionStatus}</b>
-                    </span>
-                </div>
-
-                {/* Canvas Content */}
                 <div
                     style={{
                         width: "100%",
                         height: "100%",
-                        transform: `translate(${pan.x}px, ${pan.y}px)`, // Panning 적용
+                        transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+                        transformOrigin: "0 0",
                         willChange: "transform",
                     }}
                 >
-                    {/* Root Node 렌더링 시작 */}
                     <NodeItem broker={broker} nodeId={controller.container.getRootId()} controller={controller} />
                 </div>
             </div>
         </>
     );
 }
+
+const topBtnStyle: React.CSSProperties = {
+    padding: "8px 16px",
+    backgroundColor: "#4A90E2",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "bold",
+    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+};

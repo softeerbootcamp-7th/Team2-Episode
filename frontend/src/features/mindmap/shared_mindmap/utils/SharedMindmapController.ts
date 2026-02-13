@@ -19,7 +19,7 @@ export default class SharedMindMapController {
                 this.handleTransaction(event);
             },
         });
-        this.layoutManager = new SharedMindmapLayoutManager({ xGap: 140, yGap: 60 });
+        this.layoutManager = new SharedMindmapLayoutManager({ xGap: 300, yGap: 100 });
     }
 
     private handleTransaction(event: Y.YMapEvent<NodeElement>) {
@@ -31,7 +31,7 @@ export default class SharedMindMapController {
             this.layoutManager.invalidate(nodeId, this.container);
         });
 
-        this.refreshLayout();
+        // this.refreshLayout();
     }
 
     private refreshLayout() {
@@ -50,7 +50,7 @@ export default class SharedMindMapController {
             }
 
             this.container.appendChild({ parentNodeId: parentId });
-            this.refreshLayout();
+            // this.refreshLayout();
         });
     }
 
