@@ -1,0 +1,280 @@
+name: Deploy (Production)
+run-name: Production Release ${{ github.ref_name }}
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tag is on default branch
+        run: |
+          git fetch origin ${{ github.event.repository.default_branch }}
+          git merge-base --is-ancestor $GITHUB_SHA origin/${{ github.event.repository.default_branch }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Build JAR
+        run: ./gradlew clean bootJar
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push Image
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/episode-api
+          TAG=${{ github.ref_name }}
+
+          docker buildx build \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --platform linux/arm64 \
+            -t $IMAGE:$TAG \
+            -t $IMAGE:latest \
+            --push .
+
+      - name: Setup SSH
+        id: setup_ssh
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Backup infra files
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            cd ~/app
+
+            [ -f docker-compose.yml ] && cp docker-compose.yml .docker-compose.prev.yml || echo "No docker-compose to backup"
+            [ -f Caddyfile ] && cp Caddyfile .Caddyfile.prev || echo "No Caddyfile to backup"
+          EOF
+
+      - name: Sync infra files to server
+        working-directory: .
+        run: |
+          rsync -avz --delete \
+            --exclude='.env' \
+            --exclude='.Caddyfile.prev' \
+            --exclude='.docker-compose.prev.yml' \
+            infra/prod/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/app/
+
+      - name: Deploy
+        id: deploy
+        run: |
+          TAG=${{ github.ref_name }}
+
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -e
+            cd ~/app
+
+            CURRENT_IMAGE=\$(docker inspect episode-api \
+              --format '{{.Config.Image}}' 2>/dev/null || true)
+
+            if [ -n "\$CURRENT_IMAGE" ]; then
+              CURRENT_TAG=\${CURRENT_IMAGE##*:}
+              echo "\$CURRENT_TAG" > .prev_tag
+              echo "Saved previous tag: \$CURRENT_TAG"
+            else
+              echo "No running container found"
+              rm -f .prev_tag || true
+            fi
+
+            NEW_TAG=$TAG
+            echo "Deploying new tag: \$NEW_TAG"
+            export IMAGE_TAG=\$NEW_TAG
+
+            docker compose pull
+            docker compose up -d
+          
+            for i in $(seq 1 20); do
+              docker compose exec -T caddy caddy version >/dev/null 2>&1 && break
+              sleep 1
+            done
+          
+            docker compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile
+            docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+          EOF
+
+      - name: Health check
+        id: health_check
+        run: |
+          set -e
+          URL="https://api.episode.io.kr/actuator/health"
+
+          echo "Checking health:"
+          for i in $(seq 1 30); do
+            resp="$(curl -sS --max-time 5 -w "\n%{http_code}" "$URL" || true)"
+            body="$(echo "$resp" | head -n 1)"
+            code="$(echo "$resp" | tail -n 1)"
+
+            echo "try=$i http=$code body=$body"
+
+            if [ "$code" = "200" ] && echo "$body" | grep -q '"status":"UP"'; then
+              echo "Health is UP"
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "Health check failed"
+          exit 1
+
+      - name: Rollback on failure
+        if: failure() && steps.setup_ssh.outcome == 'success'
+        run: |
+          echo "Health check failed. Rolling back..."
+          
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          set -e
+          cd ~/app
+
+          if [ ! -f .prev_tag ]; then
+             echo "No previous tag found. Nothing to rollback."
+             exit 0
+          fi
+
+          PREV_TAG=$(cat .prev_tag)
+          echo "Rolling back to $PREV_TAG"
+
+          [ -f .docker-compose.prev.yml ] && mv .docker-compose.prev.yml docker-compose.yml || true
+          [ -f .Caddyfile.prev ] && mv .Caddyfile.prev Caddyfile || true
+
+          export IMAGE_TAG=$PREV_TAG
+
+          docker compose pull
+          docker compose up -d
+          docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
+
+          echo "Rollback completed."
+          EOF
+
+      - name: Cleanup Temporary Files & Images
+        if: always() && steps.setup_ssh.outcome == 'success'
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/app
+            rm -f .prev_tag .docker-compose.prev.yml .Caddyfile.prev
+            docker image prune -f
+          EOF
+
+  frontend_build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tag is on default branch
+        run: |
+          git fetch origin ${{ github.event.repository.default_branch }}
+          git merge-base --is-ancestor $GITHUB_SHA origin/${{ github.event.repository.default_branch }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+          cache-dependency-path: ./frontend/pnpm-lock.yaml
+
+      - name: Install Dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Vercel Pull
+        working-directory: ./frontend
+        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Vercel Build
+        working-directory: ./frontend
+        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Upload prebuilt output
+        uses: actions/upload-artifact@v4
+        with:
+          name: vercel-prebuilt-output
+          path: frontend/.vercel/output
+          if-no-files-found: error
+
+  frontend_deploy:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: [ backend, frontend_build ]
+    if: needs.backend.result == 'success' && needs.frontend_build.result == 'success'
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Vercel Pull
+        working-directory: ./frontend
+        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Download prebuilt output
+        uses: actions/download-artifact@v4
+        with:
+          name: vercel-prebuilt-output
+          path: frontend/.vercel/output
+
+      - name: Deploy to Vercel
+        working-directory: ./frontend
+        run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
