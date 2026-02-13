@@ -1,11 +1,10 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CollaboratorList } from "@/features/mindmap/shared_mindmap/components/CollaboratorList";
 import { CursorOverlay } from "@/features/mindmap/shared_mindmap/components/CursorsOverlay";
 import { useNode } from "@/features/mindmap/shared_mindmap/hooks/useNode";
 import { useNodeResizeObserver } from "@/features/mindmap/shared_mindmap/hooks/useNodeResizeObserver";
 import { useSharedMindmap } from "@/features/mindmap/shared_mindmap/hooks/useSharedMindmap";
-import CollaboratorsManager from "@/features/mindmap/shared_mindmap/utils/CollaboratorManager";
 import SharedMindMapController from "@/features/mindmap/shared_mindmap/utils/SharedMindmapController";
 import { NodeId } from "@/features/mindmap/types/mindmap";
 import { EventBroker } from "@/utils/EventBroker";
