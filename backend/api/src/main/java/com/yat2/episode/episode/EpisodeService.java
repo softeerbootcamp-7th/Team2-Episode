@@ -78,8 +78,6 @@ public class EpisodeService {
 
     @Transactional
     public void clearStar(UUID nodeId, long userId) {
-        Episode episode = getEpisodeOrThrow(nodeId);
-        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
 
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
         episodeStar.clearAll();
