@@ -1,0 +1,16 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npx tsc
+
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/package*.json ./
+RUN npm install --omit=dev
+ COPY --from=builder /app/dist ./dist
+
+EXPOSE 3000
+# 경로 주의: tsconfig의 rootDir이 ./ 이므로 폴더 구조가 dist 안에 그대로 유지됨
+CMD ["node", "dist/app/src/server.js"]
