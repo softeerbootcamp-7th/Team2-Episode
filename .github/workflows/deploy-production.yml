@@ -50,6 +50,15 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "fe_sha=$FE_SHA" >> "$GITHUB_OUTPUT"
 
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "repo=${{ github.repository }}"
+          echo "ref=$GITHUB_REF"
+          echo "ref_name=$GITHUB_REF_NAME"
+          echo "event=${{ github.event_name }}"
+
   backend:
     name: Deploy Backend
     runs-on: ubuntu-latest

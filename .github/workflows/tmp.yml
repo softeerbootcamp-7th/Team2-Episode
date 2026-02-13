@@ -1,4 +1,4 @@
-name: Debug ref on PR
+name: Debug OIDC (manual + PR)
 
 on:
   workflow_dispatch:
@@ -6,13 +6,26 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Print canonical repo/ref
+        run: |
           echo "repo=${{ github.repository }}"
           echo "ref=$GITHUB_REF"
           echo "ref_name=$GITHUB_REF_NAME"
+          echo "ref_type=${{ github.ref_type }}"
           echo "event=${{ github.event_name }}"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::869652444193:role/softeer7th-gha-deploy
+          aws-region: ap-northeast-2
+          audience: sts.amazonaws.com
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
