@@ -98,28 +98,27 @@ jobs:
       - name: Deploy
         id: deploy
         run: |
-          TAG=${{ github.ref_name }}
+          TAG='${{ github.ref_name }}'
 
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "TAG=$TAG bash -s" <<'EOF'
             set -e
             cd ~/app
-
-            CURRENT_IMAGE=\$(docker inspect episode-api \
-              --format '{{.Config.Image}}' 2>/dev/null || true)
-
-            if [ -n "\$CURRENT_IMAGE" ]; then
-              CURRENT_TAG=\${CURRENT_IMAGE##*:}
-              echo "\$CURRENT_TAG" > .prev_tag
-              echo "Saved previous tag: \$CURRENT_TAG"
+          
+            CURRENT_IMAGE=$(docker inspect episode-api \
+            --format '{{.Config.Image}}' 2>/dev/null || true)
+          
+            if [ -n "$CURRENT_IMAGE" ]; then
+              CURRENT_TAG=${CURRENT_IMAGE##*:}
+              echo "$CURRENT_TAG" > .prev_tag
+              echo "Saved previous tag: $CURRENT_TAG"
             else
               echo "No running container found"
               rm -f .prev_tag || true
             fi
-
-            NEW_TAG=$TAG
-            echo "Deploying new tag: \$NEW_TAG"
-            export IMAGE_TAG=\$NEW_TAG
-
+          
+            echo "Deploying new tag: $TAG"
+            export IMAGE_TAG="$TAG"
+          
             docker compose pull
             docker compose up -d
           
