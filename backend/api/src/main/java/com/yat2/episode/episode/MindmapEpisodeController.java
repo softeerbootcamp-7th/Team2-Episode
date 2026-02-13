@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
-import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -36,7 +36,10 @@ public class MindmapEpisodeController {
     @Operation(
             summary = "마인드맵 내 에피소드 리스트 조회", description = "마인드맵 내 에피소드 리스트를 조회합니다. 마인드맵 사이드바의 \"STAR 정리하기\"에서 사용됩니다."
     )
-    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @ApiErrorCodes(
+            { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
+              ErrorCode.MINDMAP_NOT_FOUND }
+    )
     @GetMapping
     public List<EpisodeSummaryRes> getMindmapEpisodes(
             @PathVariable UUID mindmapId,
@@ -49,15 +52,18 @@ public class MindmapEpisodeController {
             summary = "마인드맵 내 에피소드 생성",
             description = "마인드맵 내에 에피소드를 생성합니다. 클라이언트에서 ID를 생성해서 요청합니다. Body의 모든 필드는 Optional입니다. 빈 객체도 허용됩니다."
     )
-    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @ApiErrorCodes(
+            { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
+              ErrorCode.MINDMAP_NOT_FOUND }
+    )
     @PutMapping("/{nodeId}")
-    public EpisodeDetailRes createEpisode(
+    public EpisodeDetail createEpisode(
             @PathVariable UUID mindmapId,
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId,
             @Valid
             @RequestBody
-            EpisodeUpsertReq episodeUpsertReq
+            EpisodeUpsertContentReq episodeUpsertReq
     ) {
         return episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
     }
