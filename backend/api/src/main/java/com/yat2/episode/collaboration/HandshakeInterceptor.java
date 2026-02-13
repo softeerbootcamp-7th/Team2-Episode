@@ -1,8 +1,7 @@
 package com.yat2.episode.collaboration;
 
-import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
-import com.yat2.episode.mindmap.jwt.MindmapTicketPayload;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -10,6 +9,10 @@ import org.springframework.web.socket.WebSocketHandler;
 
 import java.util.Map;
 
+import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
+import com.yat2.episode.mindmap.jwt.MindmapTicketPayload;
+
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class HandshakeInterceptor implements org.springframework.web.socket.server.HandshakeInterceptor {
@@ -35,6 +38,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             attributes.put("mindmapId", mindmapTicketPayload.mindmapId());
             return true;
         } catch (Exception e) {
+            log.warn("WebSocket handshake 실패", e);
             return false;
         }
     }
@@ -51,10 +55,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             return null;
         }
 
-        return java.util.Arrays.stream(query.split("&"))
-                .filter(param -> param.startsWith("token="))
-                .map(param -> param.substring(6))
-                .findFirst()
-                .orElse(null);
+        return java.util.Arrays.stream(query.split("&")).filter(param -> param.startsWith("token="))
+                .map(param -> param.substring(6)).findFirst().orElse(null);
     }
 }
