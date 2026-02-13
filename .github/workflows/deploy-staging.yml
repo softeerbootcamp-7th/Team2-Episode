@@ -1,4 +1,4 @@
-name: CD(Stage)
+name: Deploy (Staging)
 
 concurrency:
   group: stage-deploy

@@ -1,4 +1,4 @@
-name: Production Release
+name: Deploy (Production)
 run-name: Production Release ${{ github.ref_name }}
 
 concurrency:
