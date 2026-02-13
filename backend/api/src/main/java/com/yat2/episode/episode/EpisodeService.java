@@ -78,9 +78,8 @@ public class EpisodeService {
 
     @Transactional
     public void deleteEpisode(UUID nodeId, long userId) {
-        Episode episode = getEpisodeOrThrow(nodeId);
-        mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
-        episodeRepository.deleteById(nodeId);
+        EpisodeDetail episodeDetail = getEpisodeAndStarOrThrow(nodeId, userId);
+        episodeRepository.deleteById(episodeDetail.nodeId());
     }
 
     @Transactional
