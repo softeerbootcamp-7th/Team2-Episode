@@ -17,17 +17,18 @@ permissions:
 
 jobs:
   resolve_tag:
-    name: Resolve Tag
+    name: Resolve Tag & FE Commit
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.out.outputs.tag }}
+      fe_sha: ${{ steps.out.outputs.fe_sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Resolve Tag
+      - name: Resolve Tag and FE SHA
         id: out
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -36,7 +37,18 @@ jobs:
           else
             TAG='${{ github.ref_name }}'
           fi
+          
+          FE_SHA=$(git log "$TAG" --grep='^\[FE\]' -n 1 --format='%H')
+          
+          if [ -z "$FE_SHA" ]; then
+            echo "No [FE] commit found. Falling back to tag: $TAG"
+            FE_SHA=$TAG
+          else
+            echo "Found latest [FE] commit: $FE_SHA"
+          fi
+          
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "fe_sha=$FE_SHA" >> "$GITHUB_OUTPUT"
 
   backend:
     name: Deploy Backend
@@ -234,7 +246,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ needs.resolve_tag.outputs.tag }}
+          ref: ${{ needs.resolve_tag.outputs.fe_sha }}
 
       - name: Ensure tag is on default branch
         run: |
@@ -286,7 +298,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.resolve_tag.outputs.tag }}
+          ref: ${{ needs.resolve_tag.outputs.fe_sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
