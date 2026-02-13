@@ -8,45 +8,54 @@ import { NodeId } from "@/features/mindmap/types/node";
 
 export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
     const nodeData = useMindMapNode(nodeId);
-    const { updateNodeSize, addNode } = useMindMapActions();
+    const { updateNodeSize } = useMindMapActions();
 
     const contentRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (contentRef.current) {
-            // 브라우저가 계산한 실제 너비와 높이를 가져옵니다.
-            const { width, height } = contentRef.current.getBoundingClientRect();
-
-            if (Math.abs(nodeData!.width - width) > 0.5 || Math.abs(nodeData!.height - height) > 0.5) {
-                updateNodeSize(nodeId, width, height);
-            }
-        }
-    }, [nodeData?.data.contents, nodeId, updateNodeSize]); // 콘텐츠가 바뀌면 재측정
 
     if (!nodeData) return null;
 
     const { x, y, width, height, data } = nodeData;
     const isRoot = nodeData.type === "root";
+    const w = width || 200;
+    const h = height || 200;
 
     const { addNodeDirection } = nodeData;
 
+    useEffect(() => {
+        if (!contentRef.current || !nodeData) return;
+
+        const rect = contentRef.current.getBoundingClientRect();
+        const svg = contentRef.current.closest("svg") as SVGSVGElement;
+        const svgRect = svg.getBoundingClientRect();
+        const viewBox = svg.viewBox.baseVal;
+
+        const scaleX = svgRect.width / viewBox.width;
+        const scaleY = svgRect.height / viewBox.height;
+
+        const worldWidth = rect.width / scaleX;
+        const worldHeight = rect.height / scaleY;
+
+        updateNodeSize(nodeId, worldWidth, worldHeight);
+    }, [nodeData?.data.contents, nodeId]);
+
     return (
         <foreignObject
-            x={x}
-            y={y}
-            width={width || 200}
-            height={height || 200} // NodeCenter는 원형이라 높이가 더 클 수 있음
+            x={x - w / 2}
+            y={y - h / 2}
+            width={w}
+            height={h}
             data-node-id={nodeId}
             className="overflow-visible"
         >
             <div ref={contentRef} className="inline-block">
                 {isRoot ? (
                     /* 루트 노드일 때 */
-                    <NodeCenter
-                        data-action="select"
-                        username={data.contents}
-                        onAdd={(direction) => addNode(nodeId, "child", direction)}
-                    />
+                    <NodeCenter data-action="select" username={data.contents}>
+                        {/* 좌표 디버깅용 (개발 모드에서만 보이게) */}
+                        <div className="absolute -top-6 left-0 text-[10px] bg-black text-white p-1 whitespace-nowrap opacity-70 pointer-events-none">
+                            x: {Math.round(x)}, y: {Math.round(y)} | w: {Math.round(width)}, h: {Math.round(height)}
+                        </div>
+                    </NodeCenter>
                 ) : (
                     /* 일반 노드일 때 */
                     <Node>
@@ -55,7 +64,6 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
                             data-action="add-child"
                             direction={addNodeDirection}
                             color={"violet"}
-                            onClick={() => addNode(nodeId, "child", addNodeDirection)}
                         />
                         <Node.Content
                             data-action="select"
@@ -64,6 +72,10 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
                             onClick={() => console.log(`클릭: ${data.contents}`)}
                         >
                             {data.contents || "하위 내용"}
+                            {/* 좌표 디버깅용 (개발 모드에서만 보이게) */}
+                            <div className="absolute -top-6 left-0 text-[10px] bg-black text-white p-1 whitespace-nowrap opacity-70 pointer-events-none">
+                                x: {Math.round(x)}, y: {Math.round(y)} | w: {Math.round(width)}, h: {Math.round(height)}
+                            </div>
                         </Node.Content>
                     </Node>
                 )}
