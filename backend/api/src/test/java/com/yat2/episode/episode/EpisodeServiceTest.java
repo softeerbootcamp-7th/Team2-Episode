@@ -30,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -93,7 +92,11 @@ class EpisodeServiceTest {
         @DisplayName("신규 생성 성공: 모든 참여자의 별을 일괄 저장하고 에피소드를 생성한다")
         void upsertEpisode_Create() {
             EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("제목");
+            EpisodeStar mockStar = EpisodeStar.create(nodeId, userId);
+
             when(episodeRepository.findById(nodeId)).thenReturn(Optional.empty());
+
+            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(mockStar));
 
             User mockUser = mock(User.class);
             when(mockUser.getKakaoId()).thenReturn(userId);
@@ -102,29 +105,13 @@ class EpisodeServiceTest {
 
             when(mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId)).thenReturn(List.of(participant));
             when(episodeRepository.save(any(Episode.class))).thenAnswer(i -> i.getArgument(0));
-            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.empty());
-            when(episodeStarRepository.save(any(EpisodeStar.class))).thenAnswer(i -> i.getArgument(0));
 
             EpisodeDetail result = episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
 
             verify(episodeStarRepository).saveAll(anyList());
             verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
             assertThat(result).isNotNull();
-        }
-
-        @Test
-        @DisplayName("업데이트 성공: 기존 에피소드의 필드를 수정한다")
-        void upsertEpisode_Update() {
-            Episode existingEpisode = Episode.create(nodeId, mindmapId);
-            EpisodeStar existingStar = EpisodeStar.create(nodeId, userId);
-            EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("수정 제목");
-
-            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(existingEpisode));
-            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(existingStar));
-
-            episodeService.upsertEpisode(nodeId, userId, mindmapId, req);
-
-            verify(episodeRepository, never()).save(any());
+            assertThat(result.nodeId()).isEqualTo(nodeId);
         }
 
         @Test

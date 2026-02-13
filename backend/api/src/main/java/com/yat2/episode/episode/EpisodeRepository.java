@@ -13,16 +13,20 @@ import com.yat2.episode.episode.dto.EpisodeDetail;
 
 @Repository
 public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
+
     @Query(
             """
-                        SELECT e
-                        FROM Episode e
-                        JOIN EpisodeStar s ON s.id.nodeId = e.id
-                        WHERE e.mindmapId = :mindmapId
-                          AND s.id.userId = :userId
+                    SELECT e
+                    FROM Episode e
+                    JOIN EpisodeStar s ON s.id.nodeId = e.id
+                    WHERE e.mindmapId = :mindmapId
+                      AND s.id.userId = :userId
                     """
     )
-    List<Episode> findEpisodesByMindmapIdAndUserId(UUID mindmapId, long userId);
+    List<Episode> findEpisodesByMindmapIdAndUserId(
+            @Param("mindmapId") UUID mindmapId,
+            @Param("userId") long userId
+    );
 
     @Query("SELECT e.id FROM Episode e WHERE e.mindmapId = :mindmapId")
     List<UUID> findNodeIdsByMindmapId(
@@ -31,66 +35,46 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
 
     @Query(
             """
-                        SELECT new com.yat2.episode.episode.dto.EpisodeDetail(
-                            e.id,
-                            e.mindmapId,
-                            s.competencyTypeIds,
-                            e.content,
-                            s.situation,
-                            s.task,
-                            s.action,
-                            s.result,
-                            s.startDate,
-                            s.endDate,
-                            s.createdAt,
-                            s.updatedAt
-                        )
-                        FROM Episode e
-                        LEFT JOIN EpisodeStar s
-                            ON e.id = s.id.nodeId
-                           AND s.id.userId = :userId
-                        WHERE e.mindmapId = :mindmapId
+                    SELECT new com.yat2.episode.episode.dto.EpisodeDetail(
+                        e.id, e.mindmapId, s.competencyTypeIds, e.content,
+                        s.situation, s.task, s.action, s.result,
+                        s.startDate, s.endDate, s.createdAt, s.updatedAt
+                    )
+                    FROM Episode e
+                    JOIN EpisodeStar s ON e.id = s.id.nodeId
+                    WHERE e.mindmapId = :mindmapId
+                      AND s.id.userId = :userId
                     """
     )
-    List<EpisodeDetail> findDetailsByMindmapIdAndUserId(UUID mindmapId, Long userId);
-
+    List<EpisodeDetail> findDetailsByMindmapIdAndUserId(
+            @Param("mindmapId") UUID mindmapId,
+            @Param("userId") Long userId
+    );
 
     @Query(
             """
-                        SELECT DISTINCT ctId
-                        FROM Episode e
-                        JOIN EpisodeStar s
-                            ON e.id = s.id.nodeId
-                        JOIN s.competencyTypeIds ctId
-                        WHERE e.mindmapId = :mindmapId
+                    SELECT DISTINCT ctId
+                    FROM Episode e
+                    JOIN EpisodeStar s ON e.id = s.id.nodeId
+                    JOIN s.competencyTypeIds ctId
+                    WHERE e.mindmapId = :mindmapId
                     """
     )
     List<Integer> findCompetencyTypesByMindmapId(
             @Param("mindmapId") UUID mindmapId
     );
 
-
     @Query(
             """
-                        SELECT new com.yat2.episode.episode.dto.EpisodeDetail(
-                            e.id,
-                            e.mindmapId,
-                            s.competencyTypeIds,
-                            e.content,
-                            s.situation,
-                            s.task,
-                            s.action,
-                            s.result,
-                            s.startDate,
-                            s.endDate,
-                            s.createdAt,
-                            s.updatedAt
-                        )
-                        FROM Episode e
-                        LEFT JOIN EpisodeStar s
-                            ON e.id = s.id.nodeId
-                           AND s.id.userId = :userId
-                        WHERE e.id = :nodeId
+                    SELECT new com.yat2.episode.episode.dto.EpisodeDetail(
+                        e.id, e.mindmapId, s.competencyTypeIds, e.content,
+                        s.situation, s.task, s.action, s.result,
+                        s.startDate, s.endDate, s.createdAt, s.updatedAt
+                    )
+                    FROM Episode e
+                    JOIN EpisodeStar s ON e.id = s.id.nodeId
+                    WHERE e.id = :nodeId
+                      AND s.id.userId = :userId
                     """
     )
     Optional<EpisodeDetail> findDetail(
