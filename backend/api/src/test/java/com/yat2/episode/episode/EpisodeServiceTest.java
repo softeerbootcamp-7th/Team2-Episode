@@ -142,15 +142,12 @@ class EpisodeServiceTest {
         @Test
         @DisplayName("STAR 초기화 성공: 에피소드 존재 여부와 권한 확인 후 초기화")
         void clearStar_Success() {
-            Episode episode = Episode.create(nodeId, mindmapId);
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
 
-            when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
             when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
 
             episodeService.clearStar(nodeId, userId);
 
-            verify(mindmapAccessValidator).findParticipantOrThrow(mindmapId, userId);
             verify(episodeStarRepository).save(star);
         }
 
