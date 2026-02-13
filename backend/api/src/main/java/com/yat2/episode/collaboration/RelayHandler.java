@@ -26,8 +26,7 @@ public class RelayHandler extends AbstractWebSocketHandler {
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.error("WebSocket 전송 에러 발생: 세션 ID = {}, 원인 = {}",
-                session.getId(), exception.getMessage());
+        log.error("WebSocket 전송 에러 발생: 세션 ID = {}", session.getId(), exception);
 
         if (session.isOpen()) {
             session.close(CloseStatus.SERVER_ERROR);
