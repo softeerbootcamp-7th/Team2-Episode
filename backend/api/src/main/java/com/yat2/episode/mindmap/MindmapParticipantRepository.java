@@ -25,6 +25,11 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
     @Modifying
     int deleteByMindmap_IdAndUser_KakaoId(UUID uuid, Long userId);
 
+    @Query("SELECT p FROM MindmapParticipant p JOIN FETCH p.user WHERE p.mindmap.id = :mindmapId")
+    List<MindmapParticipant> findAllByMindmapIdWithUser(
+            @Param("mindmapId") UUID mindmapId
+    );
+
     boolean existsByMindmap_Id(UUID mindmapId);
 
     @Query(

@@ -17,6 +17,8 @@ import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
+import com.yat2.episode.mindmap.MindmapParticipant;
+import com.yat2.episode.mindmap.MindmapParticipantRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,7 @@ public class EpisodeService {
     private final CompetencyTypeRepository competencyTypeRepository;
     private final EpisodeStarRepository episodeStarRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
+    private final MindmapParticipantRepository mindmapParticipantRepository;
 
     public EpisodeDetail getEpisodeDetail(UUID nodeId, long userId) {
         return getEpisodeAndStarOrThrow(nodeId, userId);
@@ -47,7 +50,15 @@ public class EpisodeService {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> {
             mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
-            return createNewEpisode(episodeId, mindmapId);
+            Episode newEpisode = createNewEpisode(episodeId, mindmapId);
+            List<MindmapParticipant> participants = mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId);
+
+            List<EpisodeStar> stars =
+                    participants.stream().map(p -> EpisodeStar.create(nodeId, p.getUser().getKakaoId())).toList();
+
+            episodeStarRepository.saveAll(stars);
+
+            return newEpisode;
         });
         if (!mindmapId.equals(episode.getMindmapId())) throw new CustomException(ErrorCode.EPISODE_NOT_FOUND);
         EpisodeStar episodeStar = episodeStarRepository.findById(episodeId).orElseGet(() -> createNewStar(episodeId));
