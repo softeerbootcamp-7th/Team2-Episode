@@ -24,7 +24,9 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             Map attributes
     ) {
         String query = request.getURI().getQuery();
-        String token = extractToken(query);
+        String token =
+                org.springframework.web.util.UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams()
+                        .getFirst("token");
 
         if (token == null || token.isBlank()) {
             return false;
@@ -48,14 +50,5 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
             Exception ex
     ) {
-    }
-
-    private String extractToken(String query) {
-        if (query == null || query.isBlank()) {
-            return null;
-        }
-
-        return java.util.Arrays.stream(query.split("&")).filter(param -> param.startsWith("token="))
-                .map(param -> param.substring(6)).findFirst().orElse(null);
     }
 }
