@@ -16,7 +16,7 @@ import com.yat2.episode.global.constant.AttributeKeys;
 @Service
 public class CollaborationService {
     private final SessionRegistry sessionRegistry;
-    private final RedisStreamRepository redisStreamRepository;
+    private final RedisStreamStore redisStreamStore;
 
     public void handleConnect(WebSocketSession session) {
         sessionRegistry.addSession(getMindmapId(session), session);
