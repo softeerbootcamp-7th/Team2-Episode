@@ -81,10 +81,10 @@ export default class MindMapCore {
         console.log(quadHeight);
 
         return {
-            minX: -10000,
-            maxX: 10000,
-            minY: -10000,
-            maxY: 10000,
+            minX: -1000,
+            maxX: 1000,
+            minY: -1000,
+            maxY: 1000,
         };
     }
 

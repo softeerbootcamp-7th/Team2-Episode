@@ -31,12 +31,12 @@ export default class QuadTree {
 
     /** [Add/Drop] 점 삽입: 외부 전용 관문으로, 필요 시 영역을 확장하고 삽입을 실행 */
     public insert(point: Point): boolean {
-        // 삽입 전, 점의 위치가 현재 전체 영역의 90%를 벗어나는지 확인하여 확장
+        while (!this.isPointInBounds(point)) {
+            this.rebuild();
+        }
         if (this.isNearBoundary(point)) {
             this.rebuild();
         }
-
-        // 실제 삽입 로직 수행
         return this.executeInsert(point);
     }
 
@@ -245,23 +245,30 @@ export default class QuadTree {
 
     /** 삽입 작업을 자식 노드에게 위임 */
     private delegateInsert(point: Point): boolean {
-        if (!this.children) {
-            console.error("[QuadTree 위임 실패] 자식 노드가 생성되지 않은 상태입니다.");
-            return false;
-        }
+        if (!this.children) return false;
+
         const { NW, NE, SW, SE } = this.children;
 
-        return NW.executeInsert(point) || NE.executeInsert(point) || SW.executeInsert(point) || SE.executeInsert(point);
+        if (isPointInRect(point, NW.getBounds())) return NW.executeInsert(point);
+        if (isPointInRect(point, NE.getBounds())) return NE.executeInsert(point);
+        if (isPointInRect(point, SW.getBounds())) return SW.executeInsert(point);
+        if (isPointInRect(point, SE.getBounds())) return SE.executeInsert(point);
+
+        console.error("[QuadTree] 어떤 자식 영역에도 속하지 않는 좌표입니다.", point);
+        return false;
     }
 
     /** 삭제 작업을 자식 노드에게 위임 */
     private delegateRemove(point: Point): boolean {
-        if (!this.children) {
-            console.error("[QuadTree 위임 실패] 삭제를 위임할 자식 노드가 존재하지 않습니다.");
-            return false;
-        }
+        if (!this.children) return false;
+
         const { NW, NE, SW, SE } = this.children;
 
-        return NW.remove(point) || NE.remove(point) || SW.remove(point) || SE.remove(point);
+        if (isPointInRect(point, NW.getBounds())) return NW.remove(point);
+        if (isPointInRect(point, NE.getBounds())) return NE.remove(point);
+        if (isPointInRect(point, SW.getBounds())) return SW.remove(point);
+        if (isPointInRect(point, SE.getBounds())) return SE.remove(point);
+
+        return false;
     }
 }
