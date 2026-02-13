@@ -146,7 +146,7 @@ class EpisodeServiceTest {
             when(episodeRepository.findById(nodeId)).thenReturn(Optional.of(episode));
             when(episodeStarRepository.findById(any())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> episodeService.deleteStar(nodeId, userId)).isInstanceOf(CustomException.class)
+            assertThatThrownBy(() -> episodeService.clearStar(nodeId, userId)).isInstanceOf(CustomException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EPISODE_STAR_NOT_FOUND);
         }
     }

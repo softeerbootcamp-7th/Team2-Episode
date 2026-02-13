@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -78,18 +79,18 @@ public class EpisodeController {
         episodeService.deleteEpisode(nodeId, userId);
     }
 
-    @Operation(summary = "에피소드 STAR 삭제", description = "에피소드 내의 STAR/태그 등의 내용을 비웁니다.")
+    @Operation(summary = "에피소드 STAR 비우기", description = "에피소드 내의 STAR/태그 등의 내용을 비웁니다.")
     @ApiErrorCodes(
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.EPISODE_STAR_NOT_FOUND,
               ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND }
     )
-    @DeleteMapping("/stars")
+    @PutMapping("/stars/clear")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteStar(
+    public void clearStar(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId
     ) {
-        episodeService.deleteStar(nodeId, userId);
+        episodeService.clearStar(nodeId, userId);
     }
 
     @Operation(summary = "에피소드 시작/끝 날짜 삭제", description = "에피소드의 시작/끝 날짜를 초기화합니다.")

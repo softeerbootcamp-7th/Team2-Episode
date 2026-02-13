@@ -70,7 +70,7 @@ public class EpisodeService {
     }
 
     @Transactional
-    public void deleteStar(UUID nodeId, long userId) {
+    public void clearStar(UUID nodeId, long userId) {
         Episode episode = getEpisodeOrThrow(nodeId);
         mindmapAccessValidator.findParticipantOrThrow(episode.getMindmapId(), userId);
 
