@@ -9,6 +9,7 @@ import org.springframework.web.socket.WebSocketHandler;
 
 import java.util.Map;
 
+import com.yat2.episode.global.constant.AttributeKeys;
 import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
 import com.yat2.episode.mindmap.jwt.MindmapTicketPayload;
 
@@ -23,7 +24,6 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
             Map attributes
     ) {
-        String query = request.getURI().getQuery();
         String token =
                 org.springframework.web.util.UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams()
                         .getFirst("token");
@@ -35,9 +35,8 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
         try {
             MindmapTicketPayload mindmapTicketPayload = jwtProvider.verify(token);
 
-            // todo: global constants 값으로 키 변경
-            attributes.put("userId", mindmapTicketPayload.userId());
-            attributes.put("mindmapId", mindmapTicketPayload.mindmapId());
+            attributes.put(AttributeKeys.USER_ID, mindmapTicketPayload.userId());
+            attributes.put(AttributeKeys.MINDMAP_ID, mindmapTicketPayload.mindmapId());
             return true;
         } catch (Exception e) {
             log.warn("WebSocket handshake 실패", e);
