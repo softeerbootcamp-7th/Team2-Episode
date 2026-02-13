@@ -38,7 +38,7 @@ import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
-import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
+import static com.yat2.episode.global.constant.AttributeKeys.USER_ID;
 
 
 @RequiredArgsConstructor

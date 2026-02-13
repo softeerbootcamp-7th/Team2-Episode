@@ -36,6 +36,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework:spring-webflux'
     implementation 'com.github.f4b6a3:uuid-creator:6.0.0'
 
@@ -53,7 +54,8 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testRuntimeOnly 'com.h2database:h2'
+    testImplementation "org.testcontainers:junit-jupiter:1.19.7"
+    testImplementation "org.testcontainers:mysql:1.19.7"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation platform('software.amazon.awssdk:bom:2.21.0')

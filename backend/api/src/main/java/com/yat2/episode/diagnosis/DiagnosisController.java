@@ -27,7 +27,7 @@ import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.global.utils.UriUtil;
 
-import static com.yat2.episode.global.constant.RequestAttrs.USER_ID;
+import static com.yat2.episode.global.constant.AttributeKeys.USER_ID;
 
 @RestController
 @AuthRequiredErrors

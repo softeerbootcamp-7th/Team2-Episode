@@ -9,11 +9,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Set;
 
+import com.yat2.episode.utils.AbstractRepositoryTest;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
-class CompetencyTypeRepositoryTest {
+class CompetencyTypeRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private CompetencyTypeRepository competencyTypeRepository;
