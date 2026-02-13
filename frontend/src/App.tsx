@@ -6,6 +6,7 @@ import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchiveP
 import HomePage from "@/features/home/pages/HomePage";
 import LandingPage from "@/features/landing/pages/LandingPage";
 import MindmapPage from "@/features/mindmap/pages/MindmapPage";
+import MindmapShowcaseV3 from "@/features/mindmap/shared_mindmap/show_cases/ShowCase";
 import SelfDiagnosisPage from "@/features/self_diagnosis/pages/SelfDiagnosisPage";
 import LoginPage from "@/features/user/login/pages/LoginPages";
 import { Toaster } from "@/shared/components/ui/sonner";
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
     {
         path: routeHelper.login(),
         element: <LoginPage />,
+    },
+    {
+        path: "/showcase",
+        element: <MindmapShowcaseV3 />,
     },
 ]);
 
