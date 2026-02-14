@@ -1,5 +1,5 @@
 import { useCollaborators } from "@/features/mindmap/shared_mindmap/hooks/useCollaborators";
-import CollaboratorsManager from "@/features/mindmap/shared_mindmap/utils/CollaboratorManager";
+import CollaboratorsManager from "@/features/mindmap/shared_mindmap/utils/CollaboratorsManager";
 import Icon from "@/shared/components/icon/Icon";
 import List from "@/shared/components/list/List";
 import ListRow from "@/shared/components/list/ListRow";
@@ -8,7 +8,7 @@ import ProfileIcon from "@/shared/components/profile_icon/ProfileIcon";
 type Props = {
     manager: CollaboratorsManager;
 };
-// 1. 목록 컴포넌트 (조용함)
+
 export function CollaboratorList({ manager }: Props) {
     const users = useCollaborators(manager);
     return (
