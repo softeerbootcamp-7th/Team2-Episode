@@ -223,13 +223,13 @@ export class MindmapInteractionManager {
             }
 
             case "dragging": {
-                // 월드 좌표 기준 이동량 계산
-                const worldDx = dx / this.transform.scale;
-                const worldDy = dy / this.transform.scale;
+                // 1. 시작점 대비 현재 마우스의 전체 이동 거리를 한 번에 계산
+                const totalDx = clientX - this.startMousePos.x;
+                const totalDy = clientY - this.startMousePos.y;
 
                 this.dragDelta = {
-                    x: this.dragDelta.x + worldDx,
-                    y: this.dragDelta.y + worldDy,
+                    x: totalDx / this.transform.scale,
+                    y: totalDy / this.transform.scale,
                 };
 
                 this.updateDropTarget(e);
