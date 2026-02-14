@@ -7,10 +7,15 @@ services:
     networks:
       - web
     healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 5s
       retries: 3
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   caddy:
     image: caddy:2.10.2-alpine
@@ -59,6 +64,26 @@ services:
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - web
+
+  redis:
+    image: redis:7-alpine
+    container_name: episode-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: [ "redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}" ]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - web
 
@@ -71,3 +96,4 @@ volumes:
   caddy_config:
   mysql-data:
   minio-data:
+  redis-data:
