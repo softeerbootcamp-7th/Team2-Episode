@@ -1,8 +1,13 @@
+import { parseISO } from "date-fns";
+
 export function getRelativeTime(dateString: string) {
-    const start = new Date(dateString);
+    const fixedDateString = dateString.endsWith("Z") ? dateString : `${dateString}Z`;
+
+    const start = parseISO(fixedDateString);
     const end = new Date();
 
     const seconds = Math.floor((end.getTime() - start.getTime()) / 1000);
+
     if (seconds < 60) return "방금 전";
 
     const minutes = seconds / 60;
@@ -14,5 +19,5 @@ export function getRelativeTime(dateString: string) {
     const days = hours / 24;
     if (days < 7) return `${Math.floor(days)}일 전`;
 
-    return `${start.toLocaleDateString()} `; // 7일 이상이면 날짜 표시
+    return `${start.toLocaleDateString()} `;
 }
