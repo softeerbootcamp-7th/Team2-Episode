@@ -40,7 +40,7 @@ const Card = ({
 export default Card;
 
 const variants = cva(
-    "text-gray-800 w-full h-full flex flex-col justify-between bg-white outline outline-gray-200 rounded-xl hover:outline-primary hover:outline-2 hover:shadow-lg transition-all",
+    "text-gray-800 w-full h-full flex flex-col justify-between bg-white outline outline-gray-400 rounded-xl hover:outline-primary hover:outline-2 hover:shadow-lg transition-all",
     {
         variants: {
             yPadding: {
