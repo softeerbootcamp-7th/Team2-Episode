@@ -82,8 +82,14 @@ export default class MindMapCore {
     private sync(affectedIds?: NodeId[]) {
         const { quadTree, viewport, _isInitialized } = this;
 
-        // 💡 quadTree뿐만 아니라 viewport도 확인해야 안전하게 화면을 갱신합니다.
         if (!_isInitialized || !quadTree || !viewport) return;
+
+        // 영향을 받는 노드들의 레이아웃 캐시 무효화
+        if (affectedIds) {
+            affectedIds.forEach((id) => {
+                this.layout.invalidate(id);
+            });
+        }
 
         // 1. 레이아웃 업데이트
         const rootId = this.tree.getRootId();
@@ -196,5 +202,9 @@ export default class MindMapCore {
 
     getViewport() {
         return this.viewport;
+    }
+
+    getLayout() {
+        return this.layout;
     }
 }
