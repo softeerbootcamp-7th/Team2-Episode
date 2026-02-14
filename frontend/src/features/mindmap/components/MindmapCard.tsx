@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 
 import { useDeleteMindmap } from "@/features/mindmap/hooks/useDeleteMindmap";
+import { useUpdateMindmapFavorite } from "@/features/mindmap/hooks/useUpdateMindmapFavorite"; // 훅 import
 import { useUpdateMindmapName } from "@/features/mindmap/hooks/useUpdateMindmapName";
 import { MindmapItem, MindmapType } from "@/features/mindmap/types/mindmap";
 import Button from "@/shared/components/button/Button";
@@ -23,6 +24,7 @@ type Props = {
 const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
     const { mutate: deleteMindmap } = useDeleteMindmap();
     const { mutate: updateMindmapName } = useUpdateMindmapName();
+    const { mutate: updateMindmapFavorite } = useUpdateMindmapFavorite();
 
     const handleDelete = () => {
         if (window.confirm("정말 이 마인드맵을 삭제하시겠습니까?")) {
@@ -30,17 +32,28 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
         }
     };
 
+    const handleToggleFavorite = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        updateMindmapFavorite({
+            mindmapId: data.mindmapId,
+            status: !data.isFavorite,
+        });
+    };
+
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(data.mindmapName);
-
     const editContainerRef = useRef<HTMLDivElement>(null);
 
     useClickOutside(editContainerRef, () => {
         if (isEditing) {
-            setIsEditing(false);
-            setEditName(data.mindmapName);
+            handleCancel();
         }
     });
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setEditName(data.mindmapName);
+    };
 
     const handleStartEdit = () => {
         setEditName(data.mindmapName);
@@ -49,28 +62,22 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
 
     const handleSave = (e: React.MouseEvent) => {
         e.stopPropagation();
+        const trimmed = editName.trim();
 
-        if (!editName.trim()) {
-            return;
-        }
+        if (!trimmed) return;
 
-        if (editName === data.mindmapName) {
+        if (trimmed === data.mindmapName) {
             setIsEditing(false);
             return;
         }
 
         updateMindmapName(
-            { mindmapId: data.mindmapId, name: editName },
+            { mindmapId: data.mindmapId, name: trimmed },
             {
-                onSuccess: () => {
-                    setIsEditing(false);
-                },
+                onSuccess: () => setIsEditing(false),
             },
         );
     };
-
-    // const displayTags = data.tags.slice(0, 4);
-    // const hiddenTagCount = data.tags.length - 4;
 
     return (
         <Card
@@ -87,21 +94,25 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
                                     inputSize="sm"
                                     autoFocus
                                     onClick={(e) => e.stopPropagation()}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") handleCancel();
+                                    }}
                                 />
                             </div>
-                            <Button
-                                variant="primary"
-                                size="sm" // 버튼 사이즈 조정
-                                onClick={handleSave}
-                                className="shrink-0"
-                            >
+                            <Button variant="primary" size="sm" onClick={handleSave} className="shrink-0">
                                 확인
                             </Button>
                         </div>
                     ) : (
                         <div className="flex items-center gap-2 overflow-hidden flex-1">
-                            <button className={cn("shrink-0", data.isFavorite ? "text-yellow-100" : "text-gray-500")}>
-                                <Icon name={data.isFavorite ? "ic_star_filled" : "ic_star"} />
+                            <button
+                                onClick={handleToggleFavorite}
+                                className={cn(
+                                    "shrink-0 transition-colors duration-200 p-1 my-1 mr-1 rounded-full hover:bg-gray-100",
+                                    data.isFavorite ? "text-yellow-100" : "text-gray-300 hover:text-gray-400",
+                                )}
+                            >
+                                <Icon name={data.isFavorite ? "ic_star_filled" : "ic_star"} size={30} />
                             </button>
                             <h3 className="text-text-main2 typo-title-20-bold truncate" title={data.mindmapName}>
                                 {data.mindmapName}
@@ -131,7 +142,7 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
                                 }
                             >
                                 <button className="p-1.5 hover:bg-gray-100 rounded-full flex items-center justify-center">
-                                    <Icon name="ic_ellipsis_vertical" color="#9CA3AF" />
+                                    <Icon name="ic_ellipsis_vertical" color="var(--color-gray-500)" />
                                 </button>
                             </Popover>
                         </div>
