@@ -4,6 +4,8 @@ services:
     container_name: episode-api
     restart: unless-stopped
     env_file: .env
+    environment:
+      - JAVA_OPTS=-Dspring.profiles.active=prod
     networks:
       - web
     healthcheck:

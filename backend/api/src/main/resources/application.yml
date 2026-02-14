@@ -23,6 +23,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc.batch_size: 100
+        order_inserts: true
+        order_updates: true
+        generate_statistics: true
 
   
   # ===============================
