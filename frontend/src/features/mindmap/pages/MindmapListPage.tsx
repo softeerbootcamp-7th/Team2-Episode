@@ -32,31 +32,33 @@ const MindmapListPage = () => {
 
     return (
         <MindMapProvider>
-            <MaxWidth maxWidth="lg" gap="md" className="py-10 items-start">
-                <Top
-                    lowerGap="md"
-                    title={<h1 className="text-3xl font-bold text-gray-900">마인드맵</h1>}
-                    lower={<p className="text-text-main2">경험을 구조화하고 관리하세요</p>}
-                />
+            <MaxWidth maxWidth="lg">
+                <div className="flex flex-col flex-1 w-full gap-6">
+                    <Top
+                        lowerGap="md"
+                        title={<h1 className="typo-title-30-bold font-bold text-gray-900">마인드맵</h1>}
+                        lower={<p className="typo-body-16-medium text-text-main2">경험을 구조화하고 관리하세요</p>}
+                    />
 
-                <Tab layout="fullWidth" selectedTabId={selectedTabId} onChange={(id) => onChange(id)}>
-                    {MINDMAP_TABS.map((tab) => (
-                        <TabItem key={tab.id} id={tab.id} label={tab.label} />
-                    ))}
-                </Tab>
+                    <Tab layout="fullWidth" selectedTabId={selectedTabId} onChange={(id) => onChange(id)}>
+                        {MINDMAP_TABS.map((tab) => (
+                            <TabItem key={tab.id} id={tab.id} label={tab.label} />
+                        ))}
+                    </Tab>
 
-                <Button
-                    onClick={() => navigate(linkTo.mindmap.create())}
-                    size="md"
-                    variant="primary"
-                    leftSlot={<Icon name="ic_plus" />}
-                >
-                    새 마인드맵
-                </Button>
+                    <Button
+                        onClick={() => navigate(linkTo.mindmap.create())}
+                        size="md"
+                        variant="primary"
+                        leftSlot={<Icon name="ic_plus" />}
+                    >
+                        새 마인드맵
+                    </Button>
 
-                <Suspense fallback={<Spinner />}>
-                    <MindmapList mindmapType={selectedTabId} />
-                </Suspense>
+                    <Suspense fallback={<Spinner />}>
+                        <MindmapList mindmapType={selectedTabId} />
+                    </Suspense>
+                </div>
             </MaxWidth>
         </MindMapProvider>
     );
