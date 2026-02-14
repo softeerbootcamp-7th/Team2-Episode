@@ -2,7 +2,7 @@ import * as Y from "yjs";
 
 import SharedMindmapLayoutManager from "@/features/mindmap/shared_mindmap/utils/SharedMindmapLayoutManager";
 import SharedTreeContainer from "@/features/mindmap/shared_mindmap/utils/SharedTreeContainer";
-import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap_node";
 import { MindmapRoomId } from "@/features/mindmap/types/mindmap_room";
 import { EventBroker } from "@/utils/EventBroker";
 

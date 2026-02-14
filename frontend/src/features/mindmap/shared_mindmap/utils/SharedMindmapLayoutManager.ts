@@ -1,5 +1,5 @@
 import SharedTreeContainer from "@/features/mindmap/shared_mindmap/utils/SharedTreeContainer";
-import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap_node";
 import { calcPartitionIndex } from "@/utils/calc_partition";
 import { isSame } from "@/utils/is_same";
 

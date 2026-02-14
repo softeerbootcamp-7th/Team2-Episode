@@ -4,13 +4,15 @@ import { WebsocketProvider } from "y-websocket";
 
 import { CursorMap, UserProfile } from "@/features/mindmap/shared_mindmap/types/collaborator";
 
+const WS_HZ = 100;
+
 export default class CollaboratorsManager {
     private awareness: Awareness;
     private localUser: UserProfile;
 
     private collaboratorsCache: UserProfile[] = [];
     private cursorsCache: CursorMap = new Map();
-
+    private rafId: number | null = null;
     constructor({ provider, userInfo }: { provider: WebsocketProvider; userInfo: UserProfile }) {
         this.awareness = provider.awareness;
         this.localUser = userInfo;
@@ -34,7 +36,7 @@ export default class CollaboratorsManager {
 
     public updateCursor = throttle((x: number, y: number) => {
         this.awareness.setLocalStateField("cursor", { x, y });
-    }, 80);
+    }, WS_HZ);
 
     private processAwarenessData() {
         const states = this.awareness.getStates();
@@ -42,7 +44,7 @@ export default class CollaboratorsManager {
         const newCollaborators: UserProfile[] = [];
         const newCursors: CursorMap = new Map();
 
-        const isCollaboratorsChanged = false;
+        // const isCollaboratorsChanged = false;
 
         states.forEach((state: any, clientId: number) => {
             if (!state.user) return;
@@ -71,11 +73,26 @@ export default class CollaboratorsManager {
 
     subscribe = (callback: () => void) => {
         const handler = () => {
-            this.processAwarenessData();
-            callback();
+            // 이미 예약된 애니메이션 프레임이 없다면 새로 예약
+            if (this.rafId === null) {
+                this.rafId = requestAnimationFrame(() => {
+                    this.processAwarenessData(); // 데이터 가공
+                    callback(); // React 리렌더링 트리거 (useSyncExternalStore)
+                    this.rafId = null; // 실행 완료 후 초기화
+                });
+            }
         };
+
         this.awareness.on("change", handler);
-        return () => this.awareness.off("change", handler);
+
+        return () => {
+            this.awareness.off("change", handler);
+            // 언마운트 시 예약된 프레임이 있다면 취소하여 메모리 누수 방지
+            if (this.rafId !== null) {
+                cancelAnimationFrame(this.rafId);
+                this.rafId = null;
+            }
+        };
     };
 
     // 1. 유저 목록 스냅샷
@@ -89,7 +106,12 @@ export default class CollaboratorsManager {
     };
 
     destroy() {
-        this.updateCursor.cancel(); // throttle 취소
+        this.updateCursor.cancel();
         this.awareness.setLocalState(null);
+        // 💡 추가: 인스턴스 파괴 시 rAF 정리
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
     }
 }

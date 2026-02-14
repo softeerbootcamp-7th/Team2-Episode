@@ -1,6 +1,6 @@
 import * as Y from "yjs";
 
-import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/mindmap";
+import { NodeData, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/mindmap_node";
 import { MindmapRoomId } from "@/features/mindmap/types/mindmap_room";
 import { EventBroker } from "@/utils/EventBroker";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";

@@ -1,4 +1,4 @@
-import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap_node";
 import TreeContainer from "@/features/mindmap/utils/TreeContainer";
 import { CacheMap } from "@/utils/CacheMap";
 import { calcPartitionIndex } from "@/utils/calc_partition";
