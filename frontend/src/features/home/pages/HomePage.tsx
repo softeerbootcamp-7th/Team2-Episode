@@ -5,13 +5,13 @@ import Button from "@/shared/components/button/Button";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 import Popover from "@/shared/components/popover/Popover";
 import UserBox from "@/shared/components/user_box/UserBox";
-import { routeHelper } from "@/shared/utils/route";
+import { linkTo } from "@/shared/utils/route";
 
 const HomePage = () => {
     const { user, logout } = useAuth();
 
     return (
-        <div className="min-h-screen overflow-hidden">
+        <div className="flex flex-col min-h-screen overflow-hidden">
             <GlobalNavigationBar
                 rightSlot={
                     user ? (
@@ -30,7 +30,7 @@ const HomePage = () => {
                             <UserBox name={user.nickname} />
                         </Popover>
                     ) : (
-                        <Link to={routeHelper.login()}>
+                        <Link to={linkTo.login()}>
                             <Button size="xs" variant="quaternary_accent_outlined">
                                 로그인
                             </Button>
@@ -39,7 +39,7 @@ const HomePage = () => {
                 }
             />
 
-            <main>
+            <main className="flex-1 flex flex-col relative w-full">
                 <Outlet />
             </main>
         </div>
