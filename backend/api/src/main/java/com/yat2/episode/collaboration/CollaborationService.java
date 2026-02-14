@@ -8,6 +8,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import com.yat2.episode.global.constant.AttributeKeys;
 
@@ -17,6 +18,7 @@ import com.yat2.episode.global.constant.AttributeKeys;
 public class CollaborationService {
     private final SessionRegistry sessionRegistry;
     private final RedisStreamStore redisStreamStore;
+    private final Executor redisExecutor;
 
     public void handleConnect(WebSocketSession session) {
         sessionRegistry.addSession(getMindmapId(session), session);
@@ -31,9 +33,15 @@ public class CollaborationService {
 
         if (YjsProtocolUtil.isUpdateFrame(payload)) {
             try {
-                redisStreamStore.appendUpdate(roomId, payload);
+                redisExecutor.execute(() -> {
+                    try {
+                        redisStreamStore.appendUpdate(roomId, payload);
+                    } catch (Exception e) {
+                        log.warn("Redis append failed. roomId={}", roomId, e);
+                    }
+                });
             } catch (Exception e) {
-                log.error("Error while appending update frame to redis. roomId={}", roomId, e);
+                log.error("Redis append failed. roomId={}", roomId, e);
             }
         }
     }
