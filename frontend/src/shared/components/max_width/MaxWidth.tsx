@@ -35,7 +35,7 @@ const variants = cva("flex px-4", {
         maxWidth: {
             sm: "max-w-sm",
             md: "max-w-2xl",
-            lg: "max-w-8xl",
+            lg: "max-w-7xl",
         },
         direction: {
             y: "flex-col",
