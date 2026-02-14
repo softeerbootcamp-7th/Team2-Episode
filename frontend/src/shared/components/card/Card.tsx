@@ -13,7 +13,7 @@ type Props = ComponentPropsWithoutRef<"div"> &
 
 const Card = ({
     gap = "md",
-    yPadding = "md",
+    yPadding = "lg",
     xPadding = "lg",
     header,
     bottomContents,
@@ -24,15 +24,13 @@ const Card = ({
 }: Props) => {
     return (
         <div className={cn(variants({ yPadding, xPadding, gap }), className)} {...rest}>
-            <div className="flex flex-col gap-2 h-fit">
+            <div className="flex flex-col gap-4">
                 {header}
-
                 {contents}
             </div>
 
-            <div className="flex flex-col gap-2 h-fit">
+            <div className="flex flex-col gap-1">
                 {bottomContents}
-
                 {footer}
             </div>
         </div>
@@ -42,7 +40,7 @@ const Card = ({
 export default Card;
 
 const variants = cva(
-    "text-gray-800 w-full h-full flex flex-col space-between bg-white outline outline-gray-400 rounded-xl hover:outline-primary hover:outline-2 hover:shadow-lg",
+    "text-gray-800 w-full h-full flex flex-col justify-between bg-white outline outline-gray-200 rounded-xl hover:outline-primary hover:outline-2 hover:shadow-lg transition-all",
     {
         variants: {
             yPadding: {
