@@ -6,7 +6,7 @@ import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchiveP
 import HomePage from "@/features/home/pages/HomePage";
 import LandingPage from "@/features/landing/pages/LandingPage";
 import CreateMindmapPage from "@/features/mindmap/pages/CreateMindmapPage";
-import MindmapMainPage from "@/features/mindmap/pages/MindmapMainPage";
+import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
 import MindmapPage from "@/features/mindmap/pages/MindmapPage";
 import SelfDiagnosisPage from "@/features/self_diagnosis/pages/SelfDiagnosisPage";
 import LoginPage from "@/features/user/login/pages/LoginPage";
@@ -31,11 +31,11 @@ const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        element: <MindmapMainPage />,
+                        element: <MindmapListPage />,
                     },
                     {
                         path: PATHS.mindmap.list,
-                        element: <MindmapMainPage />,
+                        element: <MindmapListPage />,
                     },
                     {
                         path: PATHS.episode_archive,
