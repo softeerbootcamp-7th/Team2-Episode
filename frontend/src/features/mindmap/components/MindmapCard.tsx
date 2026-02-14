@@ -112,6 +112,7 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
                                     maxLength={20}
                                     placeholder="이름을 입력하세요"
                                     inputSize="sm"
+                                    isFullWidth
                                     autoFocus
                                     onClick={(e) => e.stopPropagation()}
                                     onKeyDown={(e) => {
