@@ -22,9 +22,8 @@ export const MINDMAP_TABS: { id: MindmapType; label: string }[] = [
 
 export type MindmapTabId = (typeof MINDMAP_TABS)[number]["id"];
 const MindmapListPage = () => {
-    const { selectedValue, onChange } = useTabs<MindmapTabId>("ALL");
-    const selectedTabIndex = MINDMAP_TABS.findIndex((tab) => tab.id === selectedValue) ?? 0;
-    const selectedTabId = MINDMAP_TABS[selectedTabIndex]!.id;
+    const { selectedValue: selectedId, onChange } = useTabs<MindmapTabId>("ALL");
+
     const navigate = useNavigate();
 
     return (
@@ -37,7 +36,7 @@ const MindmapListPage = () => {
                         lower={<p className="typo-body-16-medium text-text-main2">경험을 구조화하고 관리하세요</p>}
                     />
 
-                    <Tab layout="fullWidth" selectedTabId={selectedTabId} onChange={(id) => onChange(id)}>
+                    <Tab layout="fullWidth" selectedTabId={selectedId} onChange={(id) => onChange(id)}>
                         {MINDMAP_TABS.map((tab) => (
                             <TabItem key={tab.id} id={tab.id} label={tab.label} />
                         ))}
@@ -55,7 +54,7 @@ const MindmapListPage = () => {
 
                 <div className="flex-1 w-full overflow-y-auto p-1 custom-scrollbar">
                     <Suspense fallback={<Spinner />}>
-                        <MindmapList mindmapType={selectedTabId} />
+                        <MindmapList mindmapType={selectedId} />
                     </Suspense>
                 </div>
             </MaxWidth>
