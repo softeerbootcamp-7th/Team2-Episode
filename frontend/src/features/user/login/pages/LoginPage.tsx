@@ -8,7 +8,7 @@ const LoginPage = () => {
         window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/login`;
     };
     return (
-        <MaxWidth align="center" gap="lg" maxWidth="lg">
+        <MaxWidth align="center" gap="lg" maxWidth="sm">
             <Spacer y={70} />
             <Top
                 align="center"
