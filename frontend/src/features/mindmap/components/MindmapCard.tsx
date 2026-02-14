@@ -190,7 +190,7 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
                 </div>
             }
             footer={
-                <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-transparent">
+                <div className="flex items-center justify-between text-body-14-regular text-gray-500 pt-4 border-t border-transparent">
                     <span>{getRelativeTime(data.updatedAt)}</span>
                     <div className="flex items-center gap-2">
                         {type === "PUBLIC" && (
