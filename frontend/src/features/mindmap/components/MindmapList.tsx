@@ -16,7 +16,7 @@ const MindmapList = ({ mindmapType }: Props) => {
             ))}
 
             {mindmapList.length === 0 && (
-                <div className="col-span-full py-10 text-center text-text-sub1">해당하는 마인드맵이 없습니다.</div>
+                <div className="col-span-full py-20 text-center text-text-sub1">해당하는 마인드맵이 없습니다.</div>
             )}
         </div>
     );
