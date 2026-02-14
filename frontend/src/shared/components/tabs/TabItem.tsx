@@ -3,6 +3,7 @@ import Divider from "@/shared/components/divider/Divider";
 type Props = {
     label: string;
     isSelected?: boolean;
+    id: string | number;
     onClick?: () => void;
 };
 

@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
-import { routeHelper } from "@/shared/utils/route";
+import { linkTo } from "@/shared/utils/route";
 
 type Props = {
     rightSlot?: ReactNode;
@@ -27,22 +27,22 @@ export default function GlobalNavigationBar({ variant = "white", rightSlot }: Pr
             <div className="flex flex-row gap-1 flex-1">
                 <Button
                     size="sm"
-                    onClick={() => navigate(routeHelper.mindmap.list())}
-                    variant={includePath(routeHelper.mindmap.list()) ? "tertiary" : "ghost"}
+                    onClick={() => navigate(linkTo.mindmap.list())}
+                    variant={includePath(linkTo.mindmap.list()) ? "tertiary" : "ghost"}
                 >
                     마인드맵
                 </Button>
                 <Button
                     size="sm"
-                    onClick={() => navigate(routeHelper.episode_archive())}
-                    variant={includePath(routeHelper.episode_archive()) ? "tertiary" : "ghost"}
+                    onClick={() => navigate(linkTo.episode_archive())}
+                    variant={includePath(linkTo.episode_archive()) ? "tertiary" : "ghost"}
                 >
                     에피소드 보관함
                 </Button>
                 <Button
                     size="sm"
-                    onClick={() => navigate(routeHelper.self_diagnosis.list())}
-                    variant={includePath(routeHelper.self_diagnosis.list()) ? "tertiary" : "ghost"}
+                    onClick={() => navigate(linkTo.self_diagnosis.list())}
+                    variant={includePath(linkTo.self_diagnosis.list()) ? "tertiary" : "ghost"}
                 >
                     기출문항 셀프진단
                 </Button>
