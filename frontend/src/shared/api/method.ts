@@ -62,3 +62,17 @@ export function del<TResponse = void, TParams extends HttpParams = HttpParams>({
         params,
     });
 }
+
+export function patch<TResponse, TBody extends object, TParams extends HttpParams = HttpParams>({
+    endpoint,
+    data,
+    params,
+    options,
+}: DataParams<TBody, TParams>): Promise<TResponse> {
+    return fetchWithAuth<TResponse>(endpoint, {
+        ...options,
+        method: "PATCH",
+        body: data ? JSON.stringify(data) : undefined,
+        params,
+    });
+}
