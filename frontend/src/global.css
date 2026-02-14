@@ -173,4 +173,8 @@
     .moving-fragment-group {
         pointer-events: none;
     }
+
+    .is-dragging .static-layer {
+        pointer-events: none;
+    }
 }

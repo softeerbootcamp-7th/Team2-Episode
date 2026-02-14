@@ -1,4 +1,3 @@
-import DropIndicator from "@/features/mindmap/components/DropIndicator";
 import EdgeLayer from "@/features/mindmap/components/EdgeLayer";
 import InteractionLayer from "@/features/mindmap/components/InteractionLayer";
 import { useMindMapCore, useMindMapVersion } from "@/features/mindmap/hooks/useMindmapContext";
@@ -10,6 +9,10 @@ function MindMapInnerRenderer() {
     const mindmap = useMindMapCore();
     const version = useMindMapVersion();
 
+    console.group(`[Renderer Render] version: ${version}`);
+    console.trace("Stack Trace:");
+    console.groupEnd();
+
     if (!mindmap) return null;
     useViewportEvents();
 
@@ -17,8 +20,9 @@ function MindMapInnerRenderer() {
     const status = mindmap.getInteractionStatus();
 
     if (!status) return null;
+    const isDragging = status.mode === "dragging";
 
-    const { baseNode, dragSubtreeIds } = status;
+    const { dragSubtreeIds } = status;
     const nodeMap = mindmap.tree.nodes;
 
     const allNodes = Array.from(nodeMap.values());
@@ -27,12 +31,15 @@ function MindMapInnerRenderer() {
 
     //TODO: EdegLayer color
     return (
-        <g className="mindmap-render-root" data-version={version}>
+        <g className={`mindmap-render-root data-version={version} ${isDragging ? "is-dragging" : ""}`}>
             {/* 정적 노드 그룹 */}
             <g className="static-layer">
                 <EdgeLayer nodeMap={nodeMap} filterNode={staticNodes} color="violet" />
                 {staticNodes.map((node) => (
-                    <NodeItem key={`${node.id}-${version}`} nodeId={node.id} />
+                    <>
+                        ㄴ
+                        <NodeItem key={node.id} nodeId={node.id} />
+                    </>
                 ))}
             </g>
 
@@ -40,14 +47,9 @@ function MindMapInnerRenderer() {
             <g className="shadow-fragment opacity-20">
                 <EdgeLayer nodeMap={nodeMap} filterNode={shadowNodes} color="violet" />
                 {shadowNodes.map((node) => (
-                    <NodeItem key={`${node.id}-${version}`} nodeId={node.id} />
+                    <NodeItem key={node.id} nodeId={node.id} />
                 ))}
             </g>
-
-            {/* Ghost */}
-            {baseNode?.targetId && baseNode?.direction && (
-                <DropIndicator nodeMap={nodeMap} targetId={baseNode.targetId} direction={baseNode.direction} />
-            )}
 
             {/* 레이어 4: Floating (마우스 추적 덩어리) */}
             <InteractionLayer status={status} nodeMap={nodeMap} />
@@ -59,7 +61,6 @@ export default function MindMapRenderer() {
     const mindmap = useMindMapCore();
 
     if (!mindmap || !mindmap.isReady) {
-        console.log("Renderer: 엔진 초기화 대기 중...");
         return null;
     }
 
