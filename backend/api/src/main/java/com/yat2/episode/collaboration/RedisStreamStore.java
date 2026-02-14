@@ -21,7 +21,7 @@ public class RedisStreamStore {
     private static final String FIELD_UPDATE = "u";
 
     private String streamKey(UUID roomId) {
-        return "collaboration:room:" + roomId;
+        return "collab:room:" + roomId;
     }
 
     public RecordId appendUpdate(UUID roomId, byte[] update) {
@@ -34,7 +34,7 @@ public class RedisStreamStore {
 
         RecordId id = ops.add(record);
 
-        redisBinaryTemplate.expire(key, Duration.ofDays(7));
+        redisBinaryTemplate.expire(key, Duration.ofDays(2));
 
         return id;
     }
