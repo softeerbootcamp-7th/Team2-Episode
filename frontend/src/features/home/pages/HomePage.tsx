@@ -11,7 +11,7 @@ const HomePage = () => {
     const { user, logout } = useAuth();
 
     return (
-        <div className="flex flex-col min-h-screen overflow-hidden">
+        <div className="flex flex-col h-screen overflow-hidden">
             <GlobalNavigationBar
                 rightSlot={
                     user ? (
@@ -39,7 +39,7 @@ const HomePage = () => {
                 }
             />
 
-            <main className="flex-1 flex flex-col relative w-full">
+            <main className="flex-1 flex flex-col relative w-full overflow-y-auto">
                 <Outlet />
             </main>
         </div>
