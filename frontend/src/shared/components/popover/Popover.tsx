@@ -32,7 +32,14 @@ const Popover = ({ direction = "bottom_left", children, contents }: Props) => {
 
     return (
         <div ref={triggerRef} className="relative w-fit">
-            <div onClick={isVisibleHandler.toggle}>{children}</div>
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    isVisibleHandler.toggle();
+                }}
+            >
+                {children}
+            </div>
 
             {isVisible && (
                 <div ref={contentsRef} className={variants({ direction: safeDirection })}>
