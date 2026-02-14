@@ -23,19 +23,33 @@ public class CollaborationService {
     }
 
     public void processMessage(WebSocketSession sender, BinaryMessage message) {
-        ByteBuffer buffer = message.getPayload();
-        byte[] payload = new byte[buffer.remaining()];
-        buffer.get(payload);
+        UUID roomId = getMindmapId(sender);
 
-        sessionRegistry.broadcast(getMindmapId(sender), sender, payload);
+        byte[] payload = toByteArray(message.getPayload());
+
+        sessionRegistry.broadcast(roomId, sender, payload);
+
+        if (YjsProtocolUtil.isUpdateFrame(payload)) {
+            try {
+                redisStreamStore.appendUpdate(roomId, payload);
+            } catch (Exception e) {
+                log.error("Error while appending update frame to redis. roomId={}", roomId, e);
+            }
+        }
     }
 
     public void handleDisconnect(WebSocketSession session) {
-        //TODO: Collaboration room 세션 수 0일때 스냅샷 트리거
         sessionRegistry.removeSession(getMindmapId(session), session);
     }
 
     private UUID getMindmapId(WebSocketSession session) {
         return (UUID) session.getAttributes().get(AttributeKeys.MINDMAP_ID);
+    }
+
+    private byte[] toByteArray(ByteBuffer buffer) {
+        ByteBuffer dup = buffer.duplicate();
+        byte[] bytes = new byte[dup.remaining()];
+        dup.get(bytes);
+        return bytes;
     }
 }

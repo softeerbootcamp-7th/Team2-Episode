@@ -1,6 +1,7 @@
 package com.yat2.episode.collaboration;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -17,6 +18,7 @@ import com.yat2.episode.collaboration.config.WebSocketProperties;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class SessionRegistry {
     private final Map<UUID, Set<WebSocketSession>> rooms = new ConcurrentHashMap<>();
     private final WebSocketProperties wsProperties;
