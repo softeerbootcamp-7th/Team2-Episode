@@ -169,7 +169,7 @@ jobs:
         id: health_check
         run: |
           set -e
-          URL="https://api.episode.io.kr/actuator/health"
+          URL="https://api.episode.io.kr/actuator/health/liveness"
 
           echo "Checking health:"
           for i in $(seq 1 30); do
