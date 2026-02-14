@@ -21,19 +21,16 @@ export const MINDMAP_TABS: { id: MindmapType; label: string }[] = [
 ] as const;
 
 export type MindmapTabId = (typeof MINDMAP_TABS)[number]["id"];
-
 const MindmapListPage = () => {
     const { selectedValue, onChange } = useTabs<MindmapTabId>("ALL");
-
     const selectedTabIndex = MINDMAP_TABS.findIndex((tab) => tab.id === selectedValue) ?? 0;
     const selectedTabId = MINDMAP_TABS[selectedTabIndex]!.id;
-
     const navigate = useNavigate();
 
     return (
         <MindMapProvider>
-            <MaxWidth maxWidth="lg">
-                <div className="flex flex-col flex-1 w-full gap-6">
+            <MaxWidth maxWidth="lg" className="h-screen flex flex-col overflow-hidden ">
+                <div className="flex flex-col w-full gap-6 pt-6 pb-4">
                     <Top
                         lowerGap="md"
                         title={<h1 className="typo-title-30-bold font-bold text-gray-900">마인드맵</h1>}
@@ -54,7 +51,9 @@ const MindmapListPage = () => {
                     >
                         새 마인드맵
                     </Button>
+                </div>
 
+                <div className="flex-1 w-full overflow-y-auto p-1 custom-scrollbar">
                     <Suspense fallback={<Spinner />}>
                         <MindmapList mindmapType={selectedTabId} />
                     </Suspense>
@@ -63,5 +62,4 @@ const MindmapListPage = () => {
         </MindMapProvider>
     );
 };
-
 export default MindmapListPage;
