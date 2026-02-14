@@ -15,6 +15,7 @@ const Button = ({
     size = "md",
     align = "center",
     layout = "fit",
+    borderRadius = "2xl",
     leftSlot,
     rightSlot,
     children,
@@ -23,7 +24,11 @@ const Button = ({
     ...rest
 }: Props) => {
     return (
-        <button ref={ref} className={cn(buttonVariants({ variant, size, align, layout }), className)} {...rest}>
+        <button
+            ref={ref}
+            className={cn(buttonVariants({ variant, size, align, layout, borderRadius }), className)}
+            {...rest}
+        >
             {leftSlot}
 
             <span className="flex-1">{children}</span>
@@ -34,7 +39,6 @@ const Button = ({
 };
 
 export default Button;
-
 const buttonVariants = cva(
     "flex flex-row gap-2 items-center justify-center whitespace-nowrap transition-all duration-200 ease-in-out active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100",
     {
@@ -54,10 +58,19 @@ const buttonVariants = cva(
                 ghost: "text-text-main2 bg-transparent hover:bg-gray-100 active:bg-gray-200",
             },
             size: {
-                xs: "rounded-lg typo-body-14-medium py-2 px-3",
-                sm: "rounded-2xl typo-body-14-medium py-3 px-4 min-w-20",
-                md: "rounded-2xl typo-body-16-semibold py-4 px-5",
-                lg: "rounded-2xl typo-body-16-medium py-5 px-10",
+                xs: "typo-body-14-medium py-2 px-3",
+                sm: "typo-body-14-medium py-3 px-4 min-w-20",
+                md: "typo-body-16-semibold py-4 px-5",
+                lg: "typo-body-16-medium py-5 px-10",
+            },
+            borderRadius: {
+                none: "rounded-none",
+                sm: "rounded-sm",
+                md: "rounded-md",
+                lg: "rounded-lg",
+                xl: "rounded-xl",
+                "2xl": "rounded-2xl",
+                full: "rounded-full",
             },
             align: {
                 left: "justify-start text-left",
@@ -68,12 +81,6 @@ const buttonVariants = cva(
                 fit: "w-fit",
                 fullWidth: "w-full",
             },
-        },
-        defaultVariants: {
-            variant: "primary",
-            size: "md",
-            align: "center",
-            layout: "fit",
         },
     },
 );
