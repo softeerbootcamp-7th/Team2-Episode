@@ -42,6 +42,7 @@ export default function EdgeLayer({ nodeMap, color, type = "active", filterNode 
                 const parent = nodeMap.get(node.parentId);
 
                 if (!parent) {
+                    console.error(`${node}의 부모를 찾을 수 없습니다.`);
                     return null;
                 }
 

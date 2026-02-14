@@ -19,23 +19,25 @@ type MovingNodeFragmentProps = {
 export default function MovingNodeFragment({ filterIds, nodeMap, delta }: MovingNodeFragmentProps) {
     // 전체 nodeMap 중 movingHead ~ 자식 노드를 하나의 덩어리화, 맵 내용이 변경될때만 fragment 다시 그림
     const { fragmentNodes, fragmentMap } = useMemo(() => {
-        const nodes: NodeElement[] = [];
         const map = new Map<NodeId, NodeElement>();
 
+        // 드래그 중인 노드들만 맵에 담기
         filterIds.forEach((id) => {
             const node = nodeMap.get(id);
             if (node) {
-                nodes.push(node);
                 map.set(id, node);
             }
         });
 
-        return { fragmentNodes: nodes, fragmentMap: map };
+        // 엣지가 그릴 대상을 '부모가 같은 드래그 그룹 안에 있는 경우'로 제한
+        const nodesForEdge = Array.from(map.values()).filter((node) => map.has(node.parentId));
+
+        return { fragmentNodes: nodesForEdge, fragmentMap: map };
     }, [filterIds, nodeMap]);
 
     return (
         <g transform={`translate(${delta.x}, ${delta.y})`} className="moving-fragment-group">
-            <EdgeLayer nodeMap={fragmentMap} type="active" filterNode={fragmentNodes} />
+            <EdgeLayer nodeMap={fragmentMap} type="active" filterNode={fragmentNodes} color="violet" />
 
             {Array.from(filterIds).map((id) => (
                 <NodeItem key={`moving-${id}`} nodeId={id} />
