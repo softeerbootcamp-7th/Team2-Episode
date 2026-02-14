@@ -4,9 +4,9 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
 import { ENV } from "@/constants/env";
-import CollaboratorsManager from "@/features/mindmap/shared_mindmap/utils/CollaboratorManager";
+import CollaboratorsManager from "@/features/mindmap/shared_mindmap/utils/CollaboratorsManager";
 import SharedMindMapController from "@/features/mindmap/shared_mindmap/utils/SharedMindmapController";
-import { NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeId } from "@/features/mindmap/types/mindmap_node";
 import { MindmapRoomId } from "@/features/mindmap/types/mindmap_room";
 import { EventBroker } from "@/utils/EventBroker";
 import generateId from "@/utils/generate_id";

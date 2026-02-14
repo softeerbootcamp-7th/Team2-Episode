@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import SharedMindMapController from "@/features/mindmap/shared_mindmap/utils/SharedMindmapController";
-import { NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeId } from "@/features/mindmap/types/mindmap_node";
 import { EventBroker } from "@/utils/EventBroker";
 
 /**

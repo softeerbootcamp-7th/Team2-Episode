@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 
-import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeElement, NodeId } from "@/features/mindmap/types/mindmap_node";
 import { isSame } from "@/utils/is_same";
 
 type Props = {
