@@ -1,4 +1,4 @@
-import { NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeId } from "@/features/mindmap/types/mindmap_node";
 
 export type InteractionMode = "idle" | "potential_drag" | "dragging" | "panning";
 
