@@ -1,28 +1,41 @@
 import { cva, VariantProps } from "class-variance-authority";
-import { ReactNode } from "react";
+import { ComponentPropsWithoutRef } from "react";
 
 import { cn } from "@/utils/cn";
 
-type Props = VariantProps<typeof variants> & {
-    children: ReactNode;
-};
+type Props = ComponentPropsWithoutRef<"div"> & VariantProps<typeof variants>;
 
-const MaxWidth = ({ gap = "none", maxWidth = "md", direction = "y", align = "center", children }: Props) => {
+const MaxWidth = ({
+    gap = "none",
+    maxWidth = "md",
+    direction = "y",
+    align = "center",
+    className,
+    children,
+    ...rest
+}: Props) => {
     return (
-        <div className="w-full flex justify-center items-center ">
-            <div className={cn(variants({ gap, maxWidth, direction, align }))}>{children}</div>
+        <div
+            className={cn(
+                "mx-auto flex-1 flex flex-col w-full",
+                variants({ gap, maxWidth, direction, align }),
+                className,
+            )}
+            {...rest}
+        >
+            {children}
         </div>
     );
 };
 
 export default MaxWidth;
 
-const variants = cva("flex", {
+const variants = cva("flex px-4", {
     variants: {
         maxWidth: {
             sm: "max-w-sm",
-            md: "max-w-md",
-            lg: "max-w-lg",
+            md: "max-w-2xl",
+            lg: "max-w-8xl",
         },
         direction: {
             y: "flex-col",
