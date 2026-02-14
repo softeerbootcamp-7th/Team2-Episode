@@ -6,7 +6,7 @@ import { useNode } from "@/features/mindmap/shared_mindmap/hooks/useNode";
 import { useNodeResizeObserver } from "@/features/mindmap/shared_mindmap/hooks/useNodeResizeObserver";
 import { useSharedMindmap } from "@/features/mindmap/shared_mindmap/hooks/useSharedMindmap";
 import SharedMindMapController from "@/features/mindmap/shared_mindmap/utils/SharedMindmapController";
-import { NodeId } from "@/features/mindmap/types/mindmap";
+import { NodeId } from "@/features/mindmap/types/mindmap_node";
 import { EventBroker } from "@/utils/EventBroker";
 
 // [Read Hook] 특정 노드의 데이터 변경을 구독
