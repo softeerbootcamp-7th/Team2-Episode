@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router";
 
 import { useDeleteMindmap } from "@/features/mindmap/hooks/useDeleteMindmap";
 import { useUpdateMindmapFavorite } from "@/features/mindmap/hooks/useUpdateMindmapFavorite"; // 훅 import
@@ -13,6 +14,7 @@ import List from "@/shared/components/list/List";
 import ListRow from "@/shared/components/list/ListRow";
 import Popover from "@/shared/components/popover/Popover";
 import useClickOutside from "@/shared/hooks/useClickOutside";
+import { linkTo } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
 import { getRelativeTime } from "@/utils/get_relative_time";
 
@@ -26,7 +28,10 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
     const { mutate: updateMindmapName } = useUpdateMindmapName();
     const { mutate: updateMindmapFavorite } = useUpdateMindmapFavorite();
 
-    const handleDelete = () => {
+    const navigate = useNavigate();
+
+    const handleDelete = (e: React.MouseEvent) => {
+        e.stopPropagation();
         if (window.confirm("정말 이 마인드맵을 삭제하시겠습니까?")) {
             deleteMindmap(data.mindmapId);
         }
@@ -44,6 +49,16 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
     const [editName, setEditName] = useState(data.mindmapName);
     const editContainerRef = useRef<HTMLDivElement>(null);
 
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value.length <= 20) {
+            setEditName(value);
+        } else {
+            // 20자가 넘어가면 잘라냄 (붙여넣기 대응)
+            setEditName(value.slice(0, 20));
+        }
+    };
+
     useClickOutside(editContainerRef, () => {
         if (isEditing) {
             handleCancel();
@@ -55,7 +70,8 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
         setEditName(data.mindmapName);
     };
 
-    const handleStartEdit = () => {
+    const handleStartEdit = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setEditName(data.mindmapName);
         setIsEditing(true);
     };
@@ -81,7 +97,10 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
 
     return (
         <Card
-            className="min-h-50 overflow-hidden"
+            className="min-h-50 overflow-hidden w-full"
+            onClick={() => {
+                navigate(linkTo.mindmap.detail(data.mindmapId));
+            }}
             header={
                 <div className="flex items-center justify-between relative h-8">
                     {isEditing ? (
@@ -89,7 +108,8 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
                             <div className="flex-1">
                                 <Input
                                     value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
+                                    onChange={handleNameChange}
+                                    maxLength={20}
                                     placeholder="이름을 입력하세요"
                                     inputSize="sm"
                                     autoFocus
