@@ -64,20 +64,7 @@ export default class ViewportManager {
         });
     }
 
-    /** 뷰포트의 위치와 크기를 최종 확정 */
-    // private updateViewBox(nextMinX: number, nextMinY: number, width: number, height: number): void {
-    //     // 매번 현재 쿼드 트리 최신 크기 참조
-    //     const worldBounds = this.getWorldBounds();
-
-    //     this.viewBox.minX = Math.max(worldBounds.minX, Math.min(nextMinX, worldBounds.maxX - width));
-    //     this.viewBox.minY = Math.max(worldBounds.minY, Math.min(nextMinY, worldBounds.maxY - height));
-    //     this.viewBox.maxX = this.viewBox.minX + width;
-    //     this.viewBox.maxY = this.viewBox.minY + height;
-
-    //     this.applyViewBox();
-    //     this.broker.publish("VIEWPORT_CHANGED", this.getCurrentTransform());
-    // }
-    /** [1번 수정] ViewBox 적용 로직: 항상 카메라 중심(panX, panY)을 기준으로 계산 */
+    /** 항상 카메라 중심(panX, panY)을 기준으로 계산 -> svg 반영 */
     public applyViewBox(): void {
         const rect = this.canvas.getBoundingClientRect();
         if (rect.width === 0) return;
@@ -96,7 +83,7 @@ export default class ViewportManager {
         // this.broker.publish("VIEWPORT_CHANGED", this.getCurrentTransform());
     }
 
-    /** [4번 수정] 마우스 드래그: 카메라의 중심점(panX, panY)을 이동 */
+    /** 마우스 드래그: 카메라의 중심점(panX, panY)을 이동 */
     panningHandler(dx: number, dy: number): void {
         // 현재 줌 배율에 맞춰 마우스 픽셀 이동량을 World 좌표 이동량으로 변환
         this.panX -= dx / this.zoom;
@@ -105,7 +92,7 @@ export default class ViewportManager {
         this.applyViewBox();
     }
 
-    /** [4번 수정] 줌 핸들러: 마우스 포인터 지점을 고정하며 줌 인/아웃 */
+    /** 줌 핸들러: 마우스 포인터 지점을 고정하며 줌 인/아웃 */
     zoomHandler(delta: number, e: { clientX: number; clientY: number }): void {
         const rect = this.canvas.getBoundingClientRect();
 
@@ -143,5 +130,23 @@ export default class ViewportManager {
     /** 외부(ResizeObserver)에서 호출할 수 있도록 제공 */
     public handleResize() {
         this.applyViewBox();
+    }
+
+    /**
+     * Screen(clientX/clientY) → World(viewBox 좌표) 변환.
+     *  node.x/y, QuadTree 탐색 범위는 모두 "World 좌표"를 사용
+     *  viewBox를 기준으로 변환하므로 pan/zoom 상태가 자동 반영
+     */
+    screenToWorld(clientX: number, clientY: number) {
+        const rect = this.canvas.getBoundingClientRect();
+        const vb = this.canvas.viewBox.baseVal;
+
+        const scaleX = rect.width / vb.width;
+        const scaleY = rect.height / vb.height;
+
+        return {
+            x: vb.x + (clientX - rect.left) / scaleX,
+            y: vb.y + (clientY - rect.top) / scaleY,
+        };
     }
 }
