@@ -1,9 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Children, cloneElement, ComponentProps, ReactElement } from "react";
 
+import TabItem from "@/shared/components/tabs/TabItem";
 import { cn } from "@/utils/cn";
-
-import TabItem from "./TabItem";
 
 const tabVariants = cva("flex border-b-2 border-gray-200 h-12.5", {
     variants: {
