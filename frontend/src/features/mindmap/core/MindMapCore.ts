@@ -150,22 +150,13 @@ export default class MindMapCore {
 
     deleteNode(nodeId: NodeId) {
         try {
-            // 1. 삭제 전 부모 ID 확보
             const parentId = this.tree.getParentId(nodeId);
-
-            // 2. Tree에서 삭제 실행 (루트일 경우 여기서 Error 발생)
             this.tree.delete({ nodeId });
-
-            // 3. 성공했을 때만 sync 호출
             this.sync(parentId ? [parentId] : undefined);
-            console.log(`노드 ${nodeId} 삭제 완료`);
         } catch (error) {
-            // 4. 에러 처리
             if (error instanceof Error) {
-                // 사용자에게 알림 (Toast나 Alert 등 UI 처리)
-                console.error("삭제 실패:", error.message);
-                // 필요하다면 전역 알림 브로커를 통해 UI에 에러 메시지 전송 가능
-                // this.broker.publish("NOTIFICATION", { type: 'error', message: error.message });
+                console.error(error.message);
+                this.broker.publish("NODE_DELETE_ERROR", error.message);
             } else {
                 console.error("알 수 없는 삭제 에러 발생");
             }
