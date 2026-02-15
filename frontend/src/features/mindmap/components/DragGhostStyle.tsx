@@ -15,7 +15,7 @@ export default function DragGhostStyle() {
     dragSubtreeIds.forEach((id) => {
         const safe = escapeAttr(String(id));
         rules.push(`.static-graph [data-node-id="${safe}"] { opacity: 0.2; }`);
-        rules.push(`.static-graph path[data-edge-child="${safe}"] { opacity: 0.2; }`);
+        rules.push(`.static-graph path[data-edge-to="${safe}"] { opacity: 0.2; }`);
     });
 
     return <style>{rules.join("\n")}</style>;
