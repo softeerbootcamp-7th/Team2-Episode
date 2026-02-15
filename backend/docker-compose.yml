@@ -1,14 +1,12 @@
 version: "3.9"
 
 services:
-  yjs-runner:
-    container_name: episode-yjs-runner
+  redis:
+    image: redis:7.2-alpine
+    container_name: episode-redis
     restart: unless-stopped
-    build:
-      context: ./yjs-runner
-    env_file: .env
     ports:
-      - "80:80"
+      - "6379:6379"
 
   mysql:
     image: mysql:8.0
