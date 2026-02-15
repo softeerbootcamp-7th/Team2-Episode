@@ -176,8 +176,11 @@
         background-repeat: no-repeat;
         background-position: top center;
         background-size: cover;
-        background-attachment: scroll;
 
-        min-height: 100vh;
+        /* 고정된 느낌을 줄이려면 아래 속성을 기본값으로 둡니다 */
+        background-attachment: local;
+
+        /* 중요: 배경이 담긴 div가 전체 콘텐츠 높이를 다 가져야 배경도 같이 스크롤됩니다. */
+        min-height: 100%;
     }
 }
