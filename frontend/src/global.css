@@ -164,9 +164,20 @@
         opacity: 1;
         visibility: visible;
     }
+
     .action-buttons {
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.2s;
+    }
+
+    .bg-landing {
+        background-image: url("@/assets/img/landing_bg.png");
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: cover;
+        background-attachment: scroll;
+
+        min-height: 100vh;
     }
 }
