@@ -35,9 +35,6 @@ export class MindmapInteractionManager {
     private interactionSnapshot: InteractionSnapshot = EMPTY_INTERACTION_SNAPSHOT;
     private dragSessionSnapshot: DragSessionSnapshot = EMPTY_DRAG_SESSION_SNAPSHOT;
 
-    private frameListeners = new Set<() => void>();
-    private sessionListeners = new Set<() => void>();
-
     constructor(
         private broker: EventBroker<MindMapEvents>,
         private container: TreeContainer,
