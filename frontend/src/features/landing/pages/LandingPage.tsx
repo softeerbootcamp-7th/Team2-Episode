@@ -44,7 +44,7 @@ const LandingPage = () => {
                 case "start":
                     return linkTo.home();
                 case "mindmap":
-                    return linkTo.mindmap.create();
+                    return linkTo.mindmap.list();
                 case "episode_archive":
                     return linkTo.episode_archive();
                 case "self_diagnosis":
