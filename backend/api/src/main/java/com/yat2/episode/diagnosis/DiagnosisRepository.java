@@ -48,4 +48,6 @@ public interface DiagnosisRepository extends JpaRepository<DiagnosisResult, Inte
             @Param("diagnosisId") Integer diagnosisId,
             @Param("userId") Long userId
     );
+
+    Optional<DiagnosisResult> findByIdAndUser_KakaoId(Integer id, Long kakaoId);
 }
