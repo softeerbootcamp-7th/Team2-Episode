@@ -113,13 +113,6 @@ export default class MindMapCore {
         return this.canvas;
     }
 
-    getInteractionStatus() {
-        if (!this._isInitialized || !this.interaction) {
-            return;
-        }
-        return this.interaction.getInteractionStatus();
-    }
-
     moveNode(targetId: NodeId, movingId: NodeId, direction: NodeDirection) {
         this.tree.moveTo({
             baseNodeId: targetId,

@@ -448,14 +448,6 @@ export class MindmapInteractionManager {
         return this.dragSessionSnapshot;
     }
 
-    getInteractionStatus(): InteractionSnapshot {
-        return this.interactionSnapshot;
-    }
-
-    getDragSessionStatus(): DragSessionSnapshot {
-        return this.dragSessionSnapshot;
-    }
-
     getSelectedNodeId() {
         return this.selectedNodeId;
     }
