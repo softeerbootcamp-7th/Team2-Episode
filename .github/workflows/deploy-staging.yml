@@ -8,23 +8,54 @@ on:
   push:
     branches: [ dev ]
     paths:
-      - "backend/**"
+      - "backend/api/**"
+      - "backend/yjs-runner/**"
       - "infra/stage/**"
-      - ".github/workflows/cd-stage.yml"
+      - ".github/workflows/deploy-staging.yml"
 
 jobs:
-  deploy:
-    name: Deploy (Stage)
+  changes:
+    name: Detect changes
     runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      runner: ${{ steps.filter.outputs.runner }}
+      infra: ${{ steps.filter.outputs.infra }}
+      workflow: ${{ steps.filter.outputs.workflow }}
+      any: ${{ steps.filter.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'backend/api/**'
+            runner:
+              - 'backend/yjs-runner/**'
+            infra:
+              - 'infra/stage/**'
+            workflow:
+              - '.github/workflows/deploy-staging.yml'
+            any:
+              - 'backend/api/**'
+              - 'backend/yjs-runner/**'
+              - 'infra/stage/**'
+              - '.github/workflows/deploy-staging.yml'
+
+  build_api:
+    name: Build & Push API Image
+    runs-on: ubuntu-latest
+    needs: [ changes ]
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.infra == 'true' || needs.changes.outputs.workflow == 'true'
     permissions:
       contents: read
       packages: write
-
     defaults:
       run:
         working-directory: backend/api
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,7 +80,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push Image (Stage)
+      - name: Build & Push
         run: |
           IMAGE=ghcr.io/${{ github.repository_owner }}/episode-api
           TAG=${GITHUB_SHA::7}
@@ -61,6 +92,55 @@ jobs:
             -t $IMAGE:stage \
             -t $IMAGE:stage-$TAG \
             --push .
+
+  build_runner:
+    name: Build & Push Yjs Runner Image
+    runs-on: ubuntu-latest
+    needs: [ changes ]
+    if: needs.changes.outputs.runner == 'true' || needs.changes.outputs.infra == 'true' || needs.changes.outputs.workflow == 'true'
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: backend/yjs-runner
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/episode-yjs-runner
+          TAG=${GITHUB_SHA::7}
+
+          docker buildx build \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --platform linux/arm64 \
+            -t $IMAGE:stage \
+            -t $IMAGE:stage-$TAG \
+            --push .
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [ changes, build_api, build_runner ]
+    if: ${{ always() &&
+      needs.changes.outputs.any == 'true' &&
+      needs.build_api.result != 'failure' &&
+      needs.build_runner.result != 'failure' &&
+      !cancelled() }}
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Setup SSH
         run: |
@@ -74,13 +154,12 @@ jobs:
           ssh ${{ secrets.STAGE_EC2_USER }}@${{ secrets.STAGE_EC2_HOST }} << 'EOF'
             set -e
             cd /home/${{ secrets.STAGE_EC2_USER }}/app
-          
-            [ -f docker-compose.yml ] && cp docker-compose.yml .docker-compose.prev.yml || echo "No docker-compose to backup"
-            [ -f Caddyfile ] && cp Caddyfile .Caddyfile.prev || echo "No Caddyfile to backup"
+
+            [ -f docker-compose.yml ] && cp docker-compose.yml .docker-compose.prev.yml || true
+            [ -f Caddyfile ] && cp Caddyfile .Caddyfile.prev || true
           EOF
 
       - name: Sync infra files to server
-        working-directory: .
         run: |
           rsync -avz --delete \
             --exclude='.env' \
@@ -89,30 +168,34 @@ jobs:
             infra/stage/ \
             ${{ secrets.STAGE_EC2_USER }}@${{ secrets.STAGE_EC2_HOST }}:/home/${{ secrets.STAGE_EC2_USER }}/app/
 
-      - name: Deploy (Stage)
+      - name: Deploy
         run: |
           ssh ${{ secrets.STAGE_EC2_USER }}@${{ secrets.STAGE_EC2_HOST }} << 'EOF'
             set -e
             cd /home/${{ secrets.STAGE_EC2_USER }}/app
-          
-            CURRENT_ID=$(docker inspect episode-api \
-              --format '{{.Image}}' 2>/dev/null || true)
-          
-            if [ ! -z "$CURRENT_ID" ]; then
-              echo "$CURRENT_ID" > .prev_image_id
-              echo "Saved previous image ID: $CURRENT_ID"
+
+            API_ID=$(docker inspect episode-api --format '{{.Image}}' 2>/dev/null || true)
+            if [ -n "$API_ID" ]; then
+              echo "$API_ID" > .prev_image_id_api
             else
-              rm -f .prev_image_id || true
+              rm -f .prev_image_id_api || true
+            fi
+
+            RUNNER_ID=$(docker inspect episode-yjs-runner --format '{{.Image}}' 2>/dev/null || true)
+            if [ -n "$RUNNER_ID" ]; then
+              echo "$RUNNER_ID" > .prev_image_id_runner
+            else
+              rm -f .prev_image_id_runner || true
             fi
 
             docker compose pull
             docker compose up -d
+
             docker compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile
             docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
-
           EOF
 
-      - name: Health check (Stage)
+      - name: Health check
         id: health_check
         run: |
           set -e
@@ -121,8 +204,8 @@ jobs:
           echo "Checking health:"
           for i in $(seq 1 30); do
             resp="$(curl -sS --max-time 5 -w "\n%{http_code}" "$URL" || true)"
-            body="$(echo "$resp" | head -n 1)"
             code="$(echo "$resp" | tail -n 1)"
+            body="$(echo "$resp" | sed '$d')"
 
             echo "try=$i http=$code body=$body"
 
@@ -142,29 +225,27 @@ jobs:
         run: |
           echo "Health check failed. Rolling back..."
           ssh ${{ secrets.STAGE_EC2_USER }}@${{ secrets.STAGE_EC2_HOST }} << 'EOF'
+            set -e
             cd /home/${{ secrets.STAGE_EC2_USER }}/app
-          
-            echo "===== Container logs (last 100 lines) ====="
+
             docker compose logs api --tail=100 || true
-            echo "==========================================="
-          
-            [ -f .docker-compose.prev.yml ] && mv .docker-compose.prev.yml docker-compose.yml || echo "No previous docker-compose found"
-            [ -f .Caddyfile.prev ] && mv .Caddyfile.prev Caddyfile || echo "No previous Caddyfile found"
-          
-            if [ ! -f .prev_image_id ]; then
-              echo "No previous image ID found."
-              exit 1
+            docker compose logs yjs --tail=100 || true
+
+            [ -f .docker-compose.prev.yml ] && mv .docker-compose.prev.yml docker-compose.yml || true
+            [ -f .Caddyfile.prev ] && mv .Caddyfile.prev Caddyfile || true
+
+            if [ -f .prev_image_id_api ]; then
+              API_TARGET=$(cat .prev_image_id_api)
+              docker tag $API_TARGET ghcr.io/${{ github.repository_owner }}/episode-api:stage
             fi
-          
-            TARGET_ID=$(cat .prev_image_id)
-          
-            echo "Restoring Image ID: $TARGET_ID"
-            docker tag $TARGET_ID ghcr.io/${{ github.repository_owner }}/episode-api:stage
-          
+
+            if [ -f .prev_image_id_runner ]; then
+              RUNNER_TARGET=$(cat .prev_image_id_runner)
+              docker tag $RUNNER_TARGET ghcr.io/${{ github.repository_owner }}/episode-yjs-runner:stage
+            fi
+
             docker compose up -d
             docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
-          
-            echo "Rollback completed."
           EOF
 
       - name: Cleanup Images
