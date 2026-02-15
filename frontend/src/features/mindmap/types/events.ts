@@ -9,6 +9,7 @@ type StaticEvents = {
     RAW_MOUSE_UP: React.MouseEvent | MouseEvent;
     RAW_WHEEL: React.WheelEvent | WheelEvent;
     RAW_KEYDOWN: KeyboardEvent;
+    NODE_DELETE: KeyboardEvent;
 
     // 2. [추가] 노드 관련 상호작용
     // 어떤 노드가 클릭되었는지 ID와 이벤트 객체를 함께 전달

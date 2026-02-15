@@ -21,6 +21,10 @@ export function useViewportEvents() {
 
         // 2. 키보드 이벤트 전달
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Delete" || e.key === "Backspace") {
+                broker.publish("NODE_DELETE", e);
+                return;
+            }
             if (!(e.ctrlKey || e.metaKey)) return;
             broker.publish("RAW_KEYDOWN", e);
         };

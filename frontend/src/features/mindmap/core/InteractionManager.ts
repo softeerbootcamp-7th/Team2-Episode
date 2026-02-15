@@ -32,6 +32,8 @@ export class MindmapInteractionManager {
     };
     private screenToWorld: (x: number, y: number) => { x: number; y: number };
 
+    private selectedNodeId: NodeId | null = null;
+
     // dragging 중 nearest의 parent 변경 시 children 캐시
     private cachedParentId: NodeId | null = null;
     private cachedChildren: NodeElement[] = [];
@@ -44,6 +46,7 @@ export class MindmapInteractionManager {
         onPan: (dx: number, dy: number) => void,
         onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void,
         screenToWorld: (x: number, y: number) => { x: number; y: number },
+        private deleteNode: (id: NodeId) => void,
     ) {
         this.broker = broker;
         this.container = container;
@@ -56,14 +59,39 @@ export class MindmapInteractionManager {
     }
 
     private setupEventListeners() {
-        this.broker.subscribe({ key: "RAW_MOUSE_DOWN", callback: (e) => this.handleMouseDown(e as React.MouseEvent) });
+        this.broker.subscribe({
+            key: "NODE_CLICK",
+            callback: ({ nodeId, event }) => {
+                this.selectedNodeId = this.selectedNodeId === nodeId ? null : nodeId;
+                if (this.selectedNodeId !== null) {
+                    this.handleNodeClick(nodeId, event as React.MouseEvent);
+                }
+            },
+        });
+
+        this.broker.subscribe({
+            key: "RAW_MOUSE_DOWN",
+            callback: (e) => {
+                this.selectedNodeId = null;
+                this.handleMouseDown(e as React.MouseEvent);
+            },
+        });
         this.broker.subscribe({ key: "RAW_MOUSE_MOVE", callback: (e) => this.handleMouseMove(e as React.MouseEvent) });
         this.broker.subscribe({ key: "RAW_MOUSE_UP", callback: (e) => this.handleMouseUp(e as React.MouseEvent) });
 
         this.broker.subscribe({
-            key: "NODE_CLICK",
-            callback: ({ nodeId, event }) => this.handleNodeClick(nodeId, event as React.MouseEvent),
+            key: "NODE_DELETE",
+            callback: () => {
+                if (this.selectedNodeId) {
+                    this.deleteNode(this.selectedNodeId);
+                    this.selectedNodeId = null;
+                }
+            },
         });
+    }
+
+    getSelectedNodeId() {
+        return this.selectedNodeId;
     }
 
     private projectScreenToWorld(clientX: number, clientY: number) {
