@@ -5,7 +5,7 @@ import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchivePage";
 import HomePage from "@/features/home/pages/HomePage";
 import LandingPage from "@/features/landing/pages/LandingPage";
-// import CreateMindmapPage from "@/features/mindmap/pages/CreateMindmapPage";
+import CreateMindmapFunnelPage from "@/features/mindmap/pages/CreateMindmapPage";
 import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
 import MindmapPage from "@/features/mindmap/pages/MindmapPage";
 import SelfDiagnosisPage from "@/features/self_diagnosis/pages/SelfDiagnosisPage";
@@ -45,10 +45,10 @@ const router = createBrowserRouter([
                         path: PATHS.self_diagnosis.list,
                         element: <SelfDiagnosisPage />,
                     },
-                    // {
-                    //     path: PATHS.mindmap.create,
-                    //     element: <CreateMindmapPage />,
-                    // },
+                    {
+                        path: PATHS.mindmap.create,
+                        element: <CreateMindmapFunnelPage />,
+                    },
                     {
                         path: PATHS.mindmap.detail,
                         element: <MindmapPage />,
