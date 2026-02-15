@@ -337,7 +337,12 @@ jobs:
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
             "ssh-keyscan -H ${{ secrets.YJS_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Build, stream image, and run container
+      - name: Install pv & zstd
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y pv zstd
+
+      - name: Build & Deploy
         run: |
           set -euo pipefail
           IMAGE=ghcr.io/${{ github.repository_owner }}/episode-yjs-runner
@@ -351,11 +356,11 @@ jobs:
             -t "$IMAGE:latest" \
             --load .
 
-          docker save "$IMAGE:$TAG" | gzip -1 | \
+          docker save "$IMAGE:$TAG" | pv -f -ptebar | zstd -T0 -9 | \
             ssh -o StrictHostKeyChecking=yes \
               -o ProxyJump=${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
               ${{ secrets.YJS_USER }}@${{ secrets.YJS_HOST }} \
-              "gunzip -c | docker load"
+              "zstd -d -c | docker load"
 
           ssh -o StrictHostKeyChecking=yes \
             -o ProxyJump=${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
@@ -373,7 +378,6 @@ jobs:
                 --restart unless-stopped \
                 -p 80:80 \
                 "$IMAGE:$TAG"
-          
+
               docker image prune -f
-          
             EOF
