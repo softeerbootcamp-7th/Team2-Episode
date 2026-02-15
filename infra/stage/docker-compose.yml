@@ -19,6 +19,14 @@ services:
       redis:
         condition: service_healthy
 
+  yjs:
+    image: ghcr.io/softeerbootcamp-7th/episode-yjs-runner:stage
+    container_name: episode-yjs-runner
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - web
+
   caddy:
     image: caddy:2.10.2-alpine
     container_name: episode-caddy
