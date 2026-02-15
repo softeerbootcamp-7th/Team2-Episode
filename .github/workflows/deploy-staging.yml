@@ -229,7 +229,7 @@ jobs:
             cd /home/${{ secrets.STAGE_EC2_USER }}/app
 
             docker compose logs api --tail=100 || true
-            docker compose logs yjs-runner --tail=100 || true
+            docker compose logs yjs --tail=100 || true
 
             [ -f .docker-compose.prev.yml ] && mv .docker-compose.prev.yml docker-compose.yml || true
             [ -f .Caddyfile.prev ] && mv .Caddyfile.prev Caddyfile || true
