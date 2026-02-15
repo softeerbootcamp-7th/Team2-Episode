@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import DragGhostStyle from "@/features/mindmap/components/DragGhostStyle";
 import InteractionLayer from "@/features/mindmap/components/InteractionLayer";
@@ -14,16 +14,22 @@ import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 /**
  * interaction 프레임은 이 컴포넌트만 구독해서, movingFragment만 리렌더되도록 분리
  */
-function InteractionOverlay({ nodeMap }: { nodeMap: Map<NodeId, NodeElement> }) {
+function InteractionOverlay({
+    nodeMap,
+    rootRef,
+}: {
+    nodeMap: Map<NodeId, NodeElement>;
+    rootRef: React.RefObject<SVGGElement | null>;
+}) {
     const status = useMindMapInteractionFrame();
 
-    // mode가 바뀔 때만 DOM의 속성을 변경 (리렌더링 유발 X)
+    // 부모로부터 받은 ref를 사용하여 해당 인스턴스의 DOM만 조작
     useEffect(() => {
-        const root = document.querySelector(".mindmap-render-root") as HTMLElement;
+        const root = rootRef.current;
         if (root) {
             root.setAttribute("data-dragging", status.mode === "dragging" ? "true" : "false");
         }
-    }, [status.mode]);
+    }, [status.mode, rootRef]);
 
     return <InteractionLayer status={status} nodeMap={nodeMap} />;
 }
@@ -31,6 +37,7 @@ function InteractionOverlay({ nodeMap }: { nodeMap: Map<NodeId, NodeElement> }) 
 function MindMapInnerRenderer() {
     const mindmap = useMindMapCore();
     const version = useMindMapVersion();
+    const rootRef = useRef<SVGGElement>(null);
 
     if (!mindmap) return null;
     useViewportEvents();
@@ -38,10 +45,10 @@ function MindMapInnerRenderer() {
     const nodeMap = mindmap.tree.nodes;
 
     return (
-        <g className="mindmap-render-root" data-version={version}>
+        <g ref={rootRef} className="mindmap-render-root" data-version={version} data-dragging="false">
             <StaticLayer nodeMap={nodeMap} />
             <DragGhostStyle />
-            <InteractionOverlay nodeMap={nodeMap} />
+            <InteractionOverlay nodeMap={nodeMap} rootRef={rootRef} />
         </g>
     );
 }
