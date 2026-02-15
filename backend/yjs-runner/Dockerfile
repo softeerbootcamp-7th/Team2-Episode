@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -9,7 +9,7 @@ RUN npx tsc
 
 RUN npm prune --omit=dev
 
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 
 COPY --from=builder /app/package.json /app/package-lock.json ./
