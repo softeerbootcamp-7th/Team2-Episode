@@ -1,6 +1,7 @@
 import { edgeVariants } from "@/features/mindmap/components/EdgeLayer";
 import TempNode, { TEMP_NODE_SIZE } from "@/features/mindmap/node/components/temp_node/TempNode";
 import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
+import { getContentBounds } from "@/features/mindmap/utils/node_geometry";
 import { getBezierPath } from "@/features/mindmap/utils/path";
 
 type DropIndicatorProps = {
@@ -9,52 +10,103 @@ type DropIndicatorProps = {
     nodeMap: Map<NodeId, NodeElement>;
 };
 
-// TODO: 임시
-const GHOST_GAP_X = 60;
-const GHOST_GAP_Y = 20;
+// LayoutManager 기본값과 맞추는 게 자연스러움
+const GHOST_GAP_X = 100; // xGap
+const SIBLING_GAP_Y = 16; // yGap
 
-/** 마우스를 놓을 때 자석처럼 붙을 ghost node */
 export default function DropIndicator({ targetId, direction, nodeMap }: DropIndicatorProps) {
     const targetNode = nodeMap.get(targetId);
     if (!targetNode || !direction) return null;
 
-    // 고스트 노드가 나타날 위치
+    const targetWidth = targetNode.width || 200;
+    const targetHeight = targetNode.height || 60;
+
+    const ghostWidth = TEMP_NODE_SIZE.ghost.width;
+    const ghostHeight = TEMP_NODE_SIZE.ghost.height;
+
     let ghostX = targetNode.x;
     let ghostY = targetNode.y;
 
+    /**
+     * - child: 부모 = targetNode
+     * - prev/next: 부모 = targetNode.parent
+     */
+    const parentNode =
+        direction === "child" ? targetNode : targetNode.parentId ? nodeMap.get(targetNode.parentId) : undefined;
+
+    // 브랜치 방향(좌/우)은 target의 addNodeDirection 기준
+    const branchSide = targetNode.type === "root" ? "right" : targetNode.addNodeDirection;
+
     switch (direction) {
-        case "child":
-            ghostX = targetNode.x + targetNode.width / 2 + GHOST_GAP_X + TEMP_NODE_SIZE.ghost.width / 2;
+        case "child": {
+            const side = targetNode.type === "root" ? "right" : targetNode.addNodeDirection;
+
+            ghostX =
+                side === "right"
+                    ? targetNode.x + targetWidth / 2 + GHOST_GAP_X + ghostWidth / 2
+                    : targetNode.x - targetWidth / 2 - GHOST_GAP_X - ghostWidth / 2;
+
             ghostY = targetNode.y;
             break;
-        case "prev":
-            ghostX = targetNode.x;
-            ghostY = targetNode.y - targetNode.height / 2 - GHOST_GAP_Y - TEMP_NODE_SIZE.ghost.height / 2;
+        }
+
+        // prev면: prevSibling.bottom ~ target.top 사이 중앙에 ghost center
+        case "prev": {
+            const prevSibling = targetNode.prevId ? nodeMap.get(targetNode.prevId) : undefined;
+
+            if (prevSibling) {
+                const prevH = prevSibling.height || 60;
+                const prevBottom = prevSibling.y + prevH / 2;
+
+                const targetTop = targetNode.y - targetHeight / 2;
+
+                ghostY = (prevBottom + targetTop) / 2;
+            } else {
+                // 첫 번째 자식의 prev: 위로 yGap만큼 띄우기
+                ghostY = targetNode.y - targetHeight / 2 - SIBLING_GAP_Y - ghostHeight / 2;
+            }
             break;
-        case "next":
-            ghostX = targetNode.x;
-            ghostY = targetNode.y + targetNode.height / 2 + GHOST_GAP_Y + TEMP_NODE_SIZE.ghost.height / 2;
+        }
+
+        // next면: target.bottom ~ nextSibling.top 사이 중앙
+        case "next": {
+            const nextSibling = targetNode.nextId ? nodeMap.get(targetNode.nextId) : undefined;
+
+            if (nextSibling) {
+                const nextH = nextSibling.height || 60;
+                const nextTop = nextSibling.y - nextH / 2;
+
+                const targetBottom = targetNode.y + targetHeight / 2;
+
+                ghostY = (targetBottom + nextTop) / 2;
+            } else {
+                // 마지막 자식의 next
+                ghostY = targetNode.y + targetHeight / 2 + SIBLING_GAP_Y + ghostHeight / 2;
+            }
+            break;
+        }
     }
 
-    const pathData = getBezierPath(
-        targetNode.x + targetNode.width / 2,
-        targetNode.y,
-        ghostX - TEMP_NODE_SIZE.ghost.width / 2,
-        ghostY,
-    );
+    if (!parentNode) return null;
+
+    // 엣지 시작점 = 부모 content 벽
+    const parentBounds = getContentBounds(parentNode);
+    const isRightBranch = branchSide === "right";
+
+    const startX = isRightBranch ? parentBounds.right : parentBounds.left;
+    const startY = parentNode.y;
+
+    // 고스트 = 부모 방향 벽으로 연결
+    const endX = isRightBranch ? ghostX - ghostWidth / 2 : ghostX + ghostWidth / 2;
+    const endY = ghostY;
+
+    const pathData = getBezierPath(startX, startY, endX, endY);
 
     return (
         <g className="drop-indicator pointer-events-none">
             <path d={pathData} className={edgeVariants({ type: "ghost" })} />
-
             <g transform={`translate(${ghostX}, ${ghostY})`}>
-                <foreignObject
-                    width={TEMP_NODE_SIZE.ghost.width}
-                    height={TEMP_NODE_SIZE.ghost.height}
-                    x={-TEMP_NODE_SIZE.ghost.width / 2}
-                    y={-TEMP_NODE_SIZE.ghost.height / 2}
-                    className="overflow-visible"
-                >
+                <foreignObject width={ghostWidth} height={ghostHeight} x={-ghostWidth / 2} y={-ghostHeight / 2}>
                     <TempNode type="ghost" />
                 </foreignObject>
             </g>

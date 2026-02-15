@@ -2,6 +2,7 @@ import { cva, VariantProps } from "class-variance-authority";
 
 import { NodeColor } from "@/features/mindmap/node/constants/colors";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
+import { getParentChildEdgeAnchors } from "@/features/mindmap/utils/node_geometry";
 import { getBezierPath } from "@/features/mindmap/utils/path";
 import { cn } from "@/utils/cn";
 
@@ -12,11 +13,11 @@ type EdgeLayerProps = {
     type?: "active" | "ghost";
 } & VariantProps<typeof edgeVariants>;
 
-export const edgeVariants = cva("fill-none stroke-2 transition-all duration-300", {
+export const edgeVariants = cva("fill-none", {
     variants: {
         type: {
-            active: "",
-            ghost: "border-dashed bg-node-blue-op-15 [stroke-dasharray:4_4]",
+            active: "stroke",
+            ghost: "stroke-2 stroke-node-blue-op-100 [stroke-dasharray:8_4]",
         },
         color: {
             violet: "stroke-node-violet-op-100",
@@ -46,20 +47,14 @@ export default function EdgeLayer({ nodeMap, color, type = "active", filterNode 
                     return null;
                 }
 
-                const startX = parent.x;
-                const startY = parent.y;
-                const endX = node.x;
-                const endY = node.y;
+                /** content 벽 기준으로 앵커를 잡고 연결 */
+                const { start, end } = getParentChildEdgeAnchors(parent, node);
+
+                const pathD = getBezierPath(start.x, start.y, end.x, end.y);
 
                 return (
                     <g key={`edge-${node.id}`}>
-                        <path
-                            key={`edge-${node.id}`}
-                            d={getBezierPath(startX, startY, endX, endY)}
-                            className={cn(edgeVariants({ type, color }))}
-                        />
-                        <circle cx={startX} cy={startY} r={4} fill="red" />
-                        <circle cx={endX} cy={endY} r={4} fill="lime" />
+                        <path d={pathD} className={cn(edgeVariants({ type, color }))} />
                     </g>
                 );
             })}

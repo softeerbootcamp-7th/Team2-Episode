@@ -2,7 +2,7 @@
  * 공간 관련
  */
 export type Point = {
-    x: number;
+    x: number;  //노드 정중아 world 좌표
     y: number;
     id: string;
 };
