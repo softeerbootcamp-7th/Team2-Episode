@@ -361,4 +361,40 @@ class DiagnosisServiceTest {
             assertThat(result.weaknesses()).isEmpty();
         }
     }
+
+    @Nested
+    @DisplayName("deleteDiagnosis")
+    class DeleteDiagnosisTest {
+
+        @Test
+        @DisplayName("진단을 성공적으로 삭제한다")
+        void deleteDiagnosis_success() {
+            Integer diagnosisId = 1;
+            Long userId = 1L;
+
+            DiagnosisResult diagnosis = mock(DiagnosisResult.class);
+            when(diagnosisRepository.findByIdAndUser_KakaoId(diagnosisId, userId)).thenReturn(Optional.of(diagnosis));
+
+            diagnosisService.deleteDiagnosis(diagnosisId, userId);
+
+            verify(diagnosisRepository).findByIdAndUser_KakaoId(diagnosisId, userId);
+            verify(diagnosisRepository).delete(diagnosis);
+        }
+
+        @Test
+        @DisplayName("진단이 없거나 내 진단이 아니면 DIAGNOSIS_NOT_FOUND 예외가 발생하고 삭제하지 않는다")
+        void deleteDiagnosis_notFound_throwsException() {
+            Integer diagnosisId = 999;
+            Long userId = 1L;
+
+            when(diagnosisRepository.findByIdAndUser_KakaoId(diagnosisId, userId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> diagnosisService.deleteDiagnosis(diagnosisId, userId)).isInstanceOf(
+                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.DIAGNOSIS_NOT_FOUND);
+
+            verify(diagnosisRepository).findByIdAndUser_KakaoId(diagnosisId, userId);
+            verify(diagnosisRepository, never()).delete(any(DiagnosisResult.class));
+        }
+    }
 }
