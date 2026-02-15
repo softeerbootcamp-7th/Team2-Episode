@@ -4,14 +4,13 @@ import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
 type StaticLayerProps = {
     nodeMap: Map<NodeId, NodeElement>;
-    isDragging: boolean;
 };
 
-export default function StaticLayer({ nodeMap, isDragging }: StaticLayerProps) {
+export default function StaticLayer({ nodeMap }: StaticLayerProps) {
     const allNodes = Array.from(nodeMap.values());
 
     return (
-        <g className={`static-layer ${isDragging ? "is-dragging" : ""}`}>
+        <g className="static-graph">
             <EdgeLayer nodeMap={nodeMap} filterNode={allNodes} color="violet" />
             {allNodes.map((node) => (
                 <NodeItem key={node.id} nodeId={node.id} />
