@@ -59,6 +59,7 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
                             사용 목적에 따라 알맞는 마인드맵 유형을 선택해 주세요.
                         </p>
                     }
+                    className="mb-12"
                 />
 
                 <div className="grid grid-cols-2 gap-4 pb-10">

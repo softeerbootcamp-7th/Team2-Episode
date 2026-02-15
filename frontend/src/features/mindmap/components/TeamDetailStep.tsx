@@ -86,29 +86,40 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
 
     return (
         <>
-            <div className="flex flex-col flex-1 w-full">
-                <Top
-                    lowerGap="lg"
-                    title={
-                        <h1 className="typo-title-28-bold text-text-main1 leading-snug">팀 마인드맵을 시작해볼까요?</h1>
-                    }
-                    lower={
-                        <p className="typo-body-16-medium text-text-main2">
-                            프로젝트 이름과 함께, 정리할 경험을 입력해 주세요.
-                        </p>
-                    }
-                />
-
-                <div className="flex flex-col gap-4 pb-10">
-                    <TextField
-                        label="프로젝트 이름"
-                        required
-                        value={projectName}
-                        placeholder="프로젝트 이름을 입력해 주세요"
-                        onChange={updateProjectName}
+            <div className="flex flex-col flex-1 w-full overflow-hidden">
+                <div className="flex-none flex flex-col">
+                    <Top
+                        lowerGap="lg"
+                        title={
+                            <h1 className="typo-title-28-bold text-text-main1 leading-snug">
+                                팀 마인드맵을 시작해볼까요?
+                            </h1>
+                        }
+                        lower={
+                            <p className="typo-body-16-medium text-text-main2">
+                                프로젝트 이름과 함께, 정리할 경험을 입력해 주세요.
+                            </p>
+                        }
+                        className="mb-12"
                     />
+                    <div className="pb-4">
+                        <TextField
+                            label="프로젝트 이름"
+                            required
+                            value={projectName}
+                            placeholder="프로젝트 이름을 입력해 주세요"
+                            onChange={updateProjectName}
+                        />
+                    </div>
+
+                    <div className="typo-body-14-medium text-text-main2">정리할 에피소드</div>
+                </div>
+
+                {/* 2. 스크롤 영역 (에피소드 리스트) */}
+                {/* flex-1: 남은 공간 모두 차지 */}
+                {/* overflow-y-auto: 내용이 넘치면 이 영역 안에서만 스크롤 발생 */}
+                <div className="flex-1 overflow-y-auto pb-32 min-h-0 basis-0">
                     <div className="flex flex-col gap-3">
-                        <div className="typo-body-14-medium text-text-main2">정리할 에피소드</div>
                         <div className="flex flex-col gap-4">
                             {episodes.map((ep, idx) => (
                                 <div key={idx} className="flex flex-col gap-2">
@@ -128,6 +139,7 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
                     </div>
                 </div>
             </div>
+
             <BottomSticky>
                 <Button
                     size="md"

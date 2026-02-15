@@ -30,12 +30,13 @@ export function MindmapTypeStep({ funnel }: { funnel: TypeStepFunnel }) {
             <div className="flex-1">
                 <Top
                     lowerGap="lg"
-                    title={<h1 className="typo-title-20-bold text-text-main1">어떤 마인드맵을 만들까요?</h1>}
+                    title={<h1 className="typo-title-28-bold text-text-main1">어떤 마인드맵을 만들까요?</h1>}
                     lower={
                         <p className="typo-body-16-medium text-text-main2">
                             사용 목적에 따라 알맞는 마인드맵 유형을 선택해 주세요.
                         </p>
                     }
+                    className="mb-12"
                 />
 
                 <div className="flex w-full gap-6 mb-12">
@@ -56,6 +57,7 @@ export function MindmapTypeStep({ funnel }: { funnel: TypeStepFunnel }) {
                 <Button
                     size="md"
                     variant="primary"
+                    layout="fullWidth"
                     disabled={!selectedType}
                     onClick={() => {
                         if (selectedType === "PUBLIC") {
