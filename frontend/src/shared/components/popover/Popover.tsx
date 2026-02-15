@@ -2,6 +2,7 @@ import { cva } from "class-variance-authority";
 import { ReactNode, useRef } from "react";
 
 import useCalcSafeDirection from "@/shared/hooks/useCalcSafeDirection";
+import useClickOutside from "@/shared/hooks/useClickOutside";
 import useToggle from "@/shared/hooks/useToggle";
 import { NonNullableVariantProps } from "@/shared/types/safe_variant_props";
 
@@ -16,6 +17,12 @@ const Popover = ({ direction = "bottom_left", children, contents }: Props) => {
 
     const [isVisible, isVisibleHandler] = useToggle();
 
+    useClickOutside(triggerRef, () => {
+        if (isVisible) {
+            isVisibleHandler.toggle();
+        }
+    });
+
     const { safeDirection } = useCalcSafeDirection({
         direction,
         triggerRef,
@@ -25,7 +32,14 @@ const Popover = ({ direction = "bottom_left", children, contents }: Props) => {
 
     return (
         <div ref={triggerRef} className="relative w-fit">
-            <div onClick={isVisibleHandler.toggle}>{children}</div>
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    isVisibleHandler.toggle();
+                }}
+            >
+                {children}
+            </div>
 
             {isVisible && (
                 <div ref={contentsRef} className={variants({ direction: safeDirection })}>
@@ -56,10 +70,3 @@ const variants = cva("absolute z-50", {
         },
     },
 });
-
-/**
- * 1. 클릭된다.
- * 2. 오버플로우히든인 래퍼를 찾는다.
- * 3. 디렉션에 따라 trigger, contents의 바운딩 박스가 래퍼를 벗어나는지 확인한다.
- * 4. 벗어난다면 해당 벗어난 위치에 mirror위치로 이동시켜 렌더링한다.
- */

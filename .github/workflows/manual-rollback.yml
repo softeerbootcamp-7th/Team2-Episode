@@ -1,0 +1,74 @@
+name: Manual Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Rollback target tag'
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    name: Rollback Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ inputs.tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag format"
+            exit 1
+          fi
+
+      - name: Rollback
+        run: |
+          TARGET_TAG="${{ inputs.tag }}"
+
+          echo "Rolling back to tag: $TARGET_TAG"
+
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -e
+            cd ~/app
+
+            echo "===== Current running image ====="
+            docker inspect episode-api --format '{{.Config.Image}}' || true
+            echo "================================="
+
+            echo "Rolling back to: $TARGET_TAG"
+            IMAGE_TAG=$TARGET_TAG docker compose pull
+            IMAGE_TAG=$TARGET_TAG docker compose up -d --remove-orphans
+
+            docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
+          EOF
+
+      - name: Health check
+        run: |
+          set -e
+          URL="https://api.episode.io.kr/actuator/health"
+
+          echo "Checking health:"
+          for i in $(seq 1 20); do
+            resp="$(curl -sS --max-time 5 -w "\n%{http_code}" "$URL" || true)"
+            body="$(echo "$resp" | head -n 1)"
+            code="$(echo "$resp" | tail -n 1)"
+
+            echo "try=$i http=$code body=$body"
+
+            if [ "$code" = "200" ] && echo "$body" | grep -q '"status":"UP"'; then
+              echo "Rollback successful. Service is UP."
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "Rollback health check failed."
+          exit 1

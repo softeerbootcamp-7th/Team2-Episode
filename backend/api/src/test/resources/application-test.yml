@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: episode-test
+
+  flyway:
+    enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true

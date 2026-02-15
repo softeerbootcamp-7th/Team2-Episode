@@ -1,11 +1,25 @@
 services:
   api:
-    image: ghcr.io/softeerbootcamp-7th/episode-api:latest
+    image: ghcr.io/softeerbootcamp-7th/episode-api:${IMAGE_TAG:-latest}
     container_name: episode-api
     restart: unless-stopped
     env_file: .env
+    environment:
+      - JAVA_OPTS=-Dspring.profiles.active=prod
     networks:
       - web
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-northeast-2
+        awslogs-group: episode-api-prod
+        awslogs-stream: api
+        awslogs-create-group: "true"
 
   caddy:
     image: caddy:2.10.2-alpine

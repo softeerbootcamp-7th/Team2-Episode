@@ -2,6 +2,7 @@ package com.yat2.episode.mindmap;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,6 +14,11 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 import com.yat2.episode.user.User;
 
@@ -23,6 +29,7 @@ import com.yat2.episode.user.User;
         name = "uk_mindmap_participant_user_mindmap", columnNames = { "user_id", "mindmap_id" }
 )
 )
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MindmapParticipant {
 
@@ -40,6 +47,14 @@ public class MindmapParticipant {
 
     @Column(name = "is_favorite", insertable = false)
     private boolean isFavorite;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     public MindmapParticipant(User user, Mindmap mindmap) {
         this.user = user;
