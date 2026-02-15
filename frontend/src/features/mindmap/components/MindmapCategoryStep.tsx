@@ -1,5 +1,3 @@
-import { useNavigate } from "react-router";
-
 import { useCreateMindmap } from "@/features/mindmap/hooks/useCreateMindmap";
 import { ACTIVITY_CATEGORIES, ActivityCategory } from "@/features/mindmap/types/mindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
@@ -16,8 +14,6 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
     const { mutate: createMindmap, isPending } = useCreateMindmap();
 
     const selected = funnel.context.categories ?? [];
-
-    const navigate = useNavigate();
 
     const toggle = (id: ActivityCategory) => {
         funnel.history.setContext((prev) => {
@@ -37,8 +33,7 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
             },
             {
                 onSuccess: (data) => {
-                    console.log("생성 완료:", data);
-                    navigate(linkTo.mindmap.detail(data.mindmap.mindmapId), { replace: true });
+                    funnel.exit(linkTo.mindmap.detail(data.mindmap.mindmapId), { replace: false });
                 },
             },
         );

@@ -65,7 +65,6 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
 
     const cleanedEpisodes = useMemo(() => episodes.map((e) => e.trim()).filter(Boolean), [episodes]);
     const canNext = projectName.trim().length > 0 && cleanedEpisodes.length > 0;
-    const navigate = useNavigate();
 
     const handleSubmit = () => {
         createMindmap(
@@ -75,7 +74,7 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
             },
             {
                 onSuccess: (data) => {
-                    navigate(linkTo.mindmap.detail(data.mindmap.mindmapId));
+                    funnel.exit(linkTo.mindmap.detail(data.mindmap.mindmapId), { replace: false });
                 },
                 onError: (error) => {
                     alert(error.message || "마인드맵 생성 중 오류가 발생했습니다.");
