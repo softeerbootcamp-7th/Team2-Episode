@@ -26,6 +26,10 @@ public class CollaborationService {
 
     public void processMessage(WebSocketSession sender, BinaryMessage message) {
         UUID roomId = getMindmapId(sender);
+        if (roomId == null) {
+            log.error("Mindmap Id is null.");
+            return;
+        }
 
         byte[] payload = toByteArray(message.getPayload());
 
@@ -47,6 +51,7 @@ public class CollaborationService {
     }
 
     public void handleDisconnect(WebSocketSession session) {
+        //TODO: Collaboration room 세션 수 0일때 스냅샷 트리거
         sessionRegistry.removeSession(getMindmapId(session), session);
     }
 
