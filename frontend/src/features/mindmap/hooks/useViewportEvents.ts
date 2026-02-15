@@ -7,7 +7,7 @@ export function useViewportEvents() {
     const mindmap = useMindMapCore(); // 코어에서 broker를 가져오기 위함
 
     useEffect(() => {
-        if (!mindmap || !mindmap.isReady) return;
+        if (!mindmap || !mindmap.getIsReady()) return;
 
         const svg = mindmap.getCanvas();
         if (!svg) return;

@@ -19,7 +19,6 @@ export default class MindMapCore {
     private broker = new EventBroker<MindMapEvents>();
     private layout: MindmapLayoutManager;
 
-    // ! 나 ? 없이 사용하기 위해, 초기화 전에는 접근을 막는 구조
     private canvas: SVGSVGElement | null = null;
     private viewport: ViewportManager | null = null;
     private quadTree: QuadTree | null = null;
@@ -30,45 +29,6 @@ export default class MindMapCore {
     constructor(private onGlobalUpdate: () => void) {
         this.tree = new TreeContainer();
         this.layout = new MindmapLayoutManager({ treeContainer: this.tree });
-    }
-
-    /** 2단계 결합을 위한 초기화 메서드 */
-    public initialize(canvas: SVGSVGElement) {
-        if (this._isInitialized) return;
-
-        const rootNode = this.tree.getRootNode();
-        const initialBounds = this.calculateInitialBounds();
-
-        // 여기서 할당이 완료됨
-        this.canvas = canvas;
-        this.quadTree = new QuadTree(initialBounds);
-        this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree!.getBounds());
-
-        this.interaction = new MindmapInteractionManager(
-            this.broker,
-            this.tree,
-            this.quadTree,
-            () => this.onGlobalUpdate(),
-            (dx, dy) => {
-                // 내부 콜백에서도 null 체크 후 실행 (안정성 확보)
-                if (this.viewport) this.viewport.panningHandler(dx, dy);
-            },
-            (target, moving, direction) => this.moveNode(target, moving, direction),
-            (x, y) => this.viewport!.screenToWorld(x, y),
-            (id) => this.deleteNode(id),
-        );
-
-        this._isInitialized = true;
-        this.sync();
-    }
-
-    public get isReady(): boolean {
-        return this._isInitialized;
-    }
-
-    /** 엔진이 소유하고 있는 SVG 엘리먼트를 반환 */
-    public getCanvas(): SVGSVGElement | null {
-        return this.canvas;
     }
 
     /** 쿼드트리 초기 영역 계산 */
@@ -122,6 +82,40 @@ export default class MindMapCore {
         this.onGlobalUpdate();
     }
 
+    /** 2단계 결합을 위한 초기화 메서드 */
+    initialize(canvas: SVGSVGElement) {
+        if (this._isInitialized) return;
+
+        const rootNode = this.tree.getRootNode();
+        const initialBounds = this.calculateInitialBounds();
+
+        // 여기서 할당이 완료됨
+        this.canvas = canvas;
+        this.quadTree = new QuadTree(initialBounds);
+        this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree!.getBounds());
+
+        this.interaction = new MindmapInteractionManager(
+            this.broker,
+            this.tree,
+            this.quadTree,
+            () => this.onGlobalUpdate(),
+            (dx, dy) => {
+                // 내부 콜백에서도 null 체크 후 실행 (안정성 확보)
+                if (this.viewport) this.viewport.panningHandler(dx, dy);
+            },
+            (target, moving, direction) => this.moveNode(target, moving, direction),
+            (x, y) => this.viewport!.screenToWorld(x, y),
+            (id) => this.deleteNode(id),
+        );
+
+        this._isInitialized = true;
+        this.sync();
+    }
+
+    getCanvas(): SVGSVGElement | null {
+        return this.canvas;
+    }
+
     getInteractionStatus() {
         if (!this._isInitialized || !this.interaction) {
             return;
@@ -146,8 +140,6 @@ export default class MindMapCore {
         }
     }
 
-    // MindMapCore.ts
-
     deleteNode(nodeId: NodeId) {
         try {
             const parentId = this.tree.getParentId(nodeId);
@@ -162,6 +154,7 @@ export default class MindMapCore {
             }
         }
     }
+
     updateNodeSize(nodeId: NodeId, width: number, height: number) {
         console.log("사이즈 변함");
         if (!this.interaction) return;
@@ -218,5 +211,9 @@ export default class MindMapCore {
 
     getLayout() {
         return this.layout;
+    }
+
+    getIsReady(): boolean {
+        return this._isInitialized;
     }
 }

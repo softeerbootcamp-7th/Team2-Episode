@@ -70,7 +70,7 @@ function MindMapInnerRenderer() {
 export default function MindMapRenderer() {
     const mindmap = useMindMapCore();
 
-    if (!mindmap || !mindmap.isReady) {
+    if (!mindmap || !mindmap.getIsReady()) {
         return null;
     }
 

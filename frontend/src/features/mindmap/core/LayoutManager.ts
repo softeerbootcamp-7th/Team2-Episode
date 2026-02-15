@@ -25,88 +25,10 @@ export default class MindmapLayoutManager {
         this.config = { ...defaultConfig, ...config };
         this.subtreeHeightCache = new CacheMap();
     }
-
-    /** 캐시 무효화 : 특정 노드 변경 시 상위 부모들의 높이 계산 초기화 */
-    public invalidate(nodeId: NodeId) {
-        let currentId: NodeId | undefined = nodeId;
-
-        while (currentId) {
-            this.subtreeHeightCache.delete(currentId);
-
-            const parentNode = this.treeContainer.safeGetParentNode(currentId);
-            if (!parentNode) {
-                break;
-            }
-
-            currentId = parentNode.id;
-        }
-    }
-
-    public updateLayout({ rootId }: { rootId: NodeId }) {
-        const rootNode = this.treeContainer.safeGetNode(rootId);
-        if (!rootNode) {
-            return;
-        }
-
-        rootNode.x = 0;
-        rootNode.y = 0;
-
-        const childNodes = this.treeContainer.getChildNodes(rootId);
-        if (childNodes.length === 0) {
-            return;
-        }
-
-        const { leftGroup, rightGroup } = this.getPartition(childNodes);
-
-        this.layoutPartition({
-            parentNode: rootNode,
-            partition: rightGroup,
-            direction: "right",
-        });
-
-        this.layoutPartition({
-            parentNode: rootNode,
-            partition: leftGroup,
-            direction: "left",
-        });
-    }
-
     // TODO: 좌우 균형 일단 적용 X, 사용자 조작대로만 위치
     private getPartition(childNodes: NodeElement[]) {
-        // 1. 데이터에 기반한 필터링 (사용자 의도 존중)
         const currentLeft = childNodes.filter((n) => n.addNodeDirection === "left");
         const currentRight = childNodes.filter((n) => n.addNodeDirection === "right");
-
-        // const leftHeight = this.calcPartitionHeightWithGap(currentLeft);
-        // const rightHeight = this.calcPartitionHeightWithGap(currentRight);
-
-        // // 2. 임계치 체크
-        // const imbalanceThreshold = 2.0;
-        // const ratio = Math.max(leftHeight, rightHeight) / (Math.min(leftHeight, rightHeight) || 1);
-
-        // // 균형이 깨지지 않았다면 사용자의 의도(데이터에 박힌 값)를 그대로 믿고 반환
-        // if (ratio <= imbalanceThreshold) {
-        //     return {
-        //         leftGroup: currentLeft,
-        //         rightGroup: currentRight,
-        //     };
-        // }
-
-        // // 3. 균형이 너무 깨졌을 때만 Rebalancing (여기서 slice 기준을 다시 잡음)
-        // const heightArr = childNodes.map((node) => this.getSubTreeHeight(node));
-        // const partitionIndex = calcPartitionIndex(heightArr);
-
-        // // 재배치 시: 앞쪽 절반은 오른쪽으로, 뒤쪽 절반은 왼쪽으로 보냄
-        // const newRight = childNodes.slice(0, partitionIndex);
-        // const newLeft = childNodes.slice(partitionIndex);
-
-        // // 재배치된 노드들의 데이터를 실제 물리적 방향과 동기화 (업데이트)
-        // newRight.forEach((n) => {
-        //     n.addNodeDirection = "right";
-        // });
-        // newLeft.forEach((n) => {
-        //     n.addNodeDirection = "left";
-        // });
 
         return {
             rightGroup: currentRight,
@@ -236,5 +158,50 @@ export default class MindmapLayoutManager {
         const totalNodesHeight = partition.reduce((acc, node) => acc + this.getSubTreeHeight(node), totalGap);
 
         return totalNodesHeight;
+    }
+
+    /** 캐시 무효화 : 특정 노드 변경 시 상위 부모들의 높이 계산 초기화 */
+    invalidate(nodeId: NodeId) {
+        let currentId: NodeId | undefined = nodeId;
+
+        while (currentId) {
+            this.subtreeHeightCache.delete(currentId);
+
+            const parentNode = this.treeContainer.safeGetParentNode(currentId);
+            if (!parentNode) {
+                break;
+            }
+
+            currentId = parentNode.id;
+        }
+    }
+
+    updateLayout({ rootId }: { rootId: NodeId }) {
+        const rootNode = this.treeContainer.safeGetNode(rootId);
+        if (!rootNode) {
+            return;
+        }
+
+        rootNode.x = 0;
+        rootNode.y = 0;
+
+        const childNodes = this.treeContainer.getChildNodes(rootId);
+        if (childNodes.length === 0) {
+            return;
+        }
+
+        const { leftGroup, rightGroup } = this.getPartition(childNodes);
+
+        this.layoutPartition({
+            parentNode: rootNode,
+            partition: rightGroup,
+            direction: "right",
+        });
+
+        this.layoutPartition({
+            parentNode: rootNode,
+            partition: leftGroup,
+            direction: "left",
+        });
     }
 }

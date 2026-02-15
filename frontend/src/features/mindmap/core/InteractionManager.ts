@@ -10,14 +10,6 @@ import { EventBroker } from "@/utils/EventBroker";
 const DRAG_THRESHOLD = 5;
 
 export class MindmapInteractionManager {
-    private broker: EventBroker<MindMapEvents>;
-    private container: TreeContainer;
-
-    private quadTree: QuadTree;
-    private onUpdate: () => void;
-    private onPan: (dx: number, dy: number) => void;
-    private onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void;
-
     // 상태 변수
     private mode: InteractionMode = "idle";
     private startMousePos = { x: 0, y: 0 };
@@ -30,31 +22,18 @@ export class MindmapInteractionManager {
         targetId: null,
         direction: null,
     };
-    private screenToWorld: (x: number, y: number) => { x: number; y: number };
-
     private selectedNodeId: NodeId | null = null;
 
-    // dragging 중 nearest의 parent 변경 시 children 캐시
-    private cachedParentId: NodeId | null = null;
-    private cachedChildren: NodeElement[] = [];
-
     constructor(
-        broker: EventBroker<MindMapEvents>,
-        container: TreeContainer,
-        quadTree: QuadTree,
-        onUpdate: () => void,
-        onPan: (dx: number, dy: number) => void,
-        onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void,
-        screenToWorld: (x: number, y: number) => { x: number; y: number },
+        private broker: EventBroker<MindMapEvents>,
+        private container: TreeContainer,
+        private quadTree: QuadTree,
+        private onUpdate: () => void,
+        private onPan: (dx: number, dy: number) => void,
+        private onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void,
+        private screenToWorld: (x: number, y: number) => { x: number; y: number },
         private deleteNode: (id: NodeId) => void,
     ) {
-        this.broker = broker;
-        this.container = container;
-        this.quadTree = quadTree;
-        this.onUpdate = onUpdate;
-        this.onPan = onPan;
-        this.onMoveNode = onMoveNode;
-        this.screenToWorld = screenToWorld;
         this.setupEventListeners();
     }
 
@@ -90,18 +69,14 @@ export class MindmapInteractionManager {
         });
     }
 
-    getSelectedNodeId() {
-        return this.selectedNodeId;
-    }
-
     private projectScreenToWorld(clientX: number, clientY: number) {
         return this.screenToWorld(clientX, clientY);
     }
+
     /**
      * 드롭 타겟 탐색
-     *  기준점: 현재 마우스의 World 좌표(mouseX/mouseY)
-     *  탐색 범위: World 단위 threshold (줌이 바뀌어도 월드 반경은 동일)
-     *  QuadTree는 World 좌표를 저장하므로 반드시 World Range로 탐색
+     * 기준점: 현재 마우스의 World 좌표(mouseX/mouseY)
+     * 탐색 범위: World 단위 threshold (줌이 바뀌어도 월드 반경은 동일)
      */
     private updateDropTarget(e: React.MouseEvent) {
         // 드래그 중이거나 노드 생성 중일 때만 타겟 계산 수행
@@ -300,17 +275,6 @@ export class MindmapInteractionManager {
         this.baseNode = { targetId: null, direction: null };
     }
 
-    getInteractionStatus() {
-        return {
-            mode: this.mode,
-            draggingNodeId: this.draggingNodeId,
-            dragDelta: this.dragDelta,
-            mousePos: this.mousePos,
-            dragSubtreeIds: this.dragSubtreeIds,
-            baseNode: this.baseNode,
-        };
-    }
-
     /** 노드 클릭 */
     // TODO: 노드 리액트 컴포넌트에서 마우스 누를때 e.stopPropabation 추가 필수
     private handleNodeClick = (nodeId: NodeId, e: React.MouseEvent) => {
@@ -325,7 +289,7 @@ export class MindmapInteractionManager {
     };
 
     /** 배경 클릭 */
-    handleMouseDown = (e: React.MouseEvent) => {
+    private handleMouseDown = (e: React.MouseEvent) => {
         const isPanningButton =
             e.button === MOUSE_DOWN.left || e.button === MOUSE_DOWN.wheel || e.button === MOUSE_DOWN.right;
 
@@ -336,7 +300,7 @@ export class MindmapInteractionManager {
         this.mode = "panning";
     };
 
-    handleMouseMove(e: React.MouseEvent): { dx: number; dy: number } {
+    private handleMouseMove(e: React.MouseEvent): { dx: number; dy: number } {
         const clientX = e.clientX;
         const clientY = e.clientY;
 
@@ -403,7 +367,7 @@ export class MindmapInteractionManager {
         return { dx, dy };
     }
 
-    handleMouseUp = (_e: React.MouseEvent) => {
+    private handleMouseUp = (_e: React.MouseEvent) => {
         if (this.mode === "dragging" && this.draggingNodeId && this.baseNode.targetId) {
             const targetNodeId = this.baseNode.targetId;
             const movingNodeId = this.draggingNodeId;
@@ -430,12 +394,27 @@ export class MindmapInteractionManager {
         }
     };
 
-    // 새로운 노드 추가 TODO: 외부에서 버튼 클릭 시 이 모드가 되어야 함
-    public startCreating = () => {
-        this.mode = "pending_creation";
-    };
+    getSelectedNodeId() {
+        return this.selectedNodeId;
+    }
 
-    public getInteractionMode() {
+    getInteractionStatus() {
+        return {
+            mode: this.mode,
+            draggingNodeId: this.draggingNodeId,
+            dragDelta: this.dragDelta,
+            mousePos: this.mousePos,
+            dragSubtreeIds: this.dragSubtreeIds,
+            baseNode: this.baseNode,
+        };
+    }
+
+    // 새로운 노드 추가 TODO: 외부에서 버튼 클릭 시 이 모드가 되어야 함
+    startCreating() {
+        this.mode = "pending_creation";
+    }
+
+    getInteractionMode() {
         return this.mode;
     }
 }

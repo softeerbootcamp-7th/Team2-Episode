@@ -50,12 +50,7 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
             <div ref={contentRef} className="inline-block">
                 {isRoot ? (
                     /* 루트 노드일 때 */
-                    <NodeCenter data-action="select" username={data.contents}>
-                        {/* 좌표 디버깅용 (개발 모드에서만 보이게) */}
-                        <div className="absolute -top-6 left-0 text-[10px] bg-black text-white p-1 whitespace-nowrap opacity-70 pointer-events-none">
-                            x: {Math.round(x)}, y: {Math.round(y)} | w: {Math.round(width)}, h: {Math.round(height)}
-                        </div>
-                    </NodeCenter>
+                    <NodeCenter data-action="select" username={data.contents}></NodeCenter>
                 ) : (
                     /* 일반 노드일 때 */
                     <Node>
@@ -72,10 +67,6 @@ export default function NodeItem({ nodeId }: { nodeId: NodeId }) {
                             onClick={() => console.log(`클릭: ${data.contents}`)}
                         >
                             {data.contents || "하위 내용"}
-                            {/* 좌표 디버깅용 (개발 모드에서만 보이게) */}
-                            <div className="absolute -top-6 left-0 text-[10px] bg-black text-white p-1 whitespace-nowrap opacity-70 pointer-events-none">
-                                x: {Math.round(x)}, y: {Math.round(y)} | w: {Math.round(width)}, h: {Math.round(height)}
-                            </div>
                         </Node.Content>
                     </Node>
                 )}

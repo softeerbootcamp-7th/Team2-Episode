@@ -10,9 +10,8 @@ type DropIndicatorProps = {
     nodeMap: Map<NodeId, NodeElement>;
 };
 
-// LayoutManager 기본값과 맞추는 게 자연스러움
-const GHOST_GAP_X = 100; // xGap
-const SIBLING_GAP_Y = 16; // yGap
+const GHOST_GAP_X = 100;
+const SIBLING_GAP_Y = 16;
 
 export default function DropIndicator({ targetId, direction, nodeMap }: DropIndicatorProps) {
     const targetNode = nodeMap.get(targetId);
@@ -28,7 +27,7 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
     let ghostY = targetNode.y;
 
     /**
-     * ✅ 핵심 변경 1) 엣지 출발은 "부모"여야 함
+     * 엣지 출발은 "부모"
      * - child: 부모 = targetNode
      * - prev/next: 부모 = targetNode.parent
      */
@@ -55,7 +54,7 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
 
         case "prev": {
             /**
-             * ✅ 핵심 변경 2) "형제 사이 중앙" 계산
+             * "형제 사이 중앙" 계산
              * prev면: prevSibling.bottom ~ target.top 사이 중앙에 ghost center 배치
              */
             const prevSibling = targetNode.prevId ? nodeMap.get(targetNode.prevId) : undefined;
@@ -66,7 +65,7 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
 
                 const targetTop = targetNode.y - targetHeight / 2;
 
-                ghostY = (prevBottom + targetTop) / 2; // ✅ 경계 기준 중앙
+                ghostY = (prevBottom + targetTop) / 2;
             } else {
                 // 첫 번째 자식의 prev: 위로 yGap만큼 띄우는 규칙
                 ghostY = targetNode.y - targetHeight / 2 - SIBLING_GAP_Y - ghostHeight / 2;
@@ -86,7 +85,7 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
 
                 const targetBottom = targetNode.y + targetHeight / 2;
 
-                ghostY = (targetBottom + nextTop) / 2; // ✅ 경계 기준 중앙
+                ghostY = (targetBottom + nextTop) / 2;
             } else {
                 // 마지막 자식의 next
                 ghostY = targetNode.y + targetHeight / 2 + SIBLING_GAP_Y + ghostHeight / 2;
@@ -96,7 +95,7 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
     }
 
     /**
-     * ✅ 핵심 변경 3) ghost edge도 content wall 기준으로
+     * ghost edge도 content wall 기준으로
      * - start: parent.content wall
      * - end: ghost box에서 parent를 향하는 벽
      */
@@ -117,9 +116,6 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
     return (
         <g className="drop-indicator pointer-events-none">
             <path d={pathData} className={edgeVariants({ type: "ghost" })} />
-
-            {/* (선택) 디버깅용: 고스트 Y 위치 라인 */}
-            {/* <line x1={-10000} x2={10000} y1={ghostY} y2={ghostY} stroke="orange" strokeWidth={1} /> */}
 
             <g transform={`translate(${ghostX}, ${ghostY})`}>
                 <foreignObject width={ghostWidth} height={ghostHeight} x={-ghostWidth / 2} y={-ghostHeight / 2}>

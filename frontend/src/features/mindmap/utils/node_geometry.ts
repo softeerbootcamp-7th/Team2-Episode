@@ -1,19 +1,6 @@
 import { NodeElement } from "@/features/mindmap/types/node";
 
-/**
- * NOTE(중요):
- * 현재 NodeElement.width/height 는 "노드 전체"(Node.Content + AddNode 포함) bounding-box 기준.
- * 요구사항은 edge/밴드/앵커를 Node.Content 벽 기준으로 해야 하므로,
- * node.width에서 AddNode 영역만큼 제외해 content 벽 좌표를 계산한다.
- *
- * AddNode (Tailwind):
- *  - w-13.5 = 54px
- *  - wrapper gap-2 = 8px
- *  => AddNode + gap 합계 = 62px
- *
- * ⚠️ 스타일 변경 시 이 값도 같이 변경 필요.
- */
-
+// * node.width에서 AddNode 영역만큼 제외해 content 벽 좌표를 계산 */
 const DEFAULT_OUTER_W = 200; // 측정 전 fallback
 const DEFAULT_OUTER_H = 60;
 
@@ -28,8 +15,8 @@ export function getOuterSize(node: NodeElement) {
 
 /**
  * Node.Content의 좌/우 벽을 월드 좌표로 반환
- * - root: AddNode가 양쪽에 있다고 가정
- * - normal: addNodeDirection에 따라 왼쪽/오른쪽 한쪽에만 AddNode가 있다고 가정
+ * - root: AddNode가 양쪽
+ * - normal: addNodeDirection에 따라 왼쪽/오른쪽 한쪽에만 AddNode
  */
 export function getContentBounds(node: NodeElement) {
     const { w, h } = getOuterSize(node);
@@ -61,12 +48,6 @@ export function getContentBounds(node: NodeElement) {
         right: contentRight,
         top: node.y - halfH,
         bottom: node.y + halfH,
-
-        // 디버깅용 outer
-        outerLeft,
-        outerRight,
-        outerTop: node.y - halfH,
-        outerBottom: node.y + halfH,
     };
 }
 

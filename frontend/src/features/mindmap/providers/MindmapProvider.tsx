@@ -22,7 +22,7 @@ export const MindMapProvider = ({
         const svg = canvasRef.current;
 
         // 이미 초기화되었거나 SVG가 아직 없다면 중단
-        if (!svg || core.isReady) return;
+        if (!svg || core.getIsReady()) return;
 
         // 2. SVG의 실제 크기를 감시
         const observer = new ResizeObserver((entries) => {

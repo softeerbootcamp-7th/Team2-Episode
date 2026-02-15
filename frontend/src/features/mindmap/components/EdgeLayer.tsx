@@ -41,14 +41,6 @@ export default function EdgeLayer({ nodeMap, color, type = "active", filterNode 
                 const parent = nodeMap.get(node.parentId);
                 if (!parent) return null;
 
-                /**
-                 * ✅ 요구사항 반영:
-                 * 기존: parent.x,y(센터) -> child.x,y(센터)
-                 *  - 라인이 노드 내부를 지나가고
-                 *  - (width가 AddNode 포함이라면) AddNode에서 출발하는 것처럼 보일 수 있음
-                 *
-                 * 변경: content 벽 기준으로 앵커를 잡고 연결
-                 */
                 const { start, end } = getParentChildEdgeAnchors(parent, node);
 
                 const pathD = getBezierPath(start.x, start.y, end.x, end.y);
@@ -57,7 +49,6 @@ export default function EdgeLayer({ nodeMap, color, type = "active", filterNode 
                     <g key={`edge-${node.id}`}>
                         <path d={pathD} className={cn(edgeVariants({ type, color }))} />
 
-                        {/* 디버깅 점: start/end 앵커가 content 벽에 오는지 눈으로 확인 */}
                         <circle cx={start.x} cy={start.y} r={4} fill="red" />
                         <circle cx={end.x} cy={end.y} r={4} fill="lime" />
                     </g>

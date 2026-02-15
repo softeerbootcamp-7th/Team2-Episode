@@ -65,7 +65,7 @@ export default class ViewportManager {
     }
 
     /** 항상 카메라 중심(panX, panY)을 기준으로 계산 -> svg 반영 */
-    public applyViewBox(): void {
+    applyViewBox(): void {
         const rect = this.canvas.getBoundingClientRect();
         if (rect.width === 0) return;
 
@@ -128,7 +128,7 @@ export default class ViewportManager {
     }
 
     /** 외부(ResizeObserver)에서 호출할 수 있도록 제공 */
-    public handleResize() {
+    handleResize() {
         this.applyViewBox();
     }
 
