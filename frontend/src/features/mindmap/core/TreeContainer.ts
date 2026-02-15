@@ -90,10 +90,6 @@ export default class TreeContainer {
     }) {
         try {
             const parentNode = this._getNode(parentNodeId);
-            console.log("최종 엔진 도착 : ", addNodeDirection);
-            // [방향 결정 로직]
-            // 1. 부모가 루트면: UI에서 전달받은 direction 사용
-            // 2. 부모가 일반 노드면: 부모의 direction을 상속
             const finalDirection =
                 parentNode.type === "root" ? addNodeDirection || "right" : parentNode.addNodeDirection;
 

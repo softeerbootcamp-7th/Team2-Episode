@@ -34,10 +34,6 @@ export const MindMapProvider = ({
             // 실제 픽셀 크기가 확보된 시점에 엔진 초기화
             if (width > 0 && height > 0) {
                 core.initialize(svg);
-
-                // 초기화가 완료되었음을 리액트에 알려 Renderer를 마운트시킴
-                setVersion((v) => v + 1);
-
                 // 초기화는 한 번이면 족하므로 감시 중단
                 observer.disconnect();
             }

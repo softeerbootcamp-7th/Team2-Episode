@@ -28,17 +28,20 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
     let ghostY = targetNode.y;
 
     /**
+     * ✅ 핵심 변경 1) 엣지 출발은 "부모"여야 함
      * - child: 부모 = targetNode
      * - prev/next: 부모 = targetNode.parent
      */
     const parentNode =
         direction === "child" ? targetNode : targetNode.parentId ? nodeMap.get(targetNode.parentId) : undefined;
 
-    // 브랜치 방향(좌/우)은 target의 addNodeDirection 기준
+    // 브랜치 방향(좌/우)은 target의 addNodeDirection 기준이 안전(루트 자식도 포함)
     const branchSide = targetNode.type === "root" ? "right" : targetNode.addNodeDirection;
 
     switch (direction) {
         case "child": {
+            // NOTE: root 위 드롭 시 좌/우는 현재 로직상 무조건 right.
+            // 요구사항대로면 InteractionManager가 mouseX로 left/right 결정해서 내려줘야 함.
             const side = targetNode.type === "root" ? "right" : targetNode.addNodeDirection;
 
             ghostX =
@@ -50,8 +53,11 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
             break;
         }
 
-        // prev면: prevSibling.bottom ~ target.top 사이 중앙에 ghost center
         case "prev": {
+            /**
+             * ✅ 핵심 변경 2) "형제 사이 중앙" 계산
+             * prev면: prevSibling.bottom ~ target.top 사이 중앙에 ghost center 배치
+             */
             const prevSibling = targetNode.prevId ? nodeMap.get(targetNode.prevId) : undefined;
 
             if (prevSibling) {
@@ -60,16 +66,18 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
 
                 const targetTop = targetNode.y - targetHeight / 2;
 
-                ghostY = (prevBottom + targetTop) / 2;
+                ghostY = (prevBottom + targetTop) / 2; // ✅ 경계 기준 중앙
             } else {
-                // 첫 번째 자식의 prev: 위로 yGap만큼 띄우기
+                // 첫 번째 자식의 prev: 위로 yGap만큼 띄우는 규칙
                 ghostY = targetNode.y - targetHeight / 2 - SIBLING_GAP_Y - ghostHeight / 2;
             }
             break;
         }
 
-        // next면: target.bottom ~ nextSibling.top 사이 중앙
         case "next": {
+            /**
+             * next면: target.bottom ~ nextSibling.top 사이 중앙
+             */
             const nextSibling = targetNode.nextId ? nodeMap.get(targetNode.nextId) : undefined;
 
             if (nextSibling) {
@@ -78,7 +86,7 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
 
                 const targetBottom = targetNode.y + targetHeight / 2;
 
-                ghostY = (targetBottom + nextTop) / 2;
+                ghostY = (targetBottom + nextTop) / 2; // ✅ 경계 기준 중앙
             } else {
                 // 마지막 자식의 next
                 ghostY = targetNode.y + targetHeight / 2 + SIBLING_GAP_Y + ghostHeight / 2;
@@ -87,16 +95,20 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
         }
     }
 
+    /**
+     * ✅ 핵심 변경 3) ghost edge도 content wall 기준으로
+     * - start: parent.content wall
+     * - end: ghost box에서 parent를 향하는 벽
+     */
     if (!parentNode) return null;
 
-    // 엣지 시작점 = 부모 content 벽
     const parentBounds = getContentBounds(parentNode);
     const isRightBranch = branchSide === "right";
 
     const startX = isRightBranch ? parentBounds.right : parentBounds.left;
     const startY = parentNode.y;
 
-    // 고스트 = 부모 방향 벽으로 연결
+    // ghost의 "부모 방향" 벽
     const endX = isRightBranch ? ghostX - ghostWidth / 2 : ghostX + ghostWidth / 2;
     const endY = ghostY;
 
@@ -105,6 +117,10 @@ export default function DropIndicator({ targetId, direction, nodeMap }: DropIndi
     return (
         <g className="drop-indicator pointer-events-none">
             <path d={pathData} className={edgeVariants({ type: "ghost" })} />
+
+            {/* (선택) 디버깅용: 고스트 Y 위치 라인 */}
+            {/* <line x1={-10000} x2={10000} y1={ghostY} y2={ghostY} stroke="orange" strokeWidth={1} /> */}
+
             <g transform={`translate(${ghostX}, ${ghostY})`}>
                 <foreignObject width={ghostWidth} height={ghostHeight} x={-ghostWidth / 2} y={-ghostHeight / 2}>
                     <TempNode type="ghost" />

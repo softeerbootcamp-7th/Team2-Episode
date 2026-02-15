@@ -53,6 +53,16 @@ function MindMapInnerRenderer() {
 
             {/* 레이어 4: Floating (마우스 추적 덩어리) */}
             <InteractionLayer status={status} nodeMap={nodeMap} />
+
+            {process.env.NODE_ENV === "development" && (
+                <g className="debug-pointer" style={{ pointerEvents: "none" }}>
+                    {/* 현재 마우스의 월드 좌표를 나타내는 점 */}
+                    <circle cx={status.mousePos.x} cy={status.mousePos.y} r={5} fill="red" />
+                    <text x={status.mousePos.x + 10} y={status.mousePos.y} fill="red" fontSize="12">
+                        {`X: ${Math.round(status.mousePos.x)}, Y: ${Math.round(status.mousePos.y)}`}
+                    </text>
+                </g>
+            )}
         </g>
     );
 }

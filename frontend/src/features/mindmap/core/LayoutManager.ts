@@ -48,14 +48,6 @@ export default class MindmapLayoutManager {
             return;
         }
 
-        console.log(`[Layout Debug] Root State:`, {
-            id: rootId,
-            dataX: rootNode.x, // 우리가 기대하는 값은 항상 0 근처 (또는 -w/2)
-            dataY: rootNode.y,
-            measuredW: rootNode.width, // 👈 이 값이 노드 추가 시 변하는지 확인
-            measuredH: rootNode.height,
-        });
-
         rootNode.x = 0;
         rootNode.y = 0;
 

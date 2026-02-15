@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { MindMapShowcase } from "@/features/mindmap/pages/MindmapPageShowcase";
+import MindMapShowcase from "@/features/mindmap/pages/MindmapShowcase";
 import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
 
 const MindmapPage = () => {

@@ -54,6 +54,7 @@ export default class MindMapCore {
                 if (this.viewport) this.viewport.panningHandler(dx, dy);
             },
             (target, moving, direction) => this.moveNode(target, moving, direction),
+            (x, y) => this.viewport!.screenToWorld(x, y),
         );
 
         this._isInitialized = true;
