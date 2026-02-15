@@ -14,6 +14,7 @@ import org.springframework.web.socket.WebSocketSession;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import com.yat2.episode.global.constant.AttributeKeys;
 
@@ -38,11 +39,14 @@ class CollaborationServiceTest {
     @Mock
     RedisStreamStore redisStreamStore;
 
+    @Mock
+    Executor redisExecutor;
+
     CollaborationService service;
 
     @BeforeEach
     void setUp() {
-        service = new CollaborationService(sessionRegistry, redisStreamStore);
+        service = new CollaborationService(sessionRegistry, redisStreamStore, redisExecutor);
     }
 
     @Nested
@@ -109,7 +113,7 @@ class CollaborationServiceTest {
         }
 
         @Test
-        @DisplayName("Update 프레임이면 Redis에 저장한다")
+        @DisplayName("Update 프레임이면 Redis에 저장한다 (Executor에 task를 넣고, task 실행 시 append된다)")
         void processMessage_whenUpdateFrame_appendsToRedis() {
             UUID roomId = UUID.randomUUID();
             WebSocketSession sender = mock(WebSocketSession.class);
@@ -126,6 +130,11 @@ class CollaborationServiceTest {
             ArgumentCaptor<byte[]> broadcastCaptor = ArgumentCaptor.forClass(byte[].class);
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), broadcastCaptor.capture());
             assertArrayEquals(frame, broadcastCaptor.getValue());
+
+            ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+            verify(redisExecutor).execute(taskCaptor.capture());
+
+            taskCaptor.getValue().run();
 
             ArgumentCaptor<byte[]> redisCaptor = ArgumentCaptor.forClass(byte[].class);
             verify(redisStreamStore).appendUpdate(eq(roomId), redisCaptor.capture());
@@ -148,6 +157,7 @@ class CollaborationServiceTest {
             service.processMessage(sender, message);
 
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
+            verifyNoInteractions(redisExecutor);
             verifyNoInteractions(redisStreamStore);
         }
 
@@ -170,6 +180,12 @@ class CollaborationServiceTest {
             assertThatCode(() -> service.processMessage(sender, message)).doesNotThrowAnyException();
 
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
+
+            ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+            verify(redisExecutor).execute(taskCaptor.capture());
+
+            assertThatCode(() -> taskCaptor.getValue().run()).doesNotThrowAnyException();
+
             verify(redisStreamStore).appendUpdate(eq(roomId), any(byte[].class));
         }
     }
