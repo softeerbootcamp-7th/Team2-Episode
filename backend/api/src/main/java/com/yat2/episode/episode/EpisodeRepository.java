@@ -13,21 +13,6 @@ import com.yat2.episode.episode.dto.EpisodeDetail;
 
 @Repository
 public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
-
-    @Query(
-            """
-                    SELECT e
-                    FROM Episode e
-                    JOIN EpisodeStar s ON s.id.nodeId = e.id
-                    WHERE e.mindmapId = :mindmapId
-                      AND s.id.userId = :userId
-                    """
-    )
-    List<Episode> findEpisodesByMindmapIdAndUserId(
-            @Param("mindmapId") UUID mindmapId,
-            @Param("userId") long userId
-    );
-
     @Query("SELECT e.id FROM Episode e WHERE e.mindmapId = :mindmapId")
     List<UUID> findNodeIdsByMindmapId(
             @Param("mindmapId") UUID mindmapId
@@ -52,13 +37,18 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
     );
 
     @Query(
-            """
-                    SELECT DISTINCT ctId
-                    FROM Episode e
-                    JOIN EpisodeStar s ON e.id = s.id.nodeId
-                    JOIN s.competencyTypeIds ctId
-                    WHERE e.mindmapId = :mindmapId
-                    """
+            value = """
+                    SELECT DISTINCT jt.ct_id
+                    FROM episodes e
+                    JOIN episode_stars es ON es.node_id = e.node_id
+                    JOIN JSON_TABLE(
+                      es.competency_type_ids,
+                      '$[*]' COLUMNS (
+                        ct_id INT PATH '$'
+                      )
+                    ) jt
+                    WHERE e.mindmap_id = :mindmapId
+                    """, nativeQuery = true
     )
     List<Integer> findCompetencyTypesByMindmapId(
             @Param("mindmapId") UUID mindmapId

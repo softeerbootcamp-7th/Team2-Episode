@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -79,5 +80,19 @@ public class DiagnosisController {
         DiagnosisSummaryRes resBody = diagnosisService.createDiagnosis(userId, reqBody);
         URI location = UriUtil.createLocationUri(resBody.diagnosisId());
         return ResponseEntity.created(location).body(resBody);
+    }
+
+    @Operation(summary = "진단 삭제")
+    @ApiResponses({ @ApiResponse(responseCode = "204", description = "삭제 성공") })
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.DIAGNOSIS_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
+    @DeleteMapping("/{diagnosisId}")
+    public ResponseEntity<Void> deleteDiagnosis(
+            @PathVariable
+            @Positive(message = "Id는 1 이상의 정수여야 합니다.")
+            Integer diagnosisId,
+            @RequestAttribute(USER_ID) Long userId
+    ) {
+        diagnosisService.deleteDiagnosis(diagnosisId, userId);
+        return ResponseEntity.noContent().build();
     }
 }
