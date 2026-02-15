@@ -47,7 +47,12 @@ export default function EdgeLayer({ nodeMap, color, type = "active", filterNode 
 
                 return (
                     <g key={`edge-${node.id}`}>
-                        <path d={pathD} className={cn(edgeVariants({ type, color }))} />
+                        <path
+                            d={pathD}
+                            data-edge-to={node.id}
+                            data-edge-from={parent.id}
+                            className={cn(edgeVariants({ type, color }))}
+                        />
                     </g>
                 );
             })}

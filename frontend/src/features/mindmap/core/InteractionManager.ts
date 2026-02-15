@@ -2,7 +2,14 @@ import { MOUSE_DOWN } from "@/constants/mouse";
 import QuadTree from "@/features/mindmap/core/QuadTree";
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
 import { MindMapEvents } from "@/features/mindmap/types/events";
-import { BaseNodeInfo, InteractionMode } from "@/features/mindmap/types/interaction";
+import {
+    BaseNodeInfo,
+    DragSessionSnapshot,
+    EMPTY_DRAG_SESSION_SNAPSHOT,
+    EMPTY_INTERACTION_SNAPSHOT,
+    InteractionMode,
+    InteractionSnapshot,
+} from "@/features/mindmap/types/interaction";
 import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { calcDistance } from "@/utils/calc_distance";
 import { EventBroker } from "@/utils/EventBroker";
@@ -24,16 +31,24 @@ export class MindmapInteractionManager {
     };
     private selectedNodeId: NodeId | null = null;
 
+    // 프레임 스냅샷을 캐시하고, emit 시 교체
+    private interactionSnapshot: InteractionSnapshot = EMPTY_INTERACTION_SNAPSHOT;
+    private dragSessionSnapshot: DragSessionSnapshot = EMPTY_DRAG_SESSION_SNAPSHOT;
+
+    private frameListeners = new Set<() => void>();
+    private sessionListeners = new Set<() => void>();
+
     constructor(
         private broker: EventBroker<MindMapEvents>,
         private container: TreeContainer,
         private quadTree: QuadTree,
-        private onUpdate: () => void,
         private onPan: (dx: number, dy: number) => void,
         private onMoveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) => void,
         private screenToWorld: (x: number, y: number) => { x: number; y: number },
         private deleteNode: (id: NodeId) => void,
     ) {
+        this.commitInteractionSnapshot();
+        this.commitDragSessionSnapshot();
         this.setupEventListeners();
     }
 
@@ -271,7 +286,6 @@ export class MindmapInteractionManager {
         this.draggingNodeId = null;
         this.dragDelta = { x: 0, y: 0 };
         this.dragSubtreeIds = null;
-
         this.baseNode = { targetId: null, direction: null };
     }
 
@@ -331,7 +345,9 @@ export class MindmapInteractionManager {
                     if (this.draggingNodeId) {
                         this.dragSubtreeIds = this.container.getAllDescendantIds(this.draggingNodeId);
                     }
-                    this.onUpdate();
+                    // ghost 1회 + 첫 프레임
+                    this.emitDragSession();
+                    this.emitInteractionFrame();
                 }
                 break;
             }
@@ -353,13 +369,14 @@ export class MindmapInteractionManager {
                 };
 
                 this.updateDropTarget(e);
-                this.onUpdate();
+                // dragging movingFragment만 리렌더
+                this.emitInteractionFrame();
                 break;
             }
 
             case "pending_creation": {
                 this.updateDropTarget(e);
-                this.onUpdate();
+                this.emitInteractionFrame();
                 break;
             }
         }
@@ -390,16 +407,14 @@ export class MindmapInteractionManager {
         this.clearStatus();
 
         if (shouldUpdateReact) {
-            this.onUpdate();
+            this.emitDragSession();
+            this.emitInteractionFrame();
         }
     };
 
-    getSelectedNodeId() {
-        return this.selectedNodeId;
-    }
-
-    getInteractionStatus() {
-        return {
+    /** 스냅샷 생성은 여기에서만 (캐시 갱신 시점 통제) */
+    private commitInteractionSnapshot() {
+        this.interactionSnapshot = {
             mode: this.mode,
             draggingNodeId: this.draggingNodeId,
             dragDelta: this.dragDelta,
@@ -409,6 +424,44 @@ export class MindmapInteractionManager {
         };
     }
 
+    private commitDragSessionSnapshot() {
+        this.dragSessionSnapshot = {
+            isDragging: this.mode === "dragging",
+            draggingNodeId: this.draggingNodeId,
+            dragSubtreeIds: this.dragSubtreeIds,
+        };
+    }
+
+    /** 드래그 프레임(마우스 move 등)용 업데이트: InteractionLayer만 리렌더되도록 */
+    private emitInteractionFrame() {
+        this.commitInteractionSnapshot();
+        this.broker.publish("INTERACTION_FRAME", undefined);
+    }
+
+    /** 드래그 세션 시작/종료(1회)용 업데이트: 원본 노드 ghost 처리 등에 사용 */
+    private emitDragSession() {
+        this.commitDragSessionSnapshot();
+        this.broker.publish("DRAG_SESSION", undefined);
+    }
+    getInteractionSnapshot(): InteractionSnapshot {
+        return this.interactionSnapshot;
+    }
+
+    getDragSessionSnapshot(): DragSessionSnapshot {
+        return this.dragSessionSnapshot;
+    }
+
+    getInteractionStatus(): InteractionSnapshot {
+        return this.interactionSnapshot;
+    }
+
+    getDragSessionStatus(): DragSessionSnapshot {
+        return this.dragSessionSnapshot;
+    }
+
+    getSelectedNodeId() {
+        return this.selectedNodeId;
+    }
     // 새로운 노드 추가 TODO: 외부에서 버튼 클릭 시 이 모드가 되어야 함
     startCreating() {
         this.mode = "pending_creation";

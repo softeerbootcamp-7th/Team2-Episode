@@ -40,7 +40,7 @@ export default function MovingNodeFragment({ filterIds, nodeMap, delta }: Moving
             <EdgeLayer nodeMap={fragmentMap} type="active" filterNode={fragmentNodes} color="violet" />
 
             {Array.from(filterIds).map((id) => (
-                <NodeItem key={`moving-${id}`} nodeId={id} />
+                <NodeItem key={`moving-${id}`} nodeId={id} measure={false} />
             ))}
         </g>
     );

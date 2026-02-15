@@ -4,6 +4,7 @@ import QuadTree from "@/features/mindmap/core/QuadTree";
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
 import ViewportManager from "@/features/mindmap/core/ViewportManager";
 import { MindMapEvents } from "@/features/mindmap/types/events";
+import { EMPTY_DRAG_SESSION_SNAPSHOT, EMPTY_INTERACTION_SNAPSHOT } from "@/features/mindmap/types/interaction";
 import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
 import { EventBroker } from "@/utils/EventBroker";
 
@@ -96,9 +97,7 @@ export default class MindMapCore {
             this.broker,
             this.tree,
             this.quadTree,
-            () => this.onGlobalUpdate(),
             (dx, dy) => {
-                // 내부 콜백에서도 null 체크 후 실행 (안정성 확보)
                 if (this.viewport) this.viewport.panningHandler(dx, dy);
             },
             (target, moving, direction) => this.moveNode(target, moving, direction),
@@ -152,9 +151,21 @@ export default class MindMapCore {
             }
         }
     }
+    getInteractionSnapshot() {
+        if (!this._isInitialized || !this.interaction) return EMPTY_INTERACTION_SNAPSHOT;
+        return this.interaction.getInteractionSnapshot();
+    }
+
+    getDragSessionSnapshot() {
+        if (!this._isInitialized || !this.interaction) return EMPTY_DRAG_SESSION_SNAPSHOT;
+        return this.interaction.getDragSessionSnapshot();
+    }
 
     updateNodeSize(nodeId: NodeId, width: number, height: number) {
-        if (!this.interaction) return;
+        // 동일 사이즈면 early return
+        const cur = this.tree.safeGetNode(nodeId);
+        if (cur && cur.width === width && cur.height === height) return;
+
         this.tree.update({ nodeId, newNodeData: { width, height } });
         this.sync([nodeId]);
     }
