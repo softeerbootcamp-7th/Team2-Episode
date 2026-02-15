@@ -20,6 +20,10 @@ function InteractionOverlay({ nodeMap }: { nodeMap: Map<NodeId, NodeElement> }) 
 function MindMapInnerRenderer() {
     const mindmap = useMindMapCore();
     const version = useMindMapVersion();
+    const status = useMindMapInteractionFrame();
+    const { mode } = status;
+
+    const isDragging = mode === "dragging" ? true : false;
 
     if (!mindmap) return null;
     useViewportEvents();
@@ -28,7 +32,7 @@ function MindMapInnerRenderer() {
 
     return (
         <g className="mindmap-render-root" data-version={version}>
-            <StaticLayer nodeMap={nodeMap} />
+            <StaticLayer nodeMap={nodeMap} isDragging={isDragging} />
             <DragGhostStyle />
             <InteractionOverlay nodeMap={nodeMap} />
         </g>

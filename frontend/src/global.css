@@ -174,7 +174,7 @@
         pointer-events: none;
     }
 
-    .is-dragging .static-layer {
+    .is-dragging {
         pointer-events: none;
     }
 }

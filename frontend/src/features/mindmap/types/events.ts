@@ -23,6 +23,8 @@ type StaticEvents = {
 
     // 4. 상태 알림
     RENDER_UPDATE: undefined;
+    INTERACTION_FRAME: undefined;
+    DRAG_SESSION: undefined;
 
     // 5. 에러
     NODE_DELETE_ERROR: string;
