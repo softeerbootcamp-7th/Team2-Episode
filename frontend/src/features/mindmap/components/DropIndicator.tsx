@@ -12,13 +12,15 @@ type DropIndicatorProps = {
 
 const GHOST_GAP_X = 100;
 const SIBLING_GAP_Y = 16;
+const DEFAULT_NODE_WIDTH = 200;
+const DEFAULT_NODE_HEIGHT = 60;
 
 export default function DropIndicator({ targetId, direction, nodeMap }: DropIndicatorProps) {
     const targetNode = nodeMap.get(targetId);
     if (!targetNode || !direction) return null;
 
-    const targetWidth = targetNode.width || 200;
-    const targetHeight = targetNode.height || 60;
+    const targetWidth = targetNode.width || DEFAULT_NODE_WIDTH;
+    const targetHeight = targetNode.height || DEFAULT_NODE_HEIGHT;
 
     const ghostWidth = TEMP_NODE_SIZE.ghost.width;
     const ghostHeight = TEMP_NODE_SIZE.ghost.height;
