@@ -19,7 +19,7 @@ const tempNodeVariants = cva("", {
 });
 
 export default function TempNode({ type = "ghost", className, ...rest }: TempNodeProps) {
-    const isGhost = type == "ghost";
+    const isGhost = type === "ghost";
 
     const content = isGhost ? null : "새로운 노드";
 
