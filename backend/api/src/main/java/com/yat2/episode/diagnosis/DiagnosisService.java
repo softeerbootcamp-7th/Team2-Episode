@@ -74,6 +74,14 @@ public class DiagnosisService {
                                       weaknesses);
     }
 
+    @Transactional
+    public void deleteDiagnosis(Integer diagnosisId, Long userId) {
+        DiagnosisResult diagnosis = diagnosisRepository.findByIdAndUser_KakaoId(diagnosisId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.DIAGNOSIS_NOT_FOUND));
+
+        diagnosisRepository.delete(diagnosis);
+    }
+
     private void validateUserJob(User user) {
         if (user.getJob() == null) {
             throw new CustomException(ErrorCode.JOB_NOT_SELECTED);
