@@ -58,14 +58,12 @@ export default class MindMapCore {
         if (rootId) {
             this.layout.updateLayout({ rootId });
         }
-        console.log("레이아웃 업데이트");
 
         // 2. 쿼드 트리 갱신
         quadTree.clear();
         this.tree.nodes.forEach((node) => {
             quadTree.insert(node);
         });
-        console.log("쿼드 트리 갱신");
 
         // 3. broker 알림
         if (affectedIds) {
@@ -156,7 +154,6 @@ export default class MindMapCore {
     }
 
     updateNodeSize(nodeId: NodeId, width: number, height: number) {
-        console.log("사이즈 변함");
         if (!this.interaction) return;
         this.tree.update({ nodeId, newNodeData: { width, height } });
         this.sync([nodeId]);

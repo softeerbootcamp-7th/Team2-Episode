@@ -241,7 +241,6 @@ export default class TreeContainer {
     }) {
         try {
             const baseNode = this._getNode(baseNodeId);
-            console.log("attachTo: ", addNodeDirection);
 
             const newNode = this.generateNewNodeElement({
                 addNodeDirection: addNodeDirection,
