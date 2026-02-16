@@ -1,18 +1,18 @@
-import { useSearchParams } from "react-router";
+// import { useSearchParams } from "react-router";
 
-import DiagnosisResultSidebar from "@/features/self_diagnosis/components/DiagnosisResultSideBar";
-import DiagnosisResultSidePanel from "@/features/self_diagnosis/components/DiagnosisResultSidePanel";
+// import DiagnosisResultSidebar from "@/features/self_diagnosis/components/DiagnosisResultSideBar";
+// import DiagnosisResultSidePanel from "@/features/self_diagnosis/components/DiagnosisResultSidePanel";
 
 const MindmapDetailPage = () => {
-    const [sp, setSp] = useSearchParams();
-    const diagnosisIdParam = sp.get("diagnosisId");
-    const diagnosisId = diagnosisIdParam ? Number(diagnosisIdParam) : null;
+    // const [sp, setSp] = useSearchParams();
+    // const diagnosisIdParam = sp.get("diagnosisId");
+    // const diagnosisId = diagnosisIdParam ? Number(diagnosisIdParam) : null;
 
     return (
         <>
             <main className="flex-1">마인드맵 캔버스 영역</main>
 
-            {diagnosisId ? (
+            {/* {diagnosisId ? (
                 <DiagnosisResultSidePanel
                     diagnosisId={diagnosisId}
                     onClose={() => {
@@ -20,7 +20,7 @@ const MindmapDetailPage = () => {
                         setSp(sp);
                     }}
                 />
-            ) : null}
+            ) : null} */}
             {/* <DiagnosisResultSidebar
                 totalCount={11}
                 items={[
