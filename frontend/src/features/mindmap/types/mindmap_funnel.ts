@@ -1,5 +1,5 @@
 import { ActivityCategory, MindmapType } from "@/features/mindmap/types/mindmap";
-import { SelectFrom } from "@/shared/types/select_from";
+import { SelectFrom } from "@/shared/types/utility_type";
 
 export type CreateMindmapFunnel = {
     TYPE: { mindmapType?: MindmapType };
