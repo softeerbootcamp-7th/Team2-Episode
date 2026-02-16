@@ -1,14 +1,12 @@
 version: "3.9"
 
 services:
-  yjs-runner:
-    container_name: episode-yjs-runner
+  redis:
+    image: redis:7.2-alpine
+    container_name: episode-redis
     restart: unless-stopped
-    build:
-      context: ./yjs-runner
-    env_file: .env
     ports:
-      - "80:80"
+      - "6379:6379"
 
   mysql:
     image: mysql:8.0
@@ -42,7 +40,18 @@ services:
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
+
+  redis:
+    image: redis:7-alpine
+    container_name: episode-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: [ "redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}" ]
+
 volumes:
   mysql-data:
   minio-data:
-  
+  redis-data:
