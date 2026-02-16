@@ -1,69 +1,43 @@
 package com.yat2.episode.episode;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
 
-import com.yat2.episode.competency.CompetencyType;
-import com.yat2.episode.mindmap.Mindmap;
-import com.yat2.episode.user.User;
+import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
 
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "episodes")
 public class Episode {
+    @Id
+    @Column(name = "node_id", columnDefinition = "BINARY(16)")
+    private UUID id;
 
-    @EmbeddedId
-    private EpisodeId id;
-
-    @MapsId("userId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "mindmap_id", nullable = false)
-    private Mindmap mindmap;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "competency_type_id")
-    private CompetencyType competencyType;
-
-    @Column(length = 200)
-    private String situation;
-
-    @Column(length = 200)
-    private String task;
-
-    @Column(length = 200)
-    private String action;
-
-    @Column(length = 200)
-    private String result;
+    @Column(name = "mindmap_id", nullable = false)
+    private UUID mindmapId;
 
     @Column(length = 100)
     private String content;
 
-    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
-    private LocalDateTime createdAt;
+    public static Episode create(UUID nodeId, UUID mindmapId) {
+        Episode episode = new Episode();
+        episode.id = nodeId;
+        episode.mindmapId = mindmapId;
+        return episode;
+    }
 
-    public static Episode create(long userId, int nodeId, Mindmap mindmap) {
-        Episode e = new Episode();
-        e.id = new EpisodeId(nodeId, userId);
-        e.mindmap = mindmap;
-        return e;
+    public void update(EpisodeUpsertContentReq req) {
+        this.content = req.content();
     }
 }

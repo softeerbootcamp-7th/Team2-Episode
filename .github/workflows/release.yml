@@ -1,0 +1,106 @@
+name: Release
+
+concurrency:
+  group: create-release-tag
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Select the version increment type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  tag:
+    if: github.ref_name == github.event.repository.default_branch
+    name: Tag
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.WORKFLOW_PAT }}
+
+      - name: Get latest tag
+        id: latest
+        run: |
+          TAG=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+          echo "latest=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Fail if no tag exists
+        if: steps.latest.outputs.latest == ''
+        run: |
+          echo "No existing version tag found"
+          exit 1
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Calculate next version
+        id: version
+        run: |
+          LATEST="${{ steps.latest.outputs.latest }}"
+          echo "Latest tag: $LATEST"
+
+          [[ "$LATEST" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || {
+            echo "Invalid tag format: $LATEST"
+            exit 1
+          }
+
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+
+          case "${{ github.event.inputs.bump }}" in
+            major)
+              MAJOR=$((MAJOR+1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR+1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH+1))
+              ;;
+          esac
+
+          NEXT="v$MAJOR.$MINOR.$PATCH"
+
+          if git rev-parse "$NEXT" >/dev/null 2>&1; then
+            echo "Tag already exists: $NEXT"
+            exit 1
+          fi
+
+          echo "next=$NEXT" >> $GITHUB_OUTPUT
+          echo "Next version: $NEXT"
+
+      - name: Create and push annotated tag
+        run: |
+          TAG="${{ steps.version.outputs.next }}"
+          git tag -a "$TAG" -m "$TAG" HEAD
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.next }}
+          name: ${{ steps.version.outputs.next }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

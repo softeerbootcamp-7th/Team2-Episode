@@ -39,7 +39,7 @@ public class KakaoIdTokenVerifier {
         this.jwtProcessor = processor;
 
         JWTClaimsSet expectedClaims =
-                new JWTClaimsSet.Builder().issuer(props.issuer()).audience(props.getClientId()).build();
+                new JWTClaimsSet.Builder().issuer(props.issuer()).audience(props.clientId()).build();
 
         this.claimsVerifier = new DefaultJWTClaimsVerifier<>(expectedClaims, Set.of("sub", "exp", "iat"));
     }

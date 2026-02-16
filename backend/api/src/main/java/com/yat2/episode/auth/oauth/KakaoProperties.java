@@ -1,18 +1,14 @@
 package com.yat2.episode.auth.oauth;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "kakao")
-@Getter
-@Setter
-public class KakaoProperties {
-
+public record KakaoProperties(
+        String clientId,
+        String clientSecret,
+        String redirectUri
+) {
     private static final String BASE_URL = "https://kauth.kakao.com";
-    private String clientId;
-    private String clientSecret;
-    private String redirectUri;
 
     public String authUrl() {
         return BASE_URL + "/oauth/authorize";

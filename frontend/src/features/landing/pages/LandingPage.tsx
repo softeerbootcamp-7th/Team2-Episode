@@ -5,7 +5,7 @@ import Button from "@/shared/components/button/Button";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 import Popover from "@/shared/components/popover/Popover";
 import UserBox from "@/shared/components/user_box/UserBox";
-import { routeHelper } from "@/shared/utils/route";
+import { linkTo } from "@/shared/utils/route";
 
 const LandingPage = () => {
     const { user, logout } = useAuth();
@@ -32,7 +32,7 @@ const LandingPage = () => {
                                 <UserBox name={user.nickname} />
                             </Popover>
                         ) : (
-                            <Link to={routeHelper.login()}>
+                            <Link to={linkTo.login()}>
                                 <Button size="xs" variant="quaternary_accent_outlined">
                                     로그인
                                 </Button>

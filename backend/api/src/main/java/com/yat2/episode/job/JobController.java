@@ -15,12 +15,12 @@ import java.util.List;
 import com.yat2.episode.auth.security.Public;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
-import com.yat2.episode.job.dto.JobsByOccupationDto;
+import com.yat2.episode.job.dto.JobsByOccupationRes;
 
 @Public
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/job")
+@RequestMapping("/jobs")
 @Tag(name = "Job", description = "직군/직무 조회 API")
 public class JobController {
     private final JobService jobService;
@@ -29,7 +29,7 @@ public class JobController {
     @Operation(summary = "직군/직무 전체 조회", description = "직군(occupation) 목록을 가나다순으로 조회하고, 각 직군에 속한 직무(job) 목록도 함께 반환합니다.")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @ApiErrorCodes(ErrorCode.INTERNAL_ERROR)
-    public ResponseEntity<List<JobsByOccupationDto>> getOccupationsWithJobs() {
+    public ResponseEntity<List<JobsByOccupationRes>> getOccupationsWithJobs() {
         return ResponseEntity.ok(jobService.getOccupationsWithJobs());
     }
 }

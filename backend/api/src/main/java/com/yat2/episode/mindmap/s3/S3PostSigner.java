@@ -12,8 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 
-import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsDto;
-import com.yat2.episode.mindmap.s3.dto.S3UploadResponseDto;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFields;
+import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 @Slf4j
 @Component
@@ -23,15 +23,17 @@ public class S3PostSigner {
     private final String region;
     private final String endpoint;
     private final long maxUploadSize;
+    private final long expiryMinute;
 
     public S3PostSigner(S3Properties s3Properties) {
         this.bucket = s3Properties.getBucket().getName();
         this.region = s3Properties.getRegion();
         this.endpoint = s3Properties.getEndpoint();
         this.maxUploadSize = s3Properties.getMaxUploadSize();
+        this.expiryMinute = s3Properties.getPostUrlExpiry();
     }
 
-    public S3UploadResponseDto generatePostFields(String key, AwsCredentials credentials) throws Exception {
+    public S3UploadFieldsRes generatePostFields(String key, AwsCredentials credentials) throws Exception {
 
         String accessKey = credentials.accessKeyId().trim();
         String secretKey = credentials.secretAccessKey().trim();
@@ -41,7 +43,8 @@ public class S3PostSigner {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS);
         String dateStamp = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String xAmzDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
-        String expiration = now.plusMinutes(15).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+        String expiration =
+                now.plusMinutes(expiryMinute).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
 
         String credential = accessKey + "/" + dateStamp + "/" + region + "/s3/aws4_request";
         String policyJson = buildPolicy(bucket, key, credential, xAmzDate, sessionToken, expiration);
@@ -51,8 +54,9 @@ public class S3PostSigner {
         String actionUrl = (endpoint != null && !endpoint.isEmpty()) ? endpoint + "/" + bucket :
                            "https://" + bucket + ".s3." + region + ".amazonaws.com";
 
-        return new S3UploadResponseDto(actionUrl, new S3UploadFieldsDto(key, "AWS4-HMAC-SHA256", credential, xAmzDate,
-                                                                        sessionToken, policyBase64, signature));
+        return new S3UploadFieldsRes(actionUrl,
+                                     new S3UploadFields(key, "AWS4-HMAC-SHA256", credential, xAmzDate, sessionToken,
+                                                        policyBase64, signature));
     }
 
     private String buildPolicy(

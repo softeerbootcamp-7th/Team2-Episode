@@ -28,8 +28,8 @@ import java.util.stream.Stream;
 import com.yat2.episode.auth.security.Public;
 import com.yat2.episode.global.exception.ErrorCode;
 
-import static com.yat2.episode.auth.cookie.AuthCookieNames.ACCESS_COOKIE_NAME;
-import static com.yat2.episode.auth.cookie.AuthCookieNames.REFRESH_COOKIE_NAME;
+import static com.yat2.episode.auth.cookie.CookieNames.ACCESS_COOKIE_NAME;
+import static com.yat2.episode.auth.cookie.CookieNames.REFRESH_COOKIE_NAME;
 
 @Configuration
 public class SwaggerConfig {
