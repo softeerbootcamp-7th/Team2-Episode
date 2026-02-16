@@ -1,4 +1,4 @@
-package com.yat2.episode.mindmap.dto;
+package com.yat2.episode.mindmap.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.yat2.episode.mindmap.dto;
+package com.yat2.episode.mindmap.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

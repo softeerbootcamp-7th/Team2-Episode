@@ -7,8 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,11 +30,12 @@ import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.global.utils.UriUtil;
 import com.yat2.episode.mindmap.constants.MindmapVisibility;
-import com.yat2.episode.mindmap.dto.MindmapCreateReq;
-import com.yat2.episode.mindmap.dto.MindmapDetailRes;
-import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
-import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
-import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
+import com.yat2.episode.mindmap.dto.request.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.request.MindmapNameUpdateReq;
+import com.yat2.episode.mindmap.dto.response.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.response.MindmapSessionJoinRes;
+import com.yat2.episode.mindmap.dto.response.MindmapSummaryRes;
+import com.yat2.episode.mindmap.dto.response.MindmapUploadUrlRes;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static com.yat2.episode.global.constant.AttributeKeys.USER_ID;
@@ -179,12 +179,11 @@ public class MindmapController {
     public MindmapSummaryRes updateName(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId,
-            @RequestParam
-            @NotBlank
-            @Size(max = 43)
-            String name
+            @RequestBody
+            @Valid
+            MindmapNameUpdateReq request
     ) {
-        return mindmapService.updateName(userId, mindmapId, name);
+        return mindmapService.updateName(userId, mindmapId, request.name());
     }
 
 
