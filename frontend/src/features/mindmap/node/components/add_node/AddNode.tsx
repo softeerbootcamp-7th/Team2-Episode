@@ -4,6 +4,7 @@ import { ComponentPropsWithoutRef } from "react";
 import AddNodeArrow from "@/features/mindmap/node/components/add_node/AddNodeArrow";
 import AddNodeDot from "@/features/mindmap/node/components/add_node/AddNodeDot";
 import { NodeColor } from "@/features/mindmap/node/constants/colors";
+import { AddNodeDirection } from "@/features/mindmap/types/node";
 import { cn } from "@/utils/cn";
 
 const addNodeVariants = cva(
@@ -21,7 +22,7 @@ const addNodeVariants = cva(
 type Props = ComponentPropsWithoutRef<"div"> &
     VariantProps<typeof addNodeVariants> & {
         color: NodeColor;
-        direction: "left" | "right";
+        direction: AddNodeDirection;
     };
 
 export default function AddNode({ color, direction, className, ...rest }: Props) {
