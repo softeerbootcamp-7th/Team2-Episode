@@ -1,4 +1,4 @@
-INSERT INTO question_job_mappings (question_id, job_id)
+INSERT IGNORE INTO question_job_mappings (question_id, job_id)
 SELECT q.id, j.id
 FROM (
          SELECT '공동의 목표를 가진 팀 활동 중 가장 기억에 남는 경험을 한 가지 선택하여, 팀에서의 역할과 기여, 성과를 구체적으로 작성해 주세요.' AS q_content, '경영기획·전략·사업기획' AS j_name UNION ALL
