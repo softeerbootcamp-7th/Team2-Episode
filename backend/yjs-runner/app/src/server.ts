@@ -1,18 +1,59 @@
-import Fastify, {FastifyInstance} from 'fastify';
+import Redis from 'ioredis';
+import {S3SnapshotStorage} from './infrastructure/S3SnapshotStorage';
+import {RedisUpdateRepository} from './infrastructure/UpdateRepository';
+import {DefaultYjsProcessor} from './domain/YjsProcessor';
+import {SnapshotService} from './services/SnapshotService';
+import {RedisStreamJobConsumer} from './infrastructure/JobConsumer';
+import {SnapshotWorker} from './worker/SnapshotWorker';
 
-const app: FastifyInstance = Fastify({logger: true});
-
-app.get('/ping', async () => {
-    return {message: 'pong'};
+const redis = new Redis({
+    host: process.env.REDIS_HOST!,
+    port: Number(process.env.REDIS_PORT ?? 6379),
 });
 
-const start = async () => {
-    try {
-        await app.listen({port: 80, host: '0.0.0.0'});
-    } catch (err) {
-        app.log.error(err);
-        process.exit(1);
-    }
-};
+const updateRepo = new RedisUpdateRepository(redis, {
+    updateStreamKeyPrefix: process.env.UPDATE_STREAM_PREFIX!,
+});
 
-start();
+const storage = new S3SnapshotStorage({
+    region: process.env.AWS_REGION!,
+    bucket: process.env.S3_BUCKET!,
+    keyPrefix: process.env.S3_PREFIX!,
+});
+
+const yjs = new DefaultYjsProcessor();
+
+const service = new SnapshotService({updateRepo, yjs, storage});
+
+const consumer = new RedisStreamJobConsumer(redis, {
+    jobStreamKey: process.env.JOB_STREAM_KEY!,
+    groupName: process.env.JOB_GROUP_NAME!,
+    consumerName: process.env.JOB_CONSUMER_NAME!,
+    roomIdField: process.env.JOB_ROOM_FIELD,
+});
+
+const worker = new SnapshotWorker({
+    consumer,
+    service,
+    blockMs: Number(process.env.JOB_BLOCK_MS ?? 10000),
+    count: Number(process.env.JOB_COUNT ?? 1),
+});
+
+async function main() {
+    await worker.init();
+    await worker.start();
+}
+
+main();
+
+process.on('SIGINT', async () => {
+    worker.stop();
+    await redis.quit();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    worker.stop();
+    await redis.quit();
+    process.exit(0);
+});

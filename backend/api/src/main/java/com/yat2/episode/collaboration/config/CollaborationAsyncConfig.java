@@ -31,7 +31,7 @@ public class CollaborationAsyncConfig {
     private RejectedExecutionHandler dropAndLogError() {
         AtomicLong dropped = new AtomicLong();
         AtomicLong lastLogMs = new AtomicLong(0);
-
+        //TODO: Update가 drop 될 경우 Yjs Runner에게 알려 Sync 프로토콜로 복구
         return (r, executor) -> {
             long n = dropped.incrementAndGet();
 
