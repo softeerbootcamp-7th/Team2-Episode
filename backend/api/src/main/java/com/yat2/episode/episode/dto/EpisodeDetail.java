@@ -32,8 +32,7 @@ public record EpisodeDetail(
                                      null, null, null, null);
         }
 
-        List<Integer> ctIds =
-                (s.getCompetencyTypeIds() == null) ? List.of() : s.getCompetencyTypeIds().stream().sorted().toList();
+        List<Integer> ctIds = s.getCompetencyTypeIds().stream().sorted().toList();
 
         return new EpisodeDetail(e.getId(), e.getMindmapId(), ctIds, e.getContent(), s.getSituation(), s.getTask(),
                                  s.getAction(), s.getResult(), s.getStartDate(), s.getEndDate(), s.getCreatedAt(),
