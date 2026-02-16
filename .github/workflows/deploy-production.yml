@@ -380,4 +380,4 @@ jobs:
                 "$IMAGE:$TAG"
 
               docker image prune -f
-            EOF
+          EOF
