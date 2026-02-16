@@ -187,6 +187,6 @@ public class MindmapService {
         MindmapParticipant mindmapParticipant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
         return new MindmapSessionJoinRes(ticket, snapshotRepository.createPresignedGetURL(
-                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapParticipant.getMindmap().getId())));
+                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)));
     }
 }
