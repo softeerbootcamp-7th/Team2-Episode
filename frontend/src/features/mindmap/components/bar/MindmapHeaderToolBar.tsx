@@ -1,107 +1,69 @@
-import { ComponentProps, ComponentPropsWithoutRef, ReactNode } from "react";
+import { ComponentProps, ComponentPropsWithoutRef } from "react";
 
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
+import Popover from "@/shared/components/popover/Popover";
+import Row from "@/shared/components/row/Row";
 import Search from "@/shared/components/search/Search";
 import { cn } from "@/utils/cn";
 
 export type ActiveAction = "selfTest" | "star" | null;
 
-type TopProps = {
-    leftSlot?: ReactNode;
-    contents?: ReactNode;
-    rightSlot?: ReactNode;
-    className?: string;
-};
-
-// TODO
-/**
- * Row 컴포넌트처럼 left/contents/right slot을 제공하는 헤더 전용 래퍼.
- * (Row는 li 기반이라 Header에서는 div 기반으로 재구성)
- */
-function Top({ leftSlot, contents, rightSlot, className }: TopProps) {
-    return (
-        <div className={cn("w-full flex flex-row items-center justify-between gap-4", className)}>
-            <div className="min-w-0 flex flex-row items-center gap-3">
-                {leftSlot}
-                {contents}
-            </div>
-            {rightSlot}
-        </div>
-    );
-}
-
-const SKILLS = [
-    "팀워크",
-    "커뮤니케이션",
-    "협업",
-    "갈등해결",
-    "리더십",
-    "문제해결",
-    "분석력",
-    "의사결정",
-    "기획력",
-    "창의성",
-    "실행력",
-    "책임감",
-    "적응력",
-    "학습능력",
-    "목표지향",
-];
-
 type Props = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
     title: string;
     onBack?: () => void;
 
-    // 검색창 클릭 시 필터를 닫기 위한 핸들러
-    onSearchFocus?: () => void;
     onSearchChange?: ComponentProps<typeof Search>["onSearchChange"];
     onSearchSubmit?: ComponentProps<typeof Search>["onSearchSubmit"];
-    searchPlaceholder?: string;
 
-    /** 역량 필터 상태 및 핸들러 */
-    isFilterOpen?: boolean;
-    onFilterClick?: () => void;
+    /** controlled popover */
+    isFilterOpen: boolean;
+    onFilterOpenChange: (open: boolean) => void;
 
-    /** 우측 버튼 액션 상태 및 핸들러 */
-    activeAction?: ActiveAction; // 외부에서 주입받는 현재 활성 액션
-    onSelfTestClick?: () => void;
-    onStarOrganizeClick?: () => void;
+    /** 선택된 태그 존재 여부 */
+    hasSelectedSkills: boolean;
+
+    /** popover contents */
+    filterPopover: React.ReactNode;
+
+    activeAction: ActiveAction;
+    onSelfTestClick: () => void;
+    onStarOrganizeClick: () => void;
 };
 
 export default function MindmapHeaderToolBar({
     title,
     onBack,
-    onSearchFocus,
     onSearchChange,
     onSearchSubmit,
-    searchPlaceholder = "검색",
-    isFilterOpen = false,
-    onFilterClick,
-    activeAction = null,
+    isFilterOpen,
+    onFilterOpenChange,
+    hasSelectedSkills,
+    filterPopover,
+    activeAction,
     onSelfTestClick,
     onStarOrganizeClick,
     className,
     ...rest
 }: Props) {
     const handleBack = () => {
-        if (onBack) {
-            onBack();
-            return;
-        }
+        if (onBack) return onBack();
         if (typeof window !== "undefined") window.history.back();
     };
+
+    const isFilterActive = isFilterOpen || hasSelectedSkills;
 
     return (
         <header
             className={cn(
-                "w-full h-full flex flex-col items-start px-10 py-3",
+                "w-full h-full flex flex-col items-start",
+                "py-3 px-5",
                 "border-b border-gray-200 bg-base-white",
                 className,
             )}
             {...rest}
         >
-            <Top
+            <Row
                 leftSlot={
                     <button
                         type="button"
@@ -113,41 +75,61 @@ export default function MindmapHeaderToolBar({
                     </button>
                 }
                 contents={
-                    <div className="min-w-0 flex flex-row items-center gap-4">
+                    <div className="min-w-0 flex items-center gap-4">
                         <h1 className="typo-title-18-bold text-text-main1 whitespace-nowrap">{title}</h1>
 
-                        <div className="w-80" onFocus={onSearchFocus}>
+                        <div
+                            className="w-80"
+                            onPointerDownCapture={() => onFilterOpenChange(false)}
+                            onFocusCapture={() => onFilterOpenChange(false)}
+                        >
                             <Search
-                                placeholder={searchPlaceholder}
+                                placeholder="검색"
                                 onSearchChange={onSearchChange}
                                 onSearchSubmit={onSearchSubmit}
                             />
                         </div>
 
-                        <Button
-                            type="button"
-                            // 필터 오픈 여부에 따라 variant 변경
-                            variant={isFilterOpen ? "tertiary_outlined" : "quaternary_accent_outlined"}
-                            size="sm"
-                            borderRadius="2xl"
-                            leftSlot={<Icon name="ic_filter" size={18} />}
-                            rightSlot={<Icon name="ic_up" size={18} rotate={isFilterOpen ? 0 : 180} />}
-                            onClick={onFilterClick}
-                            className={cn("border", isFilterOpen ? "border-primary-500" : "border-gray-300")}
+                        <Popover
+                            open={isFilterOpen}
+                            onOpenChange={onFilterOpenChange}
+                            direction="bottom_right"
+                            contents={filterPopover}
                         >
-                            역량 필터
-                        </Button>
+                            <Button
+                                type="button"
+                                variant={isFilterActive ? "quaternary_accent_outlined" : "quaternary_outlined"}
+                                size="sm"
+                                borderRadius="2xl"
+                                leftSlot={<Icon name="ic_filter" size={18} />}
+                                rightSlot={
+                                    <span
+                                        className={cn(
+                                            "transition-transform duration-200",
+                                            isFilterOpen ? "rotate-180" : "rotate-0",
+                                        )}
+                                    >
+                                        <Icon name="ic_dropdown" size={18} />
+                                    </span>
+                                }
+                            >
+                                역량 필터
+                            </Button>
+                        </Popover>
                     </div>
                 }
                 rightSlot={
-                    <div className="shrink-0 flex flex-row items-center gap-2">
+                    <div className="shrink-0 flex items-center gap-2">
                         <Button
                             type="button"
                             variant={activeAction === "selfTest" ? "primary" : "ghost"}
                             size="sm"
                             borderRadius="2xl"
-                            leftSlot={<Icon name="ic_selftest" size={18} />}
-                            onClick={onSelfTestClick}
+                            leftSlot={<Icon name="ic_circle_check" size={18} />}
+                            onClick={() => {
+                                onFilterOpenChange(false);
+                                onSelfTestClick();
+                            }}
                         >
                             기출문항 셀프진단
                         </Button>
@@ -157,8 +139,11 @@ export default function MindmapHeaderToolBar({
                             variant={activeAction === "star" ? "primary" : "ghost"}
                             size="sm"
                             borderRadius="2xl"
-                            leftSlot={<Icon name="ic_writing" size={18} />}
-                            onClick={onStarOrganizeClick}
+                            leftSlot={<Icon name="ic_star" size={18} />}
+                            onClick={() => {
+                                onFilterOpenChange(false);
+                                onStarOrganizeClick();
+                            }}
                         >
                             STAR 정리하기
                         </Button>
