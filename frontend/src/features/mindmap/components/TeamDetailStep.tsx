@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router";
 
 import { useCreateMindmap } from "@/features/mindmap/hooks/useCreateMindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
@@ -77,7 +76,7 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
                     funnel.exit(linkTo.mindmap.detail(data.mindmap.mindmapId), { replace: false });
                 },
                 onError: (error) => {
-                    alert(error.message || "마인드맵 생성 중 오류가 발생했습니다.");
+                    console.error(error.message || "마인드맵 생성 중 오류가 발생했습니다.");
                 },
             },
         );

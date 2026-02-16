@@ -35,6 +35,9 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
                 onSuccess: (data) => {
                     funnel.exit(linkTo.mindmap.detail(data.mindmap.mindmapId), { replace: false });
                 },
+                onError: (e) => {
+                    console.error("마인드맵 생성에 실패했습니다.", e);
+                },
             },
         );
     };
