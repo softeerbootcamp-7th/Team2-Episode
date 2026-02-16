@@ -1,4 +1,5 @@
 import Icon from "@/shared/components/icon/Icon";
+import { cn } from "@/utils/cn";
 
 export function EmojiCard(props: { emoji: string; label: string; selected: boolean; onClick: () => void }) {
     const { emoji, label, selected, onClick } = props;
@@ -6,10 +7,10 @@ export function EmojiCard(props: { emoji: string; label: string; selected: boole
         <button
             type="button"
             onClick={onClick}
-            className={[
+            className={cn(
                 "flex items-center gap-3 rounded-2xl border px-6 py-5 text-left transition w-full",
                 selected ? "border-primary bg-indigo-50" : "border-gray-200 bg-white hover:bg-gray-50",
-            ].join(" ")}
+            )}
         >
             <span className="text-xl">{emoji}</span>
             <span className={["flex-1 font-semibold", selected ? "text-primary" : "text-gray-900"].join(" ")}>
