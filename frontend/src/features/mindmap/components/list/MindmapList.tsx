@@ -1,4 +1,4 @@
-import MindmapCard from "@/features/mindmap/components/MindmapCard";
+import MindmapCard from "@/features/mindmap/components/list/MindmapCard";
 import { useMindmapList } from "@/features/mindmap/hooks/useMindmapList";
 import { MindmapType } from "@/features/mindmap/types/mindmap";
 

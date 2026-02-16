@@ -1,4 +1,4 @@
-INSERT INTO `questions` (competency_type_id, content, guidance_message)
+INSERT IGNORE INTO `questions` (competency_type_id, content, guidance_message)
 VALUES ((SELECT id FROM competency_types WHERE type_name = '팀워크'),
         '공동의 목표를 가진 팀 활동 중 가장 기억에 남는 경험을 한 가지 선택하여, 팀에서의 역할과 기여, 성과를 구체적으로 작성해 주세요.', '팀워크를 발휘했던 사례'),
        ((SELECT id FROM competency_types WHERE type_name = '팀워크'),
