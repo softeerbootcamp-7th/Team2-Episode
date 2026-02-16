@@ -95,12 +95,10 @@ const LandingPage = () => {
                     return prev.intersectionRatio >= cur.intersectionRatio ? prev : cur;
                 });
 
-                const key = (best.target as HTMLElement).dataset.section as FocusKey | undefined;
-                if (!key) {
-                    return;
+                const key = (best.target as HTMLElement).dataset.section;
+                if (key === "mindmap" || key === "self_diagnosis" || key === "episode_archive") {
+                    setFocused((prev) => (prev === key ? prev : key));
                 }
-
-                setFocused((prev) => (prev === key ? prev : key));
             },
             {
                 root,
