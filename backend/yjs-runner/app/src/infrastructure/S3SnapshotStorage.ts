@@ -1,4 +1,4 @@
-import {S3Client} from "@aws-sdk/client-s3";
+import {GetObjectCommand, NoSuchKey, PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
 
 export interface SnapshotStorage {
     upload(roomId: string, data: Uint8Array): Promise<void>;
@@ -33,17 +33,42 @@ export class S3SnapshotStorage implements SnapshotStorage {
         });
     }
 
+    private getFullKey(roomId: string): string {
+        return `${this.config.keyPrefix}${roomId}`;
+    }
+
     async upload(roomId: string, data: Uint8Array): Promise<void> {
-        // todo: PutObject 진행
-        // Key 예시: `${config.keyPrefix}/${roomId}`
-        void roomId;
-        void data;
+        const command = new PutObjectCommand({
+            Bucket: this.config.bucket,
+            Key: this.getFullKey(roomId),
+            Body: data,
+            ContentType: 'application/octet-stream',
+        });
+
+        await this.client.send(command);
     }
 
     async download(roomId: string): Promise<Uint8Array> {
-        // todo: GetObject 진행
-        // Key 예시: `${config.keyPrefix}/${roomId}`
-        void roomId;
-        return new Uint8Array();
+        try {
+            const command = new GetObjectCommand({
+                Bucket: this.config.bucket,
+                Key: this.getFullKey(roomId),
+            });
+
+            const response = await this.client.send(command);
+            if (!response.Body) {
+                return new Uint8Array();
+            }
+
+            return await response.Body.transformToByteArray();
+
+        } catch (error) {
+            if (error instanceof NoSuchKey) {
+                console.info(`[S3Storage] 해당 roomId에 대한 데이터가 존재하지 않습니다.: ${roomId}.`);
+            } else {
+                console.error("[S3Storage] 예상치 못한 에러가 발생했습니다.");
+            }
+            return new Uint8Array();
+        }
     }
 }
