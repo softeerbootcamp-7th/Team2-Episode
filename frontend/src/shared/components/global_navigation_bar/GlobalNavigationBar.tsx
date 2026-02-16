@@ -57,7 +57,7 @@ const variants = cva("w-full h-18.5 border-b py-4 px-9 flex flex-row items-cente
     variants: {
         variant: {
             white: "bg-white border-gray-300",
-            transparent: "bg-white-op-20 border-white",
+            transparent: "bg-white/20 border-white/30 backdrop-blur-xs",
         },
     },
 });
