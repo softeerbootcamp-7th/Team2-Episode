@@ -213,7 +213,7 @@ public class MindmapService {
     }
 
     private List<Integer> getSortedCompetencyTypeIds(UUID mindmapId, long userId) {
-        return episodeStarRepository.findCompetencyTypesByMindmapId(mindmapId, userId).stream().distinct().sorted()
+        return episodeStarRepository.findCompetencyTypesByMindmapId(mindmapId, userId).stream().sorted()
                 .toList();
     }
 }
