@@ -1,74 +1,55 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
-import { useViewportRef } from "@/features/mindmap/hooks/useViewportRef";
+import { useMindMapCore } from "@/features/mindmap/hooks/useMindmapContext";
 
-/** 사용자의 입력 이벤트를 감지, 바인딩하고, Renderer에 명령을 내리는 로직 */
-export function useViewportEvents(canvasRef: React.RefObject<SVGSVGElement | null>) {
-    // Provider에서 rendererRef 가져오기
-    const rendererRef = useViewportRef();
-    const dragRef = useRef({ isDragging: false, lastX: 0, lastY: 0 });
+/** 브라우저 외부 이벤트를 감지하고 mindmap 내부 broker로 전달 */
+export function useViewportEvents() {
+    const mindmap = useMindMapCore(); // 코어에서 broker를 가져오기 위함
 
     useEffect(() => {
-        const svg = canvasRef.current;
+        if (!mindmap || !mindmap.getIsReady()) return;
+
+        const svg = mindmap.getCanvas();
         if (!svg) return;
 
-        //[zoom] 마우스 휠
+        const broker = mindmap.getBroker();
+        // 1. 휠 이벤트 전달
         const handleWheel = (e: WheelEvent) => {
-            e.preventDefault(); // 브라우저 기본 스크롤 방지
-            rendererRef.current?.zoomHandler(e.deltaY, {
-                clientX: e.clientX,
-                clientY: e.clientY,
-            });
+            e.preventDefault();
+            broker.publish("RAW_WHEEL", e);
         };
 
-        //[zoom] 키보드 (Ctrl + / -)
+        // 2. 키보드 이벤트 전달
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (!(e.ctrlKey || e.metaKey)) return;
-            if (["+", "=", "-"].includes(e.key)) {
-                e.preventDefault(); // 브라우저 기본 확대 방지
-
-                const delta = e.key === "-" ? 100 : -100;
-                const rect = svg.getBoundingClientRect();
-
-                // 키보드 줌은 마우스 위치가 없으므로 화면 중앙 좌표를 전달
-                rendererRef.current?.zoomHandler(delta, {
-                    clientX: rect.left + rect.width / 2,
-                    clientY: rect.top + rect.height / 2,
-                });
+            if (e.key === "Delete" || e.key === "Backspace") {
+                broker.publish("NODE_DELETE", e);
+                return;
             }
+            if (!(e.ctrlKey || e.metaKey)) return;
+            broker.publish("RAW_KEYDOWN", e);
         };
 
-        //[panning] 마우스 드래그
+        // 3. 마우스 이벤트 전달
         const handleMouseDown = (e: MouseEvent) => {
-            dragRef.current = { isDragging: true, lastX: e.clientX, lastY: e.clientY };
+            mindmap.handleMouseDown(e as unknown as React.MouseEvent);
         };
 
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!dragRef.current.isDragging || !rendererRef.current) return;
-
-            const dx = e.clientX - dragRef.current.lastX;
-            const dy = e.clientY - dragRef.current.lastY;
-
-            // Renderer에 이동량 전달
-            rendererRef.current.panningHandler(dx, dy);
-
-            dragRef.current.lastX = e.clientX;
-            dragRef.current.lastY = e.clientY;
+        // 우클릭 기본 동작 차단, 패닝으로 사용
+        const handleContextMenu = (e: MouseEvent) => {
+            e.preventDefault();
         };
+        const handleMouseMove = (e: MouseEvent) => broker.publish("RAW_MOUSE_MOVE", e);
+        const handleMouseUp = (e: MouseEvent) => broker.publish("RAW_MOUSE_UP", e);
 
-        const handleMouseUp = () => {
-            dragRef.current.isDragging = false;
-        };
-
-        // 이벤트 리스너 등록
+        // 이벤트 등록
         svg.addEventListener("wheel", handleWheel, { passive: false });
+        svg.addEventListener("contextmenu", handleContextMenu);
         window.addEventListener("keydown", handleKeyDown);
         svg.addEventListener("mousedown", handleMouseDown);
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("mouseup", handleMouseUp);
         window.addEventListener("mouseleave", handleMouseUp);
 
-        // cleanUp: 컴포넌트가 사라질 때 리스너 제거
         return () => {
             svg.removeEventListener("wheel", handleWheel);
             window.removeEventListener("keydown", handleKeyDown);
@@ -77,5 +58,5 @@ export function useViewportEvents(canvasRef: React.RefObject<SVGSVGElement | nul
             window.removeEventListener("mouseup", handleMouseUp);
             window.removeEventListener("mouseleave", handleMouseUp);
         };
-    }, [canvasRef, rendererRef]);
+    }, [mindmap]);
 }
