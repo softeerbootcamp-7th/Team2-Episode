@@ -40,6 +40,7 @@ const variants = cva("rounded-4xl flex flex-row items-center", {
             tertiary: [COLOR_SET.tertiary],
             tertiary_outlined: [COLOR_SET.tertiary_outlined],
             quaternary: [COLOR_SET.quaternary],
+            quaternary_outlined: [COLOR_SET.quaternary_outlined],
             quaternary_accent_outlined: [COLOR_SET.quaternary_accent_outlined],
             basic: [COLOR_SET.basic],
             notification: [COLOR_SET.notification],
