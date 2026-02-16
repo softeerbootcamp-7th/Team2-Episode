@@ -88,6 +88,7 @@ export const ICON_NAMES = [
     "ic_x",
     "ic_logo",
     "ic_kakao_login",
+    "ic_target",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
