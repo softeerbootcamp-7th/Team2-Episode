@@ -368,13 +368,13 @@ jobs:
               set -e
               cd ~/app
 
-              [ -f ~/.env ] || (echo "~/.env not found" && exit 1)
+              [ -f ~/app/.env ] || (echo "~/app/.env not found" && exit 1)
 
               docker rm -f episode-yjs-runner || true
 
               docker run -d \
                 --name episode-yjs-runner \
-                --env-file ~/.env \
+                --env-file ~/app/.env \
                 --restart unless-stopped \
                 -p 80:80 \
                 "$IMAGE:$TAG"
