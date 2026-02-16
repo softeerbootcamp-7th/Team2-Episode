@@ -13,9 +13,7 @@ export function EmojiCard(props: { emoji: string; label: string; selected: boole
             )}
         >
             <span className="text-xl">{emoji}</span>
-            <span className={["flex-1 font-semibold", selected ? "text-primary" : "text-gray-900"].join(" ")}>
-                {label}
-            </span>
+            <span className={cn("flex-1 font-semibold", selected ? "text-primary" : "text-gray-900")}>{label}</span>
             {selected && <Icon name="ic_check" color="var(--color-primary)" />}
         </button>
     );
