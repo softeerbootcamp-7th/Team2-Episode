@@ -27,7 +27,7 @@ const Top = ({
         <div className={cn(variants({ align }), className)}>
             {upper}
 
-            <div className={cn("flex items-center gap-2", titleVariants({ lowerGap, upperGap }), className)} {...rest}>
+            <div className={cn("flex items-center gap-2", titleVariants({ lowerGap, upperGap }))} {...rest}>
                 {leftSlot}
                 {title}
             </div>
