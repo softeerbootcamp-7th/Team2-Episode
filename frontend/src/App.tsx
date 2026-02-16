@@ -42,7 +42,7 @@ const router = createBrowserRouter([
                         element: <EpisodeArchivePage />,
                     },
                     {
-                        path: PATHS.self_diagnosis.list,
+                        path: PATHS.self_diagnoses.list,
                         element: <SelfDiagnosisPage />,
                     },
                     {
