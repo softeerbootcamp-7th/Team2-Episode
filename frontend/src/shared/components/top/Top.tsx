@@ -7,6 +7,7 @@ type Props = Omit<ComponentPropsWithoutRef<"div">, "title"> &
     VariantProps<typeof variants> &
     VariantProps<typeof titleVariants> & {
         title?: ReactNode;
+        leftSlot?: ReactNode;
         lower?: ReactNode;
         upper?: ReactNode;
     };
@@ -16,6 +17,7 @@ const Top = ({
     lowerGap = "none",
     upperGap = "none",
     title,
+    leftSlot,
     lower,
     upper,
     className,
@@ -25,7 +27,8 @@ const Top = ({
         <div className={cn(variants({ align }), className)}>
             {upper}
 
-            <div className={cn(titleVariants({ lowerGap, upperGap }), className)} {...rest}>
+            <div className={cn("flex items-center gap-2", titleVariants({ lowerGap, upperGap }), className)} {...rest}>
+                {leftSlot}
                 {title}
             </div>
 
@@ -36,7 +39,7 @@ const Top = ({
 
 export default Top;
 
-const variants = cva("flex flex-col", {
+const variants = cva("flex flex-col w-full", {
     variants: {
         align: {
             center: "items-center",

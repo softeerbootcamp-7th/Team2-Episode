@@ -10,12 +10,15 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeRepository;
-import com.yat2.episode.episode.dto.EpisodeDetailRes;
+import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
-import com.yat2.episode.episode.dto.EpisodeUpsertReq;
+import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
+import com.yat2.episode.mindmap.MindmapParticipant;
+import com.yat2.episode.mindmap.MindmapParticipantRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -24,67 +27,100 @@ public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
     private final CompetencyTypeRepository competencyTypeRepository;
+    private final EpisodeStarRepository episodeStarRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
+    private final MindmapParticipantRepository mindmapParticipantRepository;
 
-    public EpisodeDetailRes getEpisode(UUID nodeId, long userId) {
-        Episode episode = getEpisodeOrThrow(nodeId, userId);
-
-        return EpisodeDetailRes.of(episode);
+    public EpisodeDetail getEpisodeDetail(UUID nodeId, long userId) {
+        return getEpisodeAndStarOrThrow(nodeId, userId);
     }
 
     public List<EpisodeSummaryRes> getMindmapEpisodes(UUID mindmapId, long userId) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
 
-        return episodeRepository.findByMindmapIdAndIdUserId(mindmapId, userId).stream().map(EpisodeSummaryRes::of)
+        return episodeRepository.findDetailsByMindmapIdAndUserId(mindmapId, userId).stream().map(EpisodeSummaryRes::of)
                 .toList();
     }
 
     @Transactional
-    public EpisodeDetailRes upsertEpisode(UUID nodeId, long userId, UUID mindmapId, EpisodeUpsertReq episodeUpsertReq) {
+    public EpisodeDetail upsertEpisode(
+            UUID nodeId, long userId, UUID mindmapId,
+            EpisodeUpsertContentReq episodeUpsertReq
+    ) {
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
-        validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
-        validateCompetencyIds(episodeUpsertReq.competencyTypeIds());
+        Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> {
+            mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+            Episode newEpisode = createNewEpisode(episodeId, mindmapId);
+            List<MindmapParticipant> participants = mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId);
 
-        Episode episode = episodeRepository.findById(episodeId).orElseGet(() -> createNewEpisode(episodeId, mindmapId));
+            List<EpisodeStar> stars =
+                    participants.stream().map(p -> EpisodeStar.create(nodeId, p.getUser().getKakaoId())).toList();
 
+            episodeStarRepository.saveAll(stars);
+
+            return newEpisode;
+        });
+        if (!mindmapId.equals(episode.getMindmapId())) throw new CustomException(ErrorCode.EPISODE_NOT_FOUND);
+        EpisodeStar episodeStar = episodeStarRepository.findById(episodeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND));
         episode.update(episodeUpsertReq);
 
-        return EpisodeDetailRes.of(episode);
+        return EpisodeDetail.of(episode, episodeStar);
     }
 
     @Transactional
-    public void updateEpisode(UUID nodeId, long userId, EpisodeUpsertReq episodeUpsertReq) {
-        Episode episode = getEpisodeOrThrow(nodeId, userId);
-        validateDates(episodeUpsertReq.startDate(), episodeUpsertReq.endDate());
-        validateCompetencyIds(episodeUpsertReq.competencyTypeIds());
+    public void updateStar(UUID nodeId, long userId, StarUpdateReq starUpdateReq) {
+        validateDates(starUpdateReq.startDate(), starUpdateReq.endDate());
+        validateCompetencyIds(starUpdateReq.competencyTypeIds());
+        EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
+        episodeStar.update(starUpdateReq);
+    }
 
-        episode.update(episodeUpsertReq);
+    @Transactional
+    public void clearStar(UUID nodeId, long userId) {
+
+        EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
+        episodeStar.clearAll();
+        episodeStarRepository.save(episodeStar);
     }
 
     @Transactional
     public void deleteEpisode(UUID nodeId, long userId) {
-        episodeRepository.deleteById(new EpisodeId(nodeId, userId));
+        EpisodeDetail episodeDetail = getEpisodeAndStarOrThrow(nodeId, userId);
+        episodeRepository.deleteById(episodeDetail.nodeId());
     }
 
     @Transactional
     public void clearEpisodeDates(UUID nodeId, long userId) {
-        Episode episode = getEpisodeOrThrow(nodeId, userId);
-        episode.clearDates();
+        EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
+        episodeStar.clearDates();
     }
 
-    private Episode getEpisodeOrThrow(UUID nodeId, long userId) {
-        EpisodeId episodeId = new EpisodeId(nodeId, userId);
+    private Episode getEpisodeOrThrow(UUID nodeId) {
+        return episodeRepository.findById(nodeId).orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+    }
 
-        return episodeRepository.findById(episodeId)
+    private EpisodeDetail getEpisodeAndStarOrThrow(UUID nodeId, long userId) {
+        return episodeRepository.findDetail(nodeId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
     }
 
-    private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId) {
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, episodeId.getUserId());
+    private EpisodeStar getStarOrThrow(UUID nodeId, long userId) {
+        EpisodeId episodeId = new EpisodeId(nodeId, userId);
+        return episodeStarRepository.findById(episodeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND));
+    }
 
-        Episode newEpisode = Episode.create(episodeId.getNodeId(), episodeId.getUserId(), mindmapId);
+    private Episode createNewEpisode(EpisodeId episodeId, UUID mindmapId) {
+        Episode newEpisode = Episode.create(episodeId.getNodeId(), mindmapId);
 
         return episodeRepository.save(newEpisode);
+    }
+
+    private EpisodeStar createNewStar(EpisodeId episodeId) {
+        EpisodeStar newEpisodeStar = EpisodeStar.create(episodeId.getNodeId(), episodeId.getUserId());
+
+        return episodeStarRepository.save(newEpisodeStar);
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate) {

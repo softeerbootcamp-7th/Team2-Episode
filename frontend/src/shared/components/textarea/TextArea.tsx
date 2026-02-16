@@ -5,7 +5,7 @@ import { InputVariants } from "@/shared/styles/input_variants";
 
 type MultilineInputProps = ComponentPropsWithoutRef<"textarea"> & VariantProps<typeof InputVariants>;
 
-export function TextArea({ placeholder, value, inputSize = "full", ...rest }: MultilineInputProps) {
+export function TextArea({ placeholder, value, inputSize = "lg", ...rest }: MultilineInputProps) {
     const status = value ? "filled" : "empty";
 
     return (

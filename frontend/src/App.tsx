@@ -5,12 +5,14 @@ import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchivePage";
 import HomePage from "@/features/home/pages/HomePage";
 import LandingPage from "@/features/landing/pages/LandingPage";
+// import CreateMindmapPage from "@/features/mindmap/pages/CreateMindmapPage";
+import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
 import MindmapPage from "@/features/mindmap/pages/MindmapPage";
 import MindmapShowcaseV3 from "@/features/mindmap/shared_mindmap/show_cases/ShowCase";
 import SelfDiagnosisPage from "@/features/self_diagnosis/pages/SelfDiagnosisPage";
-import LoginPage from "@/features/user/login/pages/LoginPages";
+import LoginPage from "@/features/user/login/pages/LoginPage";
 import { Toaster } from "@/shared/components/ui/sonner";
-import { routeHelper } from "@/shared/utils/route";
+import { PATHS } from "@/shared/utils/route";
 
 function RootLayout() {
     return (
@@ -30,30 +32,38 @@ const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        element: <MindmapPage />,
+                        element: <MindmapListPage />,
                     },
                     {
-                        path: routeHelper.mindmap.list(),
-                        element: <MindmapPage />,
+                        path: PATHS.mindmap.list,
+                        element: <MindmapListPage />,
                     },
                     {
-                        path: routeHelper.episode_archive(),
+                        path: PATHS.episode_archive,
                         element: <EpisodeArchivePage />,
                     },
                     {
-                        path: routeHelper.self_diagnosis.list(),
+                        path: PATHS.self_diagnosis.list,
                         element: <SelfDiagnosisPage />,
+                    },
+                    // {
+                    //     path: PATHS.mindmap.create,
+                    //     element: <CreateMindmapPage />,
+                    // },
+                    {
+                        path: PATHS.mindmap.detail,
+                        element: <MindmapPage />,
                     },
                 ],
             },
             {
-                path: routeHelper.landing(),
+                path: PATHS.landing,
                 element: <LandingPage />,
             },
         ],
     },
     {
-        path: routeHelper.login(),
+        path: PATHS.login,
         element: <LoginPage />,
     },
     {

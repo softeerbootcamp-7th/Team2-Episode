@@ -31,6 +31,7 @@ public enum ErrorCode {
 
     //Episode
     EPISODE_NOT_FOUND(HttpStatus.NOT_FOUND, "EPISODE_NOT_FOUND", "존재하지 않는 에피소드입니다."),
+    EPISODE_STAR_NOT_FOUND(HttpStatus.NOT_FOUND, "EPISODE_STAR_NOT_FOUND", "STAR 데이터가 존재하지 않습니다."),
 
     //Users
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "존재하지 않는 유저입니다."),

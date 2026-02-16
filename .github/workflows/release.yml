@@ -1,4 +1,4 @@
-name: Create Release Tag
+name: Release
 
 concurrency:
   group: create-release-tag

@@ -23,6 +23,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc.batch_size: 100
+        order_inserts: true
+        order_updates: true
+        generate_statistics: true
 
   
   # ===============================
@@ -36,6 +40,12 @@ spring:
   web:
     resources:
       add-mappings: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
 
 server:
   port: 8080
@@ -112,6 +122,11 @@ management:
         include: health
   endpoint:
     health:
+      group:
+        readiness:
+          include: readinessState,db,redis
+        liveness:
+          include: livenessState
       show-details: never
 
 collaboration:

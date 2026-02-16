@@ -1,54 +1,78 @@
 import { fetchWithAuth } from "@/shared/api/client";
-import { FetchOptions } from "@/shared/api/types";
+import { FetchOptions, HttpParams } from "@/shared/api/types";
 
-type BaseParams = {
+type BaseParams<P extends HttpParams = HttpParams> = {
     endpoint: string;
-    options?: FetchOptions;
+    params?: P;
+    options?: Omit<FetchOptions, "params">;
 };
 
-type DataParams<TBody extends object> = BaseParams & {
+type DataParams<TBody extends object, P extends HttpParams = HttpParams> = BaseParams<P> & {
     data?: TBody;
 };
 
-/**
- * GET 요청
- */
-export function get<TResponse>({ endpoint, options }: BaseParams): Promise<TResponse> {
-    return fetchWithAuth<TResponse>(endpoint, { ...options, method: "GET" });
+export function get<TResponse, TParams extends HttpParams = HttpParams>({
+    endpoint,
+    params,
+    options,
+}: BaseParams<TParams>): Promise<TResponse> {
+    return fetchWithAuth<TResponse>(endpoint, {
+        ...options,
+        method: "GET",
+        params,
+    });
 }
 
-/**
- * POST 요청
- *  TResponse: 서버로부터 받을 응답의 타입
- *  TBody: 클라이언트가 보낼 요청 데이터의 타입
- */
-export function post<TResponse, TBody extends object>({
+export function post<TResponse, TBody extends object, TParams extends HttpParams = HttpParams>({
     endpoint,
     data,
+    params,
     options,
-}: DataParams<TBody>): Promise<TResponse> {
+}: DataParams<TBody, TParams>): Promise<TResponse> {
     return fetchWithAuth<TResponse>(endpoint, {
         ...options,
         method: "POST",
         body: data ? JSON.stringify(data) : undefined,
+        params,
     });
 }
 
-/**
- * PUT 요청
- */
-export function put<TResponse, TBody extends object>(params: DataParams<TBody>): Promise<TResponse> {
-    const { endpoint, data, options } = params;
+export function put<TResponse, TBody extends object, TParams extends HttpParams = HttpParams>({
+    endpoint,
+    data,
+    params,
+    options,
+}: DataParams<TBody, TParams>): Promise<TResponse> {
     return fetchWithAuth<TResponse>(endpoint, {
         ...options,
         method: "PUT",
         body: data ? JSON.stringify(data) : undefined,
+        params,
     });
 }
 
-/**
- * DELETE 요청
- */
-export function del<TResponse = void>({ endpoint, options }: BaseParams): Promise<TResponse> {
-    return fetchWithAuth<TResponse>(endpoint, { ...options, method: "DELETE" });
+export function del<TResponse = void, TParams extends HttpParams = HttpParams>({
+    endpoint,
+    params,
+    options,
+}: BaseParams<TParams>): Promise<TResponse> {
+    return fetchWithAuth<TResponse>(endpoint, {
+        ...options,
+        method: "DELETE",
+        params,
+    });
+}
+
+export function patch<TResponse, TBody extends object, TParams extends HttpParams = HttpParams>({
+    endpoint,
+    data,
+    params,
+    options,
+}: DataParams<TBody, TParams>): Promise<TResponse> {
+    return fetchWithAuth<TResponse>(endpoint, {
+        ...options,
+        method: "PATCH",
+        body: data ? JSON.stringify(data) : undefined,
+        params,
+    });
 }
