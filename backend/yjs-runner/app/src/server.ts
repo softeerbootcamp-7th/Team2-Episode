@@ -19,6 +19,10 @@ const storage = new S3SnapshotStorage({
     region: process.env.AWS_REGION!,
     bucket: process.env.S3_BUCKET!,
     keyPrefix: process.env.S3_PREFIX!,
+    endpoint: process.env.S3_ENDPOINT,
+    accessKey: process.env.S3_ACCESS_KEY,
+    secretKey: process.env.S3_SECRET_KEY,
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
 });
 
 const yjs = new DefaultYjsProcessor();
