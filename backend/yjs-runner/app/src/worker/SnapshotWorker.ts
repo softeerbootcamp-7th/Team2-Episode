@@ -25,7 +25,7 @@ export class SnapshotWorker {
         while (this.running) {
             try {
                 const jobs = await this.deps.consumer.read(this.deps.blockMs, this.deps.count);
-                if (!jobs || jobs.length > 0) {
+                if (!jobs || jobs.length === 0) {
                     continue;
                 }
                 for (const job of jobs) {
