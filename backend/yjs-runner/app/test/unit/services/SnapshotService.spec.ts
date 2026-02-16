@@ -48,9 +48,9 @@ describe('SnapshotService', () => {
         expect(mockUpdateRepo.trim).toHaveBeenCalledWith(roomId);
     });
 
-    it('S3에 기존 스냅샷이 없어도(신규 방) 정상적으로 동작해야 한다', async () => {
+    it('S3에 기존 스냅샷이 없어도 정상적으로 동작해야 한다', async () => {
         const roomId = 'new-room';
-        mockStorage.download.mockResolvedValue(new Uint8Array()); // 빈 값 반환
+        mockStorage.download.mockResolvedValue(new Uint8Array());
         mockUpdateRepo.fetchAllUpdates.mockResolvedValue([new Uint8Array([9])]);
         mockYjs.buildSnapshot.mockReturnValue(new Uint8Array([9]));
 
@@ -65,6 +65,6 @@ describe('SnapshotService', () => {
         mockStorage.upload.mockRejectedValue(new Error('S3 Connection Failed'));
 
         await expect(service.process('fail-room')).rejects.toThrow('S3 Connection Failed');
-        expect(mockUpdateRepo.trim).not.toHaveBeenCalled(); // 중요: 데이터 유실 방지 검증
+        expect(mockUpdateRepo.trim).not.toHaveBeenCalled();
     });
 });
