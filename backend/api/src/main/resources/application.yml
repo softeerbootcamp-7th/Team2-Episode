@@ -122,6 +122,11 @@ management:
         include: health
   endpoint:
     health:
+      group:
+        readiness:
+          include: readinessState,db,redis
+        liveness:
+          include: livenessState
       show-details: never
 
 collaboration:
