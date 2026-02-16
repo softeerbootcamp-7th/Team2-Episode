@@ -91,8 +91,8 @@ export default function MindmapHeaderToolBar({
                         </div>
 
                         <Popover
-                            open={isFilterOpen}
-                            onOpenChange={onFilterOpenChange}
+                            isOpen={isFilterOpen}
+                            isOnOpenChange={onFilterOpenChange}
                             direction="bottom_right"
                             contents={filterPopover}
                         >

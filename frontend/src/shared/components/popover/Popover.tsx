@@ -11,25 +11,25 @@ type Props = NonNullableVariantProps<typeof variants> & {
     contents: ReactNode;
 
     // controlled
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
+    isOpen?: boolean;
+    isOnOpenChange?: (open: boolean) => void;
 };
 
-const Popover = ({ direction = "bottom_left", children, contents, open, onOpenChange }: Props) => {
+const Popover = ({ direction = "bottom_left", children, contents, isOpen, isOnOpenChange }: Props) => {
     const triggerRef = useRef<HTMLDivElement>(null);
     const contentsRef = useRef<HTMLDivElement>(null);
 
-    const isControlled = open !== undefined;
+    const isControlled = isOpen !== undefined;
 
     const [internalOpen, setInternalOpen] = useState(false);
 
-    const visible = isControlled ? open : internalOpen;
+    const visible = isControlled ? isOpen : internalOpen;
 
     const setVisible = (next: boolean) => {
         if (!isControlled) {
             setInternalOpen(next);
         }
-        onOpenChange?.(next);
+        isOnOpenChange?.(next);
     };
 
     useClickOutside(triggerRef, () => {
