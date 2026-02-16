@@ -169,4 +169,12 @@
         visibility: hidden;
         transition: opacity 0.2s;
     }
+
+    .moving-fragment-group {
+        pointer-events: none;
+    }
+
+    .mindmap-render-root[data-dragging="true"] .static-graph {
+        pointer-events: none;
+    }
 }
