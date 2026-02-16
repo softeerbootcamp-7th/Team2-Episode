@@ -1,11 +1,12 @@
 import { ComponentPropsWithoutRef } from "react";
 
 import { COLOR_CLASS_MAP, NodeColor } from "@/features/mindmap/node/constants/colors";
+import { AddNodeDirection } from "@/features/mindmap/types/node";
 import Icon from "@/shared/components/icon/Icon";
 import { cn } from "@/utils/cn";
 
 type DirectionVariantProps = {
-    direction: "left" | "right";
+    direction: AddNodeDirection;
 };
 
 type Props = Omit<ComponentPropsWithoutRef<"button">, "color"> &

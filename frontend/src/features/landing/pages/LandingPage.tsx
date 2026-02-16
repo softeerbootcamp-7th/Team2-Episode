@@ -7,6 +7,7 @@ import { Logo } from "@/features/landing/components/Logo";
 import Button from "@/shared/components/button/Button";
 import CallToActionButton from "@/shared/components/call_to_action_button/CallToActionButton";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
+import Icon from "@/shared/components/icon/Icon";
 import Popover from "@/shared/components/popover/Popover";
 import UserBox from "@/shared/components/user_box/UserBox";
 import { linkTo } from "@/shared/utils/route";
@@ -120,7 +121,7 @@ const LandingPage = () => {
             className={cn(
                 "relative h-screen w-full overflow-y-auto overflow-x-hidden bg-landing",
                 "snap-y snap-mandatory scroll-smooth",
-                "scroll-pt-(--gnb-h)",
+                "scroll-pt-100px",
             )}
         >
             <div className="sticky top-0 z-50" ref={gnbRef}>
@@ -162,11 +163,11 @@ const LandingPage = () => {
 
             <section className="relative snap-start min-h-screen w-full pt-24 pb-16">
                 <div className="mx-auto w-full max-w-5xl px-6 flex flex-col items-center">
-                    <p className="typo-body-14-medium text-text-sub1">경험의 갈래를 연결하다</p>
+                    <p className="typo-body-18-medium text-gray-500 pb-5">경험의 경로를 알려주다</p>
 
-                    <Logo />
+                    <Icon name="ic_logo" width="360" height="68" viewBox="0 0 87 16" />
 
-                    <p className="mt-10 text-center typo-body-16-medium text-text-sub1">
+                    <p className="mt-10 text-center typo-body-24-medium text-text-main1">
                         흩어진 경험을 하나의 흐름으로,
                         <br />
                         취업 준비의 모든 과정을 한 곳에서
@@ -190,11 +191,11 @@ const LandingPage = () => {
 
                     <div className="mt-10 w-full">
                         <div className="mx-auto w-full max-w-5xl">
-                            <LandingInfo
+                            {/* <LandingInfo
                                 name="main"
                                 alt="EPISODE 메인 화면"
                                 className="w-full h-auto rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 bg-white"
-                            />
+                            /> */}
                         </div>
                     </div>
                 </div>
@@ -212,11 +213,11 @@ const LandingPage = () => {
                 <div className="mx-auto w-full max-w-5xl px-6">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-8 md:p-10 relative">
                         <div className="flex flex-col md:flex-row items-center gap-10">
-                            <LandingInfo
+                            {/* <LandingInfo
                                 name="mindmap"
                                 alt="마인드맵 기능"
                                 className="w-full md:w-115 h-auto rounded-xl border border-gray-100"
-                            />
+                            /> */}
 
                             <div className="flex-1 w-full">
                                 <h2 className="typo-title-28-bold text-text-main1">마인드맵</h2>
@@ -297,12 +298,12 @@ const LandingPage = () => {
                                     </Link>
                                 </div>
                             </div>
-
+                            {/* 
                             <LandingInfo
                                 name="self_test"
                                 alt="기술문제 셀프진단 기능"
                                 className="w-full md:w-115 h-auto rounded-xl border border-gray-100 order-1 md:order-2"
-                            />
+                            /> */}
                         </div>
                     </div>
                 </div>
@@ -320,11 +321,11 @@ const LandingPage = () => {
                 <div className="mx-auto w-full max-w-5xl px-6">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-8 md:p-10 relative">
                         <div className="flex flex-col md:flex-row items-center gap-10">
-                            <LandingInfo
+                            {/* <LandingInfo
                                 name="episode"
                                 alt="에피소드 보관함 기능"
                                 className="w-full md:w-115 h-auto rounded-xl border border-gray-100"
-                            />
+                            /> */}
 
                             <div className="flex-1 w-full">
                                 <h2 className="typo-title-28-bold text-text-main1">에피소드 보관함</h2>

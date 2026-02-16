@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,36 +15,35 @@ import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserRepository;
 import com.yat2.episode.utils.AbstractRepositoryTest;
 
-import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static com.yat2.episode.utils.TestEntityFactory.createMindmap;
+import static com.yat2.episode.utils.TestEntityFactory.createParticipant;
+import static com.yat2.episode.utils.TestEntityFactory.createUser;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("MindmapRepository 통합 테스트")
 class MindmapRepositoryTest extends AbstractRepositoryTest {
-    @Autowired
-    private MindmapRepository mindmapRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
+    MindmapRepository mindmapRepository;
     @Autowired
-    private MindmapParticipantRepository participantRepository;
+    UserRepository userRepository;
+    @Autowired
+    MindmapParticipantRepository participantRepository;
 
     @Test
     @DisplayName("사용자 ID로 참여 중인 마인드맵 목록을 최신순으로 조회한다")
     void findByUserIdOrderByCreatedDesc_Success() {
-        User user = User.newUser(12345L, "테스트유저");
+        User user = createUser(12345L);
         userRepository.save(user);
 
         Mindmap m1 = createMindmap("먼저 만든 마인드맵", false, LocalDateTime.now().minusSeconds(10));
         Mindmap m2 = createMindmap("나중에 만든 마인드맵", false, LocalDateTime.now());
-        mindmapRepository.save(m1);
-        mindmapRepository.save(m2);
+        mindmapRepository.saveAll(List.of(m1, m2));
 
-        saveParticipant(user, m1);
-        saveParticipant(user, m2);
+        participantRepository.save(createParticipant(m1, user));
+        participantRepository.save(createParticipant(m2, user));
 
         List<Mindmap> result = mindmapRepository.findByUserIdOrderByCreatedDesc(12345L);
 
@@ -56,16 +54,17 @@ class MindmapRepositoryTest extends AbstractRepositoryTest {
     @Test
     @DisplayName("특정 이름을 접두사로 가진 사용자의 마인드맵 이름들을 모두 조회한다")
     void findAllNamesByBaseName_Success() {
-        User user = User.newUser(1L, "애플");
+        User user = createUser(1L);
         userRepository.save(user);
 
         String baseName = "애플의 마인드맵";
         Mindmap m1 = createMindmap(baseName, false);
         Mindmap m2 = createMindmap(baseName + "(1)", false);
-
         mindmapRepository.saveAll(List.of(m1, m2));
-        saveParticipant(user, m1);
-        saveParticipant(user, m2);
+
+        participantRepository.save(createParticipant(m1, user));
+        participantRepository.save(createParticipant(m2, user));
+
         List<String> names = mindmapRepository.findAllNamesByBaseName(baseName, 1L);
 
         assertThat(names).hasSize(2);
@@ -85,10 +84,4 @@ class MindmapRepositoryTest extends AbstractRepositoryTest {
         assertThat(result.get().getName()).isEqualTo("잠금 테스트");
     }
 
-    private void saveParticipant(User user, Mindmap mindmap) {
-        MindmapParticipant participant = createEntity(MindmapParticipant.class);
-        ReflectionTestUtils.setField(participant, "user", user);
-        ReflectionTestUtils.setField(participant, "mindmap", mindmap);
-        participantRepository.save(participant);
-    }
 }
