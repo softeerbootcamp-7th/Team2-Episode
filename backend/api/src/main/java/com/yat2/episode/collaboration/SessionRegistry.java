@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,12 +31,22 @@ public class SessionRegistry {
         WebSocketSession decorated =
                 new ConcurrentWebSocketSessionDecorator(session, wsProperties.sendTimeout(), wsProperties.bufferSize());
 
-        rooms.computeIfAbsent(mindmapId, id -> new ConcurrentHashMap<>()).put(decorated.getId(), decorated);
+        rooms.compute(mindmapId, (id, sessions) -> {
+            if (sessions == null) {
+                sessions = new ConcurrentHashMap<>();
+            }
+            sessions.put(decorated.getId(), decorated);
+            return sessions;
+        });
     }
 
     public void removeSession(UUID mindmapId, WebSocketSession session) {
+        removeSession(mindmapId, session.getId());
+    }
+
+    private void removeSession(UUID mindmapId, String sessionId) {
         rooms.computeIfPresent(mindmapId, (id, sessions) -> {
-            sessions.remove(session.getId());
+            sessions.remove(sessionId);
             return sessions.isEmpty() ? null : sessions;
         });
     }
@@ -47,13 +56,17 @@ public class SessionRegistry {
         if (sessions == null || sessions.isEmpty()) return;
 
         BinaryMessage message = new BinaryMessage(payload);
-        final List<String> deadSessionIds = new ArrayList<>();
+        List<String> deadSessionIds = new ArrayList<>();
+
+        final String senderId = (sender == null) ? null : sender.getId();
 
         for (Map.Entry<String, WebSocketSession> entry : sessions.entrySet()) {
             String sessionId = entry.getKey();
             WebSocketSession session = entry.getValue();
 
-            if (sender != null && sessionId.equals(sender.getId())) continue;
+            if (senderId != null && senderId.equals(sessionId)) {
+                continue;
+            }
 
             if (!session.isOpen()) {
                 deadSessionIds.add(sessionId);
@@ -68,38 +81,29 @@ public class SessionRegistry {
         }
 
         for (String deadId : deadSessionIds) {
-            sessions.remove(deadId);
-        }
-
-        if (sessions.isEmpty()) {
-            rooms.remove(mindmapId, sessions);
+            removeSession(mindmapId, deadId);
         }
     }
 
-
     public boolean unicast(UUID mindmapId, String receiverSessionId, byte[] payload) {
-        Set<WebSocketSession> sessions = rooms.get(mindmapId);
+        ConcurrentHashMap<String, WebSocketSession> sessions = rooms.get(mindmapId);
         if (sessions == null || sessions.isEmpty()) return false;
 
-        BinaryMessage message = new BinaryMessage(payload);
+        WebSocketSession session = sessions.get(receiverSessionId);
+        if (session == null) return false;
 
-        for (WebSocketSession session : sessions) {
-            if (!session.getId().equals(receiverSessionId)) continue;
-
-            if (!session.isOpen()) {
-                removeSession(mindmapId, session);
-                return false;
-            }
-
-            try {
-                session.sendMessage(message);
-                return true;
-            } catch (Exception e) {
-                removeSession(mindmapId, session);
-                return false;
-            }
+        if (!session.isOpen()) {
+            removeSession(mindmapId, receiverSessionId);
+            return false;
         }
-        return false;
+
+        try {
+            session.sendMessage(new BinaryMessage(payload));
+            return true;
+        } catch (Exception e) {
+            removeSession(mindmapId, receiverSessionId);
+            return false;
+        }
     }
 
     public boolean unicast(UUID mindmapId, WebSocketSession receiver, byte[] payload) {
@@ -107,25 +111,35 @@ public class SessionRegistry {
     }
 
     public Optional<WebSocketSession> findOldestAlivePeer(UUID mindmapId, String excludeSessionId) {
-        Set<WebSocketSession> sessions = rooms.get(mindmapId);
-        if (sessions == null || sessions.isEmpty()) {
-            return Optional.empty();
-        }
+        ConcurrentHashMap<String, WebSocketSession> sessions = rooms.get(mindmapId);
+        if (sessions == null || sessions.isEmpty()) return Optional.empty();
 
         WebSocketSession best = null;
         long bestAt = Long.MAX_VALUE;
 
-        for (WebSocketSession s : sessions) {
+        List<String> dead = null;
+
+        for (Map.Entry<String, WebSocketSession> entry : sessions.entrySet()) {
+            String sessionId = entry.getKey();
+            WebSocketSession s = entry.getValue();
+
+            if (excludeSessionId != null && excludeSessionId.equals(sessionId)) continue;
+
             if (!s.isOpen()) {
+                if (dead == null) dead = new ArrayList<>();
+                dead.add(sessionId);
                 continue;
             }
-            if (excludeSessionId != null && excludeSessionId.equals(s.getId())) continue;
 
             long at = getConnectedAt(s);
             if (at < bestAt) {
                 bestAt = at;
                 best = s;
             }
+        }
+
+        if (dead != null) {
+            for (String id : dead) removeSession(mindmapId, id);
         }
 
         return Optional.ofNullable(best);
