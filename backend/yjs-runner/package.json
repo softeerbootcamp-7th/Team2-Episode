@@ -6,15 +6,18 @@
     "build": "npx tsc",
     "start": "node dist/app/src/server.js",
     "dev": "nodemon app/src/server.ts",
-    "test": "exit 0"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.11",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
