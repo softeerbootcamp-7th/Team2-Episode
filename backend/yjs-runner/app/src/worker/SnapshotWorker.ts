@@ -23,10 +23,24 @@ export class SnapshotWorker {
         this.running = true;
 
         while (this.running) {
-            // todo: consumer 읽기
-            // todo: 읽어온 job 기준으로 snapshot 처리
-            // todo: job ack 처리
-            await wait(3000);
+            try {
+                const jobs = await this.deps.consumer.read(this.deps.blockMs, this.deps.count);
+                if (!jobs || jobs.length > 0) {
+                    continue;
+                }
+                for (const job of jobs) {
+                    try {
+                        await this.deps.service.process(job.roomId);
+                        await this.deps.consumer.ack([job.entryId]);
+                    } catch (error) {
+                        console.error(`[Worker] 저장 실패! roomId: ${job.roomId}`, error);
+                    }
+                }
+                await wait(3000); //todo: redis block 관련 로직 구현 후 삭제
+            } catch (e) {
+                console.error('[Worker] 전역 Error:', e);
+                await wait(this.deps.blockMs);
+            }
         }
     }
 
