@@ -21,7 +21,6 @@ import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
 import com.yat2.episode.mindmap.dto.MindmapCreateReq;
-import com.yat2.episode.mindmap.dto.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
 import com.yat2.episode.mindmap.jwt.MindmapJwtProperties;
@@ -161,7 +160,7 @@ class MindmapServiceTest {
 
             given(mindmapAccessValidator.findParticipantOrThrow(mindmap.getId(), testUserId)).willReturn(participant);
 
-            MindmapDetailRes result = mindmapService.updateName(testUserId, mindmap.getId(), "새 이름");
+            MindmapSummaryRes result = mindmapService.updateName(testUserId, mindmap.getId(), "새 이름");
 
             assertThat(result.mindmapName()).isEqualTo("새 이름");
             assertThat(mindmap.getName()).isEqualTo("새 이름");
@@ -212,7 +211,7 @@ class MindmapServiceTest {
 
             given(episodeRepository.findNodeIdsByMindmapId(mindmapId)).willReturn(existingEpisodeIds);
 
-            MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
+            MindmapSummaryRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
 
             assertThat(result.mindmapId()).isEqualTo(mindmapId);
 
@@ -239,7 +238,7 @@ class MindmapServiceTest {
             given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
                     Optional.of(existingParticipant));
 
-            MindmapDetailRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
+            MindmapSummaryRes result = mindmapService.saveMindmapParticipant(testUserId, mindmapId);
 
             assertThat(result.mindmapId()).isEqualTo(mindmapId);
 
