@@ -9,9 +9,9 @@ import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorato
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import com.yat2.episode.collaboration.config.WebSocketProperties;
 
@@ -110,42 +110,15 @@ public class SessionRegistry {
         return unicast(mindmapId, receiver.getId(), payload);
     }
 
-    public Optional<WebSocketSession> findOldestAlivePeer(UUID mindmapId, String excludeSessionId) {
-        ConcurrentHashMap<String, WebSocketSession> sessions = rooms.get(mindmapId);
-        if (sessions == null || sessions.isEmpty()) return Optional.empty();
+    public List<WebSocketSession> findAllAlivePeers(UUID roomId, String excludeId) {
+        var sessions = rooms.get(roomId);
+        if (sessions == null) return List.of();
 
-        WebSocketSession best = null;
-        long bestAt = Long.MAX_VALUE;
-
-        List<String> dead = null;
-
-        for (Map.Entry<String, WebSocketSession> entry : sessions.entrySet()) {
-            String sessionId = entry.getKey();
-            WebSocketSession s = entry.getValue();
-
-            if (excludeSessionId != null && excludeSessionId.equals(sessionId)) continue;
-
-            if (!s.isOpen()) {
-                if (dead == null) dead = new ArrayList<>();
-                dead.add(sessionId);
-                continue;
-            }
-
-            long at = getConnectedAt(s);
-            if (at < bestAt) {
-                bestAt = at;
-                best = s;
-            }
-        }
-
-        if (dead != null) {
-            for (String id : dead) removeSession(mindmapId, id);
-        }
-
-        return Optional.ofNullable(best);
+        return sessions.values().stream().filter(WebSocketSession::isOpen).filter(s -> !s.getId().equals(excludeId))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private long getConnectedAt(WebSocketSession session) {
+    public long getConnectedAt(WebSocketSession session) {
         return (Long) session.getAttributes().get(CONNECTED_AT);
     }
 }
