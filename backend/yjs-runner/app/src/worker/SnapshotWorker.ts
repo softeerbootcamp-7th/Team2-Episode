@@ -1,5 +1,6 @@
 import type {JobConsumer} from '../infrastructure/JobConsumer';
 import type {SnapshotService} from '../services/SnapshotService';
+import wait from "waait";
 
 export class SnapshotWorker {
     private running = false;
@@ -25,6 +26,7 @@ export class SnapshotWorker {
             // todo: consumer 읽기
             // todo: 읽어온 job 기준으로 snapshot 처리
             // todo: job ack 처리
+            await wait(3000);
         }
     }
 
