@@ -1,7 +1,7 @@
 export interface SnapshotStorage {
     upload(roomId: string, data: Uint8Array): Promise<void>;
 
-    download(roomId: string, data: Uint8Array): Promise<Uint8Array>;
+    download(roomId: string): Promise<Uint8Array>;
 }
 
 export type S3Config = {
@@ -21,11 +21,10 @@ export class S3SnapshotStorage implements SnapshotStorage {
         void data;
     }
 
-    async download(roomId: string, data: Uint8Array): Promise<Uint8Array> {
+    async download(roomId: string): Promise<Uint8Array> {
         // todo: GetObject 진행
         // Key 예시: `${config.keyPrefix}/${roomId}`
         void roomId;
-        void data;
         return new Uint8Array();
     }
 }
