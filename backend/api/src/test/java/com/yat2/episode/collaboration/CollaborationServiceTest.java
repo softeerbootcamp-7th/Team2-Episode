@@ -93,7 +93,6 @@ class CollaborationServiceTest {
             WebSocketSession session = mock(WebSocketSession.class);
 
             Map<String, Object> attrs = new HashMap<>();
-            // MINDMAP_ID 미설정 => null
             when(session.getAttributes()).thenReturn(attrs);
 
             assertThatCode(() -> service.handleDisconnect(session)).doesNotThrowAnyException();
@@ -137,7 +136,6 @@ class CollaborationServiceTest {
             WebSocketSession sender = mock(WebSocketSession.class);
 
             Map<String, Object> attrs = new HashMap<>();
-            // MINDMAP_ID 미설정 => null
             when(sender.getAttributes()).thenReturn(attrs);
 
             BinaryMessage message = new BinaryMessage(new byte[]{ 1, 2, 3 });
