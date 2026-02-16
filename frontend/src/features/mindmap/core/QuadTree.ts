@@ -1,5 +1,4 @@
-import { Point } from "@/features/quad_tree/types/point";
-import { Rect } from "@/features/quad_tree/types/rect";
+import { Point, Rect } from "@/features/mindmap/types/spatial";
 import { isIntersected, isPointInRect } from "@/shared/utils/rect_helper";
 
 /**
@@ -24,23 +23,6 @@ export default class QuadTree {
         this.bounds = bounds;
         this.limit = limit;
     }
-
-    /** 현재 트리의 전체 경계 반환 (Renderer 참조용) */
-    getBounds(): Rect {
-        return this.bounds;
-    }
-
-    /** [Add/Drop] 점 삽입: 외부 전용 관문으로, 필요 시 영역을 확장하고 삽입을 실행 */
-    public insert(point: Point): boolean {
-        // 삽입 전, 점의 위치가 현재 전체 영역의 90%를 벗어나는지 확인하여 확장
-        if (this.isNearBoundary(point)) {
-            this.rebuild();
-        }
-
-        // 실제 삽입 로직 수행
-        return this.executeInsert(point);
-    }
-
     /** [Internal] 실제 삽입 로직: 개수 > limit 이면, 하위 영역으로 분할하고 자식 노드로 전달 */
     private executeInsert(point: Point): boolean {
         // 삽입하려는 점이 현재 Quad 영역에 속하지 않으면 삽입 거부
@@ -70,36 +52,6 @@ export default class QuadTree {
 
         // 새로 들어온 점도 자식 노드로 위임
         return this.delegateInsert(point);
-    }
-
-    /** [Remove/DragStart] 점 삭제 : 삭제 후 데이터 밀도가 낮아지면 tryMerge */
-    remove(point: Point): boolean {
-        if (!this.isPointInBounds(point)) {
-            console.error(`[QuadTree 삭제 실패] 점 (${point.x}, ${point.y})이 경계 영역 밖에 있습니다.`);
-            return false;
-        }
-
-        let removed = false;
-
-        if (this.children) {
-            removed = this.delegateRemove(point);
-
-            if (removed) {
-                this.tryMerge();
-            } else {
-                // 삭제 대상이 영역 안에는 있어야 하는데 못 찾은 경우
-                console.error(
-                    `[QuadTree 삭제 실패] 하위 자식 노드에서 점 (${point.x}, ${point.y})을 찾을 수 없습니다.`,
-                );
-            }
-        } else {
-            // 리프 노드인 경우 직접 점 삭제
-            removed = this.points.delete(point);
-            if (!removed) {
-                console.error(`[QuadTree 삭제 실패] 리프 노드에 삭제하려는 점 (${point.x}, ${point.y})이 없습니다.`);
-            }
-        }
-        return removed;
     }
 
     /** [Rebuild] 경계를 중심점 기준 2배로 확장하고 트리를 재구축 */
@@ -146,27 +98,6 @@ export default class QuadTree {
         };
 
         return !isPointInRect(point, innerBounds);
-    }
-
-    /** [DragMove] 범위 탐색 : 마우스 주변의 스냅 가능한 노드 확보 */
-    getPointsInRange(range: Rect, found: Point[] = []): Point[] {
-        if (!isIntersected(this.bounds, range)) {
-            return found;
-        }
-
-        this.points.forEach((point) => {
-            if (isPointInRect(point, range)) {
-                found.push(point);
-            }
-        });
-
-        if (this.children) {
-            this.children.NW.getPointsInRange(range, found);
-            this.children.NE.getPointsInRange(range, found);
-            this.children.SW.getPointsInRange(range, found);
-            this.children.SE.getPointsInRange(range, found);
-        }
-        return found;
     }
 
     /** 현재 영역을 4개의 하위 영역으로 분할 */
@@ -240,23 +171,103 @@ export default class QuadTree {
 
     /** 삽입 작업을 자식 노드에게 위임 */
     private delegateInsert(point: Point): boolean {
-        if (!this.children) {
-            console.error("[QuadTree 위임 실패] 자식 노드가 생성되지 않은 상태입니다.");
-            return false;
-        }
+        if (!this.children) return false;
+
         const { NW, NE, SW, SE } = this.children;
 
-        return NW.executeInsert(point) || NE.executeInsert(point) || SW.executeInsert(point) || SE.executeInsert(point);
+        if (isPointInRect(point, NW.getBounds())) return NW.executeInsert(point);
+        if (isPointInRect(point, NE.getBounds())) return NE.executeInsert(point);
+        if (isPointInRect(point, SW.getBounds())) return SW.executeInsert(point);
+        if (isPointInRect(point, SE.getBounds())) return SE.executeInsert(point);
+
+        console.error("[QuadTree] 어떤 자식 영역에도 속하지 않는 좌표입니다.", point);
+        return false;
     }
 
     /** 삭제 작업을 자식 노드에게 위임 */
     private delegateRemove(point: Point): boolean {
-        if (!this.children) {
-            console.error("[QuadTree 위임 실패] 삭제를 위임할 자식 노드가 존재하지 않습니다.");
-            return false;
-        }
+        if (!this.children) return false;
+
         const { NW, NE, SW, SE } = this.children;
 
-        return NW.remove(point) || NE.remove(point) || SW.remove(point) || SE.remove(point);
+        if (isPointInRect(point, NW.getBounds())) return NW.remove(point);
+        if (isPointInRect(point, NE.getBounds())) return NE.remove(point);
+        if (isPointInRect(point, SW.getBounds())) return SW.remove(point);
+        if (isPointInRect(point, SE.getBounds())) return SE.remove(point);
+
+        return false;
+    }
+
+    /** 현재 트리의 전체 경계 반환 (Renderer 참조용) */
+    getBounds(): Rect {
+        return this.bounds;
+    }
+
+    /** [Add/Drop] 점 삽입: 외부 전용 관문으로, 필요 시 영역을 확장하고 삽입을 실행 */
+    insert(point: Point): boolean {
+        while (!this.isPointInBounds(point)) {
+            this.rebuild();
+        }
+        if (this.isNearBoundary(point)) {
+            this.rebuild();
+        }
+        return this.executeInsert(point);
+    }
+
+    /** [DragMove] 범위 탐색 : 마우스 주변의 스냅 가능한 노드 확보 */
+    getPointsInRange(range: Rect, found: Point[] = []): Point[] {
+        if (!isIntersected(this.bounds, range)) {
+            return found;
+        }
+
+        this.points.forEach((point) => {
+            if (isPointInRect(point, range)) {
+                found.push(point);
+            }
+        });
+
+        if (this.children) {
+            this.children.NW.getPointsInRange(range, found);
+            this.children.NE.getPointsInRange(range, found);
+            this.children.SW.getPointsInRange(range, found);
+            this.children.SE.getPointsInRange(range, found);
+        }
+        return found;
+    }
+
+    /** [Remove/DragStart] 점 삭제 : 삭제 후 데이터 밀도가 낮아지면 tryMerge */
+    remove(point: Point): boolean {
+        if (!this.isPointInBounds(point)) {
+            console.error(`[QuadTree 삭제 실패] 점 (${point.x}, ${point.y})이 경계 영역 밖에 있습니다.`);
+            return false;
+        }
+
+        let removed = false;
+
+        if (this.children) {
+            removed = this.delegateRemove(point);
+
+            if (removed) {
+                this.tryMerge();
+            } else {
+                // 삭제 대상이 영역 안에는 있어야 하는데 못 찾은 경우
+                console.error(
+                    `[QuadTree 삭제 실패] 하위 자식 노드에서 점 (${point.x}, ${point.y})을 찾을 수 없습니다.`,
+                );
+            }
+        } else {
+            // 리프 노드인 경우 직접 점 삭제
+            removed = this.points.delete(point);
+            if (!removed) {
+                console.error(`[QuadTree 삭제 실패] 리프 노드에 삭제하려는 점 (${point.x}, ${point.y})이 없습니다.`);
+            }
+        }
+        return removed;
+    }
+
+    /** 트리 초기화 */
+    clear(): void {
+        this.points.clear();
+        this.children = null;
     }
 }
