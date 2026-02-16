@@ -1,145 +1,71 @@
-/**
- * 해당 파일에 여러 훅, 로직이 함께 있습니다.
- * 하나가 수정되면 보통 다 수정되므로 파일 왔다갔다 없이 빠르게 수정할 수 있도록 함께 두었습니다.
- * 이후에 마인드맵 로직이 어느정도 굳어졌다 싶으면 분리할 예정입니다.
- */
-import { createContext, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { NodeId } from "@/features/mindmap/types/mindmap_node";
-import MindmapLayoutManager from "@/features/mindmap/utils/MindmapLayoutManager";
-import TreeContainer from "@/features/mindmap/utils/TreeContainer";
-import { EventBroker } from "@/utils/EventBroker";
+import MindMapCore from "@/features/mindmap/core/MindMapCore";
+import { MindMapRefContext, MindMapStateContext } from "@/features/mindmap/providers/MindmapContext";
+import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
 
-type MindMapRefContextType = {
-    container: TreeContainer;
-    broker: EventBroker<NodeId>;
-    actions: {
-        addNode: (parentId: NodeId) => void;
-        deleteNode: (nodeId: NodeId) => void;
-        moveNode: (targetId: NodeId, movingId: NodeId) => void;
-        updateNodeSize: (nodeId: NodeId, width: number, height: number) => void;
-        forceLayout: () => void;
-    };
-};
+export const MindMapProvider = ({
+    children,
+    canvasRef,
+}: {
+    children: React.ReactNode;
+    canvasRef?: React.RefObject<SVGSVGElement | null>;
+}) => {
+    // 1. 엔진 인스턴스는 즉시 생성
+    // 리렌더링 시 인스턴스가 유지되도록 useMemo 사용
+    const core = useMemo(() => new MindMapCore(() => setVersion((v) => v + 1)), []);
 
-type MindMapStateContextType = {
-    version: number;
-};
-
-const MindMapRefContext = createContext<MindMapRefContextType | null>(null);
-const MindMapStateContext = createContext<MindMapStateContextType | null>(null);
-
-// controller
-export const MindMapProvider = ({ children }: { children: React.ReactNode }) => {
-    const storeRef = useRef<{
-        container: TreeContainer;
-        broker: EventBroker<NodeId>;
-        layoutManager: MindmapLayoutManager;
-    } | null>(null);
-
+    // 리액트 UI를 갱신하기 위한 버전 상태
     const [version, setVersion] = useState(0);
 
-    if (!storeRef.current) {
-        const broker = new EventBroker<NodeId>();
-        const container = new TreeContainer({ broker, quadTreeManager: undefined });
-        const layoutManager = new MindmapLayoutManager({ treeContainer: container });
-        storeRef.current = { container, broker, layoutManager };
-    }
+    useEffect(() => {
+        if (!canvasRef || !canvasRef.current) return;
+        const svg = canvasRef.current;
 
-    const { container, broker, layoutManager } = storeRef.current;
+        // 이미 초기화되었거나 SVG가 아직 없다면 중단
+        if (!svg || core.getIsReady()) return;
 
-    // 지금은 필요한 메서드를 모두 호출하고 있음. 이는 유지보수를 매우매우 어렵게 함.
-    // 그래서 이후 디펜던시 관계를 다시 정립해야할거임.
+        // 2. SVG의 실제 크기를 감시
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (!entry) return;
+
+            const { width, height } = entry.contentRect;
+
+            // 실제 픽셀 크기가 확보된 시점에 엔진 초기화
+            if (width > 0 && height > 0) {
+                core.initialize(svg);
+                // 초기화는 한 번이면 족하므로 감시 중단
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(svg);
+        return () => observer.disconnect();
+    }, [canvasRef, core]);
+
+    // 3. 외부 노출용 액션 (core가 상수로 존재하므로 내부 체크 생략 가능)
     const actions = useMemo(
         () => ({
-            addNode: (parentId: NodeId) => {
-                container.appendChild({ parentNodeId: parentId });
-                layoutManager.invalidate(parentId);
-                const rootId = container.getRootId();
-                if (rootId) layoutManager.updateLayout({ rootId });
-                setVersion((v) => v + 1);
+            addNode: (parentId: NodeId, direction: NodeDirection, addNodeDirection: AddNodeDirection) => {
+                core.addNode(parentId, direction, addNodeDirection);
             },
-            deleteNode: (nodeId: NodeId) => {
-                const parentId = container.getParentId(nodeId);
-                container.delete({ nodeId });
-                if (parentId) {
-                    layoutManager.invalidate(parentId);
-                    const rootId = container.getRootId();
-                    if (rootId) layoutManager.updateLayout({ rootId });
-                }
-                setVersion((v) => v + 1);
-            },
-            updateNodeSize: (nodeId: NodeId, width: number, height: number) => {
-                const node = container.safeGetNode(nodeId);
-                if (node && (node.width !== width || node.height !== height)) {
-                    container.update({ nodeId, newNodeData: { width, height } });
-                    layoutManager.invalidate(nodeId);
-                    const rootId = container.getRootId();
-                    if (rootId) layoutManager.updateLayout({ rootId });
-                    setVersion((v) => v + 1);
-                }
-            },
-            moveNode: (targetId: NodeId, movingId: NodeId) => {
-                const oldParentId = container.getParentId(movingId);
-                container.moveTo({ baseNodeId: targetId, movingNodeId: movingId, direction: "child" });
-                layoutManager.invalidate(targetId);
-                if (oldParentId) layoutManager.invalidate(oldParentId);
-                const rootId = container.getRootId();
-                if (rootId) layoutManager.updateLayout({ rootId });
-                setVersion((v) => v + 1);
-            },
-            forceLayout: () => {
-                const rootId = container.getRootId();
-                if (rootId) layoutManager.updateLayout({ rootId });
-                setVersion((v) => v + 1);
-            },
+            deleteNode: (nodeId: NodeId) => core.deleteNode(nodeId),
+            updateNodeSize: (nodeId: NodeId, width: number, height: number) =>
+                core.updateNodeSize(nodeId, width, height),
+            moveNode: (targetId: NodeId, movingId: NodeId, direction: NodeDirection) =>
+                core.moveNode(targetId, movingId, direction),
         }),
-        [container, broker, layoutManager],
+        [core],
     );
 
-    const refValue = useMemo(() => ({ container, broker, actions }), [container, broker, actions]);
+    // core가 인스턴스화 되었을 때 컨텍스트 값 생성
+    const controller = useMemo(() => ({ core, actions }), [core, actions]);
     const stateValue = useMemo(() => ({ version }), [version]);
 
     return (
-        <MindMapRefContext.Provider value={refValue}>
+        <MindMapRefContext.Provider value={controller}>
             <MindMapStateContext.Provider value={stateValue}>{children}</MindMapStateContext.Provider>
         </MindMapRefContext.Provider>
     );
-};
-
-export const useNode = (nodeId: NodeId) => {
-    const context = useContext(MindMapRefContext);
-    if (!context) throw new Error("Provider missing!");
-    const { container, broker } = context;
-
-    const subscribe = useCallback(
-        (onStoreChange: () => void) => broker.subscribe({ key: nodeId, callback: onStoreChange }),
-        [broker, nodeId],
-    );
-
-    const getSnapshot = useCallback(() => container.safeGetNode(nodeId), [container, nodeId]);
-
-    return useSyncExternalStore(subscribe, getSnapshot);
-};
-
-export const useMindmapActions = () => {
-    const context = useContext(MindMapRefContext);
-
-    if (!context) throw new Error("Provider missing!");
-
-    return context.actions;
-};
-
-export const useMindmapContainer = () => {
-    const context = useContext(MindMapRefContext);
-    if (!context) throw new Error("Provider missing!");
-    return context.container;
-};
-
-// version만
-// 해당 훅은 리렌더링 강제 트리거를 위한 값인 version을 사용하기 위한것인데.. 이후에 성능을 위해서는 해당 값을 제거해야할 필요가 있을것. 일단은 임시로 넣어두었습니다.
-export const useMindmapVersion = () => {
-    const context = useContext(MindMapStateContext);
-    if (!context) throw new Error("Provider missing!");
-    return context.version;
 };
