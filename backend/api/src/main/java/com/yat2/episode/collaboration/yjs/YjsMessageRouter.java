@@ -106,8 +106,14 @@ public class YjsMessageRouter {
 
     public void onDisconnect(UUID roomId, String sessionId) {
         ConcurrentHashMap<String, String> roomSyncs = pendingSyncs.get(roomId);
-        if (roomSyncs != null) {
-            roomSyncs.remove(sessionId);
+        if (roomSyncs == null) return;
+
+        roomSyncs.remove(sessionId);
+
+        roomSyncs.entrySet().removeIf(e -> sessionId.equals(e.getValue()));
+
+        if (roomSyncs.isEmpty()) {
+            pendingSyncs.remove(roomId, roomSyncs);
         }
     }
 
