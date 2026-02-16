@@ -9,6 +9,7 @@
         "skipLibCheck": true,
         "paths": {
             "@/shared/*": ["shared/*"],
+            "@/assets/*": ["assets/*"],
             "@/utils/*": ["utils/*"],
             "@/icons/*": ["assets/icons/*"],
             "@/features/*": ["features/*"],
