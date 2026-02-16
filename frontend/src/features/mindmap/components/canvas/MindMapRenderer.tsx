@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
-import DragGhostStyle from "@/features/mindmap/components/DragGhostStyle";
-import InteractionLayer from "@/features/mindmap/components/InteractionLayer";
-import StaticLayer from "@/features/mindmap/components/StaticLayer";
+import DragGhostStyle from "@/features/mindmap/components/canvas/DragGhostStyle";
+import InteractionLayer from "@/features/mindmap/components/canvas/InteractionLayer";
+import StaticLayer from "@/features/mindmap/components/canvas/StaticLayer";
 import {
     useMindMapCore,
     useMindMapInteractionFrame,

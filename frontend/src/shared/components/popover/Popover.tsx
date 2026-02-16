@@ -1,25 +1,40 @@
 import { cva } from "class-variance-authority";
-import { ReactNode, useRef } from "react";
+import { ReactNode, useRef, useState } from "react";
 
 import useCalcSafeDirection from "@/shared/hooks/useCalcSafeDirection";
 import useClickOutside from "@/shared/hooks/useClickOutside";
-import useToggle from "@/shared/hooks/useToggle";
 import { NonNullableVariantProps } from "@/shared/types/safe_variant_props";
 
 type Props = NonNullableVariantProps<typeof variants> & {
+    // uncontrolled
     children: ReactNode;
     contents: ReactNode;
+
+    // controlled
+    isOpen?: boolean;
+    isOnOpenChange?: (open: boolean) => void;
 };
 
-const Popover = ({ direction = "bottom_left", children, contents }: Props) => {
+const Popover = ({ direction = "bottom_left", children, contents, isOpen, isOnOpenChange }: Props) => {
     const triggerRef = useRef<HTMLDivElement>(null);
     const contentsRef = useRef<HTMLDivElement>(null);
 
-    const [isVisible, isVisibleHandler] = useToggle();
+    const isControlled = isOpen !== undefined;
+
+    const [internalOpen, setInternalOpen] = useState(false);
+
+    const visible = isControlled ? isOpen : internalOpen;
+
+    const setVisible = (next: boolean) => {
+        if (!isControlled) {
+            setInternalOpen(next);
+        }
+        isOnOpenChange?.(next);
+    };
 
     useClickOutside(triggerRef, () => {
-        if (isVisible) {
-            isVisibleHandler.toggle();
+        if (visible) {
+            setVisible(false);
         }
     });
 
@@ -27,7 +42,7 @@ const Popover = ({ direction = "bottom_left", children, contents }: Props) => {
         direction,
         triggerRef,
         contentsRef,
-        disabled: !isVisible,
+        disabled: !visible,
     });
 
     return (
@@ -35,13 +50,13 @@ const Popover = ({ direction = "bottom_left", children, contents }: Props) => {
             <div
                 onClick={(e) => {
                     e.stopPropagation();
-                    isVisibleHandler.toggle();
+                    setVisible(!visible);
                 }}
             >
                 {children}
             </div>
 
-            {isVisible && (
+            {visible && (
                 <div ref={contentsRef} className={variants({ direction: safeDirection })}>
                     {contents}
                 </div>
