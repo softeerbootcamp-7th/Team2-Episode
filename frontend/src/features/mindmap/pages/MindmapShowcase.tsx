@@ -1,4 +1,4 @@
-import MindMapRenderer from "@/features/mindmap/components/MindMapRenderer";
+import MindMapRenderer from "@/features/mindmap/components/canvas/MindMapRenderer";
 
 interface MindMapShowcaseProps {
     canvasRef: React.RefObject<SVGSVGElement | null>;

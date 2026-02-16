@@ -31,6 +31,24 @@ function Top({ leftSlot, contents, rightSlot, className }: TopProps) {
     );
 }
 
+const SKILLS = [
+    "팀워크",
+    "커뮤니케이션",
+    "협업",
+    "갈등해결",
+    "리더십",
+    "문제해결",
+    "분석력",
+    "의사결정",
+    "기획력",
+    "창의성",
+    "실행력",
+    "책임감",
+    "적응력",
+    "학습능력",
+    "목표지향",
+];
+
 type Props = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
     title: string;
     onBack?: () => void;
