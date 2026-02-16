@@ -6,7 +6,7 @@ export interface JobConsumer {
 
     read(blockMs: number, count?: number): Promise<SnapshotJob[]>;
 
-    ack(messageIds: string[]): Promise<void>;
+    ack(entryId: string[]): Promise<void>;
 }
 
 export type RedisJobConsumerConfig = {
@@ -37,10 +37,10 @@ export class RedisStreamJobConsumer implements JobConsumer {
         return [];
     }
 
-    async ack(messageIds: string[]): Promise<void> {
+    async ack(entryId: string[]): Promise<void> {
         // todo:
         // XACK <stream> <group> <id...>
-        void messageIds;
+        void entryId;
     }
 }
 
