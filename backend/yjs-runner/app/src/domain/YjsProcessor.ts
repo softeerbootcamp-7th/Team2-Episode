@@ -6,17 +6,22 @@ export interface YjsProcessor {
 
 export class DefaultYjsProcessor implements YjsProcessor {
     buildSnapshot(baseSnapshot: Uint8Array, updates: Uint8Array[]): Uint8Array {
-        const doc = new Y.Doc();
+        let doc = new Y.Doc();
 
         if (baseSnapshot && baseSnapshot.length > 0) {
-            Y.applyUpdate(doc, baseSnapshot);
+            try {
+                Y.applyUpdate(doc, baseSnapshot);
+            } catch (e) {
+                console.error('[YjsProcessor] 기존 base snapshot 데이터가 유효하지 않습니다.', e);
+                doc = new Y.Doc();
+            }
         }
 
         for (const update of updates) {
             try {
                 Y.applyUpdate(doc, update);
             } catch (e) {
-                console.error('[YjsProcessor] Failed to apply update', e);
+                console.error('[YjsProcessor] 업데이트 패킷이 유효하지 않습니다.', e);
             }
         }
 
