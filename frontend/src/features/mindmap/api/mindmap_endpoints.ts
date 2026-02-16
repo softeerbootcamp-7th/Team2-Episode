@@ -5,6 +5,7 @@ export const mindmapEndpoints = {
     delete: (mindmapId: string) => `/mindmaps/${mindmapId}`,
     rename: (mindmapId: string) => `/mindmaps/${mindmapId}/name`,
     favorite: (mindmapId: string) => `/mindmaps/${mindmapId}/favorite`,
+    session_join: (mindmapId: string) => `/mindmaps/${mindmapId}/sessions/join`,
 
     node: (mindmapId: string, nodeId: string) => `/mindmaps/${mindmapId}/nodes/${nodeId}`,
 } as const;

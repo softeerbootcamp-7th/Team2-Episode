@@ -3,12 +3,12 @@ export const PATHS = {
     mindmap: {
         list: "/mindmaps",
         create: "/mindmaps/create",
-        detail: "/mindmaps/:mindmap_id",
+        detail: "/mindmaps/:mindmapId",
     },
     episode_archive: "/episode_archive",
     self_diagnosis: {
         list: "/self_diagnoses",
-        detail: "/self_diagnoses/:self_diagnosis_id",
+        detail: "/self_diagnoses/:selfDiagnosisId",
     },
     login: "/login",
     landing: "/landing",
@@ -20,7 +20,7 @@ export const linkTo = {
     mindmap: {
         list: () => PATHS.mindmap.list,
         create: () => PATHS.mindmap.create,
-        detail: (mindmapId: number | string) => PATHS.mindmap.detail.replace(":mindmap_id", String(mindmapId)),
+        detail: (mindmapId: number | string) => PATHS.mindmap.detail.replace(":mindmapId", String(mindmapId)),
     },
 
     episode_archive: () => PATHS.episode_archive,
@@ -28,7 +28,7 @@ export const linkTo = {
     self_diagnosis: {
         list: () => PATHS.self_diagnosis.list,
         detail: (selfDiagnosisId: number | string) =>
-            PATHS.self_diagnosis.detail.replace(":self_diagnosis_id", String(selfDiagnosisId)),
+            PATHS.self_diagnosis.detail.replace(":selfDiagnosisId", String(selfDiagnosisId)),
     },
 
     login: () => PATHS.login,
