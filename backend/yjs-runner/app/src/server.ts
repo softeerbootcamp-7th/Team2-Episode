@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import Redis from 'ioredis';
 import {S3SnapshotStorage} from './infrastructure/S3SnapshotStorage';
 import {RedisUpdateRepository} from './infrastructure/UpdateRepository';
