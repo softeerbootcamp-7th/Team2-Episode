@@ -3,7 +3,6 @@ import { Link } from "react-router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import LandingInfo from "@/features/landing/components/LandingInfo";
-import { Logo } from "@/features/landing/components/Logo";
 import Button from "@/shared/components/button/Button";
 import CallToActionButton from "@/shared/components/call_to_action_button/CallToActionButton";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
@@ -191,11 +190,11 @@ const LandingPage = () => {
 
                     <div className="mt-10 w-full">
                         <div className="mx-auto w-full max-w-5xl">
-                            {/* <LandingInfo
+                            <LandingInfo
                                 name="main"
                                 alt="EPISODE 메인 화면"
                                 className="w-full h-auto rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 bg-white"
-                            /> */}
+                            />
                         </div>
                     </div>
                 </div>
@@ -213,11 +212,11 @@ const LandingPage = () => {
                 <div className="mx-auto w-full max-w-5xl px-6">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-8 md:p-10 relative">
                         <div className="flex flex-col md:flex-row items-center gap-10">
-                            {/* <LandingInfo
+                            <LandingInfo
                                 name="mindmap"
                                 alt="마인드맵 기능"
                                 className="w-full md:w-115 h-auto rounded-xl border border-gray-100"
-                            /> */}
+                            />
 
                             <div className="flex-1 w-full">
                                 <h2 className="typo-title-28-bold text-text-main1">마인드맵</h2>
@@ -298,12 +297,12 @@ const LandingPage = () => {
                                     </Link>
                                 </div>
                             </div>
-                            {/* 
+
                             <LandingInfo
                                 name="self_test"
                                 alt="기술문제 셀프진단 기능"
                                 className="w-full md:w-115 h-auto rounded-xl border border-gray-100 order-1 md:order-2"
-                            /> */}
+                            />
                         </div>
                     </div>
                 </div>
@@ -321,11 +320,11 @@ const LandingPage = () => {
                 <div className="mx-auto w-full max-w-5xl px-6">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-8 md:p-10 relative">
                         <div className="flex flex-col md:flex-row items-center gap-10">
-                            {/* <LandingInfo
+                            <LandingInfo
                                 name="episode"
                                 alt="에피소드 보관함 기능"
                                 className="w-full md:w-115 h-auto rounded-xl border border-gray-100"
-                            /> */}
+                            />
 
                             <div className="flex-1 w-full">
                                 <h2 className="typo-title-28-bold text-text-main1">에피소드 보관함</h2>
