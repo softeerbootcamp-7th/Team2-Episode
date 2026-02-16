@@ -9,7 +9,7 @@ export const MindMapProvider = ({
     canvasRef,
 }: {
     children: React.ReactNode;
-    canvasRef: React.RefObject<SVGSVGElement | null>;
+    canvasRef?: React.RefObject<SVGSVGElement | null>;
 }) => {
     // 1. 엔진 인스턴스는 즉시 생성
     // 리렌더링 시 인스턴스가 유지되도록 useMemo 사용
@@ -19,6 +19,7 @@ export const MindMapProvider = ({
     const [version, setVersion] = useState(0);
 
     useEffect(() => {
+        if (!canvasRef || !canvasRef.current) return;
         const svg = canvasRef.current;
 
         // 이미 초기화되었거나 SVG가 아직 없다면 중단
