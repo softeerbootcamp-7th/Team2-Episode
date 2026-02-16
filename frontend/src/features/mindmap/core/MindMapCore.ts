@@ -169,6 +169,12 @@ export default class MindMapCore {
     }
 
     /** ========== Interaction ========== */
+    resetViewport() {
+        if (!this._isInitialized || !this.viewport) return;
+
+        this.broker.publish("VIEWPORT_RESET", undefined);
+    }
+
     handleMouseMove(e: React.MouseEvent) {
         this.broker.publish("RAW_MOUSE_MOVE", e);
     }

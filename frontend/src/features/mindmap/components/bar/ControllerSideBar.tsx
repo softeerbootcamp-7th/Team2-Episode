@@ -1,5 +1,6 @@
 import { ComponentPropsWithoutRef, ReactNode } from "react";
 
+import { useMindMapCore } from "@/features/mindmap/hooks/useMindmapContext";
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
 import { cn } from "@/utils/cn";
@@ -21,6 +22,11 @@ function Col({ upSlot, bottomSlot, className, ...props }: ColProps) {
 const iconColor = "var(--color-gray-700)";
 
 export default function ControllerSideBar() {
+    const core = useMindMapCore();
+
+    const handleReset = () => {
+        core?.resetViewport();
+    };
     return (
         <Col
             upSlot={
@@ -29,7 +35,7 @@ export default function ControllerSideBar() {
                         <Icon name="ic_tool_fit" color={iconColor} />
                     </Button>
 
-                    <Button variant="sidebar" borderRadius="xl" size="xs">
+                    <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleReset}>
                         <Icon name="ic_target" color={iconColor} />
                     </Button>
                 </>

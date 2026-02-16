@@ -3,6 +3,7 @@ import { NodeElement } from "@/features/mindmap/types/node";
 import { Rect } from "@/features/mindmap/types/spatial";
 import { EventBroker } from "@/utils/EventBroker";
 
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 /**
  * 카메라
  *  canvas: 화면을 그리는 실제 SVG 엘리먼트
@@ -19,6 +20,7 @@ export default class ViewportManager {
     private zoom = 1;
 
     private readonly INITIAL_VIEW_FACTOR = 6; // 초기 뷰포트 크기: 루트 노드의 n배
+    private rafId: number | null = null; // 애니메이션 프레임 ID
 
     /** [Init] 루트 노드를 중앙에 배치하고 쿼드 트리와 줌인된 초기 뷰포트를 설정 */
     constructor(
@@ -38,6 +40,43 @@ export default class ViewportManager {
 
         this.setupEventListeners();
         this.applyViewBox();
+    }
+
+    private cancelAnimation() {
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+    }
+
+    private animateTo(targetPanX: number, targetPanY: number, targetZoom: number, duration: number = 320) {
+        this.cancelAnimation(); // 이전 애니메이션이 있다면 중단
+
+        const startPanX = this.panX;
+        const startPanY = this.panY;
+        const startZoom = this.zoom;
+        const startTime = performance.now();
+
+        const step = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const k = easeOutCubic(progress);
+
+            // 보간법(Interpolation) 적용
+            this.panX = startPanX + (targetPanX - startPanX) * k;
+            this.panY = startPanY + (targetPanY - startPanY) * k;
+            this.zoom = startZoom + (targetZoom - startZoom) * k;
+
+            this.applyViewBox();
+
+            if (progress < 1) {
+                this.rafId = requestAnimationFrame(step);
+            } else {
+                this.rafId = null;
+            }
+        };
+
+        this.rafId = requestAnimationFrame(step);
     }
 
     /** broker 통한 명령 구독 */
@@ -62,6 +101,11 @@ export default class ViewportManager {
                 this.zoomHandler(wheelEvent.deltaY, { clientX: wheelEvent.clientX, clientY: wheelEvent.clientY });
             },
         });
+
+        this.broker.subscribe({
+            key: "VIEWPORT_RESET",
+            callback: () => this.resetView(),
+        });
     }
 
     /** 항상 카메라 중심(panX, panY)을 기준으로 계산 -> svg 반영 */
@@ -85,6 +129,7 @@ export default class ViewportManager {
 
     /** 마우스 드래그: 카메라의 중심점(panX, panY)을 이동 */
     panningHandler(dx: number, dy: number): void {
+        this.cancelAnimation();
         // 현재 줌 배율에 맞춰 마우스 픽셀 이동량을 World 좌표 이동량으로 변환
         this.panX -= dx / this.zoom;
         this.panY -= dy / this.zoom;
@@ -94,6 +139,7 @@ export default class ViewportManager {
 
     /** 줌 핸들러: 마우스 포인터 지점을 고정하며 줌 인/아웃 */
     zoomHandler(delta: number, e: { clientX: number; clientY: number }): void {
+        this.cancelAnimation();
         const rect = this.canvas.getBoundingClientRect();
 
         // 1. 줌 전의 마우스 월드 좌표 계산
@@ -130,6 +176,10 @@ export default class ViewportManager {
     /** 외부(ResizeObserver)에서 호출할 수 있도록 제공 */
     handleResize() {
         this.applyViewBox();
+    }
+
+    resetView(): void {
+        this.animateTo(0, 0, 1);
     }
 
     /**
