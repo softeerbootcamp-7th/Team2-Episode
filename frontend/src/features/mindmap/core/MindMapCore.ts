@@ -52,6 +52,11 @@ export default class MindMapCore {
             affectedIds.forEach((id) => {
                 this.layout.invalidate(id);
             });
+
+            const targetId = affectedIds[1];
+            if (targetId) {
+                this.tree.updateDirection({ nodeId: targetId });
+            }
         }
 
         // 1. 레이아웃 업데이트
