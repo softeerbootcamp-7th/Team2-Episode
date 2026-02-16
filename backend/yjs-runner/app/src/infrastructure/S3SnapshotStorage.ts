@@ -66,7 +66,7 @@ export class S3SnapshotStorage implements SnapshotStorage {
             if (error instanceof NoSuchKey) {
                 console.info(`[S3Storage] 해당 roomId에 대한 데이터가 존재하지 않습니다.: ${roomId}.`);
             } else {
-                console.error("[S3Storage] 예상치 못한 에러가 발생했습니다.");
+                console.error("[S3Storage] 예상치 못한 에러가 발생했습니다.", error);
             }
             return new Uint8Array();
         }
