@@ -73,7 +73,9 @@ const MindmapCard = ({ data, type = "PUBLIC", interaction = "navigate", selected
     };
 
     useClickOutside(editContainerRef, () => {
-        if (isEditing) handleCancel();
+        if (isEditing) {
+            handleCancel();
+        }
     });
 
     const handleCancel = () => {
