@@ -25,7 +25,7 @@ export default function ControllerSideBar() {
     const core = useMindMapCore();
 
     const handleReset = () => {
-        core?.resetViewport();
+        core?.getBroker().publish("VIEWPORT_RESET", undefined);
     };
 
     const handleFit = () => {
