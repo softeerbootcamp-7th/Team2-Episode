@@ -8,6 +8,7 @@ describe('RedisStreamJobConsumer Integration Test', () => {
     let consumer: RedisStreamJobConsumer;
 
     const STREAM_KEY = 'test:jobs';
+    const DEDUPE_KEY = 'test:jobs:dedupe:'
     const GROUP_NAME = 'test-group';
     const CONSUMER_NAME = 'test-worker';
 
@@ -22,9 +23,11 @@ describe('RedisStreamJobConsumer Integration Test', () => {
 
         consumer = new RedisStreamJobConsumer(redis, {
             jobStreamKey: STREAM_KEY,
+            jobDedupePrefix: DEDUPE_KEY,
             groupName: GROUP_NAME,
             consumerName: CONSUMER_NAME,
-            roomIdField: 'r',
+            roomIdField: 'rid',
+            typeField: 'type',
             maxRetries: 5
         });
 

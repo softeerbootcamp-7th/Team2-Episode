@@ -32,9 +32,11 @@ const service = new SnapshotService({updateRepo, yjs, storage});
 
 const consumer = new RedisStreamJobConsumer(redis, {
     jobStreamKey: process.env.JOB_STREAM_KEY!,
+    jobDedupePrefix: process.env.JOB_DEDUPE_KEY_PRIFIX!,
     groupName: process.env.JOB_GROUP_NAME!,
     consumerName: process.env.JOB_CONSUMER_NAME!,
-    roomIdField: process.env.JOB_ROOM_FIELD ? process.env.JOB_ROOM_FIELD : "r",
+    roomIdField: process.env.JOB_ROOM_FIELD ? process.env.JOB_ROOM_FIELD : "rid",
+    typeField: process.env.JOB_TYPE_FIELD ? process.env.JOB_TYPE_FIELD : "type",
     maxRetries: process.env.JOB_MAX_TRY ? process.env.JOB_MAX_TRY as unknown as number : 5,
 });
 

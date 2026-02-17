@@ -1,5 +1,5 @@
 import type Redis from 'ioredis';
-import type {SnapshotJob} from '../contracts/SnapshotJob';
+import {SnapshotJob, SnapshotJobType} from '../contracts/SnapshotJob';
 
 export interface JobConsumer {
     init(): Promise<void>;
@@ -10,10 +10,12 @@ export interface JobConsumer {
 }
 
 export type RedisJobConsumerConfig = {
-    jobStreamKey: string;     // e.g. "yjs:save:jobs"
-    groupName: string;        // e.g. "snapshot-workers"
-    consumerName: string;     // e.g. `worker-${process.pid}`
-    roomIdField: string;     // roomId 용 필드명 저장.. 아마 "r"?
+    jobStreamKey: string;
+    jobDedupePrefix: string;
+    groupName: string;
+    consumerName: string;
+    roomIdField: string;
+    typeField: string;
     maxRetries: number;
 };
 
@@ -49,38 +51,8 @@ export class RedisStreamJobConsumer implements JobConsumer {
         ) as [string, [string, string[]][]][] | null;
 
         if (pendingResults && pendingResults.length > 0 && pendingResults[0][1].length > 0) {
-            const [, entries] = pendingResults[0];
-            const entryIds = entries.map(([id]) => id);
-
-            const pendingDetails = await this.redis.xpending(
-                this.config.jobStreamKey,
-                this.config.groupName,
-                'IDLE', 0,
-                entryIds[0],
-                entryIds[entryIds.length - 1],
-                count
-            ) as any[];
-
-            const validEntries: [string, string[]][] = [];
-            const idsToAbandon: string[] = [];
-
-            entries.forEach((entry, index) => {
-                const deliveryCount = Number(pendingDetails[index][3]);
-                if (deliveryCount > this.config.maxRetries) {
-                    idsToAbandon.push(entry[0]);
-                    console.warn(`[JobConsumer] 재시도 초과(${deliveryCount}), 포기: ${entry[0]}`);
-                } else {
-                    validEntries.push(entry);
-                }
-            });
-
-            if (idsToAbandon.length > 0) {
-                await this.ack(idsToAbandon);
-            }
-
-            if (validEntries.length > 0) {
-                return this.parseEntries([[this.config.jobStreamKey, validEntries]]);
-            }
+            const pendingJobs = await this.processPending(count, pendingResults);
+            if (pendingJobs !== null) return pendingJobs;
         }
 
         const results = await this.redis.xreadgroup(
@@ -111,6 +83,49 @@ export class RedisStreamJobConsumer implements JobConsumer {
         );
     }
 
+    private async processPending(count: number = 1, pendingResults: [string, [string, string[]][]][]) {
+        const [, entries] = pendingResults[0];
+        const entryIds = entries.map(([id]) => id);
+
+        const pendingDetails = await this.redis.xpending(
+            this.config.jobStreamKey,
+            this.config.groupName,
+            'IDLE', 0,
+            entryIds[0],
+            entryIds[entryIds.length - 1],
+            count
+        ) as any[];
+
+        const validEntries: [string, string[]][] = [];
+        const idsToAbandon: string[] = [];
+
+        const deliveryById = new Map<string, number>();
+        for (const p of pendingDetails) {
+            deliveryById.set(p[0], Number(p[3]));
+        }
+
+        entries.forEach((entry, index) => {
+            const id = entry[0];
+            const deliveryCount = deliveryById.get(id);
+            if (deliveryCount == null) return;
+            if (deliveryCount > this.config.maxRetries) {
+                idsToAbandon.push(entry[0]);
+                console.warn(`[JobConsumer] 재시도 초과(${deliveryCount}), 포기: ${entry[0]}`);
+            } else {
+                validEntries.push(entry);
+            }
+        });
+
+        if (idsToAbandon.length > 0) {
+            await this.ack(idsToAbandon);
+        }
+
+        if (validEntries.length > 0) {
+            return this.parseEntries([[this.config.jobStreamKey, validEntries]]);
+        }
+        return null;
+    }
+
     private parseEntries(results: [string, [string, string[]][]][]): SnapshotJob[] {
         try {
             const [, entries] = results[0];
@@ -120,10 +135,15 @@ export class RedisStreamJobConsumer implements JobConsumer {
                 for (let i = 0; i < rawData.length; i += 2) {
                     data[rawData[i]] = rawData[i + 1];
                 }
+                const rawType = data[this.config.typeField] as SnapshotJobType;
+                if (rawType !== SnapshotJobType.SNAPSHOT && rawType !== SnapshotJobType.SYNC) {
+                    throw new Error(`Unknown job type: ${rawType}`);
+                }
 
                 return {
                     entryId: entryId,
-                    roomId: data[this.config.roomIdField]
+                    roomId: data[this.config.roomIdField],
+                    type: rawType
                 };
             });
         } catch (error) {
