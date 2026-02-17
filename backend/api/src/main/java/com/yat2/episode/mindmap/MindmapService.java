@@ -150,6 +150,7 @@ public class MindmapService {
         if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_NOT_FOUND);
 
         boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapId);
+
         if (!hasOtherParticipants) {
             mindmapRepository.delete(mindmap);
         }
@@ -182,6 +183,7 @@ public class MindmapService {
                             mindmapParticipantRepository.save(new MindmapParticipant(user, mindmap));
 
                     List<UUID> existingEpisodeNodeIds = episodeRepository.findNodeIdsByMindmapId(mindmapId);
+
                     if (!existingEpisodeNodeIds.isEmpty()) {
                         List<EpisodeStar> starsToCreate =
                                 existingEpisodeNodeIds.stream().map(nodeId -> EpisodeStar.create(nodeId, userId))
@@ -196,8 +198,7 @@ public class MindmapService {
 
     @Transactional
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
-        this.saveMindmapParticipant(userId, mindmapId);
-
+        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
 
         String presignedUrl =
