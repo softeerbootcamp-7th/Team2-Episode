@@ -277,10 +277,7 @@ class MindmapServiceTest {
             String objectKey = "snapshots/" + mindmapId;
             String expectedUrl = "https://s3.amazonaws.com/test-bucket/" + objectKey + "?token=abc";
 
-            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willReturn(mindmap);
-            given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
-                    Optional.of(participant));
+            given(mindmapAccessValidator.findParticipantOrThrow(mindmapId, testUserId)).willReturn(participant);
 
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(objectKey);
             given(snapshotRepository.createPresignedGetURL(objectKey)).willReturn(expectedUrl);
@@ -297,26 +294,12 @@ class MindmapServiceTest {
         @DisplayName("실패: 존재하지 않는 마인드맵이면 MINDMAP_NOT_FOUND 예외가 발생한다")
         void should_throw_exception_when_mindmap_not_found() {
             UUID mindmapId = UUID.randomUUID();
-            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willThrow(
+            given(mindmapAccessValidator.findParticipantOrThrow(mindmapId, testUserId)).willThrow(
                     new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
 
             assertThatThrownBy(() -> mindmapService.joinMindmapSession(testUserId, mindmapId)).isInstanceOf(
                             CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
-        }
-
-        @Test
-        @DisplayName("실패: 개인 마인드맵(공유안됨)이면 MINDMAP_ACCESS_FORBIDDEN 예외가 발생한다")
-        void should_throw_exception_when_mindmap_is_private() {
-            UUID mindmapId = UUID.randomUUID();
-            given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willThrow(
-                    new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN));
-
-            assertThatThrownBy(() -> mindmapService.joinMindmapSession(testUserId, mindmapId)).isInstanceOf(
-                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
         }
     }
 }
