@@ -35,6 +35,7 @@ const consumer = new RedisStreamJobConsumer(redis, {
     groupName: process.env.JOB_GROUP_NAME!,
     consumerName: process.env.JOB_CONSUMER_NAME!,
     roomIdField: process.env.JOB_ROOM_FIELD ? process.env.JOB_ROOM_FIELD : "r",
+    maxRetries: process.env.JOB_MAX_TRY ? process.env.JOB_MAX_TRY as unknown as number : 5,
 });
 
 const worker = new SnapshotWorker({

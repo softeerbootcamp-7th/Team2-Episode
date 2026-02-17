@@ -24,7 +24,8 @@ describe('RedisStreamJobConsumer Integration Test', () => {
             jobStreamKey: STREAM_KEY,
             groupName: GROUP_NAME,
             consumerName: CONSUMER_NAME,
-            roomIdField: 'r'
+            roomIdField: 'r',
+            maxRetries: 5
         });
 
         await consumer.init();

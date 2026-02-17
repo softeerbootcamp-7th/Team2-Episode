@@ -14,6 +14,7 @@ export type RedisJobConsumerConfig = {
     groupName: string;        // e.g. "snapshot-workers"
     consumerName: string;     // e.g. `worker-${process.pid}`
     roomIdField: string;     // roomId 용 필드명 저장.. 아마 "r"?
+    maxRetries: number;
 };
 
 export class RedisStreamJobConsumer implements JobConsumer {
@@ -48,7 +49,38 @@ export class RedisStreamJobConsumer implements JobConsumer {
         ) as [string, [string, string[]][]][] | null;
 
         if (pendingResults && pendingResults.length > 0 && pendingResults[0][1].length > 0) {
-            return this.parseEntries(pendingResults);
+            const [, entries] = pendingResults[0];
+            const entryIds = entries.map(([id]) => id);
+
+            const pendingDetails = await this.redis.xpending(
+                this.config.jobStreamKey,
+                this.config.groupName,
+                'IDLE', 0,
+                entryIds[0],
+                entryIds[entryIds.length - 1],
+                count
+            ) as any[];
+
+            const validEntries: [string, string[]][] = [];
+            const idsToAbandon: string[] = [];
+
+            entries.forEach((entry, index) => {
+                const deliveryCount = Number(pendingDetails[index][3]);
+                if (deliveryCount > this.config.maxRetries) {
+                    idsToAbandon.push(entry[0]);
+                    console.warn(`[JobConsumer] 재시도 초과(${deliveryCount}), 포기: ${entry[0]}`);
+                } else {
+                    validEntries.push(entry);
+                }
+            });
+
+            if (idsToAbandon.length > 0) {
+                await this.ack(idsToAbandon);
+            }
+
+            if (validEntries.length > 0) {
+                return this.parseEntries([[this.config.jobStreamKey, validEntries]]);
+            }
         }
 
         const results = await this.redis.xreadgroup(
