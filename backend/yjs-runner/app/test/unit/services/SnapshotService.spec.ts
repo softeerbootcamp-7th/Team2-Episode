@@ -35,36 +35,51 @@ describe('SnapshotService', () => {
         const mockUpdates = [new Uint8Array([3]), new Uint8Array([4])];
         const mockNewSnapshot = new Uint8Array([1, 2, 3, 4]);
 
+        const mockPacket = {
+            lastEntryId: '123-0',
+            roomId: roomId,
+            updateFrameList: mockUpdates
+        };
+
         mockStorage.download.mockResolvedValue(mockBase);
-        mockUpdateRepo.fetchAllUpdates.mockResolvedValue(mockUpdates);
+        mockUpdateRepo.fetchAllUpdates.mockResolvedValue(mockPacket);
         mockYjs.buildSnapshot.mockReturnValue(mockNewSnapshot);
 
         await service.process(roomId);
 
         expect(mockStorage.download).toHaveBeenCalledWith(roomId);
         expect(mockUpdateRepo.fetchAllUpdates).toHaveBeenCalledWith(roomId);
+        expect(mockUpdateRepo.trim).toHaveBeenCalledWith(roomId, mockPacket.lastEntryId);
         expect(mockYjs.buildSnapshot).toHaveBeenCalledWith(mockBase, mockUpdates);
         expect(mockStorage.upload).toHaveBeenCalledWith(roomId, mockNewSnapshot);
-        expect(mockUpdateRepo.trim).toHaveBeenCalledWith(roomId);
     });
 
-    it('S3에 기존 스냅샷이 없어도 정상적으로 동작해야 한다', async () => {
-        const roomId = 'new-room';
-        mockStorage.download.mockResolvedValue(new Uint8Array());
-        mockUpdateRepo.fetchAllUpdates.mockResolvedValue([new Uint8Array([9])]);
-        mockYjs.buildSnapshot.mockReturnValue(new Uint8Array([9]));
+    it('S3에 기존 스냅샷이 없으면 에러를 던져야 한다 (NoSuchKey 등)', async () => {
+        const roomId = 'no-base-room';
 
-        await service.process(roomId);
+        mockStorage.download.mockRejectedValue(new Error('NoSuchKey: The specified key does not exist.'));
 
-        expect(mockYjs.buildSnapshot).toHaveBeenCalledWith(new Uint8Array(), expect.any(Array));
-        expect(mockStorage.upload).toHaveBeenCalled();
+        await expect(service.process(roomId)).rejects.toThrow('NoSuchKey');
+
+        expect(mockYjs.buildSnapshot).not.toHaveBeenCalled();
+        expect(mockStorage.upload).not.toHaveBeenCalled();
+        expect(mockUpdateRepo.trim).not.toHaveBeenCalled();
     });
 
     it('업로드에 실패하면 Redis를 비우지(trim) 않아야 한다', async () => {
-        mockUpdateRepo.fetchAllUpdates.mockResolvedValue([new Uint8Array([1])]);
+        const roomId = 'fail-room';
+        const lastEntryId = '456-0';
+
+        mockStorage.download.mockResolvedValue(new Uint8Array([1]));
+        mockUpdateRepo.fetchAllUpdates.mockResolvedValue({
+            lastEntryId,
+            roomId,
+            updateFrameList: [new Uint8Array([2])]
+        });
         mockStorage.upload.mockRejectedValue(new Error('S3 Connection Failed'));
 
-        await expect(service.process('fail-room')).rejects.toThrow('S3 Connection Failed');
+        await expect(service.process(roomId)).rejects.toThrow('S3 Connection Failed');
+
         expect(mockUpdateRepo.trim).not.toHaveBeenCalled();
     });
 });
