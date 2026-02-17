@@ -13,7 +13,7 @@ export type RedisJobConsumerConfig = {
     jobStreamKey: string;     // e.g. "yjs:save:jobs"
     groupName: string;        // e.g. "snapshot-workers"
     consumerName: string;     // e.g. `worker-${process.pid}`
-    roomIdField?: string;     // roomId 용 필드명 저장.. 아마 "r"?
+    roomIdField: string;     // roomId 용 필드명 저장.. 아마 "r"?
 };
 
 export class RedisStreamJobConsumer implements JobConsumer {
@@ -24,23 +24,66 @@ export class RedisStreamJobConsumer implements JobConsumer {
     }
 
     async init(): Promise<void> {
-        // todo:
-        // XGROUP CREATE <jobStreamKey> <groupName> $ MKSTREAM
+        try {
+            await this.redis.xgroup(
+                'CREATE',
+                this.config.jobStreamKey,
+                this.config.groupName,
+                '$',
+                'MKSTREAM'
+            );
+        } catch (err: any) {
+            if (!err.message.includes('BUSYGROUP')) {
+                throw err;
+            }
+        }
     }
 
     async read(blockMs: number, count: number = 1): Promise<SnapshotJob[]> {
-        // todo:
-        // XREADGROUP GROUP <group> <consumer> COUNT <count> BLOCK <blockMs> STREAMS <stream> >
-        // 파싱 entries -> SnapshotJob[]
-        void blockMs;
-        void count;
-        return [];
+        const results = await this.redis.xreadgroup(
+            'GROUP',
+            this.config.groupName,
+            this.config.consumerName,
+            'COUNT',
+            count,
+            'BLOCK',
+            blockMs,
+            'STREAMS',
+            this.config.jobStreamKey,
+            '>'
+        ) as [string, [string, string[]][]][] | null;
+
+        if (!results) return [];
+
+        try {
+            const streamData = results[0];
+            const entries = streamData[1];
+
+            return entries.map(([entryId, rawData]) => {
+                const data: Record<string, string> = {};
+                for (let i = 0; i < rawData.length; i += 2) {
+                    data[rawData[i]] = rawData[i + 1];
+                }
+
+                return {
+                    entryId: entryId,
+                    roomId: data[this.config.roomIdField]
+                };
+            });
+        } catch (error) {
+            console.error('[RedisJobConsumer] 파싱 에러:', error);
+            return [];
+        }
     }
 
     async ack(entryId: string[]): Promise<void> {
-        // todo:
-        // XACK <stream> <group> <id...>
-        void entryId;
+        if (entryId != null && entryId.length === 0) return;
+
+        await this.redis.xack(
+            this.config.jobStreamKey,
+            this.config.groupName,
+            ...entryId
+        );
     }
 }
 
