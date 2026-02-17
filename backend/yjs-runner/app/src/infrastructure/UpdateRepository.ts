@@ -1,4 +1,5 @@
 import type Redis from 'ioredis';
+import * as decoding from 'lib0/decoding';
 import {SnapshotBuildContext} from "../contracts/SnapshotBuildContext";
 
 export interface UpdateRepository {
@@ -13,7 +14,7 @@ export type UpdateRepositoryConfig = {
 
 export class RedisUpdateRepository implements UpdateRepository {
     private readonly defaultLastEntryId = "0-0"
-    private readonly fieldUpdate = "u"
+    private static readonly FIELD_U = 0x75; // 'u'
 
     constructor(
         private readonly redis: Redis,
@@ -42,10 +43,11 @@ export class RedisUpdateRepository implements UpdateRepository {
 
         for (const [id, rawData] of entries) {
             lastEntryId = id.toString();
-            const dataIndex = rawData.findIndex(buf => buf.toString() === this.fieldUpdate);
-            if (dataIndex !== -1) {
-                const rawBuffer = rawData[dataIndex + 1];
-                updateFrameList.push(new Uint8Array(rawBuffer));
+            if ((rawData.length & 1) === 1) continue;
+            for (let i = 0; i + 1 < rawData.length; i += 2) {
+                const updateFrame = this.getPureUpdateFromRawData(rawData, i);
+                if (updateFrame == null) continue;
+                updateFrameList.push(updateFrame);
             }
         }
 
@@ -62,4 +64,25 @@ export class RedisUpdateRepository implements UpdateRepository {
         await this.redis.xtrim(key, 'MINID', lastEntryId);
         await this.redis.xdel(key, lastEntryId);
     }
+
+    private getPureUpdateFromRawData(rawData: Buffer[], i: number) {
+        const field = rawData[i];
+        if (field.length === 1 && field[0] === RedisUpdateRepository.FIELD_U) {
+            const rawBuffer = rawData[i + 1];
+            return this.decodePureUpdate(rawBuffer);
+        }
+        return null;
+    }
+
+    private decodePureUpdate(rawBuffer: Uint8Array): Uint8Array | null {
+        try {
+            const dec = decoding.createDecoder(rawBuffer);
+            decoding.readVarUint(dec);
+            decoding.readVarUint(dec);
+            return decoding.readVarUint8Array(dec);
+        } catch {
+            return null;
+        }
+    }
+
 }
