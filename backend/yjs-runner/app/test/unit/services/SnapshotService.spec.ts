@@ -38,7 +38,7 @@ describe('SnapshotService', () => {
         const mockPacket = {
             lastEntryId: '123-0',
             roomId: roomId,
-            updateDataList: mockUpdates
+            updateFrameList: mockUpdates
         };
 
         mockStorage.download.mockResolvedValue(mockBase);
@@ -74,7 +74,7 @@ describe('SnapshotService', () => {
         mockUpdateRepo.fetchAllUpdates.mockResolvedValue({
             lastEntryId,
             roomId,
-            updateDataList: [new Uint8Array([2])]
+            updateFrameList: [new Uint8Array([2])]
         });
         mockStorage.upload.mockRejectedValue(new Error('S3 Connection Failed'));
 

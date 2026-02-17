@@ -1,8 +1,8 @@
 import type Redis from 'ioredis';
-import {UpdatePacket} from "../contracts/UpdatePacket";
+import {SnapshotBuildContext} from "../contracts/SnapshotBuildContext";
 
 export interface UpdateRepository {
-    fetchAllUpdates(roomId: string): Promise<UpdatePacket>;
+    fetchAllUpdates(roomId: string): Promise<SnapshotBuildContext>;
 
     trim(roomId: string, lastEntryId: string): Promise<void>;
 }
@@ -25,7 +25,7 @@ export class RedisUpdateRepository implements UpdateRepository {
         return `${this.config.updateStreamKeyPrefix}${roomId}`;
     }
 
-    async fetchAllUpdates(roomId: string): Promise<UpdatePacket> {
+    async fetchAllUpdates(roomId: string): Promise<SnapshotBuildContext> {
         const key = this.getStreamKey(roomId);
         const entries = await this.redis.xrangeBuffer(key, '-', '+') as unknown as [Buffer, Buffer[]][];
 
@@ -33,11 +33,11 @@ export class RedisUpdateRepository implements UpdateRepository {
             return {
                 lastEntryId: this.defaultLastEntryId,
                 roomId,
-                updateDataList: []
+                updateFrameList: []
             };
         }
 
-        const updateDataList: Uint8Array[] = [];
+        const updateFrameList: Uint8Array[] = [];
         let lastEntryId = this.defaultLastEntryId;
 
         for (const [id, rawData] of entries) {
@@ -45,14 +45,14 @@ export class RedisUpdateRepository implements UpdateRepository {
             const dataIndex = rawData.findIndex(buf => buf.toString() === this.fieldUpdate);
             if (dataIndex !== -1) {
                 const rawBuffer = rawData[dataIndex + 1];
-                updateDataList.push(new Uint8Array(rawBuffer));
+                updateFrameList.push(new Uint8Array(rawBuffer));
             }
         }
 
         return {
             lastEntryId,
             roomId,
-            updateDataList
+            updateFrameList
         };
     }
 

@@ -15,7 +15,7 @@ export class SnapshotService {
     async process(roomId: string): Promise<void> {
         const baseDoc = await this.deps.storage.download(roomId)
         const updates = await this.deps.updateRepo.fetchAllUpdates(roomId);
-        const newDoc = this.deps.yjs.buildSnapshot(baseDoc, updates.updateDataList);
+        const newDoc = this.deps.yjs.buildSnapshot(baseDoc, updates.updateFrameList);
         await this.deps.storage.upload(roomId, newDoc);
         await this.deps.updateRepo.trim(roomId, updates.lastEntryId);
     }
