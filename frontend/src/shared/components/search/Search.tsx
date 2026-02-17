@@ -18,7 +18,7 @@ export default function Search({ onSearchChange, onSearchSubmit, placeholder = "
     return (
         <div
             className={cn(
-                "group bg-base-white typo-body-14-reg flex gap-3 items-center rounded-xl border border-solid px-4 py-3 shadow-sm w-full",
+                "group bg-base-white typo-body-14-reg flex gap-3 items-center rounded-xl border border-solid px-4 py-3 w-full",
                 "border-gray-300 focus-within:border-primary",
                 className,
             )}

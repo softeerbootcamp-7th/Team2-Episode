@@ -388,6 +388,27 @@ export default class TreeContainer {
         }
     }
 
+    updateDirection({ nodeId }: { nodeId: NodeId }) {
+        const parentNode = this.safeGetNode(nodeId);
+        if (!parentNode) return;
+
+        const targetDirection = parentNode.addNodeDirection;
+
+        const traverseAndCheck = (currentId: NodeId) => {
+            const children = this.getChildNodes(currentId);
+
+            children.forEach((child) => {
+                if (child.addNodeDirection === targetDirection) {
+                    return;
+                }
+                child.addNodeDirection = targetDirection;
+                traverseAndCheck(child.id);
+            });
+        };
+
+        traverseAndCheck(nodeId);
+    }
+
     // ===== 조회 / 탐색 ====== //
     getChildIds(nodeId: NodeId): NodeId[] {
         const node = this.safeGetNode(nodeId);
