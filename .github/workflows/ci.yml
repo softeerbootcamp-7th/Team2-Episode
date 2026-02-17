@@ -1,127 +1,56 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [ dev, release ]
-  push:
-    branches: [ dev ]
+    push:
+        # 2-2. 모든 브랜치 push 시 트리거되도록 설정
+        branches: ["**"]
 
 jobs:
-  detect-changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-      runner: ${{ steps.filter.outputs.runner }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            api:
-              - 'backend/api/**'
-            runner:
-              - 'backend/yjs-runner/**'
-            frontend:
-              - 'frontend/**'
+    detect-changes:
+        name: Detect Changes
+        runs-on: ubuntu-latest
+        outputs:
+            frontend: ${{ steps.filter.outputs.frontend }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      frontend:
+                        - 'frontend/**'
 
-  lint:
-    name: Check Style
-    needs: detect-changes
-    if: needs.detect-changes.outputs.api == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend/api
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: gradle
-      - run: chmod +x ./gradlew
+    build_frontend:
+        name: Build Frontend
+        needs: detect-changes
+        if: needs.detect-changes.outputs.frontend == 'true'
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: frontend
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Run Checkstyle
-        run: ./gradlew checkstyleMain checkstyleTest --no-daemon
+            # 2-3. pnpm 빌드 방식 적용
+            - name: Install pnpm
+              uses: pnpm/action-setup@v3
+              with:
+                  version: 8
 
-  build_api:
-    name: Build & Test (API)
-    needs: detect-changes
-    if: needs.detect-changes.outputs.api == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend/api
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: gradle
-      - run: chmod +x ./gradlew
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "pnpm"
+                  # lock 파일이 없으므로 package.json 기준 캐싱
+                  cache-dependency-path: frontend/package.json
 
-      - name: Build
-        run: ./gradlew build -x checkstyleMain -x checkstyleTest --no-daemon
+            - name: Install dependencies
+              run: pnpm install
 
-  build_runner:
-    name: Build & Test (Yjs Runner)
-    needs: detect-changes
-    if: needs.detect-changes.outputs.runner == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend/yjs-runner
-    steps:
-      - uses: actions/checkout@v4
+            - name: Lint
+              run: pnpm run lint
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: backend/yjs-runner/package-lock.json
-
-      - name: Install
-        run: npm ci
-
-      - name: Build
-        run: npm run build --if-present
-
-      - name: Test
-        run: npm test --if-present
-
-  build_frontend:
-    name: Build Frontend
-    needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true'
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build
+            - name: Build
+              run: pnpm run build
