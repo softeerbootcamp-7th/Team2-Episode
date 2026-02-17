@@ -27,7 +27,10 @@ function InteractionOverlay({
     useEffect(() => {
         const root = rootRef.current;
         if (root) {
-            root.setAttribute("data-dragging", status.mode === "dragging" ? "true" : "false");
+            root.setAttribute(
+                "data-dragging",
+                ["dragging", "pending_creation"].includes(status.mode) ? "true" : "false",
+            );
         }
     }, [status.mode, rootRef]);
 
