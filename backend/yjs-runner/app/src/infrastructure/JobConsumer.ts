@@ -40,6 +40,17 @@ export class RedisStreamJobConsumer implements JobConsumer {
     }
 
     async read(blockMs: number, count: number = 1): Promise<SnapshotJob[]> {
+        const pendingResults = await this.redis.xreadgroup(
+            'GROUP', this.config.groupName, this.config.consumerName,
+            'COUNT', count,
+            'STREAMS', this.config.jobStreamKey,
+            '0'
+        ) as [string, [string, string[]][]][] | null;
+
+        if (pendingResults && pendingResults.length > 0 && pendingResults[0][1].length > 0) {
+            return this.parseEntries(pendingResults);
+        }
+
         const results = await this.redis.xreadgroup(
             'GROUP',
             this.config.groupName,
@@ -53,11 +64,24 @@ export class RedisStreamJobConsumer implements JobConsumer {
             '>'
         ) as [string, [string, string[]][]][] | null;
 
-        if (!results) return [];
+        if (!results || results.length < 1) return [];
 
+        return this.parseEntries(results);
+    }
+
+    async ack(entryId: string[]): Promise<void> {
+        if (entryId == null || entryId.length === 0) return;
+
+        await this.redis.xack(
+            this.config.jobStreamKey,
+            this.config.groupName,
+            ...entryId
+        );
+    }
+
+    private parseEntries(results: [string, [string, string[]][]][]): SnapshotJob[] {
         try {
-            const streamData = results[0];
-            const entries = streamData[1];
+            const [, entries] = results[0];
 
             return entries.map(([entryId, rawData]) => {
                 const data: Record<string, string> = {};
@@ -74,16 +98,6 @@ export class RedisStreamJobConsumer implements JobConsumer {
             console.error('[RedisJobConsumer] 파싱 에러:', error);
             return [];
         }
-    }
-
-    async ack(entryId: string[]): Promise<void> {
-        if (entryId != null && entryId.length === 0) return;
-
-        await this.redis.xack(
-            this.config.jobStreamKey,
-            this.config.groupName,
-            ...entryId
-        );
     }
 }
 
