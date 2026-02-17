@@ -71,4 +71,34 @@ describe('RedisStreamJobConsumer Integration Test', () => {
         const jobs = await consumer.read(100, 1); // 짧게 100ms만 대기
         expect(jobs).toEqual([]);
     });
+
+    it('재시도 횟수(maxRetries)를 초과한 메시지는 자동으로 ACK 처리되고 읽히지 않아야 한다', async () => {
+        const testRoomId = 'poison-pill-room';
+        const messageId = await redis.xadd(STREAM_KEY, '*', 'r', testRoomId);
+
+        for (let i = 0; i < 6; i++) {
+            await consumer.read(100, 1);
+        }
+
+        const jobs = await consumer.read(100, 1);
+
+        expect(jobs.length).toBe(0);
+
+        const pending = await redis.xpending(STREAM_KEY, GROUP_NAME);
+        expect(Number(pending[0])).toBe(0);
+    });
+
+    it('PEL에 남은 메시지가 maxRetries 이내라면 정상적으로 다시 읽어와야 한다', async () => {
+        const testRoomId = 'retry-room';
+        await redis.xadd(STREAM_KEY, '*', 'r', testRoomId);
+        await consumer.read(100, 1);
+
+        const jobs = await consumer.read(100, 1);
+
+        expect(jobs.length).toBe(1);
+        expect(jobs[0].roomId).toBe(testRoomId);
+
+        const pending = await redis.xpending(STREAM_KEY, GROUP_NAME);
+        expect(Number(pending[0])).toBe(1);
+    });
 });
