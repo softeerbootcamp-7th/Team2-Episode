@@ -1,3 +1,4 @@
+import * as Y from 'yjs';
 import {GenericContainer, StartedTestContainer} from "testcontainers";
 import Redis from 'ioredis';
 import {CreateBucketCommand, PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
@@ -75,15 +76,23 @@ describe('SnapshotService Integration Test (Testcontainers)', () => {
         const streamKey = `updates:${ROOM_ID}`;
         const s3Key = `snapshots/${ROOM_ID}`;
 
-        const baseSnapshot = new Uint8Array([10, 20, 30]);
+        const ydoc = new Y.Doc();
+        const ytext = ydoc.getText('test');
+        ytext.insert(0, 'hello');
+        const baseSnapshot = Y.encodeStateAsUpdate(ydoc);
+
         await s3Client.send(new PutObjectCommand({
             Bucket: BUCKET_NAME,
             Key: s3Key,
             Body: baseSnapshot
         }));
 
-        const dummyUpdate = new Uint8Array([0, 1, 2, 3]);
-        await redis.xadd(streamKey, '*', 'u', Buffer.from(dummyUpdate));
+        const updateDoc = new Y.Doc();
+        const updateText = updateDoc.getText('test');
+        updateText.insert(5, ' world');
+        const dummyUpdate = Y.encodeStateAsUpdate(updateDoc);
+
+        await redis.xadd(`updates:${ROOM_ID}`, '*', 'u', Buffer.from(dummyUpdate));
 
         await service.process(ROOM_ID);
 
