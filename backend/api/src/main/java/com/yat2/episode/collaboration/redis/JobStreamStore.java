@@ -27,7 +27,7 @@ public class JobStreamStore {
         publish(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
     }
 
-    public void publishSyncRecovery(UUID roomId) {
+    public void publishSync(UUID roomId) {
         publish(JobType.SYNC, roomId, redisProperties.jobStream().dedupeTtl().sync());
     }
 

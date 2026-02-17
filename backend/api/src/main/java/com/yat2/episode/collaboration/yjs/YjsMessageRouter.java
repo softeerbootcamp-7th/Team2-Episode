@@ -127,13 +127,22 @@ public class YjsMessageRouter {
                     updateStreamStore.appendUpdate(roomId, payload);
                 } catch (Exception e) {
                     log.warn("Redis append failed. roomId={}", roomId, e);
-                    jobStreamStore.publishSyncRecovery(roomId);
+                    tryPublishSync(roomId);
                 }
             });
         } catch (Exception e) {
             log.error("Redis schedule failed. roomId={}", roomId, e);
-            jobStreamStore.publishSyncRecovery(roomId);
+            tryPublishSync(roomId);
         }
     }
+
+    private void tryPublishSync(UUID roomId) {
+        try {
+            jobStreamStore.publishSync(roomId);
+        } catch (Exception e) {
+            log.error("Sync publish failed. roomId={}", roomId, e);
+        }
+    }
+
 }
 
