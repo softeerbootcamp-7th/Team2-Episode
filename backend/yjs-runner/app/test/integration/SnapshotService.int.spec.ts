@@ -6,6 +6,7 @@ import {SnapshotService} from "../../src/services/SnapshotService";
 import {RedisUpdateRepository} from "../../src/infrastructure/UpdateRepository";
 import {S3SnapshotStorage} from "../../src/infrastructure/S3SnapshotStorage";
 import {DefaultYjsProcessor} from "../../src/domain/YjsProcessor";
+import {encoding} from "lib0";
 
 describe('SnapshotService Integration Test (Testcontainers)', () => {
     let redisContainer: StartedTestContainer;
@@ -92,7 +93,14 @@ describe('SnapshotService Integration Test (Testcontainers)', () => {
         updateText.insert(5, ' world');
         const dummyUpdate = Y.encodeStateAsUpdate(updateDoc);
 
-        await redis.xadd(`updates:${ROOM_ID}`, '*', 'u', Buffer.from(dummyUpdate));
+        const enc = encoding.createEncoder();
+        encoding.writeVarUint(enc, 0);
+        encoding.writeVarUint(enc, 2);
+        encoding.writeVarUint8Array(enc, dummyUpdate);
+
+        const framed = encoding.toUint8Array(enc);
+
+        await redis.xadd(streamKey, '*', 'u', Buffer.from(framed));
 
         await service.process(ROOM_ID);
 
