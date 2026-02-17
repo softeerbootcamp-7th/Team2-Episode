@@ -1,4 +1,4 @@
-import { edgeVariants } from "@/features/mindmap/components/EdgeLayer";
+import { edgeVariants } from "@/features/mindmap/components/canvas/EdgeLayer";
 import TempNode, { TEMP_NODE_SIZE } from "@/features/mindmap/node/components/temp_node/TempNode";
 import { NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { getContentBounds } from "@/features/mindmap/utils/node_geometry";

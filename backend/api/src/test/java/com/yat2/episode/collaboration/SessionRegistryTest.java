@@ -4,15 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import com.yat2.episode.collaboration.config.WebSocketProperties;
@@ -43,18 +40,13 @@ class SessionRegistryTest {
         registry = new SessionRegistry(wsProperties);
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<UUID, Set<WebSocketSession>> rooms() {
-        return (Map<UUID, Set<WebSocketSession>>) ReflectionTestUtils.getField(registry, "rooms");
-    }
-
     @Nested
     @DisplayName("세션 등록/제거")
     class SessionManagementTests {
 
         @Test
         @DisplayName("세션을 등록한다")
-        void addSession_addsDecoratedSession() {
+        void addSession_addsSession() {
             UUID roomId = UUID.randomUUID();
 
             WebSocketSession s1 = mock(WebSocketSession.class);
@@ -63,7 +55,8 @@ class SessionRegistryTest {
 
             registry.addSession(roomId, s1);
 
-            assertThat(rooms().get(roomId)).hasSize(1);
+            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(1).extracting(WebSocketSession::getId)
+                    .containsExactly("s1");
         }
 
         @Test
@@ -76,10 +69,11 @@ class SessionRegistryTest {
             when(s1.isOpen()).thenReturn(true);
 
             registry.addSession(roomId, s1);
-            assertThat(rooms().get(roomId)).hasSize(1);
+            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(1);
 
             registry.removeSession(roomId, s1);
-            assertThat(rooms().get(roomId)).isNull();
+
+            assertThat(registry.findAllAlivePeers(roomId, "NONE")).isEmpty();
         }
     }
 
@@ -122,7 +116,7 @@ class SessionRegistryTest {
 
         @Test
         @DisplayName("닫힌 세션은 제거한다")
-        void broadcast_removesClosedSessions() {
+        void broadcast_removesClosedSessions() throws IOException {
             UUID roomId = UUID.randomUUID();
 
             WebSocketSession sender = mock(WebSocketSession.class);
@@ -131,15 +125,18 @@ class SessionRegistryTest {
 
             WebSocketSession closed = mock(WebSocketSession.class);
             when(closed.getId()).thenReturn("closed");
-            when(closed.isOpen()).thenReturn(false);
+            when(closed.isOpen()).thenReturn(false, true);
 
             registry.addSession(roomId, sender);
             registry.addSession(roomId, closed);
 
             registry.broadcast(roomId, sender, new byte[]{ 9 });
+            registry.broadcast(roomId, sender, new byte[]{ 9 });
 
-            assertThat(rooms().get(roomId)).hasSize(1);
-            assertThat(rooms().get(roomId).stream().map(WebSocketSession::getId)).containsExactly("sender");
+            verify(closed, never()).sendMessage(any(BinaryMessage.class));
+
+            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(1).extracting(WebSocketSession::getId)
+                    .containsExactly("sender");
         }
 
         @Test
@@ -154,15 +151,18 @@ class SessionRegistryTest {
             WebSocketSession bad = mock(WebSocketSession.class);
             when(bad.getId()).thenReturn("bad");
             when(bad.isOpen()).thenReturn(true);
-            doThrow(new IOException("boom")).when(bad).sendMessage(any(BinaryMessage.class));
+            doThrow(new IOException("boom")).doNothing().when(bad).sendMessage(any(BinaryMessage.class));
 
             registry.addSession(roomId, sender);
             registry.addSession(roomId, bad);
 
             registry.broadcast(roomId, sender, new byte[]{ 1, 2 });
+            registry.broadcast(roomId, sender, new byte[]{ 1, 2 });
 
-            assertThat(rooms().get(roomId)).hasSize(1);
-            assertThat(rooms().get(roomId).stream().map(WebSocketSession::getId)).containsExactly("sender");
+            verify(bad, times(1)).sendMessage(any(BinaryMessage.class));
+
+            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(1).extracting(WebSocketSession::getId)
+                    .containsExactly("sender");
         }
     }
 }

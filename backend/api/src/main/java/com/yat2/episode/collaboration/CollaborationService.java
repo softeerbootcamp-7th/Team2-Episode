@@ -8,8 +8,8 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
-import java.util.concurrent.Executor;
 
+import com.yat2.episode.collaboration.yjs.YjsMessageRouter;
 import com.yat2.episode.global.constant.AttributeKeys;
 
 @Slf4j
@@ -17,11 +17,11 @@ import com.yat2.episode.global.constant.AttributeKeys;
 @Service
 public class CollaborationService {
     private final SessionRegistry sessionRegistry;
-    private final RedisStreamStore redisStreamStore;
-    private final Executor redisExecutor;
+    private final YjsMessageRouter yjsMessageRouter;
 
     public void handleConnect(WebSocketSession session) {
-        sessionRegistry.addSession(getMindmapId(session), session);
+        UUID roomId = getMindmapId(session);
+        sessionRegistry.addSession(roomId, session);
     }
 
     public void processMessage(WebSocketSession sender, BinaryMessage message) {
@@ -33,26 +33,17 @@ public class CollaborationService {
 
         byte[] payload = toByteArray(message.getPayload());
 
-        sessionRegistry.broadcast(roomId, sender, payload);
-
-        if (YjsProtocolUtil.isUpdateFrame(payload)) {
-            try {
-                redisExecutor.execute(() -> {
-                    try {
-                        redisStreamStore.appendUpdate(roomId, payload);
-                    } catch (Exception e) {
-                        log.warn("Redis append failed. roomId={}", roomId, e);
-                    }
-                });
-            } catch (Exception e) {
-                log.error("Redis append failed. roomId={}", roomId, e);
-            }
-        }
+        yjsMessageRouter.routeIncoming(roomId, sender, payload);
     }
 
     public void handleDisconnect(WebSocketSession session) {
         //TODO: Collaboration room 세션 수 0일때 스냅샷 트리거
-        sessionRegistry.removeSession(getMindmapId(session), session);
+        UUID roomId = getMindmapId(session);
+        if (roomId == null) return;
+
+        yjsMessageRouter.onDisconnect(roomId, session.getId());
+
+        sessionRegistry.removeSession(roomId, session);
     }
 
     private UUID getMindmapId(WebSocketSession session) {
