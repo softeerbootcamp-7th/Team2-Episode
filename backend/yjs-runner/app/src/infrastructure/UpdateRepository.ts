@@ -1,9 +1,10 @@
 import type Redis from 'ioredis';
+import {UpdatePacket} from "../contracts/UpdatePacket";
 
 export interface UpdateRepository {
-    fetchAllUpdates(roomId: string): Promise<Uint8Array[]>;
+    fetchAllUpdates(roomId: string): Promise<UpdatePacket>;
 
-    trim(roomId: string): Promise<void>;
+    trim(roomId: string, lastEntryId: string): Promise<void>;
 }
 
 export type UpdateRepositoryConfig = {
@@ -11,21 +12,54 @@ export type UpdateRepositoryConfig = {
 };
 
 export class RedisUpdateRepository implements UpdateRepository {
+    private readonly defaultLastEntryId = "0-0"
+    private readonly fieldUpdate = "u"
+
     constructor(
         private readonly redis: Redis,
         private readonly config: UpdateRepositoryConfig
     ) {
     }
 
-    async fetchAllUpdates(roomId: string): Promise<Uint8Array[]> {
-        // todo: 특정 roomId의 update 데이터들 가져오기
-        // key = `${config.updateStreamKeyPrefix}${roomId}`
-        void roomId;
-        return [];
+    private getStreamKey(roomId: string): string {
+        return `${this.config.updateStreamKeyPrefix}${roomId}`;
     }
 
-    async trim(roomId: string): Promise<void> {
-        // todo: 압축에 성공한 id 기준으로 이전 데이터 삭제
-        void roomId;
+    async fetchAllUpdates(roomId: string): Promise<UpdatePacket> {
+        const key = this.getStreamKey(roomId);
+        const entries = await this.redis.xrange(key, '-', '+');
+
+        if (!entries || entries.length === 0) {
+            return {
+                lastEntryId: this.defaultLastEntryId,
+                roomId,
+                updateDataList: []
+            };
+        }
+
+        const updateDataList: Uint8Array[] = [];
+        let lastEntryId = this.defaultLastEntryId;
+
+        for (const [id, rawData] of entries) {
+            lastEntryId = id;
+            const dataIndex = rawData.indexOf(this.fieldUpdate);
+            if (dataIndex !== -1) {
+                const rawBuffer = rawData[dataIndex + 1];
+                updateDataList.push(new Uint8Array(Buffer.from(rawBuffer as any, 'binary')));
+            }
+        }
+
+        return {
+            lastEntryId,
+            roomId,
+            updateDataList
+        };
+    }
+
+    async trim(roomId: string, lastEntryId: string): Promise<void> {
+        if (lastEntryId === this.defaultLastEntryId) return;
+        const key = this.getStreamKey(roomId);
+        await this.redis.xtrim(key, 'MINID', lastEntryId);
+        await this.redis.xdel(key, lastEntryId);
     }
 }
