@@ -67,7 +67,8 @@ export default function NodeItem({ nodeId, measure = true }: { nodeId: NodeId; m
                             color={"violet"}
                             onClick={() => console.log(`클릭: ${data.contents}`)}
                         >
-                            {data.contents || "하위 내용"}
+                            {/* {data.contents || "하위 내용"} */}
+                            {nodeId}
                         </Node.Content>
                     </Node>
                 )}

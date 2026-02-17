@@ -137,7 +137,7 @@ export default class MindMapCore {
             (dx, dy) => {
                 if (this.viewport) this.viewport.panningHandler(dx, dy);
             },
-            (target, moving, direction) => this.moveNode(target, moving, direction),
+            (targetId, moving, direction) => this.moveNode(targetId, moving, direction),
             (x, y) => this.viewport!.screenToWorld(x, y),
             (id) => this.deleteNode(id),
         );

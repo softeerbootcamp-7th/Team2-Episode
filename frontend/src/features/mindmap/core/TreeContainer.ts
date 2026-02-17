@@ -181,28 +181,26 @@ export default class TreeContainer {
 
         try {
             const baseNode = this._getNode(baseNodeId);
-            const movingNode = this._getNode(movingNodeId);
 
-            let checkNodeId = baseNode.id;
-            if (direction !== "child") {
-                checkNodeId = baseNode.parentId;
-            }
+            const targetNodeInMap = this.safeGetNode(movingNodeId);
 
-            // drop한 곳에서 위로 가면서 movingNode가 있는지 확인
-            let tempParent = this.safeGetNode(checkNodeId);
-            while (tempParent) {
-                if (tempParent.id === movingNodeId) {
-                    throw new Error("자손 밑으로 이동 불가");
+            const movingNode: NodeElement = targetNodeInMap
+                ? targetNodeInMap
+                : this.generateNewNodeElement({ addNodeDirection: baseNode.addNodeDirection });
+
+            if (targetNodeInMap) {
+                // [기존 로직] 이미 존재하는 노드인 경우에만 체크 및 detach
+                const checkNodeId = direction !== "child" ? baseNode.parentId : baseNode.id;
+                let tempParent = this.safeGetNode(checkNodeId);
+
+                while (tempParent) {
+                    if (tempParent.id === movingNodeId) throw new Error("자손 밑으로 이동 불가");
+                    if (tempParent.type === "root") break;
+                    tempParent = this.safeGetNode(tempParent.parentId);
                 }
 
-                if (tempParent.type === "root") {
-                    break;
-                }
-
-                tempParent = this.safeGetNode(tempParent.parentId);
+                this.detach({ node: movingNode });
             }
-
-            this.detach({ node: movingNode });
 
             switch (direction) {
                 case "next":

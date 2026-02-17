@@ -26,6 +26,7 @@ type StaticEvents = {
     RENDER_UPDATE: undefined;
     INTERACTION_FRAME: undefined;
     DRAG_SESSION: undefined;
+    PENDING_CREATION: undefined;
 
     // 5. 에러
     NODE_DELETE_ERROR: string;

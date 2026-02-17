@@ -32,6 +32,10 @@ export default function ControllerSideBar() {
         core?.fitToContent();
     };
 
+    const handleNewNode = () => {
+        core?.getBroker().publish("PENDING_CREATION", undefined);
+    };
+
     return (
         <Col
             upSlot={
@@ -46,7 +50,7 @@ export default function ControllerSideBar() {
                 </>
             }
             bottomSlot={
-                <Button variant="sidebar" borderRadius="xl" size="xs">
+                <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleNewNode}>
                     <Icon name="ic_plus" color={iconColor} />
                 </Button>
             }
