@@ -22,9 +22,11 @@ import com.yat2.episode.global.constant.AttributeKeys;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -68,12 +70,13 @@ class CollaborationServiceTest {
 
             verify(sessionRegistry).addSession(roomId, session);
             verifyNoInteractions(yjsMessageRouter);
+            verifyNoInteractions(jobStreamStore);
             verifyNoMoreInteractions(sessionRegistry);
         }
 
         @Test
-        @DisplayName("해제 시 router에 disconnect를 알리고 room에서 세션을 제거한다")
-        void handleDisconnect_notifiesRouterAndRemovesSession() {
+        @DisplayName("해제 시 router에 disconnect를 알리고 room에서 세션을 제거한다 (remaining > 0이면 snapshot job 발행 안 함)")
+        void handleDisconnect_notifiesRouterAndRemovesSession_noSnapshotWhenRemaining() {
             UUID roomId = UUID.randomUUID();
             WebSocketSession session = mock(WebSocketSession.class);
 
@@ -82,27 +85,52 @@ class CollaborationServiceTest {
             when(session.getAttributes()).thenReturn(attrs);
             when(session.getId()).thenReturn("S-1");
 
+            when(sessionRegistry.removeSession(roomId, session)).thenReturn(2);
             service.handleDisconnect(session);
 
-            InOrder inOrder = inOrder(yjsMessageRouter, sessionRegistry);
-            inOrder.verify(yjsMessageRouter).onDisconnect(roomId, "S-1");
-            inOrder.verify(sessionRegistry).removeSession(roomId, session);
+            InOrder order = inOrder(yjsMessageRouter, sessionRegistry);
+            order.verify(yjsMessageRouter).onDisconnect(roomId, "S-1");
+            order.verify(sessionRegistry).removeSession(roomId, session);
 
+            verify(jobStreamStore, never()).publishSnapshot(any(UUID.class));
             verifyNoMoreInteractions(yjsMessageRouter, sessionRegistry);
+        }
+
+        @Test
+        @DisplayName("해제 후 방에 남은 세션이 0이면 snapshot job을 발행한다")
+        void handleDisconnect_whenLastSession_publishesSnapshot() {
+            UUID roomId = UUID.randomUUID();
+            WebSocketSession session = mock(WebSocketSession.class);
+
+            Map<String, Object> attrs = new HashMap<>();
+            attrs.put(AttributeKeys.MINDMAP_ID, roomId);
+            when(session.getAttributes()).thenReturn(attrs);
+            when(session.getId()).thenReturn("S-1");
+
+            when(sessionRegistry.removeSession(roomId, session)).thenReturn(0);
+
+            service.handleDisconnect(session);
+
+            InOrder order = inOrder(yjsMessageRouter, sessionRegistry, jobStreamStore);
+            order.verify(yjsMessageRouter).onDisconnect(roomId, "S-1");
+            order.verify(sessionRegistry).removeSession(roomId, session);
+            order.verify(jobStreamStore).publishSnapshot(roomId);
+
+            verifyNoMoreInteractions(yjsMessageRouter, sessionRegistry, jobStreamStore);
         }
 
         @Test
         @DisplayName("해제 시 roomId가 null이면 아무것도 하지 않는다")
         void handleDisconnect_whenRoomIdNull_doesNothing() {
             WebSocketSession session = mock(WebSocketSession.class);
-
-            Map<String, Object> attrs = new HashMap<>();
-            when(session.getAttributes()).thenReturn(attrs);
+            when(session.getAttributes()).thenReturn(new HashMap<>());
 
             assertThatCode(() -> service.handleDisconnect(session)).doesNotThrowAnyException();
 
             verifyNoInteractions(yjsMessageRouter);
             verifyNoInteractions(sessionRegistry);
+            verifyNoInteractions(jobStreamStore);
+            verify(jobStreamStore, never()).publishSnapshot(any(UUID.class));
         }
     }
 
@@ -127,10 +155,10 @@ class CollaborationServiceTest {
 
             ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
             verify(yjsMessageRouter).routeIncoming(eq(roomId), eq(sender), payloadCaptor.capture());
-
             assertArrayEquals(frame, payloadCaptor.getValue());
 
             verifyNoInteractions(sessionRegistry);
+            verifyNoInteractions(jobStreamStore);
             verifyNoMoreInteractions(yjsMessageRouter);
         }
 
@@ -138,9 +166,7 @@ class CollaborationServiceTest {
         @DisplayName("roomId가 null이면 router로 전달하지 않고 종료한다")
         void processMessage_whenRoomIdNull_doesNotRoute() {
             WebSocketSession sender = mock(WebSocketSession.class);
-
-            Map<String, Object> attrs = new HashMap<>();
-            when(sender.getAttributes()).thenReturn(attrs);
+            when(sender.getAttributes()).thenReturn(new HashMap<>());
 
             BinaryMessage message = new BinaryMessage(new byte[]{ 1, 2, 3 });
 
@@ -148,6 +174,7 @@ class CollaborationServiceTest {
 
             verifyNoInteractions(yjsMessageRouter);
             verifyNoInteractions(sessionRegistry);
+            verifyNoInteractions(jobStreamStore);
         }
     }
 }
