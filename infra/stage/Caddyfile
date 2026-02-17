@@ -26,7 +26,7 @@ stage.episode.io.kr {
                            }
 }
 
-stage.episode.io.kr:9000 {
+storage.episode.io.kr {
     import common_headers
     import common_log
 
