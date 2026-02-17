@@ -399,7 +399,6 @@ export class MindmapInteractionManager {
             }
 
             case "pending_creation": {
-                console.log("pending_creation 이다~");
                 this.updateDropTarget(e);
                 this.emitInteractionFrame();
                 break;
