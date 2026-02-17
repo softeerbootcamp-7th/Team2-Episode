@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import Redis from 'ioredis';
 import {S3SnapshotStorage} from './infrastructure/S3SnapshotStorage';
 import {RedisUpdateRepository} from './infrastructure/UpdateRepository';
@@ -19,6 +20,10 @@ const storage = new S3SnapshotStorage({
     region: process.env.AWS_REGION!,
     bucket: process.env.S3_BUCKET!,
     keyPrefix: process.env.S3_PREFIX!,
+    endpoint: process.env.S3_ENDPOINT,
+    accessKey: process.env.S3_ACCESS_KEY,
+    secretKey: process.env.S3_SECRET_KEY,
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
 });
 
 const yjs = new DefaultYjsProcessor();
@@ -29,7 +34,8 @@ const consumer = new RedisStreamJobConsumer(redis, {
     jobStreamKey: process.env.JOB_STREAM_KEY!,
     groupName: process.env.JOB_GROUP_NAME!,
     consumerName: process.env.JOB_CONSUMER_NAME!,
-    roomIdField: process.env.JOB_ROOM_FIELD,
+    roomIdField: process.env.JOB_ROOM_FIELD ? process.env.JOB_ROOM_FIELD : "r",
+    maxRetries: process.env.JOB_MAX_TRY ? process.env.JOB_MAX_TRY as unknown as number : 5,
 });
 
 const worker = new SnapshotWorker({

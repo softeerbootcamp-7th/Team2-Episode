@@ -4,7 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.yat2.episode.episode.EpisodeRepository;
@@ -13,11 +17,12 @@ import com.yat2.episode.episode.EpisodeStarRepository;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
-import com.yat2.episode.mindmap.dto.MindmapCreateReq;
-import com.yat2.episode.mindmap.dto.MindmapDetailRes;
-import com.yat2.episode.mindmap.dto.MindmapNameRes;
-import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
-import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
+import com.yat2.episode.mindmap.constants.MindmapVisibility;
+import com.yat2.episode.mindmap.dto.MindmapCompetencyRow;
+import com.yat2.episode.mindmap.dto.request.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.response.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.response.MindmapSessionJoinRes;
+import com.yat2.episode.mindmap.dto.response.MindmapSummaryRes;
 import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
 import com.yat2.episode.mindmap.s3.S3ObjectKeyGenerator;
 import com.yat2.episode.mindmap.s3.S3SnapshotRepository;
@@ -25,6 +30,7 @@ import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
 public class MindmapService {
@@ -39,34 +45,40 @@ public class MindmapService {
     private final EpisodeStarRepository episodeStarRepository;
 
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
-        return MindmapDetailRes.of(mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId));
+        MindmapParticipant p = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+        List<Integer> competencyTypeIds = getSortedCompetencyTypeIds(mindmapId, userId);
+        return MindmapDetailRes.of(p, competencyTypeIds);
     }
 
-    @Transactional(readOnly = true)
-    public List<MindmapDetailRes> getMindmaps(Long userId, MindmapController.MindmapVisibility type) {
-        return switch (type) {
-            case PRIVATE -> getMindmapsByShared(userId, false);
-            case PUBLIC -> getMindmapsByShared(userId, true);
-            default -> getAllMindmap(userId);
+    public List<MindmapDetailRes> getMindmaps(Long userId, MindmapVisibility type) {
+        List<MindmapParticipant> participants = switch (type) {
+            case PRIVATE ->
+                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, false);
+            case PUBLIC ->
+                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, true);
+            default -> mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId);
         };
+
+        if (participants.isEmpty()) return List.of();
+
+        List<UUID> mindmapIds = participants.stream().map(p -> p.getMindmap().getId()).distinct().toList();
+
+        Map<UUID, Set<Integer>> competencyMap = new HashMap<>();
+        for (MindmapCompetencyRow row : episodeStarRepository.findCompetencyTypesByMindmapIds(mindmapIds, userId)) {
+            competencyMap.computeIfAbsent(row.mindmapId(), k -> new HashSet<>()).add(row.competencyTypeId());
+        }
+
+        return participants.stream().map(p -> {
+            UUID id = p.getMindmap().getId();
+            List<Integer> ids = competencyMap.getOrDefault(id, Set.of()).stream().sorted().toList();
+            return MindmapDetailRes.of(p, ids);
+        }).toList();
     }
 
-    private List<MindmapDetailRes> getMindmapsByShared(Long userId, boolean shared) {
-        return mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, shared).stream()
-                .map(MindmapDetailRes::of).toList();
+
+    public List<MindmapSummaryRes> getMindmapList(Long userId) {
+        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapSummaryRes::of).toList();
     }
-
-    private List<MindmapDetailRes> getAllMindmap(Long userId) {
-        return mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId).stream()
-                .map(MindmapDetailRes::of).toList();
-    }
-
-
-    @Transactional(readOnly = true)
-    public List<MindmapNameRes> getMindmapList(Long userId) {
-        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapNameRes::of).toList();
-    }
-
 
     @Transactional
     public MindmapSummaryRes saveMindmapAndParticipant(long userId, MindmapCreateReq body, UUID mindmapId) {
@@ -106,12 +118,11 @@ public class MindmapService {
                 baseNameExists = true;
                 continue;
             }
-
             if (name.startsWith(prefixWithBracket) && name.endsWith(")")) {
                 try {
                     String numPart = name.substring(prefixWithBracket.length(), name.length() - 1);
                     maxNum = Math.max(maxNum, Integer.parseInt(numPart));
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException ignored) {
                 }
             }
         }
@@ -127,7 +138,6 @@ public class MindmapService {
 
         return sb.toString();
     }
-
 
     @Transactional
     public void deleteMindmap(long userId, UUID mindmapId) {
@@ -145,30 +155,30 @@ public class MindmapService {
     }
 
     @Transactional
-    public MindmapDetailRes updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
+    public MindmapSummaryRes updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.updateFavorite(status);
 
-        return MindmapDetailRes.of(participant);
+        return MindmapSummaryRes.of(participant);
     }
 
     @Transactional
-    public MindmapDetailRes updateName(long userId, UUID mindmapId, String name) {
+    public MindmapSummaryRes updateName(long userId, UUID mindmapId, String name) {
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.getMindmap().updateName(name);
 
-        return MindmapDetailRes.of(participant);
+        return MindmapSummaryRes.of(participant);
     }
 
     @Transactional
-    public MindmapDetailRes saveMindmapParticipant(long userId, UUID mindmapId) {
+    public MindmapSummaryRes saveMindmapParticipant(long userId, UUID mindmapId) {
         User user = userService.getUserOrThrow(userId);
         Mindmap mindmap = mindmapAccessValidator.validateTeamMindmap(mindmapId);
 
-        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).map(MindmapDetailRes::of)
-                .orElseGet(() -> {
-                    MindmapParticipant newParticipant = new MindmapParticipant(user, mindmap);
-                    MindmapParticipant savedParticipant = mindmapParticipantRepository.save(newParticipant);
+        MindmapParticipant participant =
+                mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).orElseGet(() -> {
+                    MindmapParticipant savedParticipant =
+                            mindmapParticipantRepository.save(new MindmapParticipant(user, mindmap));
 
                     List<UUID> existingEpisodeNodeIds = episodeRepository.findNodeIdsByMindmapId(mindmapId);
 
@@ -178,15 +188,28 @@ public class MindmapService {
                                         .toList();
                         episodeStarRepository.saveAll(starsToCreate);
                     }
-                    return MindmapDetailRes.of(savedParticipant);
+                    return savedParticipant;
                 });
+
+        return MindmapSummaryRes.of(participant);
     }
 
-    @Transactional
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
-        MindmapDetailRes mindmapDetailRes = this.saveMindmapParticipant(userId, mindmapId);
+        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
-        return new MindmapSessionJoinRes(ticket, snapshotRepository.createPresignedGetURL(
-                s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapDetailRes.mindmapId())));
+
+        String presignedUrl =
+                snapshotRepository.createPresignedGetURL(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
+
+        return new MindmapSessionJoinRes(ticket, presignedUrl);
+    }
+
+    public List<Integer> getCompetencyTypesInMindmap(UUID mindmapId, long userId) {
+        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+        return getSortedCompetencyTypeIds(mindmapId, userId);
+    }
+
+    private List<Integer> getSortedCompetencyTypeIds(UUID mindmapId, long userId) {
+        return episodeStarRepository.findCompetencyTypesByMindmapId(mindmapId, userId).stream().sorted().toList();
     }
 }

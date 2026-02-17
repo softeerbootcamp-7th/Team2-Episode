@@ -6,22 +6,29 @@
     "build": "npx tsc",
     "start": "node dist/app/src/server.js",
     "dev": "nodemon app/src/server.ts",
-    "test": "exit 0"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.11",
+    "testcontainers": "^11.11.0",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.990.0",
     "dotenv": "^17.3.1",
     "ioredis": "^5.9.3",
-    "waait": "^1.0.5"
+    "lib0": "^0.2.117",
+    "waait": "^1.0.5",
+    "yjs": "^13.6.29"
   }
 }
