@@ -56,7 +56,7 @@ export default function MindmapHeaderToolBar({
     return (
         <header
             className={cn(
-                "w-full h-full flex flex-col items-start",
+                "w-full flex flex-col items-start",
                 "py-3 px-5",
                 "border-b border-gray-200 bg-base-white",
                 className,

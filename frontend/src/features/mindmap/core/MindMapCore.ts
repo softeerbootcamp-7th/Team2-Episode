@@ -154,8 +154,8 @@ export default class MindMapCore {
 
         console.log("bounds", bounds);
 
-        const paddedWidth = bounds.width * 1.0;
-        const paddedHeight = bounds.height * 1.0;
+        const paddedWidth = bounds.width * 1.1;
+        const paddedHeight = bounds.height * 1.1;
 
         const centerX = bounds.minX + bounds.width / 2;
         const centerY = bounds.minY + bounds.height / 2;
@@ -168,6 +168,11 @@ export default class MindMapCore {
             width: paddedWidth,
             height: paddedHeight,
         });
+    }
+
+    handleResize() {
+        if (!this.getIsReady) return;
+        this.viewport?.handleResize();
     }
 
     getCanvas(): SVGSVGElement | null {

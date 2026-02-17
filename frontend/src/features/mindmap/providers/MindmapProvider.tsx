@@ -19,25 +19,24 @@ export const MindMapProvider = ({
     const [version, setVersion] = useState(0);
 
     useEffect(() => {
-        if (!canvasRef || !canvasRef.current) return;
+        if (!canvasRef?.current) return;
         const svg = canvasRef.current;
 
-        // 이미 초기화되었거나 SVG가 아직 없다면 중단
-        if (!svg || core.getIsReady()) return;
-
-        // 2. SVG의 실제 크기를 감시
         const observer = new ResizeObserver((entries) => {
             const entry = entries[0];
             if (!entry) return;
 
             const { width, height } = entry.contentRect;
+            if (width <= 0 || height <= 0) return;
 
-            // 실제 픽셀 크기가 확보된 시점에 엔진 초기화
-            if (width > 0 && height > 0) {
+            // 1) 초기화는 딱 한 번만
+            if (!core.getIsReady()) {
                 core.initialize(svg);
-                // 초기화는 한 번이면 족하므로 감시 중단
-                observer.disconnect();
+                return;
             }
+
+            // 2) 이후부터는 리사이즈 반영(브라우저 창 크기에 따른 viewbox 조정)
+            core.handleResize();
         });
 
         observer.observe(svg);

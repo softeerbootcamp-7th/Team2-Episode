@@ -35,7 +35,7 @@ export default function MindmapPage() {
     };
 
     return (
-        <div className="flex flex-col w-full h-full">
+        <div className="flex flex-col w-full h-full overflow-hidden">
             <div className="w-full">
                 <MindmapHeaderToolBar
                     title="김현대의 마인드맵"
@@ -56,8 +56,7 @@ export default function MindmapPage() {
                     onStarOrganizeClick={handleStarClick}
                 />
             </div>
-
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 min-h-0">
                 <MindMapProvider canvasRef={canvasRef}>
                     <MindMapShowcase canvasRef={canvasRef} />
                 </MindMapProvider>

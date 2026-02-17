@@ -84,6 +84,18 @@ export default class ViewportManager {
         this.rafId = requestAnimationFrame(step);
     }
 
+    debugCanvasMetrics(tag: string) {
+        const r = this.canvas.getBoundingClientRect();
+        console.log(`=== ${tag} ===`);
+        console.log("window:", window.innerWidth, window.innerHeight);
+        console.log("svg rect:", { w: r.width, h: r.height, top: r.top, left: r.left });
+        console.log("svg client:", { w: this.canvas.clientWidth, h: this.canvas.clientHeight });
+        console.log("pan/zoom:", { panX: this.panX, panY: this.panY, zoom: this.zoom, softMin: this.softMinZoom });
+
+        const sc = document.scrollingElement;
+        if (sc) console.log("scroll:", { scrollTop: sc.scrollTop, clientH: sc.clientHeight, scrollH: sc.scrollHeight });
+    }
+
     /** broker 통한 명령 구독 */
     private setupEventListeners() {
         // Panning 명령 수신
@@ -115,6 +127,14 @@ export default class ViewportManager {
 
     // 전체 마인드맵 영역으로 fit
     fitToWorldRect(rect: { centerX: number; centerY: number; width: number; height: number }) {
+        const r = this.canvas.getBoundingClientRect();
+        console.log("FIT sizes", {
+            clientW: this.canvas.clientWidth,
+            clientH: this.canvas.clientHeight,
+            rectW: r.width,
+            rectH: r.height,
+        });
+
         const { centerX, centerY, width, height } = rect;
 
         const canvasWidth = this.canvas.clientWidth;
