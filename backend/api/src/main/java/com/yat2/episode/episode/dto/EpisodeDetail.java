@@ -22,17 +22,20 @@ public record EpisodeDetail(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static EpisodeDetail of(Episode e, EpisodeStar s) {
+    public EpisodeDetail {
+        competencyTypeIds = (competencyTypeIds == null) ? List.of() : List.copyOf(competencyTypeIds);
+    }
 
+    public static EpisodeDetail of(Episode e, EpisodeStar s) {
         if (s == null) {
             return new EpisodeDetail(e.getId(), e.getMindmapId(), List.of(), e.getContent(), null, null, null, null,
                                      null, null, null, null);
         }
-        List<Integer> competencyIds =
-                (s.getCompetencyTypeIds() == null) ? List.of() : List.copyOf(s.getCompetencyTypeIds());
 
-        return new EpisodeDetail(e.getId(), e.getMindmapId(), competencyIds, e.getContent(), s.getSituation(),
-                                 s.getTask(), s.getAction(), s.getResult(), s.getStartDate(), s.getEndDate(),
-                                 s.getCreatedAt(), s.getUpdatedAt());
+        List<Integer> ctIds = s.getCompetencyTypeIds().stream().sorted().toList();
+
+        return new EpisodeDetail(e.getId(), e.getMindmapId(), ctIds, e.getContent(), s.getSituation(), s.getTask(),
+                                 s.getAction(), s.getResult(), s.getStartDate(), s.getEndDate(), s.getCreatedAt(),
+                                 s.getUpdatedAt());
     }
 }

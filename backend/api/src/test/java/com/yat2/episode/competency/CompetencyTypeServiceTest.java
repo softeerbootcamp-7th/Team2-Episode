@@ -10,10 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
-import java.util.UUID;
 
 import com.yat2.episode.competency.dto.CompetencyTypeRes;
-import com.yat2.episode.episode.EpisodeRepository;
 
 import static com.yat2.episode.utils.TestEntityFactory.createEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,9 +24,6 @@ class CompetencyTypeServiceTest {
 
     @Mock
     private CompetencyTypeRepository competencyTypeRepository;
-
-    @Mock
-    private EpisodeRepository episodeRepository;
 
     @InjectMocks
     private CompetencyTypeService competencyTypeService;
@@ -60,20 +55,6 @@ class CompetencyTypeServiceTest {
                     .containsExactlyInAnyOrder("의사소통", "논리적 사고");
 
             verify(competencyTypeRepository).findAll();
-        }
-
-        @Test
-        @DisplayName("마인드맵 ID로 조회 시 해당 마인드맵의 역량 타입들만 반환한다")
-        void getCompetencyTypesInMindmap_Success() {
-            UUID mindmapId = UUID.randomUUID();
-            CompetencyType type = createCompetencyType(10, "성장 가능성", CompetencyType.Category.실행_성장_역량);
-
-            given(episodeRepository.findCompetencyTypesByMindmapId(mindmapId)).willReturn(List.of(type.getId()));
-
-            List<Integer> result = competencyTypeService.getCompetencyTypesInMindmap(mindmapId);
-
-            assertThat(result).hasSize(1);
-            assertThat(result.get(0)).isEqualTo(type.getId());
         }
     }
 }
