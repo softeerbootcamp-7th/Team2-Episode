@@ -11,24 +11,24 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-import com.yat2.episode.collaboration.RedisStreamStore;
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.UpdateStreamStore;
 
 @Slf4j
 @Component
 public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
-    private final RedisStreamStore redisStreamStore;
+    private final UpdateStreamStore updateStreamStore;
     private final Executor redisExecutor;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
 
     public YjsMessageRouter(
-            SessionRegistry sessionRegistry, RedisStreamStore redisStreamStore,
+            SessionRegistry sessionRegistry, UpdateStreamStore updateStreamStore,
             @Qualifier("redisExecutor") Executor redisExecutor
     ) {
         this.sessionRegistry = sessionRegistry;
-        this.redisStreamStore = redisStreamStore;
+        this.updateStreamStore = updateStreamStore;
         this.redisExecutor = redisExecutor;
     }
 
@@ -121,7 +121,7 @@ public class YjsMessageRouter {
         try {
             redisExecutor.execute(() -> {
                 try {
-                    redisStreamStore.appendUpdate(roomId, payload);
+                    updateStreamStore.appendUpdate(roomId, payload);
                 } catch (Exception e) {
                     log.warn("Redis append failed. roomId={}", roomId, e);
                 }

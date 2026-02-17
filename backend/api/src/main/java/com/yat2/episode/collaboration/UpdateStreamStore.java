@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class RedisStreamStore {
+public class UpdateStreamStore {
 
     private final RedisTemplate<String, byte[]> redisBinaryTemplate;
 

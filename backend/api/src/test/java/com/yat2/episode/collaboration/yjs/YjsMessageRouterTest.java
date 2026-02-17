@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
-import com.yat2.episode.collaboration.RedisStreamStore;
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.UpdateStreamStore;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -41,7 +41,7 @@ class YjsMessageRouterTest {
     SessionRegistry sessionRegistry;
 
     @Mock
-    RedisStreamStore redisStreamStore;
+    UpdateStreamStore updateStreamStore;
 
     @Mock
     Executor redisExecutor;
@@ -50,7 +50,7 @@ class YjsMessageRouterTest {
 
     @BeforeEach
     void setUp() {
-        router = new YjsMessageRouter(sessionRegistry, redisStreamStore, redisExecutor);
+        router = new YjsMessageRouter(sessionRegistry, updateStreamStore, redisExecutor);
     }
 
     private static byte[] awarenessFrame() {
@@ -92,7 +92,7 @@ class YjsMessageRouterTest {
             assertArrayEquals(payload, captor.getValue());
 
             verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(redisStreamStore);
+            verifyNoInteractions(updateStreamStore);
             verifyNoMoreInteractions(sessionRegistry);
         }
 
@@ -108,7 +108,7 @@ class YjsMessageRouterTest {
 
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
             verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(redisStreamStore);
+            verifyNoInteractions(updateStreamStore);
         }
     }
 
@@ -136,7 +136,7 @@ class YjsMessageRouterTest {
             taskCaptor.getValue().run();
 
             ArgumentCaptor<byte[]> redisCaptor = ArgumentCaptor.forClass(byte[].class);
-            verify(redisStreamStore).appendUpdate(eq(roomId), redisCaptor.capture());
+            verify(updateStreamStore).appendUpdate(eq(roomId), redisCaptor.capture());
             assertArrayEquals(payload, redisCaptor.getValue());
         }
 
@@ -148,7 +148,7 @@ class YjsMessageRouterTest {
 
             byte[] payload = updateFrame();
 
-            doThrow(new RuntimeException("redis down")).when(redisStreamStore)
+            doThrow(new RuntimeException("redis down")).when(updateStreamStore)
                     .appendUpdate(eq(roomId), any(byte[].class));
 
             assertThatCode(() -> router.routeIncoming(roomId, sender, payload)).doesNotThrowAnyException();
@@ -158,7 +158,7 @@ class YjsMessageRouterTest {
 
             assertThatCode(() -> taskCaptor.getValue().run()).doesNotThrowAnyException();
 
-            verify(redisStreamStore).appendUpdate(eq(roomId), any(byte[].class));
+            verify(updateStreamStore).appendUpdate(eq(roomId), any(byte[].class));
         }
 
         @Test
@@ -174,7 +174,7 @@ class YjsMessageRouterTest {
             assertThatCode(() -> router.routeIncoming(roomId, sender, payload)).doesNotThrowAnyException();
 
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
-            verifyNoInteractions(redisStreamStore);
+            verifyNoInteractions(updateStreamStore);
         }
     }
 
@@ -202,7 +202,7 @@ class YjsMessageRouterTest {
 
             verify(sessionRegistry, never()).broadcast(any(), any(), any());
             verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(redisStreamStore);
+            verifyNoInteractions(updateStreamStore);
         }
 
         @Test
