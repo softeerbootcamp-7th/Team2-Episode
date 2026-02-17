@@ -1,15 +1,18 @@
 name: CI
 
 on:
+    pull_request:
+        branches: [dev, release]
     push:
-        # 2-2. 모든 브랜치 push 시 트리거되도록 설정
-        branches: ["**"]
+        branches: [dev]
 
 jobs:
     detect-changes:
         name: Detect Changes
         runs-on: ubuntu-latest
         outputs:
+            api: ${{ steps.filter.outputs.api }}
+            runner: ${{ steps.filter.outputs.runner }}
             frontend: ${{ steps.filter.outputs.frontend }}
         steps:
             - uses: actions/checkout@v4
@@ -17,8 +20,79 @@ jobs:
               id: filter
               with:
                   filters: |
+                      api:
+                        - 'backend/api/**'
+                      runner:
+                        - 'backend/yjs-runner/**'
                       frontend:
                         - 'frontend/**'
+
+    lint:
+        name: Check Style (Backend)
+        needs: detect-changes
+        if: needs.detect-changes.outputs.api == 'true'
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: backend/api
+        steps:
+            - uses: actions/checkout@v4
+            - name: Set up JDK 17
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: 17
+                  cache: gradle
+            - run: chmod +x ./gradlew
+            - name: Run Checkstyle
+              run: ./gradlew checkstyleMain checkstyleTest --no-daemon
+
+    build_api:
+        name: Build & Test (API)
+        needs: detect-changes
+        if: needs.detect-changes.outputs.api == 'true'
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: backend/api
+        steps:
+            - uses: actions/checkout@v4
+            - name: Set up JDK 17
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: 17
+                  cache: gradle
+            - run: chmod +x ./gradlew
+            - name: Build
+              run: ./gradlew build -x checkstyleMain -x checkstyleTest --no-daemon
+
+    build_runner:
+        name: Build & Test (Yjs Runner)
+        needs: detect-changes
+        if: needs.detect-changes.outputs.runner == 'true'
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: backend/yjs-runner
+        steps:
+            - uses: actions/checkout@v4
+            - name: Install pnpm
+              uses: pnpm/action-setup@v3
+              with:
+                  version: 8
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: "pnpm"
+                  cache-dependency-path: backend/yjs-runner/package.json
+            - name: Install
+              run: pnpm install
+            - name: Build
+              run: pnpm run build --if-present
+            - name: Test
+              run: pnpm test --if-present
 
     build_frontend:
         name: Build Frontend
@@ -31,26 +105,19 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
-
-            # 2-3. pnpm 빌드 방식 적용
             - name: Install pnpm
               uses: pnpm/action-setup@v3
               with:
                   version: 8
-
             - name: Setup Node
               uses: actions/setup-node@v4
               with:
                   node-version: 20
                   cache: "pnpm"
-                  # lock 파일이 없으므로 package.json 기준 캐싱
                   cache-dependency-path: frontend/package.json
-
             - name: Install dependencies
               run: pnpm install
-
             - name: Lint
               run: pnpm run lint
-
             - name: Build
               run: pnpm run build
