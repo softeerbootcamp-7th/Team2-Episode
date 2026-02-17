@@ -1,4 +1,4 @@
-package com.yat2.episode.collaboration.job;
+package com.yat2.episode.collaboration.redis;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.yat2.episode.collaboration.JobType;
 import com.yat2.episode.collaboration.config.CollaborationRedisProperties;
 
 @Slf4j
@@ -20,14 +21,14 @@ import com.yat2.episode.collaboration.config.CollaborationRedisProperties;
 @RequiredArgsConstructor
 public class JobStreamStore {
     private final StringRedisTemplate stringRedisTemplate;
-    private final CollaborationRedisProperties redisProps;
+    private final CollaborationRedisProperties redisProperties;
 
     public void publishSnapshot(UUID roomId) {
-        publish(JobType.SNAPSHOT, roomId, redisProps.jobStream().dedupeTtl().snapshot());
+        publish(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
     }
 
     public void publishSyncRecovery(UUID roomId) {
-        publish(JobType.SYNC, roomId, redisProps.jobStream().dedupeTtl().sync());
+        publish(JobType.SYNC, roomId, redisProperties.jobStream().dedupeTtl().sync());
     }
 
     private void publish(JobType type, UUID roomId, Duration dedupeTtl) {
@@ -36,13 +37,13 @@ public class JobStreamStore {
         }
 
         Map<String, String> fields = new HashMap<>();
-        fields.put(redisProps.jobStream().fields().type(), type.name());
-        fields.put(redisProps.jobStream().fields().roomId(), roomId.toString());
+        fields.put(redisProperties.jobStream().fields().type(), type.name());
+        fields.put(redisProperties.jobStream().fields().roomId(), roomId.toString());
 
         try {
             StreamOperations<String, String, String> ops = stringRedisTemplate.opsForStream();
             MapRecord<String, String, String> record =
-                    StreamRecords.newRecord().in(redisProps.jobStream().key()).ofMap(fields);
+                    StreamRecords.newRecord().in(redisProperties.jobStream().key()).ofMap(fields);
             ops.add(record);
         } catch (Exception e) {
             log.error("Failed to publish job. type={}, roomId={}", type, roomId, e);
@@ -50,7 +51,7 @@ public class JobStreamStore {
     }
 
     private boolean tryDedupe(JobType type, UUID roomId, Duration ttl) {
-        String key = redisProps.jobStream().dedupeKeyPrefix() + type.name() + ":" + roomId;
+        String key = redisProperties.jobStream().dedupeKeyPrefix() + type.name() + ":" + roomId;
         Boolean ok = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", ttl);
         return Boolean.TRUE.equals(ok);
     }

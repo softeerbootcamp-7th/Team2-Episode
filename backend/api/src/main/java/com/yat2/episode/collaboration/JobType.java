@@ -1,4 +1,4 @@
-package com.yat2.episode.collaboration.job;
+package com.yat2.episode.collaboration;
 
 public enum JobType {
     SNAPSHOT, SYNC

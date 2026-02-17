@@ -1,4 +1,4 @@
-package com.yat2.episode.collaboration;
+package com.yat2.episode.collaboration.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -18,19 +18,19 @@ import com.yat2.episode.collaboration.config.CollaborationRedisProperties;
 public class UpdateStreamStore {
 
     private final RedisTemplate<String, byte[]> redisBinaryTemplate;
-    private final CollaborationRedisProperties redisProps;
+    private final CollaborationRedisProperties redisProperties;
 
     public RecordId appendUpdate(UUID roomId, byte[] update) {
-        String key = redisProps.updateStream().keyPrefix() + roomId;
+        String key = redisProperties.updateStream().keyPrefix() + roomId;
 
         StreamOperations<String, String, byte[]> ops = redisBinaryTemplate.opsForStream();
 
         MapRecord<String, String, byte[]> record =
-                StreamRecords.newRecord().in(key).ofMap(Map.of(redisProps.updateStream().fieldUpdate(), update));
+                StreamRecords.newRecord().in(key).ofMap(Map.of(redisProperties.updateStream().fieldUpdate(), update));
 
         RecordId id = ops.add(record);
 
-        redisBinaryTemplate.expire(key, redisProps.updateStream().ttl());
+        redisBinaryTemplate.expire(key, redisProperties.updateStream().ttl());
 
         return id;
     }

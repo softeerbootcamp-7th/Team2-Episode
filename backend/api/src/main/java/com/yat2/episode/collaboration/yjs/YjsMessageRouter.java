@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 import com.yat2.episode.collaboration.SessionRegistry;
-import com.yat2.episode.collaboration.UpdateStreamStore;
+import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 @Slf4j
 @Component
