@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,26 +27,8 @@ public class CollaborationAsyncConfig {
         exec.setKeepAliveSeconds(asyncProperties.keepAliveSeconds());
         exec.setAllowCoreThreadTimeOut(asyncProperties.allowCoreThreadTimeout());
 
-        exec.setRejectedExecutionHandler(dropAndLogError());
+        exec.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
         exec.initialize();
         return exec;
-    }
-
-
-    private RejectedExecutionHandler dropAndLogError() {
-        AtomicLong dropped = new AtomicLong();
-        AtomicLong lastLogMs = new AtomicLong(0);
-        long logIntervalMs = asyncProperties.dropLogIntervalMs();
-        //TODO: Update가 drop 될 경우 Yjs Runner에게 알려 Sync 프로토콜로 복구
-        return (r, executor) -> {
-            long n = dropped.incrementAndGet();
-            long now = System.currentTimeMillis();
-            long prev = lastLogMs.get();
-
-            if (now - prev >= logIntervalMs && lastLogMs.compareAndSet(prev, now)) {
-                int qSize = executor.getQueue().size();
-                log.error("Redis queue full. Dropping tasks. dropped={}, queueSize={}", n, qSize);
-            }
-        };
     }
 }

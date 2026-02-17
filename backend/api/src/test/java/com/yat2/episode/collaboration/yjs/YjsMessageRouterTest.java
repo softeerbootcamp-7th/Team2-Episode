@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.redis.JobStreamStore;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -44,13 +45,16 @@ class YjsMessageRouterTest {
     UpdateStreamStore updateStreamStore;
 
     @Mock
+    JobStreamStore jobStreamStore;
+
+    @Mock
     Executor redisExecutor;
 
     YjsMessageRouter router;
 
     @BeforeEach
     void setUp() {
-        router = new YjsMessageRouter(sessionRegistry, updateStreamStore, redisExecutor);
+        router = new YjsMessageRouter(sessionRegistry, updateStreamStore, redisExecutor, jobStreamStore);
     }
 
     private static byte[] awarenessFrame() {

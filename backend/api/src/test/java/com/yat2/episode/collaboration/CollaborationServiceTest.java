@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.yat2.episode.collaboration.redis.JobStreamStore;
 import com.yat2.episode.collaboration.yjs.YjsMessageRouter;
 import com.yat2.episode.global.constant.AttributeKeys;
 
@@ -39,11 +40,14 @@ class CollaborationServiceTest {
     @Mock
     YjsMessageRouter yjsMessageRouter;
 
+    @Mock
+    JobStreamStore jobStreamStore;
+
     CollaborationService service;
 
     @BeforeEach
     void setUp() {
-        service = new CollaborationService(sessionRegistry, yjsMessageRouter);
+        service = new CollaborationService(sessionRegistry, yjsMessageRouter, jobStreamStore);
     }
 
     @Nested

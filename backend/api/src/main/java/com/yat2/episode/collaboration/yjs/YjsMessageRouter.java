@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.redis.JobStreamStore;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 @Slf4j
@@ -20,16 +21,18 @@ public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
     private final UpdateStreamStore updateStreamStore;
     private final Executor redisExecutor;
+    private final JobStreamStore jobStreamStore;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
 
     public YjsMessageRouter(
             SessionRegistry sessionRegistry, UpdateStreamStore updateStreamStore,
-            @Qualifier("redisExecutor") Executor redisExecutor
+            @Qualifier("redisExecutor") Executor redisExecutor, JobStreamStore jobStreamStore
     ) {
         this.sessionRegistry = sessionRegistry;
         this.updateStreamStore = updateStreamStore;
         this.redisExecutor = redisExecutor;
+        this.jobStreamStore = jobStreamStore;
     }
 
     public void routeIncoming(UUID roomId, WebSocketSession sender, byte[] payload) {
@@ -124,10 +127,12 @@ public class YjsMessageRouter {
                     updateStreamStore.appendUpdate(roomId, payload);
                 } catch (Exception e) {
                     log.warn("Redis append failed. roomId={}", roomId, e);
+                    jobStreamStore.publishSyncRecovery(roomId);
                 }
             });
         } catch (Exception e) {
-            log.error("Redis schedule failed", e);
+            log.error("Redis schedule failed. roomId={}", roomId, e);
+            jobStreamStore.publishSyncRecovery(roomId);
         }
     }
 }
