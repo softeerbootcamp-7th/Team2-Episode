@@ -30,6 +30,7 @@ import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
 public class MindmapService {
@@ -43,14 +44,12 @@ public class MindmapService {
     private final EpisodeRepository episodeRepository;
     private final EpisodeStarRepository episodeStarRepository;
 
-    @Transactional(readOnly = true)
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
         MindmapParticipant p = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         List<Integer> competencyTypeIds = getSortedCompetencyTypeIds(mindmapId, userId);
         return MindmapDetailRes.of(p, competencyTypeIds);
     }
 
-    @Transactional(readOnly = true)
     public List<MindmapDetailRes> getMindmaps(Long userId, MindmapVisibility type) {
         List<MindmapParticipant> participants = switch (type) {
             case PRIVATE ->
@@ -77,7 +76,6 @@ public class MindmapService {
     }
 
 
-    @Transactional(readOnly = true)
     public List<MindmapSummaryRes> getMindmapList(Long userId) {
         return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapSummaryRes::of).toList();
     }
@@ -196,7 +194,6 @@ public class MindmapService {
         return MindmapSummaryRes.of(participant);
     }
 
-    @Transactional
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
@@ -207,14 +204,12 @@ public class MindmapService {
         return new MindmapSessionJoinRes(ticket, presignedUrl);
     }
 
-    @Transactional(readOnly = true)
     public List<Integer> getCompetencyTypesInMindmap(UUID mindmapId, long userId) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         return getSortedCompetencyTypeIds(mindmapId, userId);
     }
 
     private List<Integer> getSortedCompetencyTypeIds(UUID mindmapId, long userId) {
-        return episodeStarRepository.findCompetencyTypesByMindmapId(mindmapId, userId).stream().sorted()
-                .toList();
+        return episodeStarRepository.findCompetencyTypesByMindmapId(mindmapId, userId).stream().sorted().toList();
     }
 }
