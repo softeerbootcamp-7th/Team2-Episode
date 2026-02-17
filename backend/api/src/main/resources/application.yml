@@ -133,3 +133,31 @@ collaboration:
   ws:
     send-timeout: 10000
     buffer-size: 524288
+    path-prefix: /ws/mindmap
+    allowed-origin-patterns:
+      - "http://localhost:*"
+      - "https://episode.io.kr"
+
+  redis:
+    update-stream:
+      key-prefix: "collab:room:"
+      ttl: "P2D"
+      field-update: "u"
+    job-stream:
+      key: "collab:jobs"
+      dedupe-key-prefix: "collab:jobs:dedupe:"
+      fields:
+        type: "t"
+        room-id: "rid"
+      dedupe-ttl:
+        sync: "PT30S"
+        snapshot: "PT120S"
+
+  async:
+    executor:
+      core-pool-size: 1
+      max-pool-size: 2
+      queue-capacity: 10000
+      keep-alive-seconds: 30
+      allow-core-thread-timeout: true
+      drop-log-interval-ms: 1000

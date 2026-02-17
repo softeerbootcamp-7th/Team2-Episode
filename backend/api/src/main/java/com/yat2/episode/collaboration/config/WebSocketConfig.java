@@ -16,13 +16,12 @@ import com.yat2.episode.collaboration.ws.RelayHandler;
 public class WebSocketConfig implements WebSocketConfigurer {
     private final RelayHandler relayHandler;
     private final HandshakeInterceptor handshakeInterceptor;
-
-    public static final String WS_PATH_PREFIX = "/ws/mindmap";
-
+    private final WebSocketProperties webSocketProperties;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(relayHandler, WS_PATH_PREFIX + "/{mindmapId}").addInterceptors(handshakeInterceptor)
-                .setAllowedOriginPatterns("http://localhost:*", "https://episode.io.kr");
+        registry.addHandler(relayHandler, webSocketProperties.pathPrefix() + "/{mindmapId}")
+                .addInterceptors(handshakeInterceptor)
+                .setAllowedOriginPatterns(String.valueOf(webSocketProperties.allowedOriginPatterns()));
     }
 }
