@@ -127,14 +127,6 @@ export default class ViewportManager {
 
     // 전체 마인드맵 영역으로 fit
     fitToWorldRect(rect: { centerX: number; centerY: number; width: number; height: number }) {
-        const r = this.canvas.getBoundingClientRect();
-        console.log("FIT sizes", {
-            clientW: this.canvas.clientWidth,
-            clientH: this.canvas.clientHeight,
-            rectW: r.width,
-            rectH: r.height,
-        });
-
         const { centerX, centerY, width, height } = rect;
 
         const canvasWidth = this.canvas.clientWidth;
@@ -143,20 +135,11 @@ export default class ViewportManager {
         // 전체 영역의 가운데로 이동
         const zoomX = canvasWidth / width;
         const zoomY = canvasHeight / height;
+        const newZoom = Math.min(zoomX, zoomY);
 
-        let newZoom = Math.min(zoomX, zoomY);
-
-        newZoom = Math.max(newZoom, BASE_MIN_ZOOM);
-
-        // fit은 하한 예외 허용
-        this.zoom = newZoom;
-        this.panX = centerX;
-        this.panY = centerY;
-
-        // softMinZoom 조정 (fit 튐 방지)
         this.softMinZoom = Math.min(BASE_MIN_ZOOM, newZoom);
 
-        this.applyViewBox();
+        this.animateTo(centerX, centerY, newZoom, 400);
     }
 
     /** 항상 카메라 중심(panX, panY)을 기준으로 계산 -> svg 반영 */

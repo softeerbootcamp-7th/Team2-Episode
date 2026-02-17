@@ -152,21 +152,14 @@ export default class MindMapCore {
 
         const bounds = this.contentBoundsCache;
 
-        console.log("bounds", bounds);
-
-        const paddedWidth = bounds.width * 1.1;
-        const paddedHeight = bounds.height * 1.1;
-
         const centerX = bounds.minX + bounds.width / 2;
         const centerY = bounds.minY + bounds.height / 2;
-
-        console.log("Center :", centerX, centerY);
 
         this.viewport?.fitToWorldRect({
             centerX,
             centerY,
-            width: paddedWidth,
-            height: paddedHeight,
+            width: bounds.width * 1.1,
+            height: bounds.height * 1.1,
         });
     }
 
