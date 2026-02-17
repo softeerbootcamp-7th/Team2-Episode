@@ -22,6 +22,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(relayHandler, webSocketProperties.pathPrefix() + "/{mindmapId}")
                 .addInterceptors(handshakeInterceptor)
-                .setAllowedOriginPatterns(String.valueOf(webSocketProperties.allowedOriginPatterns()));
+.setAllowedOriginPatterns(webSocketProperties.allowedOriginPatterns().toArray(new String[0]));
     }
 }
