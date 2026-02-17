@@ -2,7 +2,7 @@
  * 공간 관련
  */
 export type Point = {
-    x: number;  //노드 정중아 world 좌표
+    x: number; //노드 정중아 world 좌표
     y: number;
     id: string;
 };
@@ -12,6 +12,16 @@ export type Rect = {
     maxX: number;
     minY: number;
     maxY: number;
+};
+
+// fit을 위한 마인드맵 최대 범위
+export type Bounds = {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    width: number;
+    height: number;
 };
 
 export type ViewportTransform = {

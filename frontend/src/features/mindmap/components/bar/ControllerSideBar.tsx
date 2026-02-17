@@ -27,11 +27,16 @@ export default function ControllerSideBar() {
     const handleReset = () => {
         core?.resetViewport();
     };
+
+    const handleFit = () => {
+        core?.fitToContent();
+    };
+
     return (
         <Col
             upSlot={
                 <>
-                    <Button variant="sidebar" borderRadius="xl" size="xs">
+                    <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleFit}>
                         <Icon name="ic_tool_fit" color={iconColor} />
                     </Button>
 

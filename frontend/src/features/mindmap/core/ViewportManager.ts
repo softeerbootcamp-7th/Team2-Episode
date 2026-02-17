@@ -3,6 +3,10 @@ import { NodeElement } from "@/features/mindmap/types/node";
 import { Rect } from "@/features/mindmap/types/spatial";
 import { EventBroker } from "@/utils/EventBroker";
 
+// 원래 wheel이 가지는 정책상 최소 줌 값 (복구하기 위해 필요)
+const BASE_MIN_ZOOM = 0.1;
+const BASE_MAX_ZOOM = 5;
+
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 /**
  * 카메라
@@ -17,9 +21,10 @@ export default class ViewportManager {
 
     private panX = 0;
     private panY = 0;
-    private zoom = 1;
+    private zoom = 1; //현재 카메라 상태
 
-    private readonly INITIAL_VIEW_FACTOR = 6; // 초기 뷰포트 크기: 루트 노드의 n배
+    private softMinZoom = BASE_MIN_ZOOM;
+
     private rafId: number | null = null; // 애니메이션 프레임 ID
 
     /** [Init] 루트 노드를 중앙에 배치하고 쿼드 트리와 줌인된 초기 뷰포트를 설정 */
@@ -108,6 +113,32 @@ export default class ViewportManager {
         });
     }
 
+    // 전체 마인드맵 영역으로 fit
+    fitToWorldRect(rect: { centerX: number; centerY: number; width: number; height: number }) {
+        const { centerX, centerY, width, height } = rect;
+
+        const canvasWidth = this.canvas.clientWidth;
+        const canvasHeight = this.canvas.clientHeight;
+
+        // 전체 영역의 가운데로 이동
+        const zoomX = canvasWidth / width;
+        const zoomY = canvasHeight / height;
+
+        let newZoom = Math.min(zoomX, zoomY);
+
+        newZoom = Math.max(newZoom, BASE_MIN_ZOOM);
+
+        // fit은 하한 예외 허용
+        this.zoom = newZoom;
+        this.panX = centerX;
+        this.panY = centerY;
+
+        // softMinZoom 조정 (fit 튐 방지)
+        this.softMinZoom = Math.min(BASE_MIN_ZOOM, newZoom);
+
+        this.applyViewBox();
+    }
+
     /** 항상 카메라 중심(panX, panY)을 기준으로 계산 -> svg 반영 */
     applyViewBox(): void {
         const rect = this.canvas.getBoundingClientRect();
@@ -149,14 +180,20 @@ export default class ViewportManager {
         // 2. 줌 배율 변경
         const zoomSpeed = 0.001;
         const scaleChange = Math.exp(-delta * zoomSpeed); // 휠 방향 보정
-        const nextZoom = Math.min(Math.max(this.zoom * scaleChange, 0.1), 5); // 0.1배 ~ 5배 제한
 
-        // 3. 마우스 지점 고정을 위한 새로운 panX, panY 역계산
-        // 줌 후에도 마우스 아래의 월드 좌표가 동일하게 유지되도록 중심점을 이동
+        const rawZoom = this.zoom * scaleChange;
+
+        const nextZoom = Math.min(BASE_MAX_ZOOM, Math.max(rawZoom, this.softMinZoom));
+
         this.zoom = nextZoom;
+
         this.panX = beforeZoomMouseX - (e.clientX - rect.left - rect.width / 2) / this.zoom;
         this.panY = beforeZoomMouseY - (e.clientY - rect.top - rect.height / 2) / this.zoom;
 
+        // BASE_MIN 복구
+        if (this.zoom >= BASE_MIN_ZOOM) {
+            this.softMinZoom = BASE_MIN_ZOOM;
+        }
         this.applyViewBox();
     }
 

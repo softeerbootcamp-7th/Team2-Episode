@@ -6,6 +6,7 @@ import ViewportManager from "@/features/mindmap/core/ViewportManager";
 import { MindMapEvents } from "@/features/mindmap/types/events";
 import { EMPTY_DRAG_SESSION_SNAPSHOT, EMPTY_INTERACTION_SNAPSHOT } from "@/features/mindmap/types/interaction";
 import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
+import { Bounds } from "@/features/mindmap/types/spatial";
 import { EventBroker } from "@/utils/EventBroker";
 
 /**
@@ -26,6 +27,7 @@ export default class MindMapCore {
     private interaction: MindmapInteractionManager | null = null;
 
     private _isInitialized = false;
+    private contentBoundsCache: Bounds | null = null;
 
     constructor(private onGlobalUpdate: () => void) {
         this.tree = new TreeContainer();
@@ -67,9 +69,39 @@ export default class MindMapCore {
 
         // 2. 쿼드 트리 갱신
         quadTree.clear();
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
         this.tree.nodes.forEach((node) => {
+            const left = node.x - node.width / 2;
+            const right = node.x + node.width / 2;
+            const top = node.y - node.height / 2;
+            const bottom = node.y + node.height / 2;
+
+            // bounds 갱신
+            if (left < minX) minX = left;
+            if (right > maxX) maxX = right;
+            if (top < minY) minY = top;
+            if (bottom > maxY) maxY = bottom;
+
             quadTree.insert(node);
         });
+
+        console.log("minX node:", minX, maxX);
+        console.log("maxX node:", minY, maxY);
+
+        // cache 저장
+        this.contentBoundsCache = {
+            minX,
+            maxX,
+            minY,
+            maxY,
+            width: maxX - minX,
+            height: maxY - minY,
+        };
 
         // 3. broker 알림
         if (affectedIds) {
@@ -112,6 +144,30 @@ export default class MindMapCore {
 
         this._isInitialized = true;
         this.sync();
+    }
+
+    // 마인드맵 캔버스 전체 영역으로 카메라 fit
+    fitToContent() {
+        if (!this.contentBoundsCache) return;
+
+        const bounds = this.contentBoundsCache;
+
+        console.log("bounds", bounds);
+
+        const paddedWidth = bounds.width * 1.0;
+        const paddedHeight = bounds.height * 1.0;
+
+        const centerX = bounds.minX + bounds.width / 2;
+        const centerY = bounds.minY + bounds.height / 2;
+
+        console.log("Center :", centerX, centerY);
+
+        this.viewport?.fitToWorldRect({
+            centerX,
+            centerY,
+            width: paddedWidth,
+            height: paddedHeight,
+        });
     }
 
     getCanvas(): SVGSVGElement | null {
