@@ -1,4 +1,4 @@
-package com.yat2.episode.mindmap.dto;
+package com.yat2.episode.mindmap.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

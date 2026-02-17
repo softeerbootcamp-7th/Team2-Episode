@@ -36,10 +36,7 @@ public class EpisodeService {
     }
 
     public List<EpisodeSummaryRes> getMindmapEpisodes(UUID mindmapId, long userId) {
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
-
-        return episodeRepository.findDetailsByMindmapIdAndUserId(mindmapId, userId).stream().map(EpisodeSummaryRes::of)
-                .toList();
+        return episodeRepository.findSummariesByMindmapIdAndUserId(mindmapId, userId);
     }
 
     @Transactional
@@ -96,13 +93,11 @@ public class EpisodeService {
         episodeStar.clearDates();
     }
 
-    private Episode getEpisodeOrThrow(UUID nodeId) {
-        return episodeRepository.findById(nodeId).orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
-    }
-
     private EpisodeDetail getEpisodeAndStarOrThrow(UUID nodeId, long userId) {
-        return episodeRepository.findDetail(nodeId, userId)
+        EpisodeStar s = episodeStarRepository.findStarDetail(nodeId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+
+        return EpisodeDetail.of(s.getEpisode(), s);
     }
 
     private EpisodeStar getStarOrThrow(UUID nodeId, long userId) {
@@ -115,12 +110,6 @@ public class EpisodeService {
         Episode newEpisode = Episode.create(episodeId.getNodeId(), mindmapId);
 
         return episodeRepository.save(newEpisode);
-    }
-
-    private EpisodeStar createNewStar(EpisodeId episodeId) {
-        EpisodeStar newEpisodeStar = EpisodeStar.create(episodeId.getNodeId(), episodeId.getUserId());
-
-        return episodeStarRepository.save(newEpisodeStar);
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate) {

@@ -1,23 +1,26 @@
 package com.yat2.episode.episode;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.StarUpdateReq;
@@ -32,11 +35,20 @@ public class EpisodeStar {
     @EmbeddedId
     private EpisodeId id;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(
-            name = "competency_type_ids", columnDefinition = "json", nullable = false
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "node_id", referencedColumnName = "node_id", insertable = false, updatable = false
     )
-    private List<Integer> competencyTypeIds = new ArrayList<>();
+    private Episode episode;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "episode_star_competency_types",
+            joinColumns = { @JoinColumn(name = "node_id", referencedColumnName = "node_id"),
+                            @JoinColumn(name = "user_id", referencedColumnName = "user_id") }
+    )
+    @Column(name = "competency_type_id")
+    private Set<Integer> competencyTypeIds = new HashSet<>();
 
     @Column(length = 200)
     private String situation;
