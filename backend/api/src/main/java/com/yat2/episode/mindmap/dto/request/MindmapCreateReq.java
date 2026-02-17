@@ -1,4 +1,4 @@
-package com.yat2.episode.mindmap.dto;
+package com.yat2.episode.mindmap.dto.request;
 
 public record MindmapCreateReq(
         boolean isShared,
