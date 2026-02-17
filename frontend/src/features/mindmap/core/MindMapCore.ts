@@ -128,7 +128,13 @@ export default class MindMapCore {
         // 여기서 할당이 완료됨
         this.canvas = canvas;
         this.quadTree = new QuadTree(initialBounds);
-        this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree!.getBounds());
+        this.viewport = new ViewportManager(
+            this.broker,
+            canvas,
+            rootNode,
+            () => this.quadTree!.getBounds(),
+            () => this.getContentBounds(),
+        );
 
         this.interaction = new MindmapInteractionManager(
             this.broker,
@@ -146,21 +152,8 @@ export default class MindMapCore {
         this.sync();
     }
 
-    // 마인드맵 캔버스 전체 영역으로 카메라 fit
-    fitToContent() {
-        if (!this.contentBoundsCache) return;
-
-        const bounds = this.contentBoundsCache;
-
-        const centerX = bounds.minX + bounds.width / 2;
-        const centerY = bounds.minY + bounds.height / 2;
-
-        this.viewport?.fitToWorldRect({
-            centerX,
-            centerY,
-            width: bounds.width * 1.1,
-            height: bounds.height * 1.1,
-        });
+    getContentBounds() {
+        return this.contentBoundsCache;
     }
 
     handleResize() {

@@ -1,6 +1,6 @@
 import { MindMapEvents } from "@/features/mindmap/types/events";
 import { NodeElement } from "@/features/mindmap/types/node";
-import { Rect } from "@/features/mindmap/types/spatial";
+import { Bounds, Rect } from "@/features/mindmap/types/spatial";
 import { EventBroker } from "@/utils/EventBroker";
 
 // 원래 wheel이 가지는 정책상 최소 줌 값 (복구하기 위해 필요)
@@ -15,34 +15,20 @@ const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
  *  viewBox: 현재 사용자 화면에 보이는 가상 좌표 영역
  */
 export default class ViewportManager {
-    private canvas: SVGSVGElement;
-    private broker: EventBroker<MindMapEvents>;
-    private getWorldBounds: () => Rect;
-
-    private panX = 0;
-    private panY = 0;
-    private zoom = 1; //현재 카메라 상태
-
+    private panX: number = 0;
+    private panY: number = 0;
+    private zoom: number = 1;
+    private rafId: number | null = null;
     private softMinZoom = BASE_MIN_ZOOM;
-
-    private rafId: number | null = null; // 애니메이션 프레임 ID
 
     /** [Init] 루트 노드를 중앙에 배치하고 쿼드 트리와 줌인된 초기 뷰포트를 설정 */
     constructor(
-        broker: EventBroker<MindMapEvents>,
-        canvas: SVGSVGElement,
-        rootNode: NodeElement,
-        getWorldBounds: () => Rect,
+        private broker: EventBroker<MindMapEvents>,
+        private canvas: SVGSVGElement,
+        private rootNode: NodeElement,
+        private getWorldBounds: () => Rect,
+        private getBounds: () => Bounds | null, // Core의 캐시를 가져오는 함수
     ) {
-        this.broker = broker;
-        this.canvas = canvas;
-        this.getWorldBounds = getWorldBounds;
-
-        // 초기 상태: 루트 노드가 (0,0)에 있으므로 카메라 중심도 (0,0)
-        this.panX = 0;
-        this.panY = 0;
-        this.zoom = 1;
-
         this.setupEventListeners();
         this.applyViewBox();
     }
@@ -111,21 +97,38 @@ export default class ViewportManager {
             key: "VIEWPORT_RESET",
             callback: () => this.resetView(),
         });
+
+        this.broker.subscribe({
+            key: "VIEWPORT_FIT_CONTENT",
+            callback: () => this.fitToWorldRect(),
+        });
     }
 
     // 전체 마인드맵 영역으로 fit
-    fitToWorldRect(rect: { centerX: number; centerY: number; width: number; height: number }) {
-        const { centerX, centerY, width, height } = rect;
+    fitToWorldRect() {
+        const bounds = this.getBounds();
+        const cw = this.canvas.clientWidth;
+        const ch = this.canvas.clientHeight;
 
-        const canvasWidth = this.canvas.clientWidth;
-        const canvasHeight = this.canvas.clientHeight;
+        // 1. 가드 클로즈: 필요한 데이터가 없으면 즉시 종료
+        if (!bounds || cw === 0 || ch === 0) return;
 
-        // 전체 영역의 가운데로 이동
-        const zoomX = canvasWidth / width;
-        const zoomY = canvasHeight / height;
-        const newZoom = Math.min(zoomX, zoomY);
+        // 2. 패딩을 포함한 실제 타겟 영역 크기 (의미 단위 분리)
+        const targetWidth = bounds.width * 1.1;
+        const targetHeight = bounds.height * 1.1;
 
+        // 3. 가로/세로 각각의 적정 배율 계산
+        const zoomX = cw / targetWidth;
+        const zoomY = ch / targetHeight;
+
+        // 4. 최종 줌 결정 (둘 중 작은 값을 선택해야 영역이 잘리지 않음)
+        const newZoom = Math.min(zoomX, zoomY, BASE_MAX_ZOOM);
+
+        // 5. 줌 하한선 정책 업데이트 및 이동 시작
         this.softMinZoom = Math.min(BASE_MIN_ZOOM, newZoom);
+
+        const centerX = bounds.minX + bounds.width / 2;
+        const centerY = bounds.minY + bounds.height / 2;
 
         this.animateTo(centerX, centerY, newZoom, 400);
     }

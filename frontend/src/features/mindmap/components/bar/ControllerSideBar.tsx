@@ -29,7 +29,7 @@ export default function ControllerSideBar() {
     };
 
     const handleFit = () => {
-        core?.fitToContent();
+        core?.getBroker().publish("VIEWPORT_FIT_CONTENT", undefined);
     };
 
     const handleNewNode = () => {
