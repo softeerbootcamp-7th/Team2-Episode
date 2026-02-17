@@ -24,7 +24,7 @@ jobs:
               - 'backend/api/**'
             runner:
               - 'backend/yjs-runner/**'
-            runner:
+            frontend:
               - 'frontend/**'
 
   lint:
