@@ -11,7 +11,8 @@ type InteractionLayerProps = {
 export default function InteractionLayer({ nodeMap, status }: InteractionLayerProps) {
     const { mode, draggingNodeId, dragDelta, dragSubtreeIds, baseNode, mousePos } = status;
 
-    // if (mode !== "dragging" || !draggingNodeId || !dragSubtreeIds) return null;
+    // if (mode !== "dragging"
+    // || !draggingNodeId || !dragSubtreeIds) return null;
     if (mode === "idle") return null;
 
     return (
