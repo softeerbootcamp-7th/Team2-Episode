@@ -46,6 +46,8 @@ services:
     image: mysql:8.0
     container_name: episode-mysql
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -68,6 +70,8 @@ services:
     image: minio/minio
     container_name: episode-minio
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:9001:9001"
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
@@ -86,6 +90,8 @@ services:
     image: redis:7-alpine
     container_name: episode-redis
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis-data:/data
     command: [ "redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}" ]
