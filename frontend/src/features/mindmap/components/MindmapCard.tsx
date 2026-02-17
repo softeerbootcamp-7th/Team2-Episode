@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { useDeleteMindmap } from "@/features/mindmap/hooks/useDeleteMindmap";
-import { useUpdateMindmapFavorite } from "@/features/mindmap/hooks/useUpdateMindmapFavorite"; // 훅 import
+import { useUpdateMindmapFavorite } from "@/features/mindmap/hooks/useUpdateMindmapFavorite";
 import { useUpdateMindmapName } from "@/features/mindmap/hooks/useUpdateMindmapName";
 import { MindmapItem, MindmapType } from "@/features/mindmap/types/mindmap";
 import Button from "@/shared/components/button/Button";
@@ -21,14 +21,28 @@ import { getRelativeTime } from "@/utils/get_relative_time";
 type Props = {
     data: MindmapItem;
     type?: MindmapType;
+
+    interaction?: "navigate" | "select";
+    selected?: boolean;
+    onSelect?: (mindmapId: string) => void;
+
+    className?: string;
 };
 
-const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
+const MindmapCard = ({ data, type = "PUBLIC", interaction = "navigate", selected, onSelect, className }: Props) => {
     const { mutate: deleteMindmap } = useDeleteMindmap();
     const { mutate: updateMindmapName } = useUpdateMindmapName();
     const { mutate: updateMindmapFavorite } = useUpdateMindmapFavorite();
 
     const navigate = useNavigate();
+
+    const handleCardClick = () => {
+        if (interaction === "select") {
+            onSelect?.(data.mindmapId);
+            return;
+        }
+        navigate(linkTo.mindmap.detail(data.mindmapId));
+    };
 
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -54,7 +68,6 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
         if (value.length <= 20) {
             setEditName(value);
         } else {
-            // 20자가 넘어가면 잘라냄 (붙여넣기 대응)
             setEditName(value.slice(0, 20));
         }
     };
@@ -97,10 +110,12 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
 
     return (
         <Card
-            className="min-h-50 overflow-hidden w-full"
-            onClick={() => {
-                navigate(linkTo.mindmap.detail(data.mindmapId));
-            }}
+            className={cn(
+                "min-h-50 overflow-hidden w-full",
+                selected && "outline-primary outline-2 shadow-md",
+                className,
+            )}
+            onClick={handleCardClick}
             header={
                 <div className="flex items-center justify-between relative h-8">
                     {isEditing ? (
@@ -163,32 +178,14 @@ const MindmapCard = ({ data, type = "PUBLIC" }: Props) => {
                                 }
                             >
                                 <button className="p-1.5 hover:bg-gray-100 rounded-full flex items-center justify-center">
-                                    <Icon name="ic_ellipsis_vertical" color="var(--color-gray-500)" />
+                                    <Icon name="ic_ellipsis_vertical" />
                                 </button>
                             </Popover>
                         </div>
                     )}
                 </div>
             }
-            bottomContents={
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                    {/* {displayTags.map((tag, index) => (
-                        <Chip
-                            key={index}
-                            variant="secondary"
-                            size="sm"
-                            className="bg-blue-50 text-blue-600 font-medium border-0"
-                        >
-                            {tag}
-                        </Chip>
-                    ))}
-                    {hiddenTagCount > 0 && (
-                        <Chip variant="secondary" size="sm" className="bg-blue-50 text-blue-600 font-medium border-0">
-                            +{hiddenTagCount}
-                        </Chip>
-                    )} */}
-                </div>
-            }
+            bottomContents={<div className="flex flex-wrap gap-1.5 mt-2" />}
             footer={
                 <div className="flex items-center justify-between text-body-14-regular text-gray-500 pt-4 border-t border-transparent">
                     <span>{getRelativeTime(data.updatedAt)}</span>

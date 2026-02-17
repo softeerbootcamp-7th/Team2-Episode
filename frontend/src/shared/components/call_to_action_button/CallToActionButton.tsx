@@ -23,7 +23,7 @@ const CallToActionButton = ({ variant = "primary", className, children }: Props)
 };
 
 const variants = cva(
-    "py-2 pr-2 pl-5 typo-body-16-medium flex flex-row items-center gap-4 rounded-lg shadow-[0_0_10px_0_rgba(111,128,255,0.30)]",
+    "py-2 pr-2 pl-5 typo-body-16-medium flex flex-row items-center gap-4 rounded-lg shadow-[0_0_10px_0_rgba(111,128,255,0.30)] transition-colors", // transition 추가 권장
     {
         variants: {
             variant: {
@@ -31,6 +31,10 @@ const variants = cva(
                 primary_accent: [COLOR_SET.primary_accent, "[&_svg]:text-black", "[&_div]:bg-white"],
                 quaternary_accent_outlined: [
                     COLOR_SET.quaternary_accent_outlined,
+                    "hover:bg-primary",
+                    "hover:text-white",
+                    "hover:[&_svg]:text-black",
+                    "hover:[&_div]:bg-white",
                     "[&_svg]:text-white",
                     "[&_div]:bg-primary",
                 ],
@@ -38,5 +42,4 @@ const variants = cva(
         },
     },
 );
-
 export default CallToActionButton;
