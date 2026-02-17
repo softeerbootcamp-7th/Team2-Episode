@@ -27,7 +27,7 @@ export class RedisUpdateRepository implements UpdateRepository {
 
     async fetchAllUpdates(roomId: string): Promise<UpdatePacket> {
         const key = this.getStreamKey(roomId);
-        const entries = await this.redis.xrange(key, '-', '+');
+        const entries = await this.redis.xrangeBuffer(key, '-', '+') as unknown as [Buffer, Buffer[]][];
 
         if (!entries || entries.length === 0) {
             return {
@@ -41,11 +41,11 @@ export class RedisUpdateRepository implements UpdateRepository {
         let lastEntryId = this.defaultLastEntryId;
 
         for (const [id, rawData] of entries) {
-            lastEntryId = id;
-            const dataIndex = rawData.indexOf(this.fieldUpdate);
+            lastEntryId = id.toString();
+            const dataIndex = rawData.findIndex(buf => buf.toString() === this.fieldUpdate);
             if (dataIndex !== -1) {
                 const rawBuffer = rawData[dataIndex + 1];
-                updateDataList.push(new Uint8Array(Buffer.from(rawBuffer as any, 'binary')));
+                updateDataList.push(new Uint8Array(rawBuffer));
             }
         }
 
