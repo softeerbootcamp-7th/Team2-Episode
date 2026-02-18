@@ -4,14 +4,15 @@ import { useHideDraggingNodes } from "@/features/mindmap/engine/useHideDraggingN
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
-type StaticLayerProps = {
+type Props = {
     nodeMap: Map<NodeId, NodeElement>;
 };
 
-export default function StaticLayer({ nodeMap }: StaticLayerProps) {
-    const allNodes = Array.from(nodeMap.values());
+export default function TreeLayer({ nodeMap }: Props) {
     useMindmapGraphRevision();
     useHideDraggingNodes();
+
+    const allNodes = Array.from(nodeMap.values());
 
     return (
         <g className="static-graph">
