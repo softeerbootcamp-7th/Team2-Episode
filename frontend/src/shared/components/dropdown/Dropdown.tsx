@@ -4,16 +4,19 @@ import { createPortal } from "react-dom";
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
 import useToggle from "@/shared/hooks/useToggle";
+import { cn } from "@/utils/cn";
 
 type Props = {
     children: ReactNode;
     placeholder?: string;
     value?: string;
+    color?: string;
+    className?: string;
 };
 
 const GAP = 8;
 
-const Dropdown = ({ children, placeholder = "선택해주세요", value }: Props) => {
+const Dropdown = ({ children, placeholder = "선택해주세요", value, color, className }: Props) => {
     const [isOpen, openHandler] = useToggle();
     const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -68,10 +71,12 @@ const Dropdown = ({ children, placeholder = "선택해주세요", value }: Props
                 align="left"
                 onClick={toggleDropdown}
                 variant={isOpen ? "quaternary_accent_outlined" : "quaternary_outlined"}
-                rightSlot={<Icon name="ic_dropdown" rotate={isOpen ? 180 : 0} />}
-                className={isPlaceholder ? "text-gray-400" : "text-black"}
+                rightSlot={
+                    <Icon name="ic_dropdown" rotate={isOpen ? 180 : 0} color={color || "currentColor"} width={16} />
+                }
+                className={cn(isPlaceholder ? "text-gray-400" : "text-black", className)}
             >
-                {displayText}
+                <span className={cn("truncate", className)}>{displayText}</span>
             </Button>
 
             {isOpen &&
