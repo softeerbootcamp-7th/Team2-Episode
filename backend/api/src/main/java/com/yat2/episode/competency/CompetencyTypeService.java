@@ -18,7 +18,8 @@ public class CompetencyTypeService {
     }
 
     public List<CompetencyTypeRes> getCompetencyTypesInIds(Iterable<Integer> ids) {
-        return competencyTypeRepository.findAllById(ids).stream().map(CompetencyTypeRes::of).toList();
+        return competencyTypeRepository.findAllById(ids).stream().map(CompetencyTypeRes::of)
+                .sorted(java.util.Comparator.comparing(CompetencyTypeRes::id)).toList();
     }
 
     public long countByIdIn(Set<Integer> ids) {
