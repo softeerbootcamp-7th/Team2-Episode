@@ -70,7 +70,11 @@ export class RedisStreamJobConsumer implements JobConsumer {
 
         if (!results || results.length < 1) return [];
 
-        return this.parseEntries(results);
+        const {jobs, badEntryIds} = this.parseEntries(results);
+        if (badEntryIds.length > 0) {
+            await this.ack(badEntryIds);
+        }
+        return jobs;
     }
 
     async ack(entryId: string[]): Promise<void> {
@@ -104,7 +108,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             deliveryById.set(p[0], Number(p[3]));
         }
 
-        entries.forEach((entry, index) => {
+        entries.forEach((entry,) => {
             const id = entry[0];
             const deliveryCount = deliveryById.get(id);
             if (deliveryCount == null) return;
@@ -121,16 +125,26 @@ export class RedisStreamJobConsumer implements JobConsumer {
         }
 
         if (validEntries.length > 0) {
-            return this.parseEntries([[this.config.jobStreamKey, validEntries]]);
+            const {jobs, badEntryIds} = this.parseEntries([[this.config.jobStreamKey, validEntries]]);
+            if (badEntryIds.length > 0) {
+                await this.ack(badEntryIds);
+            }
+            return jobs.length > 0 ? jobs : null;
         }
         return null;
     }
 
-    private parseEntries(results: [string, [string, string[]][]][]): SnapshotJob[] {
-        try {
-            const [, entries] = results[0];
+    private parseEntries(results: [string, [string, string[]][]][]): {
+        jobs: SnapshotJob[];
+        badEntryIds: string[];
+    } {
+        const [, entries] = results[0];
 
-            return entries.map(([entryId, rawData]) => {
+        const badEntryIds: string[] = [];
+        const jobs: SnapshotJob[] = [];
+
+        for (const [entryId, rawData] of entries) {
+            try {
                 const data: Record<string, string> = {};
                 for (let i = 0; i < rawData.length; i += 2) {
                     data[rawData[i]] = rawData[i + 1];
@@ -139,17 +153,26 @@ export class RedisStreamJobConsumer implements JobConsumer {
                 if (rawType !== SnapshotJobType.SNAPSHOT && rawType !== SnapshotJobType.SYNC) {
                     throw new Error(`Unknown job type: ${rawType}`);
                 }
+                const roomId = data[this.config.roomIdField];
+                if (!roomId) {
+                    throw new Error(`Missing roomId field`);
+                }
 
-                return {
+                jobs.push({
                     entryId: entryId,
-                    roomId: data[this.config.roomIdField],
+                    roomId: roomId,
                     type: rawType
-                };
-            });
-        } catch (error) {
-            console.error('[RedisJobConsumer] 파싱 에러:', error);
-            return [];
+                });
+            } catch (error) {
+                console.error(
+                    `[RedisJobConsumer] 파싱 실패 entryId=${entryId}`,
+                    error
+                );
+                badEntryIds.push(entryId);
+            }
         }
+
+        return {jobs, badEntryIds};
     }
 }
 
