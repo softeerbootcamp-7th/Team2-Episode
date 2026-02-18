@@ -50,11 +50,14 @@ class YjsMessageRouterTest {
     @Mock
     Executor redisExecutor;
 
+    @Mock
+    Executor jobExecutor;
+
     YjsMessageRouter router;
 
     @BeforeEach
     void setUp() {
-        router = new YjsMessageRouter(sessionRegistry, updateStreamStore, redisExecutor, jobStreamStore);
+        router = new YjsMessageRouter(sessionRegistry, updateStreamStore, redisExecutor, jobExecutor, jobStreamStore);
     }
 
     private static byte[] awarenessFrame() {

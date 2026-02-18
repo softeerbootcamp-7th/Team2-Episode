@@ -21,17 +21,20 @@ public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
     private final UpdateStreamStore updateStreamStore;
     private final Executor redisExecutor;
+    private final Executor jobExecutor;
     private final JobStreamStore jobStreamStore;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
 
     public YjsMessageRouter(
             SessionRegistry sessionRegistry, UpdateStreamStore updateStreamStore,
-            @Qualifier("redisExecutor") Executor redisExecutor, JobStreamStore jobStreamStore
+            @Qualifier("redisExecutor") Executor redisExecutor,
+            @Qualifier("jobExecutor") Executor jobExecutor, JobStreamStore jobStreamStore
     ) {
         this.sessionRegistry = sessionRegistry;
         this.updateStreamStore = updateStreamStore;
         this.redisExecutor = redisExecutor;
+        this.jobExecutor = jobExecutor;
         this.jobStreamStore = jobStreamStore;
     }
 
@@ -146,7 +149,7 @@ public class YjsMessageRouter {
             } catch (Exception e) {
                 if (isFatalRedisWrite(e)) {
                     log.error("Fatal redis write. roomId={}", roomId, e);
-                    
+
                     // todo: 다른 방법 도모..?
                     // 저희가 같은 redis 인스턴스 내에서 job 처리를 하고 있어서, fatal error 시에는 sync 시도가 무의미하다고 판단됩니다.
                     return;
