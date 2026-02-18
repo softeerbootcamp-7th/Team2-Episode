@@ -2,6 +2,7 @@ import {SnapshotService} from '../../../src/services/SnapshotService';
 import {UpdateRepository} from '../../../src/infrastructure/UpdateRepository';
 import {YjsProcessor} from '../../../src/domain/YjsProcessor';
 import {SnapshotStorage} from '../../../src/infrastructure/S3SnapshotStorage';
+import {SnapshotJobType} from "../../../src/contracts/SnapshotJob";
 
 describe('SnapshotService', () => {
     let service: SnapshotService;
@@ -45,7 +46,11 @@ describe('SnapshotService', () => {
         mockUpdateRepo.fetchAllUpdates.mockResolvedValue(mockPacket);
         mockYjs.buildSnapshot.mockReturnValue(mockNewSnapshot);
 
-        await service.process(roomId);
+        await service.process({
+            entryId: 'test-entry',
+            roomId,
+            type: SnapshotJobType.SNAPSHOT
+        });
 
         expect(mockStorage.download).toHaveBeenCalledWith(roomId);
         expect(mockUpdateRepo.fetchAllUpdates).toHaveBeenCalledWith(roomId);
@@ -59,7 +64,14 @@ describe('SnapshotService', () => {
 
         mockStorage.download.mockRejectedValue(new Error('NoSuchKey: The specified key does not exist.'));
 
-        await expect(service.process(roomId)).rejects.toThrow('NoSuchKey');
+        await expect(
+            service.process({
+                entryId: 'test-entry',
+                roomId,
+                type: SnapshotJobType.SNAPSHOT
+            })
+        ).rejects.toThrow('NoSuchKey');
+
 
         expect(mockYjs.buildSnapshot).not.toHaveBeenCalled();
         expect(mockStorage.upload).not.toHaveBeenCalled();
@@ -78,7 +90,11 @@ describe('SnapshotService', () => {
         });
         mockStorage.upload.mockRejectedValue(new Error('S3 Connection Failed'));
 
-        await expect(service.process(roomId)).rejects.toThrow('S3 Connection Failed');
+        await expect(service.process({
+            entryId: 'test-entry',
+            roomId,
+            type: SnapshotJobType.SNAPSHOT
+        })).rejects.toThrow('S3 Connection Failed');
 
         expect(mockUpdateRepo.trim).not.toHaveBeenCalled();
     });

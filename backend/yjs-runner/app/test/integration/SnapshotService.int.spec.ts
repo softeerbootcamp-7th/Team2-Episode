@@ -7,6 +7,8 @@ import {RedisUpdateRepository} from "../../src/infrastructure/UpdateRepository";
 import {S3SnapshotStorage} from "../../src/infrastructure/S3SnapshotStorage";
 import {DefaultYjsProcessor} from "../../src/domain/YjsProcessor";
 import {encoding} from "lib0";
+import {SnapshotJobType} from "../../src/contracts/SnapshotJob";
+
 
 describe('SnapshotService Integration Test (Testcontainers)', () => {
     let redisContainer: StartedTestContainer;
@@ -102,7 +104,11 @@ describe('SnapshotService Integration Test (Testcontainers)', () => {
 
         await redis.xadd(streamKey, '*', 'u', Buffer.from(framed));
 
-        await service.process(ROOM_ID);
+        await service.process({
+            entryId: 'test-entry',
+            roomId: ROOM_ID,
+            type: SnapshotJobType.SNAPSHOT
+        });
 
         const remaining = await redis.xrange(streamKey, '-', '+');
         expect(remaining.length).toBe(0);
@@ -117,7 +123,13 @@ describe('SnapshotService Integration Test (Testcontainers)', () => {
         const streamKey = `updates:${noBaseRoomId}`;
 
         await redis.xadd(streamKey, '*', 'u', Buffer.from([1, 2]));
-
-        await expect(service.process(noBaseRoomId)).rejects.toThrow();
+        
+        await expect(
+            service.process({
+                entryId: 'test-entry',
+                roomId: noBaseRoomId,
+                type: SnapshotJobType.SNAPSHOT
+            })
+        ).rejects.toThrow();
     });
 });
