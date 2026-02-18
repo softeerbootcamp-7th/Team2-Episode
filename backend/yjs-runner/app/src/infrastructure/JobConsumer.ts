@@ -1,5 +1,6 @@
 import type Redis from 'ioredis';
 import {Job, JobType} from '../contracts/Job';
+import {RedisStreamEntry, RedisStreamReadResult} from "../contracts/RedisStreamReadResult";
 
 export interface JobConsumer {
     init(): Promise<void>;
@@ -48,7 +49,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             'COUNT', count,
             'STREAMS', this.config.jobStreamKey,
             '0'
-        ) as [string, [string, string[]][]][] | null;
+        ) as RedisStreamReadResult | null;
 
         if (pendingResults && pendingResults.length > 0 && pendingResults[0][1].length > 0) {
             const pendingJobs = await this.processPending(count, pendingResults);
@@ -66,7 +67,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             'STREAMS',
             this.config.jobStreamKey,
             '>'
-        ) as [string, [string, string[]][]][] | null;
+        ) as RedisStreamReadResult | null;
 
         if (!results || results.length < 1) return [];
 
@@ -87,7 +88,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
         );
     }
 
-    private async processPending(count: number = 1, pendingResults: [string, [string, string[]][]][]) {
+    private async processPending(count: number = 1, pendingResults: RedisStreamReadResult) {
         const [, entries] = pendingResults[0];
         const entryIds = entries.map(([id]) => id);
 
@@ -100,7 +101,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             count
         ) as [string, string, number, number][];
 
-        const validEntries: [string, string[]][] = [];
+        const validEntries: RedisStreamEntry[] = [];
         const idsToAbandon: string[] = [];
 
         const deliveryById = new Map<string, number>();
@@ -134,7 +135,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
         return null;
     }
 
-    private parseEntries(results: [string, [string, string[]][]][]): {
+    private parseEntries(results: RedisStreamReadResult): {
         jobs: Job[];
         badEntryIds: string[];
     } {
