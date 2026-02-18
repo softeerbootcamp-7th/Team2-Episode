@@ -12,8 +12,6 @@ const COLORS = ["#34a7ff", "#fd69b9", "#0ed038", "#7749ff", "#ff913c"];
 export default function MindmapDetailPage() {
     const { mindmapId } = useParams<{ mindmapId: string }>();
 
-    if (!mindmapId) return <div>잘못된 접근입니다.</div>;
-
     const { user: userInfo } = useAuth();
 
     const user = useMemo(() => {
@@ -31,6 +29,16 @@ export default function MindmapDetailPage() {
         userInfo,
     });
 
+    const config = useMemo(
+        () => ({
+            layout: { xGap: 100, yGap: 20 },
+            interaction: { dragThreshold: 5 },
+        }),
+        [],
+    );
+
+    if (!mindmapId) return <div>잘못된 접근입니다.</div>;
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-screen">
@@ -40,5 +48,5 @@ export default function MindmapDetailPage() {
         );
     }
 
-    return <Mindmap doc={doc} provider={provider} user={user} mindmapId={mindmapId} />;
+    return <Mindmap doc={doc} provider={provider} user={user} mindmapId={mindmapId} config={config} />;
 }
