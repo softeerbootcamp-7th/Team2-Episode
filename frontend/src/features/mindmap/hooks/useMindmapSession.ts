@@ -12,7 +12,7 @@ type ConnectionStatus = "disconnected" | "connecting" | "connected";
 type SnapshotStatus = "idle" | "loading" | "success" | "error";
 
 type Props = {
-    mindmapId: string;
+    mindmapId?: string;
     enableAwareness?: boolean;
     userInfo: User | null;
 };
@@ -46,7 +46,7 @@ export function useMindmapSession({ mindmapId }: Props) {
     }, [mindmapId, joinSession]);
 
     const provider = useMemo(() => {
-        if (!token) return undefined;
+        if (!token || !mindmapId) return undefined;
 
         return new WebsocketProvider(`${ENV.WS_BASE_URL}/mindmap/`, mindmapId, doc, {
             connect: false,
