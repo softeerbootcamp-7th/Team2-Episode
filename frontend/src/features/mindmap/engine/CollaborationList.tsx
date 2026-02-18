@@ -1,4 +1,4 @@
-import { useMindmapParticipants } from "@/features/mindmap/engine/hooks";
+import { useMindmapParticipants } from "@/features/mindmap/hooks/useMindmapStoreState";
 import Icon from "@/shared/components/icon/Icon";
 import List from "@/shared/components/list/List";
 import ListRow from "@/shared/components/list/ListRow";

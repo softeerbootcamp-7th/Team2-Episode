@@ -1,4 +1,4 @@
-import { useMindmapRemoteCursors } from "@/features/mindmap/engine/hooks";
+import { useMindmapRemoteCursors } from "@/features/mindmap/hooks/useMindmapStoreState";
 
 export default function CollaborationCursorsLayer() {
     const cursors = useMindmapRemoteCursors();

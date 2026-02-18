@@ -1,6 +1,6 @@
-import type { CursorsSlice, Listener, MindmapStore, Collaborators, Unsubscribe } from "@/features/mindmap/engine/types";
+import { CollaboratorCursorsInfo, Collaborators, LocksInfo } from "@/features/mindmap/types/mindmap_collaboration";
+import { Listener, Unsubscribe } from "@/features/mindmap/types/mindmap_controller";
 import { DragSessionSnapshot, InteractionSnapshot } from "@/features/mindmap/types/mindmap_interaction";
-import { LocksInfo } from "@/features/mindmap/types/mindmap_lock";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
 export type StoreChannel =
@@ -9,7 +9,7 @@ export type StoreChannel =
     | "viewport"
     | "interaction"
     | "dragSession"
-    | "presence"
+    | "collaborators"
     | "cursors"
     | "locks"
     | `node:${NodeId}`
@@ -31,8 +31,8 @@ export type MindmapStoreState = {
     interaction: InteractionSnapshot;
     dragSession: DragSessionSnapshot;
 
-    presence: Collaborators;
-    cursors: CursorsSlice;
+    collaborators: Collaborators;
+    cursors: CollaboratorCursorsInfo;
 
     locks: LocksInfo;
 };

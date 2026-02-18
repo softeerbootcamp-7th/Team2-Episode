@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
 import DropNodePreviewLayer from "@/features/mindmap/engine/DropNodePreviewLayer";
-import { useMindmapInteraction } from "@/features/mindmap/engine/hooks";
 import MovingTreeLayer from "@/features/mindmap/engine/MovingTreeLayer";
 import { useMindmapControllerEvents } from "@/features/mindmap/engine/useMindmapEngineEvents";
+import { useMindmapInteraction } from "@/features/mindmap/hooks/useMindmapStoreState";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
 export default function InteractionLayer({

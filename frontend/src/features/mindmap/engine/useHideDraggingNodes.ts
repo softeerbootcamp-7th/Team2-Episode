@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 
-import { useMindmapDragSession } from "@/features/mindmap/engine/hooks";
+import { useMindmapDragSession } from "@/features/mindmap/hooks/useMindmapStoreState";
 
 export function useHideDraggingNodes() {
     const { isDragging, dragSubtreeIds } = useMindmapDragSession();

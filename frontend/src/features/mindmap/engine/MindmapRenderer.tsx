@@ -1,9 +1,10 @@
 import { useRef } from "react";
 
 import CollaborationCursorsLayer from "@/features/mindmap/engine/CollaborationCursorsLayer";
-import { useMindmapEngineContext, useMindmapReady } from "@/features/mindmap/engine/hooks";
 import InteractionLayer from "@/features/mindmap/engine/InteractionLayer";
+import { useMindmapEngineContext } from "@/features/mindmap/engine/MindmapProvider";
 import TreeLayer from "@/features/mindmap/engine/TreeLayer";
+import { useMindmapReady } from "@/features/mindmap/hooks/useMindmapStoreState";
 
 export default function MindmapRenderer() {
     const engine = useMindmapEngineContext();
