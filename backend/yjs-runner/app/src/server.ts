@@ -37,7 +37,7 @@ const consumer = new RedisStreamJobConsumer(redis, {
     consumerName: process.env.JOB_CONSUMER_NAME!,
     roomIdField: process.env.JOB_ROOM_FIELD ? process.env.JOB_ROOM_FIELD : "rid",
     typeField: process.env.JOB_TYPE_FIELD ? process.env.JOB_TYPE_FIELD : "type",
-    maxRetries: process.env.JOB_MAX_TRY ? process.env.JOB_MAX_TRY as unknown as number : 5,
+    maxRetries: Number(process.env.JOB_MAX_TRY ?? 5),
 });
 
 const worker = new SnapshotWorker({
