@@ -1,29 +1,39 @@
 package com.yat2.episode.collaboration.worker;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class UpdateAppender {
     private final UpdateStreamStore updateStreamStore;
     private final JobPublisher jobPublisher;
 
-    @Qualifier("updateExecutor")
     private final Executor updateExecutor;
+
+    public UpdateAppender(
+            UpdateStreamStore updateStreamStore, JobPublisher jobPublisher,
+            @Qualifier("updateExecutor") Executor updateExecutor
+    ) {
+        this.updateExecutor = updateExecutor;
+        this.updateStreamStore = updateStreamStore;
+        this.jobPublisher = jobPublisher;
+    }
 
     public void appendUpdateAsync(UUID roomId, byte[] payload) {
         try {
             updateExecutor.execute(() -> tryAppend(roomId, payload));
+        } catch (RejectedExecutionException e) {
+            jobPublisher.publishSyncAsync(roomId);
         } catch (Exception e) {
+            log.error("updateExecutor scheduling failed unexpectedly. roomId={}", roomId, e);
             jobPublisher.publishSyncAsync(roomId);
         }
     }

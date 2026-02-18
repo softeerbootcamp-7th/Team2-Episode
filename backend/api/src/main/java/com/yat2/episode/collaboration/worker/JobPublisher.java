@@ -1,7 +1,6 @@
 package com.yat2.episode.collaboration.worker;
 
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -14,11 +13,17 @@ import com.yat2.episode.collaboration.redis.JobStreamStore;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class JobPublisher {
     private final JobStreamStore jobStreamStore;
-    @Qualifier("jobExecutor")
     private final Executor jobExecutor;
+
+    public JobPublisher(
+            JobStreamStore jobStreamStore,
+            @Qualifier("jobExecutor") Executor jobExecutor
+    ) {
+        this.jobStreamStore = jobStreamStore;
+        this.jobExecutor = jobExecutor;
+    }
 
     public void publishSyncAsync(UUID roomId) {
         executeSafely(() -> jobStreamStore.publishSync(roomId), JobType.SYNC.name(), roomId);
