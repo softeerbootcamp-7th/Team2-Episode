@@ -2,7 +2,7 @@ import Button from "@/shared/components/button/Button";
 import Card from "@/shared/components/card/Card";
 import Chip from "@/shared/components/chip/Chip";
 
-// TODO : API 연결 필요
+// TODO : API 연결 필요함
 export const SKILLS = ["팀워크", "커뮤니케이션", "협업", "갈등해결", "리더십"] as const;
 export type Skill = (typeof SKILLS)[number];
 
