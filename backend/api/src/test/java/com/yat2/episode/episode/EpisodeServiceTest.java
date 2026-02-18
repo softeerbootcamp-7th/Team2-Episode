@@ -8,6 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.openapitools.jackson.nullable.JsonNullable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -139,8 +141,12 @@ class EpisodeServiceTest {
         @Test
         @DisplayName("STAR 업데이트 실패: 날짜 순서가 잘못되면 INVALID_REQUEST")
         void updateStar_DateInvalid() {
+            EpisodeStar star = EpisodeStar.create(nodeId, userId);
+            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
+
             StarUpdateReq req =
-                    new StarUpdateReq(null, null, null, null, null, LocalDate.now().plusDays(1), LocalDate.now());
+                    new StarUpdateReq(null, null, null, null, null, JsonNullable.of(LocalDate.now().plusDays(1)),
+                                      JsonNullable.of(LocalDate.now()));
 
             assertThatThrownBy(() -> episodeService.updateStar(nodeId, userId, req)).isInstanceOf(CustomException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST);
@@ -170,5 +176,47 @@ class EpisodeServiceTest {
 
             verify(episodeRepository).deleteById(nodeId);
         }
+
+        @Test
+        @DisplayName("STAR PATCH: startDate를 null로 보내면 startDate가 삭제(null)되어야 한다")
+        void updateStar_ClearStartDate_WithNull() {
+            EpisodeStar star = EpisodeStar.create(nodeId, userId);
+
+            org.springframework.test.util.ReflectionTestUtils.setField(star, "startDate", LocalDate.now());
+            org.springframework.test.util.ReflectionTestUtils.setField(star, "endDate", LocalDate.now().plusDays(1));
+
+            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
+
+            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, JsonNullable.<LocalDate>of(null),
+                                                  JsonNullable.undefined());
+
+            episodeService.updateStar(nodeId, userId, req);
+
+            assertThat(star.getStartDate()).isNull();
+            assertThat(star.getEndDate()).isEqualTo(LocalDate.now().plusDays(1)); // 기존 유지
+        }
+
+
+        @Test
+        @DisplayName("STAR PATCH: startDate 필드가 없으면(undefined) 기존 startDate는 유지되어야 한다")
+        void updateStar_StartDateAbsent_ShouldNotChange() {
+            EpisodeStar star = EpisodeStar.create(nodeId, userId);
+
+            LocalDate beforeStart = LocalDate.now();
+            LocalDate beforeEnd = LocalDate.now().plusDays(1);
+            ReflectionTestUtils.setField(star, "startDate", beforeStart);
+            ReflectionTestUtils.setField(star, "endDate", beforeEnd);
+
+            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
+
+            StarUpdateReq req =
+                    new StarUpdateReq(null, null, null, null, null, JsonNullable.undefined(), JsonNullable.undefined());
+
+            episodeService.updateStar(nodeId, userId, req);
+
+            assertThat(star.getStartDate()).isEqualTo(beforeStart);
+            assertThat(star.getEndDate()).isEqualTo(beforeEnd);
+        }
+
     }
 }
