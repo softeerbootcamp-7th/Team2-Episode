@@ -9,6 +9,7 @@ import org.springframework.web.socket.WebSocketSession;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import com.yat2.episode.collaboration.redis.JobStreamStore;
 import com.yat2.episode.collaboration.yjs.YjsMessageRouter;
 import com.yat2.episode.global.constant.AttributeKeys;
 
@@ -18,6 +19,7 @@ import com.yat2.episode.global.constant.AttributeKeys;
 public class CollaborationService {
     private final SessionRegistry sessionRegistry;
     private final YjsMessageRouter yjsMessageRouter;
+    private final JobStreamStore jobStreamStore;
 
     public void handleConnect(WebSocketSession session) {
         UUID roomId = getMindmapId(session);
@@ -37,13 +39,15 @@ public class CollaborationService {
     }
 
     public void handleDisconnect(WebSocketSession session) {
-        //TODO: Collaboration room 세션 수 0일때 스냅샷 트리거
         UUID roomId = getMindmapId(session);
         if (roomId == null) return;
 
         yjsMessageRouter.onDisconnect(roomId, session.getId());
 
-        sessionRegistry.removeSession(roomId, session);
+        int remainingSession = sessionRegistry.removeSession(roomId, session);
+        if (remainingSession == 0) {
+            jobStreamStore.publishSnapshot(roomId);
+        }
     }
 
     private UUID getMindmapId(WebSocketSession session) {
