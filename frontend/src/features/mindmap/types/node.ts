@@ -1,4 +1,4 @@
-import { Point } from "@/features/mindmap/types/spatial";
+import { Point } from "@/shared/types/spatial";
 
 export type NodeId = string;
 

@@ -1,10 +1,53 @@
-import type { Listener, MindmapState, MindmapStore, StoreChannel, Unsubscribe } from "@/features/mindmap/engine/types";
+import type { CursorsSlice, Listener, MindmapStore, Collaborators, Unsubscribe } from "@/features/mindmap/engine/types";
+import { DragSessionSnapshot, InteractionSnapshot } from "@/features/mindmap/types/mindmap_interaction";
+import { LocksInfo } from "@/features/mindmap/types/mindmap_lock";
+import { NodeElement, NodeId } from "@/features/mindmap/types/node";
+
+export type StoreChannel =
+    | "graph"
+    | "selection"
+    | "viewport"
+    | "interaction"
+    | "dragSession"
+    | "presence"
+    | "cursors"
+    | "locks"
+    | `node:${NodeId}`
+    | `lock:${NodeId}`;
+
+export type MindmapStoreState = {
+    ready: boolean;
+
+    graph: {
+        rootId: NodeId;
+        nodes: Map<NodeId, NodeElement>;
+        revision: number;
+    };
+
+    selection: { selectedNodeId: NodeId | null };
+
+    viewport: { x: number; y: number; scale: number };
+
+    interaction: InteractionSnapshot;
+    dragSession: DragSessionSnapshot;
+
+    presence: Collaborators;
+    cursors: CursorsSlice;
+
+    locks: LocksInfo;
+};
+
+export type MindmapStore = {
+    getState(): MindmapStoreState;
+    setState(updater: (prev: MindmapStoreState) => MindmapStoreState, opts?: { channels?: StoreChannel[] }): void;
+    subscribe(channel: StoreChannel, cb: () => void): () => void;
+};
 
 /**
- * 채널 기반 external store
+ * 채널 기반 store
  * - "node:xxx" / "interaction" / "viewport" 등 원하는 구독자만 깨울 수 있음
  */
-export function createMindmapStore(initial: MindmapState): MindmapStore {
+export function createMindmapStore(initial: MindmapStoreState): MindmapStore {
     let state = initial;
 
     const listeners = new Map<StoreChannel, Set<Listener>>();

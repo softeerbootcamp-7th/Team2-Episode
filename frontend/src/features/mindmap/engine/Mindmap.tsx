@@ -4,15 +4,20 @@ import * as Y from "yjs";
 
 import CollaborationList from "@/features/mindmap/engine/CollaborationList";
 import MindmapRenderer from "@/features/mindmap/engine/MindmapRenderer";
-import { MindmapConfig, PresenceUserProfile } from "@/features/mindmap/engine/types";
 import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
+import { CollaboratorInfo } from "@/features/mindmap/types/mindmap_collaboration";
+
+export type MindmapConfig = {
+    layout?: { xGap?: number; yGap?: number };
+    interaction?: { dragThreshold?: number };
+};
 
 type Props = {
     doc: Y.Doc | undefined;
     mindmapId: string;
     provider?: WebsocketProvider;
     config?: MindmapConfig;
-    user?: PresenceUserProfile;
+    user?: CollaboratorInfo;
 };
 
 /*
