@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import * as Y from "yjs";
 
-import { createMindmapEngine } from "@/features/mindmap/engine/MindmapController";
+import { createMindmapController } from "@/features/mindmap/engine/MindmapController";
 import { AwarenessLike, CollaboratorInfo } from "@/features/mindmap/types/mindmap_collaboration";
 import { IMindmapController, MindmapOptions } from "@/features/mindmap/types/mindmap_controller";
 
@@ -41,7 +41,9 @@ export function MindmapProvider({
     const [engine, setEngine] = useState<IMindmapController | null>(null);
 
     useEffect(() => {
-        const newEngine = createMindmapEngine({
+        if (!doc) return;
+
+        const newEngine = createMindmapController({
             doc,
             roomId,
             rootContents,

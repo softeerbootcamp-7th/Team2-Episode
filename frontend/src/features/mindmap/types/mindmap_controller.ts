@@ -66,7 +66,7 @@ export type Unsubscribe = () => void;
 
 export type MindmapOptions = {
     roomId?: string;
-    doc?: Y.Doc;
+    doc: Y.Doc;
     rootContents?: string;
 
     config?: MindmapConfig;
@@ -81,7 +81,7 @@ export type AdapterChange = {
     origin: unknown;
 };
 
-export interface TreeAdapter {
+export type TreeAdapter = {
     getMap(): Map<NodeId, NodeElement>;
     get(nodeId: NodeId): NodeElement | undefined;
     set(nodeId: NodeId, node: NodeElement): void;
@@ -91,4 +91,4 @@ export interface TreeAdapter {
 
     onChange(cb: (change: AdapterChange) => void): () => void;
     destroy(): void;
-}
+};
