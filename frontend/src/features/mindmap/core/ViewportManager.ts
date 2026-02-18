@@ -31,7 +31,6 @@ export default class ViewportManager {
         this.canvas = canvas;
         this.getWorldBounds = getWorldBounds;
 
-        // 초기 상태: 루트 노드가 (0,0)에 있으므로 카메라 중심도 (0,0)
         this.panX = 0;
         this.panY = 0;
         this.zoom = 1;
@@ -69,18 +68,22 @@ export default class ViewportManager {
         const rect = this.canvas.getBoundingClientRect();
         if (rect.width === 0) return;
 
-        // 1. 현재 줌 배율에 따라 화면에 보여줄 World 단위의 너비/높이 계산
         const viewWidth = rect.width / this.zoom;
         const viewHeight = rect.height / this.zoom;
 
-        // 2. 카메라 중심(panX, panY)에서 시야의 절반만큼 이동하여 왼쪽 상단(minX, minY) 결정
         const minX = this.panX - viewWidth / 2;
         const minY = this.panY - viewHeight / 2;
 
         this.canvas.setAttribute("viewBox", `${minX} ${minY} ${viewWidth} ${viewHeight}`);
 
-        // 리액트 등 외부 레이어에 변경 알림
-        // this.broker.publish("VIEWPORT_CHANGED", this.getCurrentTransform());
+        this.broker.publish("VIEWPORT_CHANGE", undefined);
+    }
+
+    setViewport(x: number, y: number, zoom?: number) {
+        this.panX = x;
+        this.panY = y;
+        if (zoom) this.zoom = zoom;
+        this.applyViewBox();
     }
 
     /** 마우스 드래그: 카메라의 중심점(panX, panY)을 이동 */
@@ -90,6 +93,10 @@ export default class ViewportManager {
         this.panY -= dy / this.zoom;
 
         this.applyViewBox();
+    }
+
+    getSnapshot() {
+        return { x: this.panX, y: this.panY, scale: this.zoom };
     }
 
     /** 줌 핸들러: 마우스 포인터 지점을 고정하며 줌 인/아웃 */
