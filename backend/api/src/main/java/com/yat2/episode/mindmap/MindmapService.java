@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.competency.dto.CompetencyTypeRes;
@@ -72,10 +73,18 @@ public class MindmapService {
             competencyMap.computeIfAbsent(row.mindmapId(), k -> new HashSet<>()).add(row.competencyTypeId());
         }
 
+        Set<Integer> allCompetencyIds =
+                competencyMap.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
+
+        Map<Integer, CompetencyTypeRes> competencyResMap =
+                competencyTypeService.getCompetencyTypesInIds(allCompetencyIds).stream()
+                        .collect(Collectors.toMap(CompetencyTypeRes::id, java.util.function.Function.identity()));
+
         return participants.stream().map(p -> {
             UUID id = p.getMindmap().getId();
-            List<Integer> ids = competencyMap.getOrDefault(id, Set.of()).stream().sorted().toList();
-            List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(ids);
+            List<CompetencyTypeRes> ctResList =
+                    competencyMap.getOrDefault(id, Set.of()).stream().sorted().map(competencyResMap::get)
+                            .filter(java.util.Objects::nonNull).toList();
             return MindmapDetailRes.of(p, ctResList);
         }).toList();
     }
