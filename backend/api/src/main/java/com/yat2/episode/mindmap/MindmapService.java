@@ -209,12 +209,14 @@ public class MindmapService {
         return new MindmapSessionJoinRes(ticket, presignedUrl);
     }
 
-    public List<Integer> getCompetencyTypesInMindmap(UUID mindmapId, long userId) {
+    public List<CompetencyTypeRes> getCompetencyTypesInMindmap(UUID mindmapId, long userId) {
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
-        return getSortedCompetencyTypeIds(mindmapId, userId);
+        List<Integer> ids = getSortedCompetencyTypeIds(mindmapId, userId);
+        return competencyTypeService.getCompetencyTypesInIds(ids);
     }
 
     private List<Integer> getSortedCompetencyTypeIds(UUID mindmapId, long userId) {
         return episodeStarRepository.findCompetencyTypesByMindmapId(mindmapId, userId).stream().sorted().toList();
     }
+
 }
