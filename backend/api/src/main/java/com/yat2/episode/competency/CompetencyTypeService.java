@@ -17,7 +17,7 @@ public class CompetencyTypeService {
         return competencyTypeRepository.findAll().stream().map(CompetencyTypeRes::of).toList();
     }
 
-    public List<CompetencyTypeRes> getCompetencyTypesInIds(Set<Integer> ids) {
+    public List<CompetencyTypeRes> getCompetencyTypesInIds(Iterable<Integer> ids) {
         return competencyTypeRepository.findAllById(ids).stream().map(CompetencyTypeRes::of).toList();
     }
 

@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.yat2.episode.competency.CompetencyTypeService;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.EpisodeRepository;
 import com.yat2.episode.episode.EpisodeStar;
 import com.yat2.episode.episode.EpisodeStarRepository;
@@ -43,11 +45,13 @@ public class MindmapService {
     private final MindmapJwtProvider mindmapJwtProvider;
     private final EpisodeRepository episodeRepository;
     private final EpisodeStarRepository episodeStarRepository;
+    private final CompetencyTypeService competencyTypeService;
 
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
         MindmapParticipant p = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         List<Integer> competencyTypeIds = getSortedCompetencyTypeIds(mindmapId, userId);
-        return MindmapDetailRes.of(p, competencyTypeIds);
+        List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(competencyTypeIds);
+        return MindmapDetailRes.of(p, ctResList);
     }
 
     public List<MindmapDetailRes> getMindmaps(Long userId, MindmapVisibility type) {
@@ -71,7 +75,8 @@ public class MindmapService {
         return participants.stream().map(p -> {
             UUID id = p.getMindmap().getId();
             List<Integer> ids = competencyMap.getOrDefault(id, Set.of()).stream().sorted().toList();
-            return MindmapDetailRes.of(p, ids);
+            List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(ids);
+            return MindmapDetailRes.of(p, ctResList);
         }).toList();
     }
 
