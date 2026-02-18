@@ -26,6 +26,7 @@ export class SnapshotWorker {
             try {
                 const jobs = await this.deps.consumer.read(this.deps.blockMs, this.deps.count);
                 if (!jobs || jobs.length === 0) {
+                    console.log("no job");
                     continue;
                 }
                 for (const job of jobs) {

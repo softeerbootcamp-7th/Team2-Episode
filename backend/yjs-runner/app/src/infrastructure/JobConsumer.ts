@@ -52,6 +52,8 @@ export class RedisStreamJobConsumer implements JobConsumer {
             '0'
         ) as RedisStreamReadResult | null;
 
+        console.log("successfully read by consumer group");
+
         if (pendingResults && pendingResults.length > 0 && pendingResults[0][1].length > 0) {
             const pendingJobs = await this.processPending(count, pendingResults);
             if (pendingJobs !== null) return pendingJobs;

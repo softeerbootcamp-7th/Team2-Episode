@@ -24,11 +24,12 @@
   },
   "description": "",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.990.0",
+    "@aws-sdk/client-s3": "^3.893.0",
     "dotenv": "^17.3.1",
     "ioredis": "^5.9.3",
     "lib0": "^0.2.117",
     "waait": "^1.0.5",
+    "y-protocols": "^1.0.7",
     "yjs": "^13.6.29"
   }
 }

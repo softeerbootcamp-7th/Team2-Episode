@@ -16,10 +16,15 @@ export class SnapshotService {
     async process(job: Job): Promise<void> {
         if (job.type === JobType.SNAPSHOT) {
             const baseDoc = await this.deps.storage.download(job.roomId)
+            console.log("download success");
             const updates = await this.deps.updateRepo.fetchAllUpdates(job.roomId);
+            console.log("readUpdate success");
             const newDoc = this.deps.yjs.buildSnapshot(baseDoc, updates.updateFrameList);
+            console.log("snapshot build success");
             await this.deps.storage.upload(job.roomId, newDoc);
+            console.log("upload success");
             await this.deps.updateRepo.trim(job.roomId, updates.lastEntryId);
+            console.log("trim success");
         } else {
             // todo: sync 처리 필요
         }
