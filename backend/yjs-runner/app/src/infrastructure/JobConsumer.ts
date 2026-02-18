@@ -1,6 +1,7 @@
 import type Redis from 'ioredis';
 import {Job, JobType} from '../contracts/Job';
 import {RedisStreamEntry, RedisStreamReadResult} from "../contracts/RedisStreamReadResult";
+import {StreamPendingEntries} from "../contracts/StreamPendingEntries";
 
 export interface JobConsumer {
     init(): Promise<void>;
@@ -99,7 +100,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             entryIds[0],
             entryIds[entryIds.length - 1],
             count
-        ) as [string, string, number, number][];
+        ) as StreamPendingEntries;
 
         const validEntries: RedisStreamEntry[] = [];
         const idsToAbandon: string[] = [];
