@@ -1,11 +1,7 @@
-import { useMindMapDragSession } from "@/features/mindmap/hooks/useMindmapContext";
-/**
- * 드래그 세션(start/end)에서만 style 텍스트가 바뀌도록 분리
- * - 원본(static-graph)만 흐리게 처리
- * - moving-fragment는 영향 받지 않음
- */
+import { useMindmapDragSession } from "@/features/mindmap/engine/hooks";
+
 export default function DragGhostStyle() {
-    const { isDragging, dragSubtreeIds } = useMindMapDragSession();
+    const { isDragging, dragSubtreeIds } = useMindmapDragSession();
 
     if (!isDragging || !dragSubtreeIds || dragSubtreeIds.size === 0) return null;
 
