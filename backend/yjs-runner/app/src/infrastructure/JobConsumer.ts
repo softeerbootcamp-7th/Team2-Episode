@@ -94,7 +94,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             entryIds[0],
             entryIds[entryIds.length - 1],
             count
-        ) as any[];
+        ) as [string, string, number, number][];
 
         const validEntries: [string, string[]][] = [];
         const idsToAbandon: string[] = [];
