@@ -63,10 +63,7 @@ public class EpisodeService {
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND));
         episode.update(episodeUpsertReq);
 
-        List<CompetencyTypeRes> ctResList =
-                competencyTypeService.getCompetencyTypesInIds(episodeStar.getCompetencyTypeIds());
-
-        return EpisodeDetail.of(episode, episodeStar, ctResList);
+        return buildEpisodeDetail(episode, episodeStar);
     }
 
     @Transactional
@@ -100,9 +97,12 @@ public class EpisodeService {
     private EpisodeDetail getEpisodeAndStarOrThrow(UUID nodeId, long userId) {
         EpisodeStar s = episodeStarRepository.findStarDetail(nodeId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
-        List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(s.getCompetencyTypeIds());
+        return buildEpisodeDetail(s.getEpisode(), s);
+    }
 
-        return EpisodeDetail.of(s.getEpisode(), s, ctResList);
+    private EpisodeDetail buildEpisodeDetail(Episode episode, EpisodeStar star) {
+        List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(star.getCompetencyTypeIds());
+        return EpisodeDetail.of(episode, star, ctResList);
     }
 
     private EpisodeStar getStarOrThrow(UUID nodeId, long userId) {
