@@ -32,7 +32,7 @@ public class JobStreamStore {
     }
 
     private void publish(JobType type, UUID roomId, Duration dedupeTtl) {
-        if (!tryDedupe(type, roomId, dedupeTtl)) {
+        if (type != JobType.SNAPSHOT && !tryDedupe(type, roomId, dedupeTtl)) {
             return;
         }
 
