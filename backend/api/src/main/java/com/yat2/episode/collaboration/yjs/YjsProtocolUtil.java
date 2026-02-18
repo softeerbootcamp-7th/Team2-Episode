@@ -31,7 +31,7 @@ public class YjsProtocolUtil {
     }
 
     public static byte[] emptySync2Frame() {
-        return new byte[]{ (byte) MSG_SYNC, (byte) SYNC_STEP_2, 0x00 };
+        return new byte[]{ (byte) MSG_SYNC, (byte) SYNC_STEP_2, 0x02, 0x00, 0x00 };
     }
 
     private static boolean hasPrefix(byte[] payload, int b0, int b1) {
