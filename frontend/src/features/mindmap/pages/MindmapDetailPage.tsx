@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import MindMapRenderer from "@/features/mindmap/components/MindMapRenderer";
+import ParticipantsBar from "@/features/mindmap/engine/ParticipantsBar";
 import { useMindmapSession } from "@/features/mindmap/hooks/useMindmapSession";
 import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
 import { CollaboratorList } from "@/features/mindmap/shared_mindmap/components/CollaboratorList";
@@ -36,7 +37,7 @@ export default function MindmapDetailPage() {
         [],
     );
 
-    const { doc, provider, collaboratorsManager, connectionStatus, isLoading } = useMindmapSession({
+    const { doc, provider, connectionStatus, isLoading } = useMindmapSession({
         mindmapId,
         enableAwareness: true,
         userInfo,
@@ -63,7 +64,7 @@ export default function MindmapDetailPage() {
             <div className="flex flex-col w-full h-screen bg-slate-100 overflow-hidden">
                 <div className="fixed top-4 right-4 z-50 bg-white p-2 rounded shadow">상태: {connectionStatus}</div>
 
-                {collaboratorsManager && <CollaboratorList manager={collaboratorsManager} />}
+                <ParticipantsBar />
 
                 <div className="flex-1 relative min-h-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[20px_20px]">
                     <svg ref={canvasRef} className="w-full h-full block">

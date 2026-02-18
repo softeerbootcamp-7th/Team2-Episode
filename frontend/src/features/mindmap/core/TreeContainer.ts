@@ -20,14 +20,15 @@ export default class TreeContainer {
 
     constructor({ name = ROOT_NODE_CONTENTS, isThrowError = true }: { name?: string; isThrowError?: boolean } = {}) {
         this.nodes = new Map();
+
         const rootNodeElement = this.generateNewNodeElement({
-            nodeData: {
-                contents: name,
-            },
+            nodeData: { contents: name },
             type: "root",
         });
+
         this.rootNodeId = rootNodeElement.id;
         this.addNodeToContainer(rootNodeElement);
+
         this.isThrowError = isThrowError;
     }
 
@@ -41,6 +42,50 @@ export default class TreeContainer {
         return node;
     }
 
+    /**
+     * ✅ root/normal 공통 유틸: 부모의 child list 포인터를 side까지 고려해서 읽고/쓰기
+     * - normal: firstChildId/lastChildId 사용
+     * - root: firstChildIdLeft/Right, lastChildIdLeft/Right 사용
+     */
+    private getFirstChildId(parent: NodeElement, side?: AddNodeDirection): NodeId | null {
+        if (parent.type !== "root") return parent.firstChildId;
+
+        if (side === "left") return parent.firstChildIdLeft ?? null;
+        if (side === "right") return parent.firstChildIdRight ?? null;
+
+        // (정상 로직에선 root면 side가 항상 있어야 함)
+        return parent.firstChildId;
+    }
+
+    private getLastChildId(parent: NodeElement, side?: AddNodeDirection): NodeId | null {
+        if (parent.type !== "root") return parent.lastChildId;
+
+        if (side === "left") return parent.lastChildIdLeft ?? null;
+        if (side === "right") return parent.lastChildIdRight ?? null;
+
+        return parent.lastChildId;
+    }
+
+    private setFirstChildId(parent: NodeElement, value: NodeId | null, side?: AddNodeDirection) {
+        if (parent.type !== "root") {
+            parent.firstChildId = value;
+            return;
+        }
+        if (side === "left") parent.firstChildIdLeft = value;
+        else if (side === "right") parent.firstChildIdRight = value;
+        else parent.firstChildId = value; // legacy fallback
+    }
+
+    private setLastChildId(parent: NodeElement, value: NodeId | null, side?: AddNodeDirection) {
+        if (parent.type !== "root") {
+            parent.lastChildId = value;
+            return;
+        }
+        if (side === "left") parent.lastChildIdLeft = value;
+        else if (side === "right") parent.lastChildIdRight = value;
+        else parent.lastChildId = value; // legacy fallback
+    }
+
     private generateNewNodeElement({
         nodeData = { contents: "" },
         type = "normal",
@@ -52,7 +97,7 @@ export default class TreeContainer {
             y: 0,
             width: 0,
             height: 0,
-            addNodeDirection,
+            addNodeDirection: type === "root" ? "right" : addNodeDirection,
 
             parentId: ROOT_NODE_PARENT_ID,
             firstChildId: null,
@@ -63,10 +108,17 @@ export default class TreeContainer {
 
             data: nodeData,
             type,
+            ...(type === "root"
+                ? {
+                      firstChildIdLeft: null,
+                      lastChildIdLeft: null,
+                      firstChildIdRight: null,
+                      lastChildIdRight: null,
+                  }
+                : {}),
         };
 
         this.addNodeToContainer(node);
-
         return node;
     }
 
@@ -77,41 +129,63 @@ export default class TreeContainer {
     private attachNext({ baseNode, movingNode }: { baseNode: NodeElement; movingNode: NodeElement }) {
         movingNode.parentId = baseNode.parentId;
 
+        const parentNode = this._getNode(baseNode.parentId);
+        const side = parentNode.type === "root" ? baseNode.addNodeDirection : undefined;
+
+        // ✅ root의 sibling insertion이면 side 강제 동기화
+        if (parentNode.type === "root") {
+            movingNode.addNodeDirection = baseNode.addNodeDirection;
+        }
+
         movingNode.prevId = baseNode.id;
         movingNode.nextId = baseNode.nextId;
 
         if (baseNode.nextId) {
             const nextSibling = this._getNode(baseNode.nextId);
-
             nextSibling.prevId = movingNode.id;
         }
 
         baseNode.nextId = movingNode.id;
 
-        const parentNode = this._getNode(baseNode.parentId);
-        if (parentNode.lastChildId === baseNode.id) {
-            parentNode.lastChildId = movingNode.id;
+        // ✅ root면 side별 lastChildId 갱신
+        if (this.getLastChildId(parentNode, side) === baseNode.id) {
+            this.setLastChildId(parentNode, movingNode.id, side);
+        } else if (parentNode.type !== "root") {
+            // normal은 기존 로직 유지
+            if (parentNode.lastChildId === baseNode.id) {
+                parentNode.lastChildId = movingNode.id;
+            }
         }
     }
 
     private attachPrev({ baseNode, movingNode }: { baseNode: NodeElement; movingNode: NodeElement }) {
         movingNode.parentId = baseNode.parentId;
 
+        const parentNode = this._getNode(baseNode.parentId);
+        const side = parentNode.type === "root" ? baseNode.addNodeDirection : undefined;
+
+        // ✅ root의 sibling insertion이면 side 강제 동기화
+        if (parentNode.type === "root") {
+            movingNode.addNodeDirection = baseNode.addNodeDirection;
+        }
+
         movingNode.nextId = baseNode.id;
         movingNode.prevId = baseNode.prevId;
 
         if (baseNode.prevId) {
             const prevSibling = this._getNode(baseNode.prevId);
-
             prevSibling.nextId = movingNode.id;
         }
 
         baseNode.prevId = movingNode.id;
 
-        const parentNode = this._getNode(baseNode.parentId);
-
-        if (parentNode.firstChildId === baseNode.id) {
-            parentNode.firstChildId = movingNode.id;
+        // ✅ root면 side별 firstChildId 갱신
+        if (this.getFirstChildId(parentNode, side) === baseNode.id) {
+            this.setFirstChildId(parentNode, movingNode.id, side);
+        } else if (parentNode.type !== "root") {
+            if (parentNode.firstChildId === baseNode.id) {
+                parentNode.firstChildId = movingNode.id;
+            }
         }
     }
 
@@ -121,23 +195,23 @@ export default class TreeContainer {
         }
 
         const parentNode = this._getNode(node.parentId);
+        const side = parentNode.type === "root" ? node.addNodeDirection : undefined;
 
-        // 1. 부모 포인터 갱신
-        if (parentNode.firstChildId === node.id) {
-            parentNode.firstChildId = node.nextId;
+        // ✅ 부모 포인터 갱신 (root면 side별)
+        if (this.getFirstChildId(parentNode, side) === node.id) {
+            this.setFirstChildId(parentNode, node.nextId, side);
         }
-
-        if (parentNode.lastChildId === node.id) {
-            parentNode.lastChildId = node.prevId;
+        if (this.getLastChildId(parentNode, side) === node.id) {
+            this.setLastChildId(parentNode, node.prevId, side);
         }
 
         if (node.prevId) {
             this._getNode(node.prevId).nextId = node.nextId;
         }
-
         if (node.nextId) {
             this._getNode(node.nextId).prevId = node.prevId;
         }
+
         node.prevId = null;
         node.nextId = null;
         node.parentId = DETACHED_NODE_PARENT_ID; // 임시 상태.
@@ -165,43 +239,32 @@ export default class TreeContainer {
         baseNodeId,
         movingNodeId,
         direction,
+        addNodeDirection, // ✅ root child 이동 시 필요
     }: {
         baseNodeId: NodeId;
         movingNodeId: NodeId;
         direction: NodeDirection;
+        addNodeDirection?: AddNodeDirection;
     }) {
-        // 제자리
-        if (direction === "child" && baseNodeId === movingNodeId) {
-            return;
-        }
-
-        if (baseNodeId === movingNodeId) {
-            return;
-        }
+        if (direction === "child" && baseNodeId === movingNodeId) return;
+        if (baseNodeId === movingNodeId) return;
 
         try {
             const baseNode = this._getNode(baseNodeId);
             const movingNode = this._getNode(movingNodeId);
 
             let checkNodeId = baseNode.id;
-            if (direction !== "child") {
-                checkNodeId = baseNode.parentId;
-            }
+            if (direction !== "child") checkNodeId = baseNode.parentId;
 
             // drop한 곳에서 위로 가면서 movingNode가 있는지 확인
             let tempParent = this.safeGetNode(checkNodeId);
             while (tempParent) {
-                if (tempParent.id === movingNodeId) {
-                    throw new Error("자손 밑으로 이동 불가");
-                }
-
-                if (tempParent.type === "root") {
-                    break;
-                }
-
+                if (tempParent.id === movingNodeId) throw new Error("자손 밑으로 이동 불가");
+                if (tempParent.type === "root") break;
                 tempParent = this.safeGetNode(tempParent.parentId);
             }
 
+            // ✅ detach는 "현재 side" 기준으로 해야 하므로, side 변경은 detach 이후에 일어나야 함
             this.detach({ node: movingNode });
 
             switch (direction) {
@@ -212,21 +275,20 @@ export default class TreeContainer {
                     this.attachPrev({ baseNode, movingNode });
                     break;
                 case "child":
-                    this.appendChild({ parentNodeId: baseNode.id, childNodeId: movingNode.id });
+                    this.appendChild({
+                        parentNodeId: baseNode.id,
+                        childNodeId: movingNode.id,
+                        addNodeDirection, // ✅ root면 여기서 side를 적용
+                    });
                     break;
                 default:
                     exhaustiveCheck(`${direction} 방향은 불가능합니다.`);
             }
         } catch (e) {
-            if (e instanceof Error) {
-                console.error(e.message);
-            } else {
-                console.error(String(e));
-            }
+            if (e instanceof Error) console.error(e.message);
+            else console.error(String(e));
 
-            if (this.isThrowError) {
-                throw e;
-            }
+            if (this.isThrowError) throw e;
         }
     }
 
@@ -243,7 +305,7 @@ export default class TreeContainer {
             const baseNode = this._getNode(baseNodeId);
 
             const newNode = this.generateNewNodeElement({
-                addNodeDirection: addNodeDirection,
+                addNodeDirection,
             });
 
             switch (direction) {
@@ -257,7 +319,7 @@ export default class TreeContainer {
                     this.appendChild({
                         parentNodeId: baseNode.id,
                         childNodeId: newNode.id,
-                        addNodeDirection: addNodeDirection,
+                        addNodeDirection,
                     });
                     break;
                 default:
@@ -266,15 +328,10 @@ export default class TreeContainer {
 
             return newNode.id;
         } catch (e) {
-            if (e instanceof Error) {
-                console.error(e.message);
-            } else {
-                console.error(String(e));
-            }
+            if (e instanceof Error) console.error(e.message);
+            else console.error(String(e));
 
-            if (this.isThrowError) {
-                throw e;
-            }
+            if (this.isThrowError) throw e;
         }
     }
 
@@ -289,84 +346,76 @@ export default class TreeContainer {
     }) {
         try {
             const parentNode = this._getNode(parentNodeId);
-            const finalDirection =
-                parentNode.type === "root" ? addNodeDirection || "right" : parentNode.addNodeDirection;
 
             // 노드 생성 (또는 기존 노드 가져오기)
             const childNode = cId
                 ? this._getNode(cId)
-                : this.generateNewNodeElement({ addNodeDirection: finalDirection });
+                : this.generateNewNodeElement({
+                      addNodeDirection:
+                          parentNode.type === "root" ? addNodeDirection || "right" : parentNode.addNodeDirection,
+                  });
+
+            // ✅ 최종 side 결정:
+            // - root: addNodeDirection(드롭/버튼) 우선, 없으면 child의 기존 방향 유지, 최후 default right
+            // - normal: 부모 방향 상속
+            const finalDirection =
+                parentNode.type === "root"
+                    ? addNodeDirection || childNode.addNodeDirection || "right"
+                    : parentNode.addNodeDirection;
 
             childNode.parentId = parentNodeId;
             childNode.addNodeDirection = finalDirection;
 
-            // [Double Linked List 연결: 항상 맨 뒤에 추가]
-            if (parentNode.lastChildId) {
-                // 이미 자식이 있는 경우: 기존 막내의 뒤에 붙임
-                const lastNode = this._getNode(parentNode.lastChildId);
+            const side = parentNode.type === "root" ? finalDirection : undefined;
+
+            // [Double Linked List 연결: 항상 맨 뒤에 추가] (root는 side별 리스트)
+            const lastChildId = this.getLastChildId(parentNode, side);
+
+            if (lastChildId) {
+                const lastNode = this._getNode(lastChildId);
+
                 lastNode.nextId = childNode.id;
                 childNode.prevId = lastNode.id;
 
-                // 부모의 막내 정보를 새 노드로 갱신
-                parentNode.lastChildId = childNode.id;
-                childNode.nextId = null; // 막내이므로 다음은 없음
+                this.setLastChildId(parentNode, childNode.id, side);
+                childNode.nextId = null;
             } else {
-                // 첫 번째 자식인 경우: 첫째이자 막내가 됨
-                parentNode.firstChildId = childNode.id;
-                parentNode.lastChildId = childNode.id;
+                this.setFirstChildId(parentNode, childNode.id, side);
+                this.setLastChildId(parentNode, childNode.id, side);
+
                 childNode.prevId = null;
                 childNode.nextId = null;
             }
         } catch (e) {
-            if (e instanceof Error) {
-                console.error(e.message);
-            } else {
-                console.error(String(e));
-            }
-            if (this.isThrowError) {
-                throw e;
-            }
+            if (e instanceof Error) console.error(e.message);
+            else console.error(String(e));
+            if (this.isThrowError) throw e;
         }
     }
 
     delete({ nodeId }: { nodeId: NodeId }) {
         try {
             const node = this._getNode(nodeId);
-            if (node.type === "root") {
-                throw new Error("루트 노드는 삭제할 수 없습니다.");
-            }
+            if (node.type === "root") throw new Error("루트 노드는 삭제할 수 없습니다.");
 
             const parentNode = this._getNode(node.parentId);
+            const side = parentNode.type === "root" ? node.addNodeDirection : undefined;
 
-            if (parentNode.firstChildId === node.id) {
-                parentNode.firstChildId = node.nextId;
+            if (this.getFirstChildId(parentNode, side) === node.id) {
+                this.setFirstChildId(parentNode, node.nextId, side);
+            }
+            if (this.getLastChildId(parentNode, side) === node.id) {
+                this.setLastChildId(parentNode, node.prevId, side);
             }
 
-            if (parentNode.lastChildId === node.id) {
-                parentNode.lastChildId = node.prevId;
-            }
-
-            if (node.prevId) {
-                const prevNode = this._getNode(node.prevId);
-                prevNode.nextId = node.nextId;
-            }
-
-            if (node.nextId) {
-                const nextNode = this._getNode(node.nextId);
-                nextNode.prevId = node.prevId;
-            }
+            if (node.prevId) this._getNode(node.prevId).nextId = node.nextId;
+            if (node.nextId) this._getNode(node.nextId).prevId = node.prevId;
 
             this._deleteTraverse({ nodeId });
         } catch (e) {
-            if (e instanceof Error) {
-                console.error(e.message);
-            } else {
-                console.error(String(e));
-            }
-
-            if (this.isThrowError) {
-                throw e;
-            }
+            if (e instanceof Error) console.error(e.message);
+            else console.error(String(e));
+            if (this.isThrowError) throw e;
         }
     }
 
@@ -376,34 +425,44 @@ export default class TreeContainer {
             const newNodeElement: NodeElement = { ...oldNode, ...newNodeData, id: nodeId };
             this.addNodeToContainer(newNodeElement);
         } catch (e) {
-            if (e instanceof Error) {
-                console.error(e.message);
-            } else {
-                console.error(String(e));
-            }
-
-            if (this.isThrowError) {
-                throw e;
-            }
+            if (e instanceof Error) console.error(e.message);
+            else console.error(String(e));
+            if (this.isThrowError) throw e;
         }
     }
 
     // ===== 조회 / 탐색 ====== //
+
+    private collectChildIdsFromList(startId: NodeId | null, out: NodeId[]) {
+        let cur = startId;
+        while (cur) {
+            out.push(cur);
+            const n = this.safeGetNode(cur);
+            if (!n) break;
+            cur = n.nextId;
+        }
+    }
+
     getChildIds(nodeId: NodeId): NodeId[] {
         const node = this.safeGetNode(nodeId);
-        if (!node) {
-            return [];
+        if (!node) return [];
+
+        // ✅ root는 right 리스트 + left 리스트 합쳐서 반환
+        if (node.type === "root") {
+            const ids: NodeId[] = [];
+            this.collectChildIdsFromList(node.firstChildIdRight ?? null, ids);
+            this.collectChildIdsFromList(node.firstChildIdLeft ?? null, ids);
+            return ids;
         }
 
+        // normal: 기존 single list
         const childIds: NodeId[] = [];
         let currentChildId = node.firstChildId;
 
         while (currentChildId) {
             childIds.push(currentChildId);
             const childNode = this.safeGetNode(currentChildId);
-            if (!childNode) {
-                break;
-            }
+            if (!childNode) break;
             currentChildId = childNode.nextId;
         }
         return childIds;
@@ -411,13 +470,13 @@ export default class TreeContainer {
 
     getAllDescendantIds(nodeId: NodeId): Set<NodeId> {
         const descendants = new Set<NodeId>();
-        descendants.add(nodeId); // 자기 자신 포함
+        descendants.add(nodeId);
 
         const traverse = (currentId: NodeId) => {
             const children = this.getChildIds(currentId);
             children.forEach((childId) => {
                 descendants.add(childId);
-                traverse(childId); // 재귀 호출
+                traverse(childId);
             });
         };
 
@@ -426,66 +485,41 @@ export default class TreeContainer {
     }
 
     getChildNodes(parentNodeId: NodeId): NodeElement[] {
-        const node = this.safeGetNode(parentNodeId);
-        if (!node) {
-            return [];
-        }
+        const ids = this.getChildIds(parentNodeId);
+        const nodes: NodeElement[] = [];
 
-        const childNodes: NodeElement[] = [];
-        let currentChildId = node.firstChildId;
-
-        while (currentChildId) {
-            const childNode = this.safeGetNode(currentChildId);
-
-            if (!childNode) {
+        for (const id of ids) {
+            const n = this.safeGetNode(id);
+            if (!n) {
                 console.error("유효하지 않은 childNode가 존재하므로 빈 배열을 반환합니다.");
                 return [];
             }
-
-            childNodes.push(childNode);
-
-            currentChildId = childNode.nextId;
+            nodes.push(n);
         }
 
-        return childNodes;
+        return nodes;
     }
 
     safeGetNode(nodeId: NodeId) {
-        const node = this.nodes.get(nodeId);
-
-        if (!node) {
-            return undefined;
-        }
-
-        return node;
+        return this.nodes.get(nodeId);
     }
 
     safeGetParentNode(nodeId: NodeId) {
         const node = this.safeGetNode(nodeId);
-
-        if (!node) {
-            return undefined;
-        }
+        if (!node) return undefined;
 
         const parentNode = this.safeGetNode(node.parentId);
-
-        if (!parentNode) {
-            return undefined;
-        }
+        if (!parentNode) return undefined;
 
         return parentNode;
     }
 
     getParentId(nodeId: NodeId): NodeId | undefined {
         const node = this.safeGetNode(nodeId);
-        if (!node) {
-            return undefined;
-        }
+        if (!node) return undefined;
 
         const parentNode = this.safeGetNode(node.parentId);
-        if (!parentNode) {
-            return undefined;
-        }
+        if (!parentNode) return undefined;
 
         return parentNode.id;
     }
@@ -496,5 +530,14 @@ export default class TreeContainer {
 
     getRootNode() {
         return this._getNode(this.rootNodeId);
+    }
+
+    // ✅ MindmapTree 인터페이스 호환용
+    transact(fn: () => void) {
+        fn();
+    }
+
+    destroy() {
+        // no-op
     }
 }

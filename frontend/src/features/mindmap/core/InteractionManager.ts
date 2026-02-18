@@ -1,7 +1,7 @@
 import { MOUSE_DOWN } from "@/constants/mouse";
 import QuadTree from "@/features/mindmap/core/QuadTree";
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
-import { MindMapEvents } from "@/features/mindmap/types/events";
+import { MindMapEvents } from "@/features/mindmap/types/mindmap_events";
 import {
     BaseNodeInfo,
     DragSessionSnapshot,
@@ -9,7 +9,7 @@ import {
     EMPTY_INTERACTION_SNAPSHOT,
     InteractionMode,
     InteractionSnapshot,
-} from "@/features/mindmap/types/interaction";
+} from "@/features/mindmap/types/mindmap_interaction";
 import { AddNodeDirection, NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { calcDistance } from "@/utils/calc_distance";
 import { EventBroker } from "@/utils/EventBroker";

@@ -11,6 +11,7 @@ type Props = {
 
 export function CollaboratorList({ manager }: Props) {
     const users = useCollaborators(manager);
+
     return (
         <List className="absolute top-10 right-10 z-50 p-4 gap-4" hasDivider={false}>
             <ListRow

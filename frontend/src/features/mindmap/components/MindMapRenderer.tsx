@@ -3,16 +3,16 @@ import { useEffect, useRef } from "react";
 import DragGhostStyle from "@/features/mindmap/components/DragGhostStyle";
 import InteractionLayer from "@/features/mindmap/components/InteractionLayer";
 import StaticLayer from "@/features/mindmap/components/StaticLayer";
-import {
-    useMindMapCore,
-    useMindMapInteractionFrame,
-    useMindMapVersion,
-} from "@/features/mindmap/hooks/useMindmapContext";
-import { useViewportEvents } from "@/features/mindmap/hooks/useViewportEvents";
-import { NodeElement, NodeId } from "@/features/mindmap/types/node";
+import { useMindmapEngineContext, useMindmapInteraction, useMindmapReady } from "@/features/mindmap/engine/hooks";
+import ParticipantsBar from "@/features/mindmap/engine/ParticipantsBar";
+import RemoteCursorLayer from "@/features/mindmap/engine/RemoteCursorLayer";
+import { useMindmapEngineEvents } from "@/features/mindmap/engine/useMindmapEngineEvents";
+import type { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
 /**
- * interaction 프레임은 이 컴포넌트만 구독해서, movingFragment만 리렌더되도록 분리
+ * Interaction 전용 오버레이
+ * - interaction 채널만 구독
+ * - static graph는 리렌더하지 않음
  */
 function InteractionOverlay({
     nodeMap,
@@ -21,41 +21,39 @@ function InteractionOverlay({
     nodeMap: Map<NodeId, NodeElement>;
     rootRef: React.RefObject<SVGGElement | null>;
 }) {
-    const status = useMindMapInteractionFrame();
+    const status = useMindmapInteraction();
 
-    // 부모로부터 받은 ref를 사용하여 해당 인스턴스의 DOM만 조작
     useEffect(() => {
         const root = rootRef.current;
-        if (root) {
-            root.setAttribute("data-dragging", status.mode === "dragging" ? "true" : "false");
-        }
+        if (!root) return;
+        root.setAttribute("data-dragging", status.mode === "dragging" ? "true" : "false");
     }, [status.mode, rootRef]);
 
     return <InteractionLayer status={status} nodeMap={nodeMap} />;
 }
 
 function MindMapInnerRenderer() {
-    const mindmap = useMindMapCore();
-    const version = useMindMapVersion();
+    const engine = useMindmapEngineContext();
     const rootRef = useRef<SVGGElement>(null);
 
-    if (!mindmap) return null;
-    useViewportEvents();
+    // 🔥 이벤트 바인딩
+    useMindmapEngineEvents();
 
-    const nodeMap = mindmap.tree.nodes;
+    const nodeMap = engine.getState().graph.nodes;
 
     return (
-        <g ref={rootRef} className="mindmap-render-root" data-version={version} data-dragging="false">
+        <g ref={rootRef} className="mindmap-render-root" data-dragging="false">
             <StaticLayer nodeMap={nodeMap} />
             <DragGhostStyle />
             <InteractionOverlay nodeMap={nodeMap} rootRef={rootRef} />
+            <RemoteCursorLayer />
+            <ParticipantsBar />
         </g>
     );
 }
 
 export default function MindMapRenderer() {
-    const mindmap = useMindMapCore();
-
-    if (!mindmap || !mindmap.getIsReady()) return null;
+    const ready = useMindmapReady();
+    if (!ready) return null;
     return <MindMapInnerRenderer />;
 }

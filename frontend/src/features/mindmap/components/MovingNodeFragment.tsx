@@ -1,47 +1,61 @@
-import { useMemo } from "react";
+import React, { useLayoutEffect, useMemo, useRef } from "react";
 
 import EdgeLayer from "@/features/mindmap/components/EdgeLayer";
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
-/**
- * nodeMap: 전체 맵
- * filterIds : 마우스에 붙어 움직일 노드 Ids
- * delta : 이동량
- */
 type MovingNodeFragmentProps = {
     nodeMap: Map<NodeId, NodeElement>;
-    filterIds: Set<NodeId>; //
+    filterIds: Set<NodeId>;
     delta: { x: number; y: number };
 };
 
-/** 마우스로 잡고 노드를 움직일때 마우스에 따라다니는 덩어리 노드들 */
+/**
+ * ✅ delta 변화(매 프레임)에는 NodeItem 트리가 리렌더되지 않도록 분리
+ * - g의 transform만 imperative하게 업데이트
+ * - NodeItem/Edge는 memoized content로 고정
+ */
+
+const MovingContent = React.memo(
+    function MovingContent({ filterIds, nodeMap }: { filterIds: Set<NodeId>; nodeMap: Map<NodeId, NodeElement> }) {
+        const { fragmentNodes, fragmentMap } = useMemo(() => {
+            const map = new Map<NodeId, NodeElement>();
+
+            filterIds.forEach((id) => {
+                const node = nodeMap.get(id);
+                if (node) map.set(id, node);
+            });
+
+            const nodesForEdge = Array.from(map.values()).filter((node) => map.has(node.parentId));
+            return { fragmentNodes: nodesForEdge, fragmentMap: map };
+        }, [filterIds, nodeMap]);
+
+        return (
+            <>
+                <EdgeLayer nodeMap={fragmentMap} type="active" filterNode={fragmentNodes} color="violet" />
+                {Array.from(filterIds).map((id) => (
+                    <NodeItem key={`moving-${id}`} nodeId={id} measure={false} />
+                ))}
+            </>
+        );
+    },
+    (prev, next) => prev.filterIds === next.filterIds && prev.nodeMap === next.nodeMap,
+);
+
+MovingContent.displayName = "MovingContent";
+
 export default function MovingNodeFragment({ filterIds, nodeMap, delta }: MovingNodeFragmentProps) {
-    // 전체 nodeMap 중 movingHead ~ 자식 노드를 하나의 덩어리화, 맵 내용이 변경될때만 fragment 다시 그림
-    const { fragmentNodes, fragmentMap } = useMemo(() => {
-        const map = new Map<NodeId, NodeElement>();
+    const groupRef = useRef<SVGGElement | null>(null);
 
-        // 드래그 중인 노드들만 맵에 담기
-        filterIds.forEach((id) => {
-            const node = nodeMap.get(id);
-            if (node) {
-                map.set(id, node);
-            }
-        });
-
-        // 엣지가 그릴 대상을 '부모가 같은 드래그 그룹 안에 있는 경우'로 제한
-        const nodesForEdge = Array.from(map.values()).filter((node) => map.has(node.parentId));
-
-        return { fragmentNodes: nodesForEdge, fragmentMap: map };
-    }, [filterIds, nodeMap]);
+    // ✅ 매 프레임 DOM attribute만 갱신(React tree는 그대로)
+    useLayoutEffect(() => {
+        if (!groupRef.current) return;
+        groupRef.current.setAttribute("transform", `translate(${delta.x}, ${delta.y})`);
+    }, [delta.x, delta.y]);
 
     return (
-        <g transform={`translate(${delta.x}, ${delta.y})`} className="moving-fragment-group">
-            <EdgeLayer nodeMap={fragmentMap} type="active" filterNode={fragmentNodes} color="violet" />
-
-            {Array.from(filterIds).map((id) => (
-                <NodeItem key={`moving-${id}`} nodeId={id} measure={false} />
-            ))}
+        <g ref={groupRef} className="moving-fragment-group">
+            <MovingContent filterIds={filterIds} nodeMap={nodeMap} />
         </g>
     );
 }

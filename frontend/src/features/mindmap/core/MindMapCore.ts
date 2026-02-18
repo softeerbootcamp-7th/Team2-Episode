@@ -1,22 +1,19 @@
+import * as Y from "yjs";
+
 import { MindmapInteractionManager } from "@/features/mindmap/core/InteractionManager";
 import MindmapLayoutManager from "@/features/mindmap/core/LayoutManager";
 import QuadTree from "@/features/mindmap/core/QuadTree";
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
+import type { MindmapTree } from "@/features/mindmap/core/types";
 import ViewportManager from "@/features/mindmap/core/ViewportManager";
-import { MindMapEvents } from "@/features/mindmap/types/events";
-import { EMPTY_DRAG_SESSION_SNAPSHOT, EMPTY_INTERACTION_SNAPSHOT } from "@/features/mindmap/types/interaction";
+import YjsTreeContainer from "@/features/mindmap/core/YjsTreeContainer";
+import { MindMapEvents } from "@/features/mindmap/types/mindmap_events";
+import { EMPTY_DRAG_SESSION_SNAPSHOT, EMPTY_INTERACTION_SNAPSHOT } from "@/features/mindmap/types/mindmap_interaction";
 import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
 import { EventBroker } from "@/utils/EventBroker";
 
-/**
- *  tree : 마인드맵의 계급도
- *  layout : 트리 layout 배치
- *  quadTree : 마우스 주변 노드 후보군 탐색
- *  viewport : 실제 svg 화면 그리기
- *  interaction : 마우스/키보드 조작
- */
 export default class MindMapCore {
-    public tree: TreeContainer;
+    public tree: MindmapTree;
     private broker = new EventBroker<MindMapEvents>();
     private layout: MindmapLayoutManager;
 
@@ -27,68 +24,75 @@ export default class MindMapCore {
 
     private _isInitialized = false;
 
-    constructor(private onGlobalUpdate: () => void) {
-        this.tree = new TreeContainer();
+    constructor(
+        private onGlobalUpdate: () => void,
+        opts?: { doc?: Y.Doc; roomId?: string; name?: string },
+    ) {
+        const doc = opts?.doc;
+        const roomId = opts?.roomId ?? "local";
+        const name = opts?.name ?? "";
+
+        this.tree = doc
+            ? new YjsTreeContainer({
+                  doc,
+                  roomId,
+                  broker: this.broker,
+                  name,
+                  onRemoteChange: (changedIds) => this.syncFromRemote(changedIds),
+              })
+            : new TreeContainer({ name });
+
         this.layout = new MindmapLayoutManager({ treeContainer: this.tree });
     }
 
-    /** 쿼드트리 초기 영역 계산 */
+    destroy() {
+        this.tree.destroy?.();
+    }
+
     private calculateInitialBounds() {
-        return {
-            minX: -10000,
-            maxX: 10000,
-            minY: -10000,
-            maxY: 10000,
-        };
+        return { minX: -10000, maxX: 10000, minY: -10000, maxY: 10000 };
+    }
+
+    /** ✅ remote에서 doc이 바뀌면: layout 다시 쓰지 말고(quadratic loop 방지) 렌더/쿼드트리만 갱신 */
+    private syncFromRemote(changedIds: NodeId[]) {
+        if (!this._isInitialized || !this.quadTree) return;
+
+        changedIds.forEach((id) => this.layout.invalidate(id));
+
+        this.quadTree.clear();
+        this.tree.nodes.forEach((node) => this.quadTree!.insert(node));
+
+        // static layer 갱신을 위해
+        this.onGlobalUpdate();
     }
 
     private sync(affectedIds?: NodeId[]) {
         const { quadTree, viewport, _isInitialized } = this;
-
         if (!_isInitialized || !quadTree || !viewport) return;
 
-        // 영향을 받는 노드들의 레이아웃 캐시 무효화
-        if (affectedIds) {
-            affectedIds.forEach((id) => {
-                this.layout.invalidate(id);
-            });
-        }
+        if (affectedIds) affectedIds.forEach((id) => this.layout.invalidate(id));
 
-        // 1. 레이아웃 업데이트
-        const rootId = this.tree.getRootId();
-        if (rootId) {
-            this.layout.updateLayout({ rootId });
-        }
+        // ✅ layout은 “한 트랜잭션”으로 묶어서 yjs update가 한번에 가게
+        this.tree.transact(() => {
+            const rootId = this.tree.getRootId();
+            if (rootId) this.layout.updateLayout({ rootId });
+        }, "core-layout");
 
-        // 2. 쿼드 트리 갱신
         quadTree.clear();
-        this.tree.nodes.forEach((node) => {
-            quadTree.insert(node);
-        });
+        this.tree.nodes.forEach((node) => quadTree.insert(node));
 
-        // 3. broker 알림
-        if (affectedIds) {
-            affectedIds.forEach((id) => {
-                this.broker.publish(id, undefined);
-            });
-        }
-        // 전체 알림
-        else {
-            this.broker.publish("RENDER_UPDATE", undefined);
-        }
+        if (affectedIds) affectedIds.forEach((id) => this.broker.publish(id, undefined));
+        else this.broker.publish("RENDER_UPDATE", undefined);
 
-        // 4. 전역 UI 업데이트
         this.onGlobalUpdate();
     }
 
-    /** 2단계 결합을 위한 초기화 메서드 */
     initialize(canvas: SVGSVGElement) {
         if (this._isInitialized) return;
 
         const rootNode = this.tree.getRootNode();
         const initialBounds = this.calculateInitialBounds();
 
-        // 여기서 할당이 완료됨
         this.canvas = canvas;
         this.quadTree = new QuadTree(initialBounds);
         this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree!.getBounds());
@@ -97,10 +101,8 @@ export default class MindMapCore {
             this.broker,
             this.tree,
             this.quadTree,
-            (dx, dy) => {
-                if (this.viewport) this.viewport.panningHandler(dx, dy);
-            },
-            (target, moving, direction) => this.moveNode(target, moving, direction),
+            (dx, dy) => this.viewport?.panningHandler(dx, dy),
+            (target, moving, direction, side) => this.moveNode(target, moving, direction, side),
             (x, y) => this.viewport!.screenToWorld(x, y),
             (id) => this.deleteNode(id),
         );
@@ -109,25 +111,16 @@ export default class MindMapCore {
         this.sync();
     }
 
-    getCanvas(): SVGSVGElement | null {
-        return this.canvas;
-    }
+    // ---- actions ----
 
-    moveNode(targetId: NodeId, movingId: NodeId, direction: NodeDirection) {
-        this.tree.moveTo({
-            baseNodeId: targetId,
-            movingNodeId: movingId,
-            direction,
-        });
+    moveNode(targetId: NodeId, movingId: NodeId, direction: NodeDirection, addNodeDirection?: AddNodeDirection) {
+        this.tree.moveTo({ baseNodeId: targetId, movingNodeId: movingId, direction, addNodeDirection });
         this.sync([targetId, movingId]);
     }
 
     addNode(baseNodeId: NodeId, direction: NodeDirection, addNodeDirection: AddNodeDirection) {
-        const newNodeId = this.tree.attachTo({ baseNodeId, direction: direction, addNodeDirection: addNodeDirection });
-
-        if (newNodeId) {
-            this.sync([baseNodeId, newNodeId]);
-        }
+        const newNodeId = this.tree.attachTo({ baseNodeId, direction, addNodeDirection });
+        if (newNodeId) this.sync([baseNodeId, newNodeId]);
     }
 
     deleteNode(nodeId: NodeId) {
@@ -139,23 +132,11 @@ export default class MindMapCore {
             if (error instanceof Error) {
                 console.error(error.message);
                 this.broker.publish("NODE_DELETE_ERROR", error.message);
-            } else {
-                console.error("알 수 없는 삭제 에러 발생");
             }
         }
     }
-    getInteractionSnapshot() {
-        if (!this._isInitialized || !this.interaction) return EMPTY_INTERACTION_SNAPSHOT;
-        return this.interaction.getInteractionSnapshot();
-    }
-
-    getDragSessionSnapshot() {
-        if (!this._isInitialized || !this.interaction) return EMPTY_DRAG_SESSION_SNAPSHOT;
-        return this.interaction.getDragSessionSnapshot();
-    }
 
     updateNodeSize(nodeId: NodeId, width: number, height: number) {
-        // 동일 사이즈면 early return
         const cur = this.tree.safeGetNode(nodeId);
         if (cur && cur.width === width && cur.height === height) return;
 
@@ -163,15 +144,42 @@ export default class MindMapCore {
         this.sync([nodeId]);
     }
 
-    /** ========== Interaction ========== */
+    // ---- getters / broker ----
+    getCanvas() {
+        return this.canvas;
+    }
+    getBroker() {
+        return this.broker;
+    }
+    getTree() {
+        return this.tree;
+    }
+    getViewport() {
+        return this.viewport;
+    }
+    getLayout() {
+        return this.layout;
+    }
+    getIsReady() {
+        return this._isInitialized;
+    }
+
+    getInteractionSnapshot() {
+        if (!this._isInitialized || !this.interaction) return EMPTY_INTERACTION_SNAPSHOT;
+        return this.interaction.getInteractionSnapshot();
+    }
+    getDragSessionSnapshot() {
+        if (!this._isInitialized || !this.interaction) return EMPTY_DRAG_SESSION_SNAPSHOT;
+        return this.interaction.getDragSessionSnapshot();
+    }
+
+    // input handlers는 기존 그대로
     handleMouseMove(e: React.MouseEvent) {
         this.broker.publish("RAW_MOUSE_MOVE", e);
     }
-
     handleWheel(e: React.WheelEvent) {
         this.broker.publish("RAW_WHEEL", e);
     }
-
     handleMouseDown(e: React.MouseEvent) {
         const target = e.target as HTMLElement;
         const nodeEl = target.closest("[data-node-id]");
@@ -181,40 +189,16 @@ export default class MindMapCore {
             const actionEl = target.closest("[data-action]");
 
             if (actionEl && actionEl.getAttribute("data-action") === "add-child") {
-                const direction = actionEl.getAttribute("data-direction") as AddNodeDirection;
-                this.addNode(nodeId, "child", direction);
+                const dir = actionEl.getAttribute("data-direction") as AddNodeDirection;
+                this.addNode(nodeId, "child", dir);
                 return;
             }
-
-            // 노드 본체 클릭 시 (드래그 준비)
             this.broker.publish("NODE_CLICK", { nodeId, event: e });
         } else {
-            // 배경 클릭 시 (패닝)
             this.broker.publish("RAW_MOUSE_DOWN", e);
         }
     }
-
     handleMouseUp(e: React.MouseEvent) {
         this.broker.publish("RAW_MOUSE_UP", e);
-    }
-
-    getBroker() {
-        return this.broker;
-    }
-
-    getTree() {
-        return this.tree;
-    }
-
-    getViewport() {
-        return this.viewport;
-    }
-
-    getLayout() {
-        return this.layout;
-    }
-
-    getIsReady(): boolean {
-        return this._isInitialized;
     }
 }

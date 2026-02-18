@@ -1,6 +1,6 @@
 import DropIndicator from "@/features/mindmap/components/DropIndicator";
 import MovingNodeFragment from "@/features/mindmap/components/MovingNodeFragment";
-import { InteractionSnapshot } from "@/features/mindmap/types/interaction";
+import { InteractionSnapshot } from "@/features/mindmap/types/mindmap_interaction";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
 type InteractionLayerProps = {
@@ -15,7 +15,12 @@ export default function InteractionLayer({ nodeMap, status }: InteractionLayerPr
     return (
         <g className="interaction-layer">
             {baseNode.targetId && baseNode.direction && (
-                <DropIndicator targetId={baseNode.targetId} direction={baseNode.direction} nodeMap={nodeMap} />
+                <DropIndicator
+                    targetId={baseNode.targetId}
+                    direction={baseNode.direction}
+                    nodeMap={nodeMap}
+                    side={baseNode.side ?? null}
+                />
             )}
 
             <MovingNodeFragment filterIds={dragSubtreeIds} nodeMap={nodeMap} delta={dragDelta} />

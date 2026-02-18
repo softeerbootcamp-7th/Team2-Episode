@@ -1,4 +1,4 @@
-import { MindMapEvents } from "@/features/mindmap/types/events";
+import { MindMapEvents } from "@/features/mindmap/types/mindmap_events";
 import { NodeElement } from "@/features/mindmap/types/node";
 import { Rect } from "@/features/mindmap/types/spatial";
 import { EventBroker } from "@/utils/EventBroker";
