@@ -56,7 +56,7 @@ export function useMindmapSession({ mindmapId }: Props) {
 
     useEffect(() => {
         if (!provider) return;
-        if (snapshotStatus === "loading") return;
+        if (snapshotStatus !== "success") return;
 
         if (!provider.shouldConnect) provider.connect();
 
@@ -84,33 +84,12 @@ export function useMindmapSession({ mindmapId }: Props) {
                 const update = new Uint8Array(buffer);
 
                 if (cancelled) return;
+                const tempDoc = new Y.Doc();
+                Y.applyUpdate(tempDoc, update);
 
+                // 2. JSON으로 변환하여 출력
+                console.log("압축 해제된 스냅샷 데이터(JSON):", tempDoc.toJSON());
                 Y.applyUpdate(doc, update);
-
-                const nodesMap = doc.getMap(mindmapId);
-
-                const rootId = "root";
-
-                if (nodesMap.has(rootId)) {
-                    doc.transact(() => {
-                        const nodesMap = doc.getMap<NodeElement>(mindmapId);
-
-                        const patches = computeMindmapLayout({
-                            nodes: new Map(nodesMap.entries()),
-                            rootId: rootId,
-                        });
-
-                        for (const p of patches) {
-                            const node = nodesMap.get(p.nodeId);
-                            if (node) {
-                                nodesMap.set(p.nodeId, {
-                                    ...node,
-                                    ...p.patch,
-                                });
-                            }
-                        }
-                    }, "layout-init");
-                }
 
                 setSnapshotStatus("success");
             } catch (e) {
@@ -124,7 +103,7 @@ export function useMindmapSession({ mindmapId }: Props) {
         };
     }, [doc, snapshotUrl, mindmapId]);
 
-    const isLoading = !token || snapshotStatus === "loading";
+    const isLoading = !token || snapshotStatus !== "success";
 
     return {
         doc,
