@@ -1,8 +1,5 @@
 import { Point } from "@/features/mindmap/types/spatial";
 
-/**
- * 마인드맵 데이터 구조 관련
- */
 export type NodeId = string;
 
 export type NodeType = "root" | "normal";
@@ -26,11 +23,16 @@ export type NodeElement = Node & {
     parentId: NodeId;
     type: NodeType;
 
-    // 계층 이동을 위한 Double Linked List
     firstChildId: NodeId | null;
     lastChildId: NodeId | null;
+
     nextId: NodeId | null;
     prevId: NodeId | null;
 
     addNodeDirection: AddNodeDirection;
+
+    firstChildIdLeft?: NodeId | null;
+    lastChildIdLeft?: NodeId | null;
+    firstChildIdRight?: NodeId | null;
+    lastChildIdRight?: NodeId | null;
 };
