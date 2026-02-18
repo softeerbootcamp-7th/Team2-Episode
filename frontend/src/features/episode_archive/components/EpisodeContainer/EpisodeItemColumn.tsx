@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
+import EpisodeItemHead from "@/features/episode_archive/components/episodeContainer/EpisodeItemHead";
+import EpisodeStar from "@/features/episode_archive/components/episodeContainer/EpisodeStar";
 import { MOCK_EPISODE_DETAILS } from "@/features/episode_archive/data";
 import { EpisodeDetailResponse, EpisodeSummary } from "@/features/episode_archive/types/episode";
-
-import EpisodeItemHead from "./EpisodeItemHead";
-import EpisodeStar from "./EpisodeStar";
 
 // Props 인터페이스를 명확히 정의하여 MindmapEpisodeContainer와의 타입 에러를 해결합니다.
 interface EpisodeItemColumnProps {

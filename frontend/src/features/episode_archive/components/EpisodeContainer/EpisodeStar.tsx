@@ -1,8 +1,7 @@
+import EpisodeItem from "@/features/episode_archive/components/episodeContainer/EpisodeItem";
 import { EpisodeDetailResponse } from "@/features/episode_archive/types/episode";
 import Chip from "@/shared/components/chip/Chip";
 import Icon from "@/shared/components/icon/Icon";
-
-import EpisodeItem from "./EpisodeItem";
 
 type Props = {
     detail: EpisodeDetailResponse;

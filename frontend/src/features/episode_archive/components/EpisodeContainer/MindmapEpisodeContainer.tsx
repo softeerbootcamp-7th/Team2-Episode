@@ -1,8 +1,7 @@
+import EpisodeBar from "@/features/episode_archive/components/episodeContainer/EpisodeBar";
+import EpisodeItemColumn from "@/features/episode_archive/components/episodeContainer/EpisodeItemColumn";
 import { EpisodeSummary } from "@/features/episode_archive/types/episode";
 import { cn } from "@/utils/cn";
-
-import EpisodeBar from "./EpisodeBar";
-import EpisodeItemColumn from "./EpisodeItemColumn";
 
 type Props = {
     mindmapName: string;
