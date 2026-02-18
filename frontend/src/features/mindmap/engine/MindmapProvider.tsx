@@ -7,7 +7,7 @@ import { IMindmapController, MindmapOptions } from "@/features/mindmap/types/min
 
 export const MindmapControllerContext = createContext<IMindmapController | null>(null);
 
-export function useMindmapEngineContext() {
+export function useMindmapControllerContext() {
     const engine = useContext(MindmapControllerContext);
     if (!engine) throw new Error("MindmapEngineProvider missing!");
     return engine;

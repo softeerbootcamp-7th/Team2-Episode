@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
-import { useMindmapEngineContext } from "@/features/mindmap/engine/MindmapProvider";
+import { useMindmapControllerContext } from "@/features/mindmap/engine/MindmapProvider";
 import { useMindmapControllerEvents } from "@/features/mindmap/engine/useMindmapEngineEvents";
 import { LockInfo } from "@/features/mindmap/types/mindmap_collaboration";
 import type { NodeId } from "@/features/mindmap/types/node";
@@ -10,7 +10,7 @@ import { MindmapStoreState, StoreChannel } from "@/features/mindmap/utils/mindma
 
 /** 엔진 actions */
 export function useMindmapActions() {
-    const engine = useMindmapEngineContext();
+    const engine = useMindmapControllerContext();
     return engine.actions;
 }
 
@@ -20,7 +20,7 @@ export function useMindmapActions() {
  * - selector: state에서 내가 필요한 조각만 뽑기
  */
 export function useMindmapChannel<T>(channel: StoreChannel, selector: (s: MindmapStoreState) => T): T {
-    const engine = useMindmapEngineContext();
+    const engine = useMindmapControllerContext();
     const store = engine.getStore();
 
     const subscribe = useCallback((cb: () => void) => store.subscribe(channel, cb), [store, channel]);

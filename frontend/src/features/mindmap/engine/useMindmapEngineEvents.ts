@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
-import { useMindmapEngineContext } from "@/features/mindmap/hooks/useMindmapStoreState";
+import { useMindmapControllerContext } from "@/features/mindmap/engine/MindmapProvider";
 
 export function useMindmapControllerEvents() {
-    const engine = useMindmapEngineContext();
+    const engine = useMindmapControllerContext();
 
     useEffect(() => {
         const svg = engine.getCanvas();

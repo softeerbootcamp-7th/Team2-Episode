@@ -3,7 +3,7 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
 import CollaborationList from "@/features/mindmap/engine/CollaborationList";
-import { MindMapProvider } from "@/features/mindmap/engine/MindmapProvider";
+import { MindmapProvider } from "@/features/mindmap/engine/MindmapProvider";
 import MindmapRenderer from "@/features/mindmap/engine/MindmapRenderer";
 import { CollaboratorInfo } from "@/features/mindmap/types/mindmap_collaboration";
 
@@ -36,7 +36,7 @@ const Mindmap = ({
     const canvasRef = useRef<SVGSVGElement | null>(null);
 
     return (
-        <MindMapProvider
+        <MindmapProvider
             doc={doc}
             roomId={mindmapId}
             canvasRef={canvasRef}
@@ -53,7 +53,7 @@ const Mindmap = ({
                     </svg>
                 </div>
             </div>
-        </MindMapProvider>
+        </MindmapProvider>
     );
 };
 
