@@ -40,15 +40,16 @@ public class SessionRegistry {
         });
     }
 
-    public void removeSession(UUID mindmapId, WebSocketSession session) {
-        removeSession(mindmapId, session.getId());
+    public int removeSession(UUID mindmapId, WebSocketSession session) {
+        return removeSession(mindmapId, session.getId());
     }
 
-    private void removeSession(UUID mindmapId, String sessionId) {
-        rooms.computeIfPresent(mindmapId, (id, sessions) -> {
+    private int removeSession(UUID mindmapId, String sessionId) {
+        ConcurrentHashMap<String, WebSocketSession> updated = rooms.computeIfPresent(mindmapId, (id, sessions) -> {
             sessions.remove(sessionId);
             return sessions.isEmpty() ? null : sessions;
         });
+        return updated == null ? 0 : updated.size();
     }
 
     public void broadcast(UUID mindmapId, WebSocketSession sender, byte[] payload) {
