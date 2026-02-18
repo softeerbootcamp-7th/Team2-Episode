@@ -1,8 +1,8 @@
 import { useRef } from "react";
 
+import CollaborationCursorsLayer from "@/features/mindmap/engine/CollaborationCursorsLayer";
 import { useMindmapEngineContext, useMindmapReady } from "@/features/mindmap/engine/hooks";
 import InteractionLayer from "@/features/mindmap/engine/InteractionLayer";
-import CollaborationCursorsLayer from "@/features/mindmap/engine/RemoteCursorLayer";
 import TreeLayer from "@/features/mindmap/engine/TreeLayer";
 
 export default function MindmapRenderer() {

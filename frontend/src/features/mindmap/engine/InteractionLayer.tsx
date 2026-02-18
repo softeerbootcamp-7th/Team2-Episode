@@ -1,16 +1,11 @@
 import { useEffect } from "react";
 
-import DropIndicator from "@/features/mindmap/components/DropIndicator";
-import MovingNodeFragment from "@/features/mindmap/components/MovingNodeFragment";
+import DropNodePreviewLayer from "@/features/mindmap/engine/DropNodePreviewLayer";
 import { useMindmapInteraction } from "@/features/mindmap/engine/hooks";
+import MovingTreeLayer from "@/features/mindmap/engine/MovingTreeLayer";
 import { useMindmapControllerEvents } from "@/features/mindmap/engine/useMindmapEngineEvents";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
-/**
- * Interaction 전용 오버레이
- * - interaction 채널만 구독
- * - static graph는 리렌더하지 않음
- */
 export default function InteractionLayer({
     nodeMap,
     rootRef,
@@ -34,7 +29,7 @@ export default function InteractionLayer({
     return (
         <g className="interaction-layer">
             {baseNode.targetId && baseNode.direction && (
-                <DropIndicator
+                <DropNodePreviewLayer
                     targetId={baseNode.targetId}
                     direction={baseNode.direction}
                     nodeMap={nodeMap}
@@ -42,7 +37,7 @@ export default function InteractionLayer({
                 />
             )}
 
-            <MovingNodeFragment filterIds={dragSubtreeIds} nodeMap={nodeMap} delta={dragDelta} />
+            <MovingTreeLayer filterIds={dragSubtreeIds} nodeMap={nodeMap} delta={dragDelta} />
         </g>
     );
 }

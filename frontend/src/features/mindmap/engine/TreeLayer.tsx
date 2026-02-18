@@ -1,4 +1,4 @@
-import EdgeLayer from "@/features/mindmap/components/EdgeLayer";
+import EdgeLayer from "@/features/mindmap/engine/EdgeLayer";
 import { useMindmapGraphRevision } from "@/features/mindmap/engine/hooks";
 import { useHideDraggingNodes } from "@/features/mindmap/engine/useHideDraggingNodes";
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
