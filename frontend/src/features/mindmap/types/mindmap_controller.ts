@@ -75,6 +75,15 @@ export type MindmapOptions = {
     onError?: (e: unknown) => void;
 };
 
+type RootChildPointers = {
+    firstChildIdLeft?: NodeId | null;
+    lastChildIdLeft?: NodeId | null;
+    firstChildIdRight?: NodeId | null;
+    lastChildIdRight?: NodeId | null;
+};
+
+export type NodePatch = Partial<Omit<NodeElement, "id">> & RootChildPointers;
+
 export type AdapterChange = {
     changedIds: NodeId[];
     local: boolean;

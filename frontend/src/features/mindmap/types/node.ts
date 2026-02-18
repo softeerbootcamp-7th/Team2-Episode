@@ -8,15 +8,9 @@ export type AddNodeDirection = "left" | "right";
 
 export type NodeDirection = "prev" | "next" | "child";
 
-export type NodeData = {
-    contents: string;
-    // pakxepakxe?: any; // 추가적인 확장 데이터를 위한 필드
-};
-
 export type Node = Point & {
     width: number;
     height: number;
-    data: NodeData;
 };
 
 export type NodeElement = Node & {
@@ -30,6 +24,7 @@ export type NodeElement = Node & {
     prevId: NodeId | null;
 
     addNodeDirection: AddNodeDirection;
+    contents: string;
 
     firstChildIdLeft?: NodeId | null;
     lastChildIdLeft?: NodeId | null;

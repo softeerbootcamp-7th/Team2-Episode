@@ -23,7 +23,7 @@ export default function MindmapDetailPage() {
         };
     }, [userInfo?.userId, userInfo?.nickname]);
 
-    const { doc, provider, isLoading } = useMindmapSession({
+    const { doc, provider, isInitialized } = useMindmapSession({
         mindmapId,
         enableAwareness: true,
         userInfo,
@@ -39,7 +39,7 @@ export default function MindmapDetailPage() {
 
     if (!mindmapId) return <div>잘못된 접근입니다.</div>;
 
-    if (isLoading) {
+    if (!isInitialized) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <p>.</p>

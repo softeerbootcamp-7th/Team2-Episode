@@ -25,7 +25,7 @@ export const makeDocWithArr = ({ name, items, mindmapId }: { name: string; items
 
         if (newNodeId) {
             tree.update(newNodeId, {
-                data: { contents: item },
+                contents: item,
             });
         }
     });

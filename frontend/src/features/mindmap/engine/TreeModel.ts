@@ -1,13 +1,5 @@
-import { ROOT_NODE_ID } from "@/features/mindmap/engine/YjsAdaptor";
-import { TreeAdapter } from "@/features/mindmap/types/mindmap_controller";
-import type {
-    AddNodeDirection,
-    NodeData,
-    NodeDirection,
-    NodeElement,
-    NodeId,
-    NodeType,
-} from "@/features/mindmap/types/node";
+import { ROOT_NODE_ID, YjsAdapter } from "@/features/mindmap/engine/YjsAdaptor";
+import type { AddNodeDirection, NodeDirection, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/node";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 import generateId from "@/utils/generate_id";
 
@@ -29,7 +21,7 @@ function isRootNode(node: NodeElement): node is RootNodeElement {
 }
 
 export class TreeModel {
-    constructor(private adapter: TreeAdapter) {}
+    constructor(private adapter: YjsAdapter) {}
 
     get nodes(): Map<NodeId, NodeElement> {
         return this.adapter.getMap();
@@ -107,9 +99,14 @@ export class TreeModel {
     }
 
     private patchNode(nodeId: NodeId, patch: NodePatch) {
-        const prev = this.getNode(nodeId);
-        const next = { ...prev, ...patch, id: nodeId };
-        this.adapter.set(nodeId, next);
+        // 이전 코드:
+        // const prev = this.getNode(nodeId);
+        // const next = { ...prev, ...patch, id: nodeId };
+        // this.adapter.set(nodeId, next); <-- 여기서 덮어쓰기 문제 발생
+
+        // 변경된 코드:
+        // adapter의 updateNode를 호출하여 '변경된 필드'만 전송
+        this.adapter.update(nodeId, patch);
     }
 
     update(nodeId: NodeId, newNodeData: Partial<Omit<NodeElement, "id">>) {
@@ -133,11 +130,11 @@ export class TreeModel {
     }
 
     private generateNewNodeElement({
-        nodeData = { contents: "" },
+        contents = "",
         type = "normal",
         addNodeDirection = "right",
     }: {
-        nodeData?: NodeData;
+        contents?: string;
         type?: NodeType;
         addNodeDirection?: AddNodeDirection;
     }) {
@@ -157,7 +154,7 @@ export class TreeModel {
             nextId: null,
             prevId: null,
 
-            data: nodeData,
+            contents,
             type,
 
             ...(type === "root"

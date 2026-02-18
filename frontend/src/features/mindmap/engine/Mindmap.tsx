@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
@@ -13,7 +13,7 @@ export type MindmapConfig = {
 };
 
 type Props = {
-    doc: Y.Doc | undefined;
+    doc?: Y.Doc;
     mindmapId: string;
     provider?: WebsocketProvider;
     config?: MindmapConfig;
@@ -35,6 +35,19 @@ const Mindmap = ({
 }: Props) => {
     const canvasRef = useRef<SVGSVGElement | null>(null);
 
+    const resolvedConfig = useMemo<MindmapConfig>(
+        () => ({
+            layout: {
+                xGap: config?.layout?.xGap ?? 100,
+                yGap: config?.layout?.yGap ?? 20,
+            },
+            interaction: {
+                dragThreshold: config?.interaction?.dragThreshold ?? 5,
+            },
+        }),
+        [config?.layout?.xGap, config?.layout?.yGap, config?.interaction?.dragThreshold],
+    );
+
     return (
         <MindmapProvider
             doc={doc}
@@ -42,7 +55,7 @@ const Mindmap = ({
             canvasRef={canvasRef}
             awareness={provider?.awareness ?? null}
             user={user}
-            config={config}
+            config={resolvedConfig}
         >
             <div className="flex flex-col w-full h-screen bg-slate-100 overflow-hidden">
                 <CollaborationList />

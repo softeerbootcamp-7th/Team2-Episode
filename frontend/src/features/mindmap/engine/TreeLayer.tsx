@@ -1,6 +1,5 @@
 import EdgeLayer from "@/features/mindmap/engine/EdgeLayer";
 import { useHideDraggingNodes } from "@/features/mindmap/engine/useHideDraggingNodes";
-import { useMindmapGraphRevision } from "@/features/mindmap/hooks/useMindmapStoreState";
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
@@ -9,7 +8,6 @@ type Props = {
 };
 
 export default function TreeLayer({ nodeMap }: Props) {
-    useMindmapGraphRevision();
     useHideDraggingNodes();
 
     const allNodes = Array.from(nodeMap.values());

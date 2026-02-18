@@ -5,8 +5,6 @@ import * as Y from "yjs";
 import { ENV } from "@/constants/env";
 import { User } from "@/features/auth/types/user";
 import { useJoinMindmapSession } from "@/features/mindmap/hooks/useJoinMindmapSession";
-import { NodeElement } from "@/features/mindmap/types/node";
-import { computeMindmapLayout } from "@/features/mindmap/utils/compute_mindmap_layout";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected";
 type SnapshotStatus = "idle" | "loading" | "success" | "error";
@@ -18,8 +16,13 @@ type Props = {
 };
 
 export function useMindmapSession({ mindmapId }: Props) {
+    // 1. Doc은 ID가 바뀌지 않는 한 유지
     const doc = useMemo(() => new Y.Doc(), [mindmapId]);
 
+    // 2. Provider는 State로 관리 (Ref도 가능하지만, 연결 상태 렌더링을 위해 State 추천)
+    const [provider, setProvider] = useState<WebsocketProvider | null>(null);
+
+    const [isInitialized, setIsInitialized] = useState(false);
     const [token, setToken] = useState<string | null>(null);
     const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
@@ -28,13 +31,16 @@ export function useMindmapSession({ mindmapId }: Props) {
 
     const { mutate: joinSession } = useJoinMindmapSession();
 
+    // 1. 세션 참여 요청 (Token & Snapshot URL 획득)
     useEffect(() => {
         if (!mindmapId) return;
 
+        // 초기화
         setToken(null);
         setSnapshotUrl(null);
         setSnapshotStatus("idle");
         setConnectionStatus("disconnected");
+        setIsInitialized(false);
 
         joinSession(mindmapId, {
             onSuccess: (data) => {
@@ -45,71 +51,75 @@ export function useMindmapSession({ mindmapId }: Props) {
         });
     }, [mindmapId, joinSession]);
 
-    const provider = useMemo(() => {
-        if (!token || !mindmapId) return undefined;
-
-        return new WebsocketProvider(`${ENV.WS_BASE_URL}/mindmap/`, mindmapId, doc, {
-            connect: false,
-            params: { token },
-        });
-    }, [doc, mindmapId, token]);
-
-    useEffect(() => {
-        if (!provider) return;
-        if (snapshotStatus !== "success") return;
-
-        if (!provider.shouldConnect) provider.connect();
-
-        const handleStatus = (event: { status: ConnectionStatus }) => setConnectionStatus(event.status);
-        provider.on("status", handleStatus);
-
-        return () => {
-            provider.off("status", handleStatus);
-            provider.disconnect();
-        };
-    }, [provider, snapshotStatus]);
-
+    // 2. 스냅샷 로드 (Provider 연결 전 데이터 채우기)
     useEffect(() => {
         if (!snapshotUrl) return;
 
-        let cancelled = false;
+        let active = true;
 
         (async () => {
             try {
                 setSnapshotStatus("loading");
                 const res = await fetch(snapshotUrl);
-                if (!res.ok) throw new Error(`snapshot fetch failed: ${res.status}`);
-
                 const buffer = await res.arrayBuffer();
-                const update = new Uint8Array(buffer);
 
-                if (cancelled) return;
-                const tempDoc = new Y.Doc();
-                Y.applyUpdate(tempDoc, update);
+                if (!active) return; // 언마운트 시 중단
 
-                // 2. JSON으로 변환하여 출력
-                console.log("압축 해제된 스냅샷 데이터(JSON):", tempDoc.toJSON());
-                Y.applyUpdate(doc, update);
+                Y.applyUpdate(doc, new Uint8Array(buffer)); // 초기 데이터 주입
+                console.log(doc.getMap(mindmapId).toJSON());
 
                 setSnapshotStatus("success");
             } catch (e) {
-                console.error("💥 Snapshot Load/Layout Error:", e);
-                if (!cancelled) setSnapshotStatus("error");
+                console.error("Snapshot load failed", e);
+                setSnapshotStatus("error");
             }
         })();
 
         return () => {
-            cancelled = true;
+            active = false;
         };
-    }, [doc, snapshotUrl, mindmapId]);
+    }, [doc, snapshotUrl]);
 
-    const isLoading = !token || snapshotStatus !== "success";
+    // 3. Provider 생성 및 연결 (핵심 수정 파트)
+    useEffect(() => {
+        // 토큰이 없거나, 스냅샷 로드가 끝나지 않았으면 연결하지 않음
+        if (!token || !mindmapId || snapshotStatus !== "success") return;
+
+        console.log(`🔌 Provider 생성 시작: ${mindmapId}`);
+
+        // ✅ connect: true로 설정하여 생성 즉시 연결 시도 (스냅샷이 이미 로드되었으므로 안전)
+        const wsProvider = new WebsocketProvider(`${ENV.WS_BASE_URL}/mindmap/`, mindmapId, doc, {
+            connect: true, // 여기서 바로 연결
+            params: { token },
+        });
+
+        // 이벤트 핸들러 등록
+        const handleStatus = (event: { status: ConnectionStatus }) => {
+            console.log(`📡 연결 상태 변경: ${event.status}`);
+            setConnectionStatus(event.status);
+        };
+
+        wsProvider.on("status", handleStatus);
+
+        // State에 저장 (외부에서 쓸 수 있도록)
+        setProvider(wsProvider);
+        setIsInitialized(true);
+
+        // ✅ Cleanup: 컴포넌트 언마운트/재실행 시 완벽하게 제거
+        return () => {
+            console.log(`🗑️ Provider 파괴: ${mindmapId}`);
+            wsProvider.off("status", handleStatus);
+            wsProvider.disconnect(); // 소켓 끊기
+            wsProvider.destroy(); // ⭐️ 중요: Doc에서 이벤트 리스너 제거 및 메모리 해제
+            setProvider(null);
+        };
+    }, [doc, mindmapId, token, snapshotStatus]);
 
     return {
         doc,
         provider,
         connectionStatus,
         snapshotStatus,
-        isLoading,
+        isInitialized,
     };
 }

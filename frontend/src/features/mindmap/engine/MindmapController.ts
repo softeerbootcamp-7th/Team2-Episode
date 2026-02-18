@@ -13,12 +13,21 @@ import {
     TreeAdapter,
 } from "@/features/mindmap/types/mindmap_controller";
 import { EMPTY_DRAG_SESSION_SNAPSHOT, EMPTY_INTERACTION_SNAPSHOT } from "@/features/mindmap/types/mindmap_interaction";
-import type { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
+import type { AddNodeDirection, NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";
 import { computeMindmapLayout } from "@/features/mindmap/utils/compute_mindmap_layout";
 import { createMindmapStore, MindmapStoreState, StoreChannel } from "@/features/mindmap/utils/mindmap_store";
 import { KeyLikeEvent, PointerLikeEvent, WheelLikeEvent } from "@/shared/types/native_like_event";
 import type { Rect } from "@/shared/types/spatial";
 
+function cloneNodesMapForLayout(nodes: Map<NodeId, NodeElement>): Map<NodeId, NodeElement> {
+    const out = new Map<NodeId, NodeElement>();
+    nodes.forEach((node, id) => {
+        out.set(id, {
+            ...node,
+        });
+    });
+    return out;
+}
 function makeMeta(partial?: Partial<MindmapCommandMeta>): MindmapCommandMeta {
     return {
         origin: partial?.origin ?? "local",
@@ -31,13 +40,6 @@ function makeMeta(partial?: Partial<MindmapCommandMeta>): MindmapCommandMeta {
 
 function isAddNodeDirection(x: string | null): x is AddNodeDirection {
     return x === "left" || x === "right";
-}
-
-function getTxOriginType(origin: unknown): string | undefined {
-    if (!origin || typeof origin !== "object") return undefined;
-    if (!("type" in origin)) return undefined;
-    const t = (origin as { type?: unknown }).type;
-    return typeof t === "string" ? t : undefined;
 }
 
 function isElement(x: unknown): x is Element {
@@ -291,7 +293,7 @@ export class MindmapController implements IMindmapController {
         this.adapter.transact(
             () => {
                 const patches = computeMindmapLayout({
-                    nodes: this.adapter.getMap(),
+                    nodes: cloneNodesMapForLayout(this.adapter.getMap()),
                     rootId: this.tree.getRootId(),
                     config: this.opts.config?.layout,
                 });
@@ -403,8 +405,8 @@ export class MindmapController implements IMindmapController {
                     const runLayout = (cmd.meta.layout ?? "auto") !== "skip";
                     if (runLayout) {
                         const patches = computeMindmapLayout({
-                            nodes: this.adapter.getMap(),
                             rootId: this.tree.getRootId(),
+                            nodes: cloneNodesMapForLayout(this.adapter.getMap()),
                             config: this.opts.config?.layout,
                         });
                         for (const p of patches) this.tree.update(p.nodeId, p.patch);
@@ -444,7 +446,7 @@ export class MindmapController implements IMindmapController {
 
                 if (runLayout) {
                     const patches = computeMindmapLayout({
-                        nodes: this.adapter.getMap(),
+                        nodes: cloneNodesMapForLayout(this.adapter.getMap()),
                         rootId: this.tree.getRootId(),
                         config: this.opts.config?.layout,
                     });
@@ -686,13 +688,14 @@ export class MindmapController implements IMindmapController {
         switch (cmd.type) {
             case "NODE/ADD": {
                 const { baseId, direction, side, data } = cmd.payload;
+                // 1. 노드를 먼저 생성/연결합니다.
                 const newId = this.tree.attachTo({ baseNodeId: baseId, direction, addNodeDirection: side });
 
+                // 2. 전달받은 data에 contents가 있다면 flat하게 업데이트합니다.
+                // cmd.payload.data.contents -> cmd.payload.contents 혹은 구조에 맞춰 접근
+                // 보통 ADD 페이로드에 초기 contents가 포함되어 옵니다.
                 if (data?.contents !== undefined) {
-                    const node = this.tree.safeGetNode(newId);
-                    if (node) {
-                        this.tree.update(newId, { data: { ...(node.data ?? {}), contents: data.contents } });
-                    }
+                    this.tree.update(newId, { contents: data.contents });
                 }
                 return;
             }
@@ -721,7 +724,9 @@ export class MindmapController implements IMindmapController {
                 const { nodeId, contents } = cmd.payload;
                 const cur = this.tree.safeGetNode(nodeId);
                 if (!cur) return;
-                this.tree.update(nodeId, { data: { ...(cur.data ?? {}), contents } });
+
+                // ✅ 수정: data.contents가 아닌 flat한 contents로 직접 업데이트
+                this.tree.update(nodeId, { contents });
                 return;
             }
 
@@ -731,8 +736,9 @@ export class MindmapController implements IMindmapController {
     }
 
     private handleAdapterChange(change: AdapterChange) {
-        this.quadTree.clear();
-        this.adapter.getMap().forEach((node) => this.quadTree.insert(node));
+        console.log("변해따");
+        // this.quadTree.clear();
+        // this.adapter.getMap().forEach((node) => this.quadTree.insert(node));
 
         const changedChannels: StoreChannel[] = ["graph"];
         for (const id of change.changedIds) changedChannels.push(`node:${id}` as const);
@@ -741,6 +747,7 @@ export class MindmapController implements IMindmapController {
         const selectionCleared = selected ? !this.adapter.get(selected) : false;
         if (selectionCleared) changedChannels.push("selection");
 
+        console.log(changedChannels);
         this.store.setState(
             (prev) => ({
                 ...prev,
@@ -748,6 +755,7 @@ export class MindmapController implements IMindmapController {
                     ...prev.graph,
                     rootId: this.tree.getRootId(),
                     nodes: this.adapter.getMap(),
+
                     revision: prev.graph.revision + 1,
                 },
                 selection: selectionCleared ? { selectedNodeId: null } : prev.selection,
@@ -755,30 +763,15 @@ export class MindmapController implements IMindmapController {
             { channels: changedChannels },
         );
 
-        // 무한 루프 방지: "auto-layout" 트랜잭션으로 인한 변경은 무시합니다.
-        // 또한 초기화("mindmap-init-layout") 중일 때도 중복 실행을 막음
+        // ✅ 핵심: remote 수신 처리에서 Yjs에 write(레이아웃 commit) 하지 않기
 
-        const originType = getTxOriginType(change.origin);
-        const isLayoutTransaction = originType === "auto" || originType === "mindmap-init-layout";
+        // // (선택) local에서만, 그리고 auto-layout 같은 내부 트랜잭션은 제외하고 싶다면:
+        // const originType = getTxOriginType(change.origin);
+        // const isLayoutTransaction = originType === "auto" || originType === "mindmap-init-layout";
+        // if (isLayoutTransaction) return;
 
-        if (!isLayoutTransaction) {
-            const patches = computeMindmapLayout({
-                nodes: this.adapter.getMap(),
-                rootId: this.tree.getRootId(),
-                config: this.opts.config?.layout,
-            });
-
-            if (patches.length > 0) {
-                this.adapter.transact(
-                    () => {
-                        for (const p of patches) {
-                            this.tree.update(p.nodeId, p.patch);
-                        }
-                    },
-                    { type: "auto" },
-                );
-            }
-        }
+        // 보통은 여기서도 굳이 auto-layout을 다시 commit할 필요가 없습니다.
+        // dispatch에서 이미 layout을 포함해 쓰고 있으니까요.
     }
 
     private refreshGraphChannels(channels: StoreChannel[]) {
