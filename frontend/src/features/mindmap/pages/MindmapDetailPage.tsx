@@ -1,11 +1,9 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { useParams } from "react-router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import MindMapRenderer from "@/features/mindmap/components/MindMapRenderer";
+import Mindmap from "@/features/mindmap/engine/Mindmap";
 import { useMindmapSession } from "@/features/mindmap/hooks/useMindmapSession";
-import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
-import { CollaboratorList } from "@/features/mindmap/shared_mindmap/components/CollaboratorList";
 import Spinner from "@/shared/components/spinner/Spinner";
 
 // TODO: 커서 테스트용 컬러
@@ -13,14 +11,13 @@ const COLORS = ["#34a7ff", "#fd69b9", "#0ed038", "#7749ff", "#ff913c"];
 
 export default function MindmapDetailPage() {
     const { mindmapId } = useParams<{ mindmapId: string }>();
-    const canvasRef = useRef<SVGSVGElement | null>(null);
 
     if (!mindmapId) return <div>잘못된 접근입니다.</div>;
 
     const { user: userInfo } = useAuth();
 
-    const user_ = useMemo(() => {
-        if (!userInfo) return null;
+    const user = useMemo(() => {
+        if (!userInfo) return undefined;
         return {
             id: String(userInfo.userId),
             name: userInfo.nickname,
@@ -28,15 +25,7 @@ export default function MindmapDetailPage() {
         };
     }, [userInfo?.userId, userInfo?.nickname]);
 
-    const config = useMemo(
-        () => ({
-            layout: { xGap: 100, yGap: 20 },
-            interaction: { dragThreshold: 5 },
-        }),
-        [],
-    );
-
-    const { doc, provider, collaboratorsManager, connectionStatus, isLoading } = useMindmapSession({
+    const { doc, provider, isLoading } = useMindmapSession({
         mindmapId,
         enableAwareness: true,
         userInfo,
@@ -51,26 +40,5 @@ export default function MindmapDetailPage() {
         );
     }
 
-    return (
-        <MindMapProvider
-            doc={doc}
-            roomId={mindmapId}
-            canvasRef={canvasRef}
-            awareness={provider?.awareness ?? null}
-            user={user_}
-            config={config}
-        >
-            <div className="flex flex-col w-full h-screen bg-slate-100 overflow-hidden">
-                <div className="fixed top-4 right-4 z-50 bg-white p-2 rounded shadow">상태: {connectionStatus}</div>
-
-                {collaboratorsManager && <CollaboratorList manager={collaboratorsManager} />}
-
-                <div className="flex-1 relative min-h-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[20px_20px]">
-                    <svg ref={canvasRef} className="w-full h-full block">
-                        <MindMapRenderer />
-                    </svg>
-                </div>
-            </div>
-        </MindMapProvider>
-    );
+    return <Mindmap doc={doc} provider={provider} user={user} mindmapId={mindmapId} />;
 }
