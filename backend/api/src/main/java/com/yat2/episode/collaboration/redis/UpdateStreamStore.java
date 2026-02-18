@@ -1,4 +1,4 @@
-package com.yat2.episode.collaboration;
+package com.yat2.episode.collaboration.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -8,33 +8,29 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
+import com.yat2.episode.collaboration.config.CollaborationRedisProperties;
+
 @Service
 @RequiredArgsConstructor
-public class RedisStreamStore {
+public class UpdateStreamStore {
 
     private final RedisTemplate<String, byte[]> redisBinaryTemplate;
-
-    private static final String FIELD_UPDATE = "u";
-
-    private String streamKey(UUID roomId) {
-        return "collab:room:" + roomId;
-    }
+    private final CollaborationRedisProperties redisProperties;
 
     public RecordId appendUpdate(UUID roomId, byte[] update) {
-        String key = streamKey(roomId);
+        String key = redisProperties.updateStream().keyPrefix() + roomId;
 
         StreamOperations<String, String, byte[]> ops = redisBinaryTemplate.opsForStream();
 
         MapRecord<String, String, byte[]> record =
-                StreamRecords.newRecord().in(key).ofMap(Map.of(FIELD_UPDATE, update));
+                StreamRecords.newRecord().in(key).ofMap(Map.of(redisProperties.updateStream().fieldUpdate(), update));
 
         RecordId id = ops.add(record);
 
-        redisBinaryTemplate.expire(key, Duration.ofDays(2));
+        redisBinaryTemplate.expire(key, redisProperties.updateStream().ttl());
 
         return id;
     }
