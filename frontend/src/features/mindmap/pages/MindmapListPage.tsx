@@ -28,38 +28,36 @@ const MindmapListPage = () => {
     const navigate = useNavigate();
 
     return (
-        <MindmapProvider>
-            <MaxWidth maxWidth="lg" className="h-screen flex flex-col overflow-hidden ">
-                <div className="flex flex-col w-full gap-6 pt-6 pb-4">
-                    <Top
-                        lowerGap="md"
-                        title={<h1 className="typo-title-30-bold font-bold text-gray-900">마인드맵</h1>}
-                        lower={<p className="typo-body-16-medium text-text-main2">경험을 구조화하고 관리하세요</p>}
-                    />
+        <MaxWidth maxWidth="lg" className="h-screen flex flex-col overflow-hidden ">
+            <div className="flex flex-col w-full gap-6 pt-6 pb-4">
+                <Top
+                    lowerGap="md"
+                    title={<h1 className="typo-title-30-bold font-bold text-gray-900">마인드맵</h1>}
+                    lower={<p className="typo-body-16-medium text-text-main2">경험을 구조화하고 관리하세요</p>}
+                />
 
-                    <Tab layout="fullWidth" selectedTabId={selectedTabId} onChange={(id) => onChange(id)}>
-                        {MINDMAP_TABS.map((tab) => (
-                            <TabItem key={tab.id} id={tab.id} label={tab.label} />
-                        ))}
-                    </Tab>
+                <Tab layout="fullWidth" selectedTabId={selectedTabId} onChange={(id) => onChange(id)}>
+                    {MINDMAP_TABS.map((tab) => (
+                        <TabItem key={tab.id} id={tab.id} label={tab.label} />
+                    ))}
+                </Tab>
 
-                    <Button
-                        onClick={() => navigate(linkTo.mindmap.create())}
-                        size="md"
-                        variant="primary"
-                        leftSlot={<Icon name="ic_plus" />}
-                    >
-                        새 마인드맵
-                    </Button>
-                </div>
+                <Button
+                    onClick={() => navigate(linkTo.mindmap.create())}
+                    size="md"
+                    variant="primary"
+                    leftSlot={<Icon name="ic_plus" />}
+                >
+                    새 마인드맵
+                </Button>
+            </div>
 
-                <div className="flex-1 w-full overflow-y-auto p-1 custom-scrollbar">
-                    <Suspense fallback={<Spinner />}>
-                        <MindmapList mindmapType={selectedTabId} />
-                    </Suspense>
-                </div>
-            </MaxWidth>
-        </MindmapProvider>
+            <div className="flex-1 w-full overflow-y-auto p-1 custom-scrollbar">
+                <Suspense fallback={<Spinner />}>
+                    <MindmapList mindmapType={selectedTabId} />
+                </Suspense>
+            </div>
+        </MaxWidth>
     );
 };
 
