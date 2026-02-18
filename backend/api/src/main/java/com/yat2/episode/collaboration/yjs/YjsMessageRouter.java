@@ -11,25 +11,28 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-import com.yat2.episode.collaboration.RedisStreamStore;
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.redis.JobStreamStore;
+import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 @Slf4j
 @Component
 public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
-    private final RedisStreamStore redisStreamStore;
+    private final UpdateStreamStore updateStreamStore;
     private final Executor redisExecutor;
+    private final JobStreamStore jobStreamStore;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
 
     public YjsMessageRouter(
-            SessionRegistry sessionRegistry, RedisStreamStore redisStreamStore,
-            @Qualifier("redisExecutor") Executor redisExecutor
+            SessionRegistry sessionRegistry, UpdateStreamStore updateStreamStore,
+            @Qualifier("redisExecutor") Executor redisExecutor, JobStreamStore jobStreamStore
     ) {
         this.sessionRegistry = sessionRegistry;
-        this.redisStreamStore = redisStreamStore;
+        this.updateStreamStore = updateStreamStore;
         this.redisExecutor = redisExecutor;
+        this.jobStreamStore = jobStreamStore;
     }
 
     public void routeIncoming(UUID roomId, WebSocketSession sender, byte[] payload) {
@@ -121,14 +124,25 @@ public class YjsMessageRouter {
         try {
             redisExecutor.execute(() -> {
                 try {
-                    redisStreamStore.appendUpdate(roomId, payload);
+                    updateStreamStore.appendUpdate(roomId, payload);
                 } catch (Exception e) {
                     log.warn("Redis append failed. roomId={}", roomId, e);
+                    tryPublishSync(roomId);
                 }
             });
         } catch (Exception e) {
-            log.error("Redis schedule failed", e);
+            log.error("Redis schedule failed. roomId={}", roomId, e);
+            tryPublishSync(roomId);
         }
     }
+
+    private void tryPublishSync(UUID roomId) {
+        try {
+            jobStreamStore.publishSync(roomId);
+        } catch (Exception e) {
+            log.error("Sync publish failed. roomId={}", roomId, e);
+        }
+    }
+
 }
 

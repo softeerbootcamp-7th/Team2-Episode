@@ -11,17 +11,18 @@ import org.springframework.web.socket.WebSocketHandler;
 import java.util.Map;
 import java.util.UUID;
 
+import com.yat2.episode.collaboration.config.WebSocketProperties;
 import com.yat2.episode.global.constant.AttributeKeys;
 import com.yat2.episode.mindmap.jwt.MindmapJwtProvider;
 import com.yat2.episode.mindmap.jwt.MindmapTicketPayload;
 
-import static com.yat2.episode.collaboration.config.WebSocketConfig.WS_PATH_PREFIX;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class HandshakeInterceptor implements org.springframework.web.socket.server.HandshakeInterceptor {
     private final MindmapJwtProvider jwtProvider;
+    private final WebSocketProperties webSocketProperties;
 
     @Override
     public boolean beforeHandshake(
@@ -68,7 +69,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
     private UUID extractMindmapIdFromPath(ServerHttpRequest request, ServerHttpResponse response) {
         String path = request.getURI().getPath();
 
-        String prefix = WS_PATH_PREFIX + "/";
+        String prefix = webSocketProperties.pathPrefix() + "/";
         if (!path.startsWith(prefix)) {
             response.setStatusCode(HttpStatus.BAD_REQUEST);
             return null;
