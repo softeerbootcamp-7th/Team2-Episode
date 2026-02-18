@@ -63,6 +63,12 @@ public class YjsMessageRouter {
         sessionRegistry.broadcast(roomId, sender, payload);
     }
 
+    public void executeSnapshot(UUID roomId) {
+        jobExecutor.execute(() -> {
+            jobStreamStore.publishSnapshot(roomId);
+        });
+    }
+
     private void handleSync1(UUID roomId, WebSocketSession requester, byte[] payload) {
 
         List<WebSocketSession> candidates = sessionRegistry.findAllAlivePeers(roomId, requester.getId());
