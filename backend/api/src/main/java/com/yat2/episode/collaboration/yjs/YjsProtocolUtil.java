@@ -11,6 +11,9 @@ public class YjsProtocolUtil {
     public static final int SYNC_STEP_2 = 1;
     public static final int SYNC_UPDATE = 2;
 
+    private static final byte[] EMPTY_SYNC_2_FRAME =
+            new byte[]{ (byte) MSG_SYNC, (byte) SYNC_STEP_2, 0x02, 0x00, 0x00 };
+
     public static boolean isUpdateFrame(byte[] payload) {
         return hasPrefix(payload, MSG_SYNC, SYNC_UPDATE);
     }
@@ -31,7 +34,7 @@ public class YjsProtocolUtil {
     }
 
     public static byte[] emptySync2Frame() {
-        return new byte[]{ (byte) MSG_SYNC, (byte) SYNC_STEP_2, 0x02, 0x00, 0x00 };
+        return EMPTY_SYNC_2_FRAME;
     }
 
     private static boolean hasPrefix(byte[] payload, int b0, int b1) {
