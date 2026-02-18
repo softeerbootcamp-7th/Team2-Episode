@@ -99,5 +99,3 @@ export function MindmapProvider({
 
     return <MindmapControllerContext.Provider value={engine}>{children}</MindmapControllerContext.Provider>;
 }
-
-export const MindMapProvider = MindmapProvider;

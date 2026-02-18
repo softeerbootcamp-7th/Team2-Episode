@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { useNavigate } from "react-router";
 
 import MindmapList from "@/features/mindmap/components/MindmapList";
-import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
+import { MindmapProvider } from "@/features/mindmap/engine/MindmapProvider";
 import { MindmapType } from "@/features/mindmap/types/mindmap";
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
@@ -28,7 +28,7 @@ const MindmapListPage = () => {
     const navigate = useNavigate();
 
     return (
-        <MindMapProvider>
+        <MindmapProvider>
             <MaxWidth maxWidth="lg" className="h-screen flex flex-col overflow-hidden ">
                 <div className="flex flex-col w-full gap-6 pt-6 pb-4">
                     <Top
@@ -59,7 +59,8 @@ const MindmapListPage = () => {
                     </Suspense>
                 </div>
             </MaxWidth>
-        </MindMapProvider>
+        </MindmapProvider>
     );
 };
+
 export default MindmapListPage;
