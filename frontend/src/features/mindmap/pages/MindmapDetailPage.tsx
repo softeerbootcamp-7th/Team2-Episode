@@ -1,39 +1,76 @@
-// import { useSearchParams } from "react-router";
+import { useMemo, useRef } from "react";
+import { useParams } from "react-router";
 
-// import DiagnosisResultSidebar from "@/features/self_diagnosis/components/DiagnosisResultSideBar";
-// import DiagnosisResultSidePanel from "@/features/self_diagnosis/components/DiagnosisResultSidePanel";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import MindMapRenderer from "@/features/mindmap/components/MindMapRenderer";
+import { useMindmapSession } from "@/features/mindmap/hooks/useMindmapSession";
+import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
+import { CollaboratorList } from "@/features/mindmap/shared_mindmap/components/CollaboratorList";
+import Spinner from "@/shared/components/spinner/Spinner";
 
-const MindmapDetailPage = () => {
-    // const [sp, setSp] = useSearchParams();
-    // const diagnosisIdParam = sp.get("diagnosisId");
-    // const diagnosisId = diagnosisIdParam ? Number(diagnosisIdParam) : null;
+// TODO: 커서 테스트용 컬러
+const COLORS = ["#34a7ff", "#fd69b9", "#0ed038", "#7749ff", "#ff913c"];
+
+export default function MindmapDetailPage() {
+    const { mindmapId } = useParams<{ mindmapId: string }>();
+    const canvasRef = useRef<SVGSVGElement | null>(null);
+
+    if (!mindmapId) return <div>잘못된 접근입니다.</div>;
+
+    const { user: userInfo } = useAuth();
+
+    const user_ = useMemo(() => {
+        if (!userInfo) return null;
+        return {
+            id: String(userInfo.userId),
+            name: userInfo.nickname,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)]!,
+        };
+    }, [userInfo?.userId, userInfo?.nickname]);
+
+    const config = useMemo(
+        () => ({
+            layout: { xGap: 100, yGap: 20 },
+            interaction: { dragThreshold: 5 },
+        }),
+        [],
+    );
+
+    const { doc, provider, collaboratorsManager, connectionStatus, isLoading } = useMindmapSession({
+        mindmapId,
+        enableAwareness: true,
+        userInfo,
+    });
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <p>.</p>
+                <Spinner contents={"마인드맵 데이터를 불러오는 중입니다.."} />
+            </div>
+        );
+    }
 
     return (
-        <>
-            <main className="flex-1">마인드맵 캔버스 영역</main>
+        <MindMapProvider
+            doc={doc}
+            roomId={mindmapId}
+            canvasRef={canvasRef}
+            awareness={provider?.awareness ?? null}
+            user={user_}
+            config={config}
+        >
+            <div className="flex flex-col w-full h-screen bg-slate-100 overflow-hidden">
+                <div className="fixed top-4 right-4 z-50 bg-white p-2 rounded shadow">상태: {connectionStatus}</div>
 
-            {/* {diagnosisId ? (
-                <DiagnosisResultSidePanel
-                    diagnosisId={diagnosisId}
-                    onClose={() => {
-                        sp.delete("diagnosisId");
-                        setSp(sp);
-                    }}
-                />
-            ) : null} */}
-            {/* <DiagnosisResultSidebar
-                totalCount={11}
-                items={[
-                    { id: "1", title: "팀워크 발휘 사례에 대한 내용 보충하기", tag: "협업" },
-                    { id: "2", title: "갈등 발생 경험에 대한 내용 보충하기", tag: "커뮤니케이션" },
-                    { id: "3", title: "핵심 원인을 분석해낸 내용 보충하기", tag: "분석력" },
-                    { id: "4", title: "어려운 선택을 합리적으로 했던 경험을 보충하기", tag: "의사결정" },
-                ]}
-                onClose={() => {}}
-                onBack={() => {}}
-            /> */}
-        </>
+                {collaboratorsManager && <CollaboratorList manager={collaboratorsManager} />}
+
+                <div className="flex-1 relative min-h-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[20px_20px]">
+                    <svg ref={canvasRef} className="w-full h-full block">
+                        <MindMapRenderer />
+                    </svg>
+                </div>
+            </div>
+        </MindMapProvider>
     );
-};
-
-export default MindmapDetailPage;
+}
