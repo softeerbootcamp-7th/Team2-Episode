@@ -6,9 +6,8 @@ import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchiveP
 import HomePage from "@/features/home/pages/HomePage";
 import LandingPage from "@/features/landing/pages/LandingPage";
 import CreateMindmapFunnelPage from "@/features/mindmap/pages/CreateMindmapPage";
+import MindmapDetailPage from "@/features/mindmap/pages/MindmapDetailPage";
 import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
-import MindmapPage from "@/features/mindmap/pages/MindmapPage";
-import MindmapShowcaseV3 from "@/features/mindmap/shared_mindmap/show_cases/ShowCase";
 import SelfDiagnosisPage from "@/features/self_diagnosis/pages/SelfDiagnosisPage";
 import LoginPage from "@/features/user/login/pages/LoginPage";
 import { Toaster } from "@/shared/components/ui/sonner";
@@ -52,7 +51,7 @@ const router = createBrowserRouter([
                     },
                     {
                         path: PATHS.mindmap.detail,
-                        element: <MindmapPage />,
+                        element: <MindmapDetailPage />,
                     },
                 ],
             },
@@ -65,10 +64,6 @@ const router = createBrowserRouter([
     {
         path: PATHS.login,
         element: <LoginPage />,
-    },
-    {
-        path: "/showcase",
-        element: <MindmapShowcaseV3 />,
     },
 ]);
 
