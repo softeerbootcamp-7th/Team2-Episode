@@ -3,8 +3,8 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
 import CollaborationList from "@/features/mindmap/engine/CollaborationList";
+import { MindMapProvider } from "@/features/mindmap/engine/MindmapProvider";
 import MindmapRenderer from "@/features/mindmap/engine/MindmapRenderer";
-import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
 import { CollaboratorInfo } from "@/features/mindmap/types/mindmap_collaboration";
 
 export type MindmapConfig = {
