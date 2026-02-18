@@ -129,7 +129,9 @@ public class YjsMessageRouter {
                 tryUpdateAppend(roomId, payload);
             });
         } catch (Exception e) {
-            tryPublishSync(roomId);
+            jobExecutor.execute(() -> {
+                tryPublishSync(roomId);
+            });
         }
     }
 
@@ -157,7 +159,9 @@ public class YjsMessageRouter {
                 log.warn("Redis append failed (retryable). roomId={}, attempt={}", roomId, i + 1, e);
             }
         }
-        tryPublishSync(roomId);
+        jobExecutor.execute(() -> {
+            tryPublishSync(roomId);
+        });
     }
 
     private boolean isFatalRedisWrite(Exception exception) {
