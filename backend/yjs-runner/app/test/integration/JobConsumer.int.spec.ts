@@ -8,6 +8,7 @@ describe('RedisStreamJobConsumer Integration Test', () => {
     let consumer: RedisStreamJobConsumer;
 
     const STREAM_KEY = 'test:jobs';
+    const DEDUPE_KEY = 'test:jobs:dedupe:'
     const GROUP_NAME = 'test-group';
     const CONSUMER_NAME = 'test-worker';
 
@@ -22,9 +23,11 @@ describe('RedisStreamJobConsumer Integration Test', () => {
 
         consumer = new RedisStreamJobConsumer(redis, {
             jobStreamKey: STREAM_KEY,
+            jobDedupePrefix: DEDUPE_KEY,
             groupName: GROUP_NAME,
             consumerName: CONSUMER_NAME,
-            roomIdField: 'r',
+            roomIdField: 'rid',
+            typeField: 'type',
             maxRetries: 5
         });
 
@@ -41,9 +44,15 @@ describe('RedisStreamJobConsumer Integration Test', () => {
         await consumer.init();
     });
 
-    it('메시지를 발행하면 Read를 통해 SnapshotJob 형태로 읽어와야 한다', async () => {
+    it('메시지를 발행하면 Read를 통해 Job 형태로 읽어와야 한다', async () => {
         const testRoomId = 'room-123';
-        await redis.xadd(STREAM_KEY, '*', 'r', testRoomId);
+        await redis.xadd(
+            STREAM_KEY,
+            '*',
+            'rid', testRoomId,
+            'type', 'SNAPSHOT'
+        );
+
 
         const jobs = await consumer.read(1000, 1);
 
@@ -54,7 +63,13 @@ describe('RedisStreamJobConsumer Integration Test', () => {
 
     it('ACK를 보내면 해당 메시지는 PEL(Pending List)에서 제거되어야 한다', async () => {
         const testRoomId = 'room-456';
-        await redis.xadd(STREAM_KEY, '*', 'r', testRoomId);
+        await redis.xadd(
+            STREAM_KEY,
+            '*',
+            'rid', testRoomId,
+            'type', 'SNAPSHOT'
+        );
+
         const jobs = await consumer.read(1000, 1);
         const messageId = jobs[0].entryId;
 
@@ -90,7 +105,12 @@ describe('RedisStreamJobConsumer Integration Test', () => {
 
     it('PEL에 남은 메시지가 maxRetries 이내라면 정상적으로 다시 읽어와야 한다', async () => {
         const testRoomId = 'retry-room';
-        await redis.xadd(STREAM_KEY, '*', 'r', testRoomId);
+        await redis.xadd(
+            STREAM_KEY,
+            '*',
+            'rid', testRoomId,
+            'type', 'SNAPSHOT'
+        );
         await consumer.read(100, 1);
 
         const jobs = await consumer.read(100, 1);

@@ -30,7 +30,7 @@ export class SnapshotWorker {
                 }
                 for (const job of jobs) {
                     try {
-                        await this.deps.service.process(job.roomId);
+                        await this.deps.service.process(job);
                         await this.deps.consumer.ack([job.entryId]);
                     } catch (error) {
                         console.error(`[Worker] 저장 실패! roomId: ${job.roomId}`, error);
