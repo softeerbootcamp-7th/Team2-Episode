@@ -1,8 +1,13 @@
 import { MindMapEvents } from "@/features/mindmap/types/events";
 import { NodeElement } from "@/features/mindmap/types/node";
-import { Rect } from "@/features/mindmap/types/spatial";
+import { Bounds, Rect } from "@/features/mindmap/types/spatial";
 import { EventBroker } from "@/utils/EventBroker";
 
+// 원래 wheel이 가지는 정책상 최소 줌 값 (복구하기 위해 필요)
+const BASE_MIN_ZOOM = 0.1;
+const BASE_MAX_ZOOM = 5;
+
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 /**
  * 카메라
  *  canvas: 화면을 그리는 실제 SVG 엘리먼트
@@ -10,34 +15,59 @@ import { EventBroker } from "@/utils/EventBroker";
  *  viewBox: 현재 사용자 화면에 보이는 가상 좌표 영역
  */
 export default class ViewportManager {
-    private canvas: SVGSVGElement;
-    private broker: EventBroker<MindMapEvents>;
-    private getWorldBounds: () => Rect;
-
-    private panX = 0;
-    private panY = 0;
-    private zoom = 1;
-
-    private readonly INITIAL_VIEW_FACTOR = 6; // 초기 뷰포트 크기: 루트 노드의 n배
+    private panX: number = 0;
+    private panY: number = 0;
+    private zoom: number = 1;
+    private rafId: number | null = null;
+    private softMinZoom = BASE_MIN_ZOOM;
 
     /** [Init] 루트 노드를 중앙에 배치하고 쿼드 트리와 줌인된 초기 뷰포트를 설정 */
     constructor(
-        broker: EventBroker<MindMapEvents>,
-        canvas: SVGSVGElement,
-        rootNode: NodeElement,
-        getWorldBounds: () => Rect,
+        private broker: EventBroker<MindMapEvents>,
+        private canvas: SVGSVGElement,
+        private rootNode: NodeElement,
+        private getWorldBounds: () => Rect,
+        private getBounds: () => Bounds | null, // Core의 캐시를 가져오는 함수
     ) {
-        this.broker = broker;
-        this.canvas = canvas;
-        this.getWorldBounds = getWorldBounds;
-
-        // 초기 상태: 루트 노드가 (0,0)에 있으므로 카메라 중심도 (0,0)
-        this.panX = 0;
-        this.panY = 0;
-        this.zoom = 1;
-
         this.setupEventListeners();
         this.applyViewBox();
+    }
+
+    private cancelAnimation() {
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+    }
+
+    private animateTo(targetPanX: number, targetPanY: number, targetZoom: number, duration: number = 320) {
+        this.cancelAnimation(); // 이전 애니메이션이 있다면 중단
+
+        const startPanX = this.panX;
+        const startPanY = this.panY;
+        const startZoom = this.zoom;
+        const startTime = performance.now();
+
+        const step = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const k = easeOutCubic(progress);
+
+            // 보간법(Interpolation) 적용
+            this.panX = startPanX + (targetPanX - startPanX) * k;
+            this.panY = startPanY + (targetPanY - startPanY) * k;
+            this.zoom = startZoom + (targetZoom - startZoom) * k;
+
+            this.applyViewBox();
+
+            if (progress < 1) {
+                this.rafId = requestAnimationFrame(step);
+            } else {
+                this.rafId = null;
+            }
+        };
+
+        this.rafId = requestAnimationFrame(step);
     }
 
     /** broker 통한 명령 구독 */
@@ -62,6 +92,45 @@ export default class ViewportManager {
                 this.zoomHandler(wheelEvent.deltaY, { clientX: wheelEvent.clientX, clientY: wheelEvent.clientY });
             },
         });
+
+        this.broker.subscribe({
+            key: "VIEWPORT_RESET",
+            callback: () => this.resetView(),
+        });
+
+        this.broker.subscribe({
+            key: "VIEWPORT_FIT_CONTENT",
+            callback: () => this.fitToWorldRect(),
+        });
+    }
+
+    // 전체 마인드맵 영역으로 fit
+    fitToWorldRect() {
+        const bounds = this.getBounds();
+        const cw = this.canvas.clientWidth;
+        const ch = this.canvas.clientHeight;
+
+        // 1. 가드 클로즈: 필요한 데이터가 없으면 즉시 종료
+        if (!bounds || cw === 0 || ch === 0) return;
+
+        // 2. 패딩을 포함한 실제 타겟 영역 크기 (의미 단위 분리)
+        const targetWidth = bounds.width * 1.1;
+        const targetHeight = bounds.height * 1.1;
+
+        // 3. 가로/세로 각각의 적정 배율 계산
+        const zoomX = cw / targetWidth;
+        const zoomY = ch / targetHeight;
+
+        // 4. 최종 줌 결정 (둘 중 작은 값을 선택해야 영역이 잘리지 않음)
+        const newZoom = Math.min(zoomX, zoomY, BASE_MAX_ZOOM);
+
+        // 5. 줌 하한선 정책 업데이트 및 이동 시작
+        this.softMinZoom = Math.min(BASE_MIN_ZOOM, newZoom);
+
+        const centerX = bounds.minX + bounds.width / 2;
+        const centerY = bounds.minY + bounds.height / 2;
+
+        this.animateTo(centerX, centerY, newZoom, 400);
     }
 
     /** 항상 카메라 중심(panX, panY)을 기준으로 계산 -> svg 반영 */
@@ -85,6 +154,7 @@ export default class ViewportManager {
 
     /** 마우스 드래그: 카메라의 중심점(panX, panY)을 이동 */
     panningHandler(dx: number, dy: number): void {
+        this.cancelAnimation();
         // 현재 줌 배율에 맞춰 마우스 픽셀 이동량을 World 좌표 이동량으로 변환
         this.panX -= dx / this.zoom;
         this.panY -= dy / this.zoom;
@@ -94,6 +164,7 @@ export default class ViewportManager {
 
     /** 줌 핸들러: 마우스 포인터 지점을 고정하며 줌 인/아웃 */
     zoomHandler(delta: number, e: { clientX: number; clientY: number }): void {
+        this.cancelAnimation();
         const rect = this.canvas.getBoundingClientRect();
 
         // 1. 줌 전의 마우스 월드 좌표 계산
@@ -103,14 +174,20 @@ export default class ViewportManager {
         // 2. 줌 배율 변경
         const zoomSpeed = 0.001;
         const scaleChange = Math.exp(-delta * zoomSpeed); // 휠 방향 보정
-        const nextZoom = Math.min(Math.max(this.zoom * scaleChange, 0.1), 5); // 0.1배 ~ 5배 제한
 
-        // 3. 마우스 지점 고정을 위한 새로운 panX, panY 역계산
-        // 줌 후에도 마우스 아래의 월드 좌표가 동일하게 유지되도록 중심점을 이동
+        const rawZoom = this.zoom * scaleChange;
+
+        const nextZoom = Math.min(BASE_MAX_ZOOM, Math.max(rawZoom, this.softMinZoom));
+
         this.zoom = nextZoom;
+
         this.panX = beforeZoomMouseX - (e.clientX - rect.left - rect.width / 2) / this.zoom;
         this.panY = beforeZoomMouseY - (e.clientY - rect.top - rect.height / 2) / this.zoom;
 
+        // BASE_MIN 복구
+        if (this.zoom >= BASE_MIN_ZOOM) {
+            this.softMinZoom = BASE_MIN_ZOOM;
+        }
         this.applyViewBox();
     }
 
@@ -130,6 +207,10 @@ export default class ViewportManager {
     /** 외부(ResizeObserver)에서 호출할 수 있도록 제공 */
     handleResize() {
         this.applyViewBox();
+    }
+
+    resetView(): void {
+        this.animateTo(0, 0, 1);
     }
 
     /**

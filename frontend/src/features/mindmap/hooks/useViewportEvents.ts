@@ -25,7 +25,7 @@ export function useViewportEvents() {
                 broker.publish("NODE_DELETE", e);
                 return;
             }
-            if (!(e.ctrlKey || e.metaKey)) return;
+            // if (!(e.ctrlKey || e.metaKey)) return;
             broker.publish("RAW_KEYDOWN", e);
         };
 

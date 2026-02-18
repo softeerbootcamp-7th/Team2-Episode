@@ -20,11 +20,13 @@ type StaticEvents = {
     VIEWPORT_PAN: { dx: number; dy: number };
     VIEWPORT_ZOOM: { delta: number; clientX: number; clientY: number };
     NODE_MOVE_REQUEST: { targetId: NodeId; movingId: NodeId; direction: NodeDirection };
+    VIEWPORT_RESET: undefined;
 
     // 4. 상태 알림
     RENDER_UPDATE: undefined;
     INTERACTION_FRAME: undefined;
     DRAG_SESSION: undefined;
+    PENDING_CREATION: undefined;
 
     // 5. 에러
     NODE_DELETE_ERROR: string;

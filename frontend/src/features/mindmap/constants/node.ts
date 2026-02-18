@@ -1,1 +1,3 @@
-export const ATTRIBUTE_NAME_OF_NODE_ID = "data-node-id";
+import { NodeId } from "@/features/mindmap/types/node";
+
+export const TEMP_NEW_NODE_ID = "temp-new-node-id" as NodeId;

@@ -1,4 +1,5 @@
 import { MOUSE_DOWN } from "@/constants/mouse";
+import { TEMP_NEW_NODE_ID } from "@/features/mindmap/constants/node";
 import QuadTree from "@/features/mindmap/core/QuadTree";
 import TreeContainer from "@/features/mindmap/core/TreeContainer";
 import { MindMapEvents } from "@/features/mindmap/types/events";
@@ -79,6 +80,30 @@ export class MindmapInteractionManager {
                 }
             },
         });
+
+        this.broker.subscribe({
+            key: "RAW_KEYDOWN",
+            callback: (e) => {
+                if (e.key === "Escape") {
+                    this.cancelPendingCreation();
+                }
+            },
+        });
+
+        this.broker.subscribe({ key: "PENDING_CREATION", callback: () => this.startPendingCreation() });
+    }
+
+    // 상태 초기화 및 TempNode 제거
+    private cancelPendingCreation() {
+        if (this.mode !== "pending_creation") return;
+        this.clearStatus();
+        this.emitInteractionFrame();
+    }
+
+    private startPendingCreation() {
+        this.mode = "pending_creation";
+        this.baseNode = { targetId: null, direction: null };
+        this.emitInteractionFrame();
     }
 
     private projectScreenToWorld(clientX: number, clientY: number) {
@@ -301,6 +326,8 @@ export class MindmapInteractionManager {
 
     /** 배경 클릭 */
     private handleMouseDown = (e: React.MouseEvent) => {
+        if (this.mode === "pending_creation") return;
+
         const isPanningButton =
             e.button === MOUSE_DOWN.left || e.button === MOUSE_DOWN.wheel || e.button === MOUSE_DOWN.right;
 
@@ -382,7 +409,11 @@ export class MindmapInteractionManager {
     }
 
     private handleMouseUp = (_e: React.MouseEvent) => {
-        if (this.mode === "dragging" && this.draggingNodeId && this.baseNode.targetId) {
+        const isDragging = this.mode === "dragging";
+        const isCreating = this.mode === "pending_creation";
+
+        // 드래그 드롭
+        if (isDragging && this.draggingNodeId && this.baseNode.targetId) {
             const targetNodeId = this.baseNode.targetId;
             const movingNodeId = this.draggingNodeId;
             const direction = this.baseNode.direction;
@@ -398,8 +429,14 @@ export class MindmapInteractionManager {
             }
         }
 
+        // 새로운 노드 추가
+        if (isCreating && this.baseNode.targetId && this.baseNode.direction) {
+            this.onMoveNode(this.baseNode.targetId, TEMP_NEW_NODE_ID, this.baseNode.direction);
+        }
+
         // 리렌더링이 필요한 모드인지
-        const shouldUpdateReact = this.mode === "dragging";
+        const shouldUpdateReact =
+            this.mode === "dragging" || (this.mode === "pending_creation" && this.baseNode.targetId);
 
         this.clearStatus();
 

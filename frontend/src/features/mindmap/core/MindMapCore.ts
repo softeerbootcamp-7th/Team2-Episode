@@ -6,6 +6,7 @@ import ViewportManager from "@/features/mindmap/core/ViewportManager";
 import { MindMapEvents } from "@/features/mindmap/types/events";
 import { EMPTY_DRAG_SESSION_SNAPSHOT, EMPTY_INTERACTION_SNAPSHOT } from "@/features/mindmap/types/interaction";
 import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
+import { Bounds } from "@/features/mindmap/types/spatial";
 import { EventBroker } from "@/utils/EventBroker";
 
 /**
@@ -26,6 +27,7 @@ export default class MindMapCore {
     private interaction: MindmapInteractionManager | null = null;
 
     private _isInitialized = false;
+    private contentBoundsCache: Bounds | null = null;
 
     constructor(private onGlobalUpdate: () => void) {
         this.tree = new TreeContainer();
@@ -67,9 +69,36 @@ export default class MindMapCore {
 
         // 2. 쿼드 트리 갱신
         quadTree.clear();
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
         this.tree.nodes.forEach((node) => {
+            const left = node.x - node.width / 2;
+            const right = node.x + node.width / 2;
+            const top = node.y - node.height / 2;
+            const bottom = node.y + node.height / 2;
+
+            // bounds 갱신
+            if (left < minX) minX = left;
+            if (right > maxX) maxX = right;
+            if (top < minY) minY = top;
+            if (bottom > maxY) maxY = bottom;
+
             quadTree.insert(node);
         });
+
+        // cache 저장
+        this.contentBoundsCache = {
+            minX,
+            maxX,
+            minY,
+            maxY,
+            width: maxX - minX,
+            height: maxY - minY,
+        };
 
         // 3. broker 알림
         if (affectedIds) {
@@ -96,7 +125,13 @@ export default class MindMapCore {
         // 여기서 할당이 완료됨
         this.canvas = canvas;
         this.quadTree = new QuadTree(initialBounds);
-        this.viewport = new ViewportManager(this.broker, canvas, rootNode, () => this.quadTree!.getBounds());
+        this.viewport = new ViewportManager(
+            this.broker,
+            canvas,
+            rootNode,
+            () => this.quadTree!.getBounds(),
+            () => this.getContentBounds(),
+        );
 
         this.interaction = new MindmapInteractionManager(
             this.broker,
@@ -105,13 +140,22 @@ export default class MindMapCore {
             (dx, dy) => {
                 if (this.viewport) this.viewport.panningHandler(dx, dy);
             },
-            (target, moving, direction) => this.moveNode(target, moving, direction),
+            (targetId, moving, direction) => this.moveNode(targetId, moving, direction),
             (x, y) => this.viewport!.screenToWorld(x, y),
             (id) => this.deleteNode(id),
         );
 
         this._isInitialized = true;
         this.sync();
+    }
+
+    getContentBounds() {
+        return this.contentBoundsCache;
+    }
+
+    handleResize() {
+        if (!this.getIsReady) return;
+        this.viewport?.handleResize();
     }
 
     getCanvas(): SVGSVGElement | null {
@@ -169,6 +213,12 @@ export default class MindMapCore {
     }
 
     /** ========== Interaction ========== */
+    // resetViewport() {
+    //     if (!this._isInitialized || !this.viewport) return;
+
+    //     this.broker.publish("VIEWPORT_RESET", undefined);
+    // }
+
     handleMouseMove(e: React.MouseEvent) {
         this.broker.publish("RAW_MOUSE_MOVE", e);
     }

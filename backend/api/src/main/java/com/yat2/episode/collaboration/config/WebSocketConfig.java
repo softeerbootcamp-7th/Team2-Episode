@@ -18,13 +18,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final HandshakeInterceptor handshakeInterceptor;
     private final WebSocketProperties webSocketProperties;
 
-    public static final String WS_PATH_PREFIX = "/ws/mindmap";
-
-
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(relayHandler, webSocketProperties.pathPrefix() + "/{mindmapId}")
                 .addInterceptors(handshakeInterceptor)
-.setAllowedOriginPatterns(webSocketProperties.allowedOriginPatterns().toArray(new String[0]));
+                .setAllowedOriginPatterns(webSocketProperties.allowedOriginPatterns().toArray(new String[0]));
     }
 }
