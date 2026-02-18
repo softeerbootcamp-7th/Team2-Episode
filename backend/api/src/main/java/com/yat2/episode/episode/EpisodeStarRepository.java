@@ -45,6 +45,29 @@ public interface EpisodeStarRepository extends JpaRepository<EpisodeStar, Episod
 
     @Query(
             """
+                        SELECT DISTINCT s
+                        FROM EpisodeStar s
+                        JOIN FETCH s.episode e
+                        WHERE s.id.userId = :userId
+                          AND e.mindmapId IN :mindmapIds
+                          AND (
+                            :keyword IS NULL OR :keyword = '' OR
+                            e.content LIKE %:keyword% OR
+                            s.situation LIKE %:keyword% OR
+                            s.task LIKE %:keyword% OR
+                            s.action LIKE %:keyword% OR
+                            s.result LIKE %:keyword%
+                          )
+                    """
+    )
+    List<EpisodeStar> searchEpisodes(
+            @Param("userId") long userId,
+            @Param("mindmapIds") List<UUID> mindmapIds,
+            @Param("keyword") String keyword
+    );
+
+    @Query(
+            """
                         SELECT DISTINCT new com.yat2.episode.mindmap.dto.MindmapCompetencyRow(e.mindmapId, ctId)
                         FROM EpisodeStar es
                         JOIN es.episode e

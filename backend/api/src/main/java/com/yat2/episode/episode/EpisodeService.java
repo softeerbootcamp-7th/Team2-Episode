@@ -5,21 +5,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.EpisodeSearchReq;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.MindmapEpisodeRes;
 import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
 import com.yat2.episode.mindmap.MindmapParticipant;
 import com.yat2.episode.mindmap.MindmapParticipantRepository;
+import com.yat2.episode.mindmap.constants.MindmapVisibility;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +47,85 @@ public class EpisodeService {
 
     public List<EpisodeSummaryRes> getMindmapEpisodes(UUID mindmapId, long userId) {
         return episodeRepository.findSummariesByMindmapIdAndUserId(mindmapId, userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MindmapEpisodeRes> searchEpisodes(long userId, EpisodeSearchReq req) {
+        List<MindmapParticipant> participants = findParticipantsByFilter(userId, req);
+
+        if (participants.isEmpty()) return List.of();
+
+        List<UUID> allowedMindmapIds = participants.stream().map(p -> p.getMindmap().getId()).toList();
+        String keyword = (req.search() == null) ? null : req.search().trim();
+        List<EpisodeStar> episodeStars = episodeStarRepository.searchEpisodes(userId, allowedMindmapIds, keyword);
+
+        if (episodeStars.isEmpty()) {
+            return List.of();
+        }
+
+        return toMindmapEpisodeResList(episodeStars, participants);
+    }
+
+    private List<MindmapEpisodeRes> toMindmapEpisodeResList(
+            List<EpisodeStar> stars, List<MindmapParticipant> participants) {
+        if (stars == null || stars.isEmpty()) return List.of();
+        Set<Integer> allCtIds = stars.stream().flatMap(s -> {
+            Set<Integer> ids = s.getCompetencyTypeIds();
+            return (ids == null) ? java.util.stream.Stream.<Integer>empty() : ids.stream();
+        }).collect(Collectors.toSet());
+
+        Map<Integer, CompetencyTypeRes> ctResMap =
+                allCtIds.isEmpty() ? Map.of() : competencyTypeService.getCompetencyTypeResMap(allCtIds);
+
+        Map<UUID, MindmapParticipant> participantByMindmapId = participants.stream()
+                .collect(Collectors.toMap(p -> p.getMindmap().getId(), Function.identity(), (a, b) -> a));
+
+        Map<UUID, List<EpisodeDetail>> episodeDetailsByMindmapId = new LinkedHashMap<>();
+
+        for (EpisodeStar s : stars) {
+            Episode e = s.getEpisode();
+
+            List<CompetencyTypeRes> cts = (s.getCompetencyTypeIds() == null) ? List.of() :
+                                          s.getCompetencyTypeIds().stream().map(ctResMap::get).filter(Objects::nonNull)
+                                                  .toList();
+
+            EpisodeDetail detail = EpisodeDetail.of(e, s, cts);
+
+            episodeDetailsByMindmapId.computeIfAbsent(e.getMindmapId(), k -> new ArrayList<>()).add(detail);
+        }
+
+        List<MindmapEpisodeRes> result = new ArrayList<>(episodeDetailsByMindmapId.size());
+
+        for (Map.Entry<UUID, List<EpisodeDetail>> entry : episodeDetailsByMindmapId.entrySet()) {
+            UUID mindmapId = entry.getKey();
+            List<EpisodeDetail> details = entry.getValue();
+
+            MindmapParticipant p = participantByMindmapId.get(mindmapId);
+            if (p == null) continue;
+
+            String mindmapName = p.getMindmap().getName();
+            boolean isShared = p.getMindmap().isShared();
+
+            result.add(new MindmapEpisodeRes(mindmapId, mindmapName, isShared, List.copyOf(details)));
+        }
+
+        return List.copyOf(result);
+    }
+
+
+    private List<MindmapParticipant> findParticipantsByFilter(long userId, EpisodeSearchReq req) {
+        MindmapVisibility type = req.mindmapType();
+
+        List<MindmapParticipant> participants = switch (type) {
+            case PRIVATE -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, false);
+            case PUBLIC -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, true);
+            case ALL -> mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        };
+
+        if (req.mindmapId() == null) return participants;
+
+        UUID filterId = req.mindmapId();
+        return participants.stream().filter(p -> p.getMindmap().getId().equals(filterId)).toList();
     }
 
     @Transactional
