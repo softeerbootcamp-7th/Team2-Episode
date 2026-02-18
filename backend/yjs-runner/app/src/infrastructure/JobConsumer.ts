@@ -1,10 +1,10 @@
 import type Redis from 'ioredis';
-import {SnapshotJob, SnapshotJobType} from '../contracts/SnapshotJob';
+import {Job, JobType} from '../contracts/Job';
 
 export interface JobConsumer {
     init(): Promise<void>;
 
-    read(blockMs: number, count?: number): Promise<SnapshotJob[]>;
+    read(blockMs: number, count?: number): Promise<Job[]>;
 
     ack(entryId: string[]): Promise<void>;
 }
@@ -42,7 +42,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
         }
     }
 
-    async read(blockMs: number, count: number = 1): Promise<SnapshotJob[]> {
+    async read(blockMs: number, count: number = 1): Promise<Job[]> {
         const pendingResults = await this.redis.xreadgroup(
             'GROUP', this.config.groupName, this.config.consumerName,
             'COUNT', count,
@@ -135,13 +135,13 @@ export class RedisStreamJobConsumer implements JobConsumer {
     }
 
     private parseEntries(results: [string, [string, string[]][]][]): {
-        jobs: SnapshotJob[];
+        jobs: Job[];
         badEntryIds: string[];
     } {
         const [, entries] = results[0];
 
         const badEntryIds: string[] = [];
-        const jobs: SnapshotJob[] = [];
+        const jobs: Job[] = [];
 
         for (const [entryId, rawData] of entries) {
             try {
@@ -149,8 +149,8 @@ export class RedisStreamJobConsumer implements JobConsumer {
                 for (let i = 0; i < rawData.length; i += 2) {
                     data[rawData[i]] = rawData[i + 1];
                 }
-                const rawType = data[this.config.typeField] as SnapshotJobType;
-                if (rawType !== SnapshotJobType.SNAPSHOT && rawType !== SnapshotJobType.SYNC) {
+                const rawType = data[this.config.typeField] as JobType;
+                if (rawType !== JobType.SNAPSHOT && rawType !== JobType.SYNC) {
                     throw new Error(`Unknown job type: ${rawType}`);
                 }
                 const roomId = data[this.config.roomIdField];

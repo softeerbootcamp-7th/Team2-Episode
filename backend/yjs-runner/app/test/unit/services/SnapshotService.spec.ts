@@ -2,7 +2,7 @@ import {SnapshotService} from '../../../src/services/SnapshotService';
 import {UpdateRepository} from '../../../src/infrastructure/UpdateRepository';
 import {YjsProcessor} from '../../../src/domain/YjsProcessor';
 import {SnapshotStorage} from '../../../src/infrastructure/S3SnapshotStorage';
-import {SnapshotJobType} from "../../../src/contracts/SnapshotJob";
+import {JobType} from "../../../src/contracts/Job";
 
 describe('SnapshotService', () => {
     let service: SnapshotService;
@@ -49,7 +49,7 @@ describe('SnapshotService', () => {
         await service.process({
             entryId: 'test-entry',
             roomId,
-            type: SnapshotJobType.SNAPSHOT
+            type: JobType.SNAPSHOT
         });
 
         expect(mockStorage.download).toHaveBeenCalledWith(roomId);
@@ -68,7 +68,7 @@ describe('SnapshotService', () => {
             service.process({
                 entryId: 'test-entry',
                 roomId,
-                type: SnapshotJobType.SNAPSHOT
+                type: JobType.SNAPSHOT
             })
         ).rejects.toThrow('NoSuchKey');
 
@@ -93,7 +93,7 @@ describe('SnapshotService', () => {
         await expect(service.process({
             entryId: 'test-entry',
             roomId,
-            type: SnapshotJobType.SNAPSHOT
+            type: JobType.SNAPSHOT
         })).rejects.toThrow('S3 Connection Failed');
 
         expect(mockUpdateRepo.trim).not.toHaveBeenCalled();

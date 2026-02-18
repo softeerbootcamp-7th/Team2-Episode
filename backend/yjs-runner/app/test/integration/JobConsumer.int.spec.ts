@@ -44,7 +44,7 @@ describe('RedisStreamJobConsumer Integration Test', () => {
         await consumer.init();
     });
 
-    it('메시지를 발행하면 Read를 통해 SnapshotJob 형태로 읽어와야 한다', async () => {
+    it('메시지를 발행하면 Read를 통해 Job 형태로 읽어와야 한다', async () => {
         const testRoomId = 'room-123';
         await redis.xadd(
             STREAM_KEY,

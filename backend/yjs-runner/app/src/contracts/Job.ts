@@ -1,9 +1,9 @@
-export type SnapshotJob = {
+export type Job = {
     entryId: string;
     roomId: string;
-    type: SnapshotJobType;
+    type: JobType;
 };
 
-export enum SnapshotJobType {
+export enum JobType {
     SNAPSHOT = 'SNAPSHOT', SYNC = 'SYNC'
 }
