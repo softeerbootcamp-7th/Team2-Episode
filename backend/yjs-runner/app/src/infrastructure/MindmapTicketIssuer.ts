@@ -10,17 +10,16 @@ type JwtClaims = {
 
 export class MindmapTicketIssuer {
 	private readonly secret: string;
-	private readonly issuer: string;
 	private readonly ttlSeconds: number;
+	private readonly issuer = "episode";
 
-	constructor(opts: { secret: string; issuer?: string; ttlSeconds?: number }) {
-		if (!opts.secret) {
+	constructor(secret: string, ttlSeconds?: number) {
+		if (!secret) {
 			throw new Error(`JWT secret is missing.`);
 		}
 
-		this.secret = opts.secret;
-		this.issuer = opts.issuer ?? "episode";
-		this.ttlSeconds = opts.ttlSeconds ?? 30;
+		this.secret = secret;
+		this.ttlSeconds = ttlSeconds ?? 30;
 	}
 
 	issue(mindmapId: string): string {
