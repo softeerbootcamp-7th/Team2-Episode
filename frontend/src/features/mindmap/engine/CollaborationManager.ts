@@ -124,16 +124,13 @@ export class CollaborationManager {
         this.deps = deps;
         this.localUser = user;
 
-        // local state 보장 + user 설정
         this.ensureLocalState();
         this.deps.awareness.setLocalStateField("user", this.localUser);
         this.deps.awareness.setLocalStateField("cursor", null);
         this.deps.awareness.setLocalStateField("lock", null);
 
-        // subscribe
         this.deps.awareness.on("change", this.onAwarenessChange);
 
-        // initial sync
         this.syncFromAwareness();
     }
 
@@ -159,8 +156,6 @@ export class CollaborationManager {
             this.cursorRaf = null;
         }
     }
-
-    // ---- Cursor ----
 
     handlePointerMove(clientX: number, clientY: number) {
         const rect = this.deps.getCanvasRect();
@@ -198,14 +193,6 @@ export class CollaborationManager {
         this.deps.awareness.setLocalStateField("cursor", this.pendingCursor);
     }
 
-    // ---- Lock ----
-
-    /**
-     * ✅ lock 획득/해제 (awareness에 저장)
-     * - nodeId가 있으면 lock
-     * - null이면 unlock
-     * - 이미 다른 사람이 잠근 nodeId면 false 반환
-     */
     setLock(nodeId: NodeId | null): boolean {
         this.ensureLocalState();
 
@@ -213,7 +200,6 @@ export class CollaborationManager {
         const selfId = awareness.clientID;
 
         if (nodeId) {
-            // 다른 사람이 이미 lock 중인지 검사
             const states = awareness.getStates();
             for (const [clientId, st] of states.entries()) {
                 if (clientId === selfId) continue;
@@ -241,8 +227,6 @@ export class CollaborationManager {
         }
     }
 
-    // ---- Sync ----
-
     private syncFromAwareness() {
         if (this.disposed) return;
 
@@ -253,7 +237,6 @@ export class CollaborationManager {
         const participants: Collaborator[] = [];
         const cursors: CollaboratorCursor[] = [];
 
-        // lock 후보 수집(충돌 해결 포함)
         const locksByNodeId = new Map<NodeId, LockInfo>();
         let desiredSelfLockNodeId: NodeId | null = null;
         let desiredSelfLockAt = 0;
@@ -261,8 +244,6 @@ export class CollaborationManager {
         states.forEach((state, clientId) => {
             const user = state?.user;
             if (!user) return;
-
-            console.log(user);
 
             const isSelf = clientId === selfId;
 
@@ -276,7 +257,6 @@ export class CollaborationManager {
             const lock = state?.lock;
             if (lock && lock.nodeId) {
                 const ts = lock.at;
-                // self가 원하는 lock 기록
                 if (isSelf) {
                     desiredSelfLockNodeId = lock.nodeId;
                     desiredSelfLockAt = ts;
@@ -288,7 +268,6 @@ export class CollaborationManager {
                 if (!prev) {
                     locksByNodeId.set(lock.nodeId, candidate);
                 } else {
-                    // ✅ 충돌 해결: 먼저 잡은(at 작은) 사람이 승자, 동률이면 clientId 작은 사람이 승자
                     if (candidate.timestamp < prev.timestamp) locksByNodeId.set(lock.nodeId, candidate);
                     else if (candidate.timestamp === prev.timestamp && candidate.clientId < prev.clientId)
                         locksByNodeId.set(lock.nodeId, candidate);
@@ -296,14 +275,12 @@ export class CollaborationManager {
             }
         });
 
-        // self lock winner check
         let selfLockedNodeId: NodeId | null = null;
         if (desiredSelfLockNodeId) {
             const winner = locksByNodeId.get(desiredSelfLockNodeId);
             if (winner?.clientId === selfId) {
                 selfLockedNodeId = desiredSelfLockNodeId;
             } else {
-                // 내가 lock을 잡았다고 생각하지만 경쟁에서 졌다면 local lock 해제
                 if (desiredSelfLockAt > 0) {
                     try {
                         awareness.setLocalStateField("lock", null);
@@ -314,7 +291,6 @@ export class CollaborationManager {
             }
         }
 
-        // stable order
         participants.sort((a, b) => {
             if (a.isSelf && !b.isSelf) return -1;
             if (!a.isSelf && b.isSelf) return 1;
@@ -333,7 +309,6 @@ export class CollaborationManager {
             byNodeId: locksByNodeId,
         };
 
-        // publish presence/cursors
         if (
             this.lastPresence.selfClientId !== nextPresence.selfClientId ||
             !shallowEqualParticipants(this.lastPresence.participants, nextPresence.participants)
@@ -350,7 +325,6 @@ export class CollaborationManager {
             this.deps.commitCursors(nextCursors);
         }
 
-        // publish locks
         if (!shallowEqualLocks(this.lastLocks, nextLocks)) {
             this.lastLocks = nextLocks;
             this.deps.commitLocks(nextLocks);
