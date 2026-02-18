@@ -126,12 +126,11 @@ public class EpisodeService {
         if (patch == null || patch.isUndefined()) {
             return before;
         }
-        if (!patch.isPresent()) {
+        if (!patch.isPresent() || patch.get() == null) {
             return null;
         }
         return patch.get();
     }
-
 
     private void validateCompetencyIds(Set<Integer> competencyIds) {
         if (competencyIds == null || competencyIds.isEmpty()) {
