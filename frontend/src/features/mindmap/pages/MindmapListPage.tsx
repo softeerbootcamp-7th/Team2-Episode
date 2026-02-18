@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 
 import MindmapList from "@/features/mindmap/components/list/MindmapList";
 import { MindMapProvider } from "@/features/mindmap/providers/MindmapProvider";
-import { MindmapType } from "@/features/mindmap/types/mindmap";
+import { MINDMAP_TABS, MindmapTabId } from "@/features/mindmap/types/mindmap";
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
 import MaxWidth from "@/shared/components/max_width/MaxWidth";
@@ -14,13 +14,6 @@ import Top from "@/shared/components/top/Top";
 import { useTabs } from "@/shared/hooks/useTabs";
 import { linkTo } from "@/shared/utils/route";
 
-export const MINDMAP_TABS: { id: MindmapType; label: string }[] = [
-    { id: "ALL", label: "전체" },
-    { id: "PRIVATE", label: "개인 마인드맵" },
-    { id: "PUBLIC", label: "팀 마인드맵" },
-] as const;
-
-export type MindmapTabId = (typeof MINDMAP_TABS)[number]["id"];
 const MindmapListPage = () => {
     const { selectedValue, onChange } = useTabs<MindmapTabId>("ALL");
     const selectedTabIndex = MINDMAP_TABS.findIndex((tab) => tab.id === selectedValue) ?? 0;
