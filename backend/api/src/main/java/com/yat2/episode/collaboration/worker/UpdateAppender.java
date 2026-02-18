@@ -17,12 +17,12 @@ public class UpdateAppender {
     private final UpdateStreamStore updateStreamStore;
     private final JobPublisher jobPublisher;
 
-    @Qualifier("redisExecutor")
-    private final Executor redisExecutor;
+    @Qualifier("updateExecutor")
+    private final Executor updateExecutor;
 
     public void appendUpdateAsync(UUID roomId, byte[] payload) {
         try {
-            redisExecutor.execute(() -> tryAppend(roomId, payload));
+            updateExecutor.execute(() -> tryAppend(roomId, payload));
         } catch (Exception e) {
             jobPublisher.publishSyncAsync(roomId);
         }

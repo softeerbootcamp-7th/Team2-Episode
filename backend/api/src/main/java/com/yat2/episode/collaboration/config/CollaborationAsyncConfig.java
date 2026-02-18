@@ -18,8 +18,8 @@ public class CollaborationAsyncConfig {
 
     private final CollaborationAsyncProperties asyncProperties;
 
-    @Bean(name = "redisExecutor")
-    public Executor redisExecutor() {
+    @Bean(name = "updateExecutor")
+    public Executor updateExecutor() {
         ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
         exec.setThreadNamePrefix(THREAD_PREFIX_UPDATE);
         exec.setCorePoolSize(asyncProperties.corePoolSize());
