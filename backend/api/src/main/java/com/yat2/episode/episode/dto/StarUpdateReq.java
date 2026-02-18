@@ -2,6 +2,7 @@ package com.yat2.episode.episode.dto;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -12,6 +13,6 @@ public record StarUpdateReq(
         @Size(max = 200) String task,
         @Size(max = 200) String action,
         @Size(max = 200) String result,
-        LocalDate startDate,
-        LocalDate endDate
+        JsonNullable<LocalDate> startDate,
+        JsonNullable<LocalDate> endDate
 ) {}
