@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
+import com.yat2.episode.collaboration.config.CollaborationAsyncProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 @Slf4j
@@ -15,16 +16,17 @@ import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 public class UpdateAppender {
     private final UpdateStreamStore updateStreamStore;
     private final JobPublisher jobPublisher;
-
     private final Executor updateExecutor;
+    private final int maxRetries;
 
     public UpdateAppender(
             UpdateStreamStore updateStreamStore, JobPublisher jobPublisher,
-            @Qualifier("updateExecutor") Executor updateExecutor
+            @Qualifier("updateExecutor") Executor updateExecutor, CollaborationAsyncProperties asyncProperties
     ) {
         this.updateExecutor = updateExecutor;
         this.updateStreamStore = updateStreamStore;
         this.jobPublisher = jobPublisher;
+        this.maxRetries = Math.max(1, asyncProperties.updateAppendMaxRetries());
     }
 
     public void appendUpdateAsync(UUID roomId, byte[] payload) {
@@ -39,7 +41,7 @@ public class UpdateAppender {
     }
 
     private void tryAppend(UUID roomId, byte[] payload) {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < maxRetries; i++) {
             try {
                 updateStreamStore.appendUpdate(roomId, payload);
                 return;

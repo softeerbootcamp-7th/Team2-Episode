@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
+import com.yat2.episode.collaboration.config.CollaborationAsyncProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -19,6 +20,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UpdateAppender 단위 테스트")
@@ -35,13 +37,17 @@ class UpdateAppenderTest {
 
     UpdateAppender updateAppender;
 
+    @Mock
+    CollaborationAsyncProperties asyncProperties;
+
     private static byte[] updatePayload() {
         return new byte[]{ 0, 2, 1, 2, 3, 4 };
     }
 
     @BeforeEach
     void setUp() {
-        updateAppender = new UpdateAppender(updateStreamStore, jobPublisher, updateExecutor);
+        when(asyncProperties.updateAppendMaxRetries()).thenReturn(5);
+        updateAppender = new UpdateAppender(updateStreamStore, jobPublisher, updateExecutor, asyncProperties);
     }
 
     @Test
