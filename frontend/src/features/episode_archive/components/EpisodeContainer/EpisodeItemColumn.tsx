@@ -8,9 +8,10 @@ import { EpisodeDetail, EpisodeDetailResponse } from "@/features/episode_archive
 
 interface EpisodeItemColumnProps {
     summary: EpisodeDetail;
+    searchTerm?: string;
 }
 
-const EpisodeItemColumn = memo(({ summary }: EpisodeItemColumnProps) => {
+const EpisodeItemColumn = memo(({ summary, searchTerm }: EpisodeItemColumnProps) => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
 
     const handleEditOpen = useCallback(() => setIsEditing(true), []);
@@ -31,7 +32,7 @@ const EpisodeItemColumn = memo(({ summary }: EpisodeItemColumnProps) => {
                 {isEditing ? (
                     <EpisodeEditBox initialData={summary as EpisodeDetailResponse} onCancel={handleEditClose} />
                 ) : (
-                    <EpisodeStar detail={summary} onEditClick={handleEditOpen} />
+                    <EpisodeStar detail={summary} onEditClick={handleEditOpen} searchTerm={searchTerm} />
                 )}
             </div>
         </div>

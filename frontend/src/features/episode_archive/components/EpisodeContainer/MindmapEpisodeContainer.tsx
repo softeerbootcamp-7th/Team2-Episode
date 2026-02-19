@@ -6,11 +6,11 @@ import { cn } from "@/utils/cn";
 
 type Props = {
     mindmapName: string;
-    // 타입을 EpisodeDetail[]로 변경하여 하위 컴포넌트와의 타입 불일치를 해결합니다.
     episodes: EpisodeDetail[];
+    searchTerm?: string;
 };
 
-export default function MindmapEpisodeContainer({ mindmapName, episodes }: Props) {
+export default function MindmapEpisodeContainer({ mindmapName, episodes, searchTerm }: Props) {
     return (
         <div className="flex flex-col w-full">
             <section className="flex flex-col w-full py-10">
@@ -20,7 +20,7 @@ export default function MindmapEpisodeContainer({ mindmapName, episodes }: Props
                     <EpisodeBar />
                     <div className="flex flex-col mt-2">
                         {episodes.map((ep) => (
-                            <EpisodeItemColumn key={ep.nodeId} summary={ep} />
+                            <EpisodeItemColumn key={ep.nodeId} summary={ep} searchTerm={searchTerm} />
                         ))}
                     </div>
                 </div>

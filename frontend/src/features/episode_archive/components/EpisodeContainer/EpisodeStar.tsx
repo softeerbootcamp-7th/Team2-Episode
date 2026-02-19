@@ -7,11 +7,12 @@ import Icon from "@/shared/components/icon/Icon";
 type EpisodeStarProps = {
     detail: EpisodeDetail;
     onEditClick: () => void;
+    searchTerm?: string;
 };
 
 const ICON_COLOR = "var(--color-text-placeholder)";
 
-export default function EpisodeStar({ detail, onEditClick }: EpisodeStarProps) {
+export default function EpisodeStar({ detail, onEditClick, searchTerm }: EpisodeStarProps) {
     const { mutate: clearEpisode, isPending } = useClearEpisode(detail.nodeId);
     const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
@@ -30,10 +31,10 @@ export default function EpisodeStar({ detail, onEditClick }: EpisodeStarProps) {
 
     return (
         <div className="grid grid-cols-[1fr_1fr_1fr_1fr_8rem_3.75rem] w-full h-full items-stretch bg-white">
-            <EpisodeItem>{detail.situation}</EpisodeItem>
-            <EpisodeItem>{detail.task}</EpisodeItem>
-            <EpisodeItem>{detail.action}</EpisodeItem>
-            <EpisodeItem>{detail.result}</EpisodeItem>
+            <EpisodeItem highlightTerm={searchTerm}>{detail.situation}</EpisodeItem>
+            <EpisodeItem highlightTerm={searchTerm}>{detail.task}</EpisodeItem>
+            <EpisodeItem highlightTerm={searchTerm}>{detail.action}</EpisodeItem>
+            <EpisodeItem highlightTerm={searchTerm}>{detail.result}</EpisodeItem>
 
             <div className="flex flex-wrap gap-1 content-start p-4 border-r border-gray-100">
                 {detail.competencyTypes.map((type) => (

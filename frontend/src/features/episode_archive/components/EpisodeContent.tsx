@@ -77,7 +77,8 @@ export function EpisodeContent() {
                             <MindmapEpisodeContainer
                                 key={group.mindmapId}
                                 mindmapName={group.mindmapName}
-                                episodes={group.episodes} // EpisodeDetail[] 타입 전달
+                                episodes={group.episodes}
+                                searchTerm={debouncedSearch}
                             />
                         ))}
                     </div>
