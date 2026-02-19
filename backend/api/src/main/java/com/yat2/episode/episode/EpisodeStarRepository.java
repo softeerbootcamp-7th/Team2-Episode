@@ -48,7 +48,7 @@ public interface EpisodeStarRepository extends JpaRepository<EpisodeStar, Episod
                         SELECT DISTINCT s
                         FROM EpisodeStar s
                         JOIN FETCH s.episode e
-                        JOIN FETCH s.competencyTypeIds ctId
+                        LEFT JOIN FETCH s.competencyTypeIds ctId
                         WHERE s.id.userId = :userId
                           AND e.mindmapId IN :mindmapIds
                           AND (
