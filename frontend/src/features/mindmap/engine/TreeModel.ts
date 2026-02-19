@@ -1,10 +1,10 @@
-import { ROOT_NODE_ID } from "@/features/mindmap/engine/YjsAdaptor";
 import { TreeAdapter } from "@/features/mindmap/types/mindmap_controller";
 import type { AddNodeDirection, NodeDirection, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/node";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 import generateId from "@/utils/generate_id";
 
 const ROOT_NODE_PARENT_ID = "empty";
+export const ROOT_NODE_ID = "root";
 const DETACHED_NODE_PARENT_ID = "detached";
 
 type RootChildPointers = {

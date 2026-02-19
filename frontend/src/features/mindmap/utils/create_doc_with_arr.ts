@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 
-import { TreeModel } from "@/features/mindmap/engine/TreeModel";
-import { ROOT_NODE_ID, YjsAdapter } from "@/features/mindmap/engine/YjsAdaptor";
+import { ROOT_NODE_ID, TreeModel } from "@/features/mindmap/engine/TreeModel";
+import { YjsAdapter } from "@/features/mindmap/engine/YjsAdaptor";
 
 /**
  * 마인드맵을 생성할 때 유저가 선택한 카테고리 또는 에피소드 목록으로 기본 ydoc 뼈대를 만들어 서버에 제공해야합니다.
