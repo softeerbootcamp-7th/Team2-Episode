@@ -7,6 +7,7 @@ import { SnapshotService } from "./services/SnapshotService";
 import { RedisStreamJobConsumer } from "./infrastructure/JobConsumer";
 import { SnapshotWorker } from "./worker/SnapshotWorker";
 import { MindmapTicketIssuer } from "./infrastructure/MindmapTicketIssuer";
+import { WebsocketSyncClient } from "./infrastructure/WebsocketSyncClient";
 
 const redis = new Redis({
 	host: process.env.REDIS_HOST!,
@@ -30,11 +31,24 @@ const storage = new S3SnapshotStorage({
 
 const yjs = new DefaultYjsProcessor();
 
-const ticketIssuer = new MindmapTicketIssuer({
-	secret: process.env.JWT_MINDMAP_SECRET!,
-});
+const ttl = Number(process.env.TOKEN_TTL_SEC);
 
-const service = new SnapshotService({ updateRepo, yjs, storage });
+const ticketIssuer = new MindmapTicketIssuer(
+	process.env.JWT_MINDMAP_SECRET!,
+	Number.isFinite(ttl) && ttl > 0 ? ttl : undefined,
+);
+
+const syncClient = new WebsocketSyncClient(
+	ticketIssuer,
+	process.env.WS_BASE_URL!,
+);
+
+const service = new SnapshotService({
+	updateRepo,
+	yjs,
+	storage,
+	syncClient,
+});
 
 const consumer = new RedisStreamJobConsumer(redis, {
 	jobStreamKey: process.env.JOB_STREAM_KEY!,
