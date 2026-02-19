@@ -107,16 +107,17 @@ public class EpisodeService {
     private List<MindmapParticipant> findParticipantsByFilter(long userId, EpisodeSearchReq req) {
         MindmapVisibility type = req.mindmapType();
 
+        if (req.mindmapId() != null) {
+            return List.of(mindmapAccessValidator.findParticipantOrThrow(req.mindmapId(), userId));
+        }
+
         List<MindmapParticipant> participants = switch (type) {
             case PRIVATE -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, false);
             case PUBLIC -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, true);
             case ALL -> mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId);
         };
 
-        if (req.mindmapId() == null) return participants;
-
-        UUID filterId = req.mindmapId();
-        return participants.stream().filter(p -> p.getMindmap().getId().equals(filterId)).toList();
+        return participants;
     }
 
     @Transactional
