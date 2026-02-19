@@ -5,11 +5,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -37,6 +36,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,7 +80,7 @@ class EpisodeServiceTest {
             Episode episode = Episode.create(nodeId, mindmapId);
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
 
-            EpisodeStar spyStar = org.mockito.Mockito.spy(star);
+            EpisodeStar spyStar = spy(star);
             when(spyStar.getEpisode()).thenReturn(episode);
 
             when(episodeStarRepository.findStarDetail(nodeId, userId)).thenReturn(Optional.of(spyStar));
@@ -151,9 +153,8 @@ class EpisodeServiceTest {
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
             when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
 
-            StarUpdateReq req =
-                    new StarUpdateReq(null, null, null, null, null, JsonNullable.of(LocalDate.now().plusDays(1)),
-                                      JsonNullable.of(LocalDate.now()));
+            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, LocalDate.now().plusDays(1).toString(),
+                                                  LocalDate.now().toString());
 
             assertThatThrownBy(() -> episodeService.updateStar(nodeId, userId, req)).isInstanceOf(CustomException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST);
@@ -174,7 +175,7 @@ class EpisodeServiceTest {
         @DisplayName("에피소드 삭제 성공: starDetail 존재 확인 후 deleteById 호출")
         void deleteEpisode_Success() {
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
-            EpisodeStar spyStar = Mockito.spy(star);
+            EpisodeStar spyStar = spy(star);
             when(spyStar.getEpisode()).thenReturn(Episode.create(nodeId, mindmapId));
 
             when(episodeStarRepository.findStarDetail(nodeId, userId)).thenReturn(Optional.of(spyStar));
@@ -185,45 +186,131 @@ class EpisodeServiceTest {
         }
 
         @Test
-        @DisplayName("STAR PATCH: startDate를 null로 보내면 startDate가 삭제(null)되어야 한다")
-        void updateStar_ClearStartDate_WithNull() {
+        @DisplayName("STAR 업데이트 실패: (반영 가능한 값 기준) startDate가 endDate보다 뒤면 INVALID_REQUEST")
+        void updateStar_DateInvalid_AfterApplyRules() {
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
-
-            org.springframework.test.util.ReflectionTestUtils.setField(star, "startDate", LocalDate.now());
-            org.springframework.test.util.ReflectionTestUtils.setField(star, "endDate", LocalDate.now().plusDays(1));
-
             when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
 
-            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, JsonNullable.<LocalDate>of(null),
-                                                  JsonNullable.undefined());
+            String start = LocalDate.now().plusDays(2).toString();
+            String end = LocalDate.now().plusDays(1).toString();
 
-            episodeService.updateStar(nodeId, userId, req);
+            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, start, end);
 
-            assertThat(star.getStartDate()).isNull();
-            assertThat(star.getEndDate()).isEqualTo(LocalDate.now().plusDays(1)); // 기존 유지
+            assertThatThrownBy(() -> episodeService.updateStar(nodeId, userId, req)).isInstanceOf(CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST);
         }
 
-
         @Test
-        @DisplayName("STAR PATCH: startDate 필드가 없으면(undefined) 기존 startDate는 유지되어야 한다")
-        void updateStar_StartDateAbsent_ShouldNotChange() {
-            EpisodeStar star = EpisodeStar.create(nodeId, userId);
+        @DisplayName("STAR PATCH: startDate='0000-00-00'이면 startDate가 삭제(null)되고 endDate는 유지된다")
+        void updateStar_ClearStartDate_WithZeroDate() {
+            EpisodeStar realStar = EpisodeStar.create(nodeId, userId);
+            EpisodeStar star = spy(realStar);
 
-            LocalDate beforeStart = LocalDate.now();
-            LocalDate beforeEnd = LocalDate.now().plusDays(1);
+            LocalDate beforeStart = LocalDate.of(2026, 2, 10);
+            LocalDate beforeEnd = LocalDate.of(2026, 2, 20);
             ReflectionTestUtils.setField(star, "startDate", beforeStart);
             ReflectionTestUtils.setField(star, "endDate", beforeEnd);
 
             when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
 
-            StarUpdateReq req =
-                    new StarUpdateReq(null, null, null, null, null, JsonNullable.undefined(), JsonNullable.undefined());
+            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, "0000-00-00", null);
 
             episodeService.updateStar(nodeId, userId, req);
 
-            assertThat(star.getStartDate()).isEqualTo(beforeStart);
-            assertThat(star.getEndDate()).isEqualTo(beforeEnd);
+            ArgumentCaptor<LocalDate> startCaptor = ArgumentCaptor.forClass(LocalDate.class);
+            ArgumentCaptor<LocalDate> endCaptor = ArgumentCaptor.forClass(LocalDate.class);
+
+            verify(star).update(eq(req), startCaptor.capture(), endCaptor.capture());
+
+            assertThat(startCaptor.getValue()).isNull();
+            assertThat(endCaptor.getValue()).isEqualTo(beforeEnd);
+
+            verify(episodeStarRepository, never()).save(any());
         }
+
+        @Test
+        @DisplayName("STAR PATCH: startDate가 파싱 불가 문자열이면 반영하지 않고 기존 값을 유지한다")
+        void updateStar_StartDateInvalidString_ShouldNotChange() {
+            EpisodeStar realStar = EpisodeStar.create(nodeId, userId);
+            EpisodeStar star = spy(realStar);
+
+            LocalDate beforeStart = LocalDate.of(2026, 2, 10);
+            LocalDate beforeEnd = LocalDate.of(2026, 2, 20);
+            ReflectionTestUtils.setField(star, "startDate", beforeStart);
+            ReflectionTestUtils.setField(star, "endDate", beforeEnd);
+
+            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
+
+            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, "not-a-date", null);
+
+            episodeService.updateStar(nodeId, userId, req);
+
+            ArgumentCaptor<LocalDate> startCaptor = ArgumentCaptor.forClass(LocalDate.class);
+            ArgumentCaptor<LocalDate> endCaptor = ArgumentCaptor.forClass(LocalDate.class);
+
+            verify(star).update(eq(req), startCaptor.capture(), endCaptor.capture());
+
+            assertThat(startCaptor.getValue()).isEqualTo(beforeStart);
+            assertThat(endCaptor.getValue()).isEqualTo(beforeEnd);
+
+            verify(episodeStarRepository, never()).save(any());
+        }
+
+
+        @Test
+        @DisplayName("STAR PATCH: 파싱 가능한 날짜면 해당 날짜로 반영한다")
+        void updateStar_ApplyValidDates() {
+            EpisodeStar realStar = EpisodeStar.create(nodeId, userId);
+            EpisodeStar star = spy(realStar);
+
+            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
+
+            String newStart = LocalDate.of(2026, 2, 11).toString();
+            String newEnd = LocalDate.of(2026, 2, 21).toString();
+
+            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, newStart, newEnd);
+
+            episodeService.updateStar(nodeId, userId, req);
+
+            ArgumentCaptor<LocalDate> startCaptor = ArgumentCaptor.forClass(LocalDate.class);
+            ArgumentCaptor<LocalDate> endCaptor = ArgumentCaptor.forClass(LocalDate.class);
+
+            verify(star, times(1)).update(eq(req), startCaptor.capture(), endCaptor.capture());
+
+            assertThat(startCaptor.getValue()).isEqualTo(LocalDate.parse(newStart));
+            assertThat(endCaptor.getValue()).isEqualTo(LocalDate.parse(newEnd));
+
+            verify(episodeStarRepository, never()).save(any(EpisodeStar.class));
+        }
+
+        @Test
+        @DisplayName("STAR PATCH: startDate는 파싱 불가(반영 X), endDate만 유효하면 endDate만 반영한다")
+        void updateStar_ApplyOnlyEndDate_WhenStartInvalid() {
+            EpisodeStar realStar = EpisodeStar.create(nodeId, userId);
+            EpisodeStar star = spy(realStar);
+
+            LocalDate beforeStart = LocalDate.of(2026, 2, 10);
+            LocalDate beforeEnd = LocalDate.of(2026, 2, 20);
+            ReflectionTestUtils.setField(star, "startDate", beforeStart);
+            ReflectionTestUtils.setField(star, "endDate", beforeEnd);
+
+            when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
+
+            String newEnd = LocalDate.of(2026, 2, 22).toString();
+            StarUpdateReq req = new StarUpdateReq(null, null, null, null, null, "xxxx-yy-zz", newEnd);
+
+            episodeService.updateStar(nodeId, userId, req);
+
+            ArgumentCaptor<LocalDate> startCaptor = ArgumentCaptor.forClass(LocalDate.class);
+            ArgumentCaptor<LocalDate> endCaptor = ArgumentCaptor.forClass(LocalDate.class);
+
+            verify(star).update(eq(req), startCaptor.capture(), endCaptor.capture());
+
+            assertThat(startCaptor.getValue()).isEqualTo(beforeStart);
+            assertThat(endCaptor.getValue()).isEqualTo(LocalDate.parse(newEnd));
+            verify(episodeStarRepository, never()).save(any(EpisodeStar.class));
+        }
+
 
     }
 

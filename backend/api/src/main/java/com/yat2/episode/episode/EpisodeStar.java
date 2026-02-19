@@ -13,7 +13,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -83,27 +82,18 @@ public class EpisodeStar {
         return episodeStar;
     }
 
-    public void update(StarUpdateReq req) {
+    public void update(StarUpdateReq req, LocalDate startDate, LocalDate endDate) {
         if (req.situation() != null) this.situation = req.situation();
         if (req.task() != null) this.task = req.task();
         if (req.action() != null) this.action = req.action();
         if (req.result() != null) this.result = req.result();
-        applyDatePatch(req.startDate(), d -> this.startDate = d);
-        applyDatePatch(req.endDate(), d -> this.endDate = d);
+        this.startDate = startDate;
+        this.endDate = endDate;
 
         if (req.competencyTypeIds() != null) {
             this.competencyTypeIds.clear();
             this.competencyTypeIds.addAll(req.competencyTypeIds());
         }
-    }
-
-    private void applyDatePatch(JsonNullable<LocalDate> patch, java.util.function.Consumer<LocalDate> setter) {
-        if (patch == null || patch.isUndefined()) return;
-        if (!patch.isPresent()) {
-            setter.accept(null);
-            return;
-        }
-        setter.accept(patch.get());
     }
 
     public void clearDates() {
