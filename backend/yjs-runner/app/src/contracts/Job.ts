@@ -5,5 +5,6 @@ export type Job = {
 };
 
 export enum JobType {
-    SNAPSHOT = 'SNAPSHOT', SYNC = 'SYNC'
+    SNAPSHOT = "SNAPSHOT",
+    SYNC = "SYNC",
 }
