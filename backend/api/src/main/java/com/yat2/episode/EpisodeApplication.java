@@ -5,11 +5,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableJpaAuditing
 @SpringBootApplication
 @EntityScan(basePackages = { "com.yat2.episode" })
 @ConfigurationPropertiesScan("com.yat2.episode")
+@EnableScheduling
 public class EpisodeApplication {
 
     public static void main(String[] args) {
