@@ -57,7 +57,7 @@ public class AuthService {
         refreshTokenService.validateSession(refreshToken);
 
         AuthTokens tokens = authJwtProvider.issueTokens(userId);
-        refreshTokenService.save(userId, tokens.refreshToken());
+        refreshTokenService.upsert(userId, tokens.refreshToken(), refreshToken);
 
         return tokens;
     }
