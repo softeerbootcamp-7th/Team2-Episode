@@ -232,8 +232,7 @@ public class EpisodeService {
     }
 
     private boolean isDeleteDate(String date) {
-        if (date == null) return false;
-        return DELETE_DATE.compareTo(date) == 0;
+        return DELETE_DATE.equals(date);
     }
 
     private void validateCompetencyIds(Set<Integer> competencyIds) {
