@@ -76,7 +76,7 @@ class EpisodeServiceTest {
             Episode episode = Episode.create(nodeId, mindmapId);
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
 
-            EpisodeStar spyStar = Mockito.spy(star);
+            EpisodeStar spyStar = org.mockito.Mockito.spy(star);
             when(spyStar.getEpisode()).thenReturn(episode);
 
             when(episodeStarRepository.findStarDetail(nodeId, userId)).thenReturn(Optional.of(spyStar));
