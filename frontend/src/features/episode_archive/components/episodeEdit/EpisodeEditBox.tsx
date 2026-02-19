@@ -1,76 +1,98 @@
-/** @/features/episode_archive/components/episodeEdit/EpisodeEditBox.tsx */
-import { FormProvider } from "react-hook-form";
+import { format, parseISO } from "date-fns";
+import { useCallback, useState } from "react";
+import { DateRange } from "react-day-picker";
+import { useFormContext } from "react-hook-form";
 
-import EpisodeContentSection from "@/features/episode_archive/components/episodeEdit/EpisodeCotentSection";
-import EpisodeMetaSection from "@/features/episode_archive/components/episodeEdit/EpisodeMetaSection";
-import { useEpisodeEditForm } from "@/features/episode_archive/hooks/useEpisodeEditForm";
-import { useUpdateEpisode } from "@/features/episode_archive/hooks/useUpdateEpisode";
-import { EpisodeDetailResponse, UpdateEpisodeRequest } from "@/features/episode_archive/types/episode";
-import EpisodeInfoSection from "@/shared/components/popover/EpisodeInfoSection";
+import { EpisodeDetailResponse } from "@/features/episode_archive/types/episode";
+import CustomCalendar from "@/shared/components/calendar/CustomCalendar";
+import DateInput from "@/shared/components/calendar/DateInput";
+import Popover from "@/shared/components/popover/Popover";
+import { cn } from "@/utils/cn";
 
-export default function EpisodeEditBox({
-    initialData,
-    onCancel,
-}: {
-    initialData: EpisodeDetailResponse;
-    onCancel: () => void;
-}) {
-    const methods = useEpisodeEditForm(initialData);
-    const {
-        handleSubmit,
-        formState: { dirtyFields },
-    } = methods; // 수정된 필드 확인용
-    const { mutate: updateEpisode, isPending } = useUpdateEpisode(initialData.nodeId);
+export default function EpisodeInfoSection({ className }: { className?: string }) {
+    const { register, watch, setValue } = useFormContext<EpisodeDetailResponse>();
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-    const onSubmit = (formData: EpisodeDetailResponse) => {
-        const requestBody: UpdateEpisodeRequest = {};
+    const startDate = watch("startDate");
+    const endDate = watch("endDate");
 
-        // 수정된 필드만 선별하여 전송 객체 구성
-        if (dirtyFields.situation) requestBody.situation = formData.situation || "";
-        if (dirtyFields.task) requestBody.task = formData.task || "";
-        if (dirtyFields.action) requestBody.action = formData.action || "";
-        if (dirtyFields.result) requestBody.result = formData.result || "";
-        if (dirtyFields.content) requestBody.content = formData.content || "";
-
-        // 역량 태그 수정 시 ID 배열로 변환
-        if (dirtyFields.competencyTypes) {
-            requestBody.competencyTypeIds = formData.competencyTypes.map((t) => t.id);
-        }
-
-        // 날짜 수정 시 명세서의 객체 구조 적용
-        if (dirtyFields.startDate) {
-            requestBody.startDate = {
-                present: !!formData.startDate,
-                undefined: !formData.startDate,
-            };
-        }
-        if (dirtyFields.endDate) {
-            requestBody.endDate = {
-                present: !!formData.endDate,
-                undefined: !formData.endDate,
-            };
-        }
-
-        // 변경사항이 있을 때만 PATCH 요청 전송
-        if (Object.keys(requestBody).length > 0) {
-            updateEpisode(requestBody, {
-                onSuccess: () => onCancel(), // 성공 시 수정 모드 종료
-            });
-        } else {
-            onCancel(); // 변경 사항 없으면 API 호출 없이 닫기
+    const getDisplayDate = (dateStr?: string) => {
+        if (!dateStr) return "";
+        try {
+            return format(parseISO(dateStr), "yyyy. MM. dd");
+        } catch {
+            return dateStr;
         }
     };
 
+    const handleOpen = useCallback(() => setIsCalendarOpen(true), []);
+
+    const handleSelect = useCallback(
+        (range: DateRange | undefined) => {
+            setValue("startDate", range?.from?.toISOString() || "");
+            setValue("endDate", range?.to?.toISOString() || "");
+            if (range?.from && range?.to) {
+                setIsCalendarOpen(false);
+            }
+        },
+        [setValue],
+    );
+
     return (
-        <FormProvider {...methods}>
-            <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="flex w-full items-stretch bg-gray-100 rounded-xl overflow-hidden"
-            >
-                <EpisodeInfoSection className="w-48 p-6 shrink-0" />
-                <EpisodeContentSection className="flex-1 p-6 bg-white/50" />
-                <EpisodeMetaSection className="w-47 p-6 shrink-0" onCancel={onCancel} isSubmitting={isPending} />
-            </form>
-        </FormProvider>
+        <div className={cn("flex flex-col gap-8 overflow-visible", className)}>
+            <div className="flex flex-col gap-3 w-full overflow-visible">
+                <label className="typo-body-14-semibold text-text-main1">진행 기간</label>
+
+                {/* ✅ Phase 1: Popover를 상단으로 이동 - 두 DateInput을 모두 포함 */}
+                <Popover
+                    isOpen={isCalendarOpen}
+                    isOnOpenChange={setIsCalendarOpen}
+                    direction="bottom_right"
+                    wrapperClassName="w-full"
+                    contents={
+                        <div className="flex justify-center items-center">
+                            <CustomCalendar
+                                selectedRange={{
+                                    from: startDate ? parseISO(startDate) : undefined,
+                                    to: endDate ? parseISO(endDate) : undefined,
+                                }}
+                                onSelect={handleSelect}
+                            />
+                        </div>
+                    }
+                >
+                    <div className="flex flex-col items-center gap-2 w-full">
+                        {/* 상단 입력창 */}
+                        <DateInput
+                            registration={register("startDate")}
+                            value={getDisplayDate(startDate)}
+                            placeholder="연도. 월. 일."
+                            onClick={handleOpen}
+                        />
+
+                        <span className="typo-body-14-reg text-text-placeholder">~</span>
+
+                        {/* 하단 입력창 */}
+                        <DateInput
+                            registration={register("endDate")}
+                            value={getDisplayDate(endDate)}
+                            placeholder="연도. 월. 일."
+                            onClick={handleOpen}
+                        />
+                    </div>
+                </Popover>
+            </div>
+
+            <div className="flex flex-col gap-3 w-full">
+                <label className="typo-body-14-semibold text-text-main1">에피소드</label>
+                <div className="flex w-full min-h-30 px-5 pt-4 pb-3.5 rounded-xl border border-gray-300 bg-white focus-within:border-primary transition-colors">
+                    <textarea
+                        {...register("content")}
+                        placeholder="에피소드 제목을 입력하세요"
+                        className="w-full typo-body-14-reg text-text-main1 outline-none border-none resize-none p-0 bg-transparent placeholder:text-text-placeholder"
+                    />
+                </div>
+            </div>
+        </div>
     );
 }
