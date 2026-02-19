@@ -1,47 +1,48 @@
-/** @/features/episode_archive/components/episodeEdit/EpisodeEditBox.tsx */
 import { FormProvider } from "react-hook-form";
 
-import EpisodeContentSection from "@/features/episode_archive/components/episodeEdit/EpisodeCotentSection";
-import EpisodeInfoSection from "@/features/episode_archive/components/episodeEdit/EpisodeInfoSection"; // ✅ 정본 경로
+import EpisodeContentSection from "@/features/episode_archive/components/episodeEdit/EpisodeContentSection";
+import EpisodeInfoSection from "@/features/episode_archive/components/episodeEdit/EpisodeInfoSection";
 import EpisodeMetaSection from "@/features/episode_archive/components/episodeEdit/EpisodeMetaSection";
 import { useEpisodeEditForm } from "@/features/episode_archive/hooks/useEpisodeEditForm";
 import { useUpdateEpisode } from "@/features/episode_archive/hooks/useUpdateEpisode";
 import { EpisodeDetailResponse, UpdateEpisodeRequest } from "@/features/episode_archive/types/episode";
 
-export default function EpisodeEditBox({
-    initialData,
-    onCancel,
-}: {
+type EpisodeEditBoxProps = {
     initialData: EpisodeDetailResponse;
     onCancel: () => void;
-}) {
-    const methods = useEpisodeEditForm(initialData);
+};
 
+export default function EpisodeEditBox({ initialData, onCancel }: EpisodeEditBoxProps) {
+    const methods = useEpisodeEditForm(initialData);
     const {
         handleSubmit,
         formState: { dirtyFields },
     } = methods;
+
     const { mutate: updateEpisode, isPending } = useUpdateEpisode(initialData.nodeId);
 
     const onSubmit = (formData: EpisodeDetailResponse) => {
         const requestBody: UpdateEpisodeRequest = {};
 
-        if (dirtyFields.situation) requestBody.situation = formData.situation || "";
-        if (dirtyFields.task) requestBody.task = formData.task || "";
-        if (dirtyFields.action) requestBody.action = formData.action || "";
-        if (dirtyFields.result) requestBody.result = formData.result || "";
-        if (dirtyFields.content) requestBody.content = formData.content || "";
+        const starFields: (keyof UpdateEpisodeRequest & keyof EpisodeDetailResponse)[] = [
+            "situation",
+            "task",
+            "action",
+            "result",
+        ];
+
+        starFields.forEach((field) => {
+            if (dirtyFields[field]) {
+                requestBody[field] = (formData[field] as string) || "";
+            }
+        });
 
         if (dirtyFields.competencyTypes) {
             requestBody.competencyTypeIds = (formData.competencyTypes ?? []).map((t) => t.id);
         }
 
-        if (dirtyFields.startDate) {
-            requestBody.startDate = { present: !!formData.startDate, undefined: !formData.startDate };
-        }
-        if (dirtyFields.endDate) {
-            requestBody.endDate = { present: !!formData.endDate, undefined: !formData.endDate };
-        }
+        if (dirtyFields.startDate) requestBody.startDate = formData.startDate || "0000-00-00";
+        if (dirtyFields.endDate) requestBody.endDate = formData.endDate || "0000-00-00";
 
         if (Object.keys(requestBody).length > 0) {
             updateEpisode(requestBody, { onSuccess: () => onCancel() });
@@ -51,7 +52,6 @@ export default function EpisodeEditBox({
     };
 
     return (
-        // ✅ 반드시 Provider가 form/섹션을 감싸야 함
         <FormProvider {...methods}>
             <form
                 onSubmit={handleSubmit(onSubmit)}

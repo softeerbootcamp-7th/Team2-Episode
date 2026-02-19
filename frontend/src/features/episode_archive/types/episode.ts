@@ -56,17 +56,10 @@ export type SearchEpisodesReq = HttpParams & {
 /** 에피소드 수정 API 요청 바디 */
 export type UpdateEpisodeRequest = {
     competencyTypeIds?: number[];
-    situation?: string | null;
-    task?: string | null;
-    action?: string | null;
-    result?: string | null;
-    content?: string | null;
-    startDate?: {
-        present?: boolean;
-        undefined?: boolean;
-    };
-    endDate?: {
-        present?: boolean;
-        undefined?: boolean;
-    };
+    situation?: string;
+    task?: string;
+    action?: string;
+    result?: string;
+    startDate?: string;
+    endDate?: string;
 };

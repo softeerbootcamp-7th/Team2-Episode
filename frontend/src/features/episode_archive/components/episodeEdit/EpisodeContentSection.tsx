@@ -7,14 +7,18 @@ import { cn } from "@/utils/cn";
 
 type FieldId = keyof EpisodeDetailResponse;
 
-interface FieldConfig {
+type FieldConfig = {
     id: FieldId;
     label: string;
     english: string;
     char: "S" | "T" | "A" | "R";
-}
+};
 
-export default function EpisodeContentSection({ className }: { className?: string }) {
+type EpisodeContentSectionProps = {
+    className?: string;
+};
+
+export default function EpisodeContentSection({ className }: EpisodeContentSectionProps) {
     const { register } = useFormContext<EpisodeDetailResponse>();
 
     const fields: FieldConfig[] = [
@@ -38,10 +42,8 @@ export default function EpisodeContentSection({ className }: { className?: strin
                         className="list-none"
                         leftSlot={
                             <div className="flex flex-row gap-2 items-center">
-                                <div
-                                    className="flex flex-col justify-center items-center rounded-full bg-primary w-5.5 h-5.5"
-                                    style={{ padding: "1.8px 6.4px" }}
-                                >
+                                {/* 22px는 표준에 없으므로 근사치 5.5(22px) 사용 */}
+                                <div className="flex flex-col justify-center items-center rounded-full bg-primary w-5.5 h-5.5 px-1.5 py-0.5">
                                     <span className="text-white text-xs font-bold leading-none">{field.char}</span>
                                 </div>
                                 <span className="typo-body-16-semibold text-text-main1">{field.label}</span>
@@ -50,28 +52,13 @@ export default function EpisodeContentSection({ className }: { className?: strin
                         }
                     />
 
-                    {/* w-full로 변경하여 비율에 맞춰 자동 조절되게 함 */}
-                    <div className="flex w-full min-h-30 px-5 pt-4 pb-3.5 items-start gap-2.5 rounded-xl border border-gray-300 bg-white shadow-none">
+                    {/* 120px -> min-h-30, 14px -> pb-3.5 */}
+                    <div className="flex w-full min-h-30 px-5 pt-4 pb-3.5 items-start gap-2.5 rounded-xl border border-gray-300 bg-white shadow-none focus-within:border-primary transition-colors">
                         <textarea
                             {...register(field.id)}
                             onInput={handleResizeHeight}
                             placeholder={placeHolder.STAR[field.char]}
-                            className="
-        w-full
-        typo-body-14-reg
-        text-text-main1
-        border-none
-        outline-none
-        resize-none
-        overflow-hidden
-        p-0
-
-        placeholder:text-text-placeholder
-        placeholder:font-normal
-        placeholder:text-14
-        placeholder:leading-[140%]
-        placeholder:tracking-[-0.28px]
-    "
+                            className="w-full typo-body-14-reg text-text-main1 border-none outline-none resize-none overflow-hidden p-0 bg-transparent placeholder:text-text-placeholder"
                         />
                     </div>
                 </div>

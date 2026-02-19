@@ -9,28 +9,34 @@ import DateInput from "@/shared/components/calendar/DateInput";
 import Popover from "@/shared/components/popover/Popover";
 import { cn } from "@/utils/cn";
 
-export default function EpisodeInfoSection({ className }: { className?: string }) {
+type EpisodeInfoSectionProps = {
+    className?: string;
+};
+
+export default function EpisodeInfoSection({ className }: EpisodeInfoSectionProps) {
     const { register, watch, setValue } = useFormContext<EpisodeDetailResponse>();
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
     const startDate = watch("startDate");
     const endDate = watch("endDate");
 
-    const getDisplayDate = (dateStr?: string) => {
-        if (!dateStr) return "";
+    const getDisplayDate = useCallback((dateStr?: string) => {
+        if (!dateStr || dateStr === "0000-00-00") return "";
         try {
             return format(parseISO(dateStr), "yyyy. MM. dd");
         } catch {
             return dateStr;
         }
-    };
-
-    const handleOpen = useCallback(() => setIsCalendarOpen(true), []);
+    }, []);
 
     const handleSelect = useCallback(
         (range: DateRange | undefined) => {
-            setValue("startDate", range?.from?.toISOString() || "");
-            setValue("endDate", range?.to?.toISOString() || "");
+            const formattedStart = range?.from ? format(range.from, "yyyy-MM-dd") : "0000-00-00";
+            const formattedEnd = range?.to ? format(range.to, "yyyy-MM-dd") : "0000-00-00";
+
+            setValue("startDate", formattedStart, { shouldDirty: true });
+            setValue("endDate", formattedEnd, { shouldDirty: true });
+
             if (range?.from && range?.to) {
                 setIsCalendarOpen(false);
             }
@@ -42,8 +48,6 @@ export default function EpisodeInfoSection({ className }: { className?: string }
         <div className={cn("flex flex-col gap-8 overflow-visible", className)}>
             <div className="flex flex-col gap-3 w-full overflow-visible">
                 <label className="typo-body-14-semibold text-text-main1">진행 기간</label>
-
-                {/* ✅ Phase 1: Popover를 상단으로 이동 - 두 DateInput을 모두 포함 */}
                 <Popover
                     isOpen={isCalendarOpen}
                     isOnOpenChange={setIsCalendarOpen}
@@ -53,8 +57,8 @@ export default function EpisodeInfoSection({ className }: { className?: string }
                         <div className="flex justify-center items-center">
                             <CustomCalendar
                                 selectedRange={{
-                                    from: startDate ? parseISO(startDate) : undefined,
-                                    to: endDate ? parseISO(endDate) : undefined,
+                                    from: startDate && startDate !== "0000-00-00" ? parseISO(startDate) : undefined,
+                                    to: endDate && endDate !== "0000-00-00" ? parseISO(endDate) : undefined,
                                 }}
                                 onSelect={handleSelect}
                             />
@@ -62,22 +66,18 @@ export default function EpisodeInfoSection({ className }: { className?: string }
                     }
                 >
                     <div className="flex flex-col items-center gap-2 w-full">
-                        {/* 상단 입력창 */}
                         <DateInput
                             registration={register("startDate")}
                             value={getDisplayDate(startDate)}
                             placeholder="연도. 월. 일."
-                            onClick={handleOpen}
+                            onClick={() => setIsCalendarOpen(true)}
                         />
-
                         <span className="typo-body-14-reg text-text-placeholder">~</span>
-
-                        {/* 하단 입력창 */}
                         <DateInput
                             registration={register("endDate")}
                             value={getDisplayDate(endDate)}
                             placeholder="연도. 월. 일."
-                            onClick={handleOpen}
+                            onClick={() => setIsCalendarOpen(true)}
                         />
                     </div>
                 </Popover>
