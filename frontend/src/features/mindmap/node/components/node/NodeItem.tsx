@@ -4,10 +4,12 @@ import { toast } from "sonner";
 import { useMindmapActions, useMindmapNode, useMindmapNodeLock } from "@/features/mindmap/hooks/useMindmapStoreState";
 import { Node } from "@/features/mindmap/node/components/node/Node";
 import type { NodeId } from "@/features/mindmap/types/node";
+import { cn } from "@/utils/cn";
 
 const FIXED_WIDTH = 200;
 const MIN_HEIGHT = 80;
 
+// TODO: 컨트롤러의 actions이용하는 거로 변경
 function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
     const nodeData = useMindmapNode(nodeId);
     const { updateNodeSize, updateNodeContents, unlockNode } = useMindmapActions();
@@ -148,7 +150,10 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
                             data-action="select"
                             size={"sm"}
                             color={"violet"}
-                            className="min-h-20 h-auto p-4 flex items-center justify-center"
+                            className={cn(
+                                isRoot ? "bg-primary text-white" : "", // FIX: RootNode임을 임시로 표현하기 위한 하드코딩
+                                "min-h-20 h-auto p-4 flex items-center justify-center",
+                            )}
                             onClick={() => {
                                 if (lockedByOther) {
                                     toast.error("잠금 상태라 내용 수정이 불가합니다");
