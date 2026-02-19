@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -18,19 +19,23 @@ import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.EpisodeSearchReq;
 import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.MindmapEpisodeRes;
 import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
 import com.yat2.episode.mindmap.MindmapParticipant;
 import com.yat2.episode.mindmap.MindmapParticipantRepository;
+import com.yat2.episode.mindmap.constants.MindmapVisibility;
 import com.yat2.episode.user.User;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -169,7 +174,7 @@ class EpisodeServiceTest {
         @DisplayName("에피소드 삭제 성공: starDetail 존재 확인 후 deleteById 호출")
         void deleteEpisode_Success() {
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
-            EpisodeStar spyStar = org.mockito.Mockito.spy(star);
+            EpisodeStar spyStar = Mockito.spy(star);
             when(spyStar.getEpisode()).thenReturn(Episode.create(nodeId, mindmapId));
 
             when(episodeStarRepository.findStarDetail(nodeId, userId)).thenReturn(Optional.of(spyStar));
@@ -218,6 +223,187 @@ class EpisodeServiceTest {
 
             assertThat(star.getStartDate()).isEqualTo(beforeStart);
             assertThat(star.getEndDate()).isEqualTo(beforeEnd);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("에피소드 목록 검색 테스트")
+    class SearchListTests {
+
+        @Test
+        @DisplayName("성공: search=null이면 전체 조회로 repo에 null 전달 + mindmapId로 그룹핑한 결과를 반환")
+        void searchEpisodes_Success_WhenSearchNull() {
+            var m1 = mock(com.yat2.episode.mindmap.Mindmap.class);
+            UUID m1Id = UUID.randomUUID();
+            when(m1.getId()).thenReturn(m1Id);
+            when(m1.getName()).thenReturn("마인드맵1");
+            when(m1.isShared()).thenReturn(true);
+
+            MindmapParticipant p1 = mock(MindmapParticipant.class);
+            when(p1.getMindmap()).thenReturn(m1);
+
+            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1));
+
+            UUID e1Id = UUID.randomUUID();
+            Episode e1 = Episode.create(e1Id, m1Id);
+
+            EpisodeStar s1 = mock(EpisodeStar.class);
+            when(s1.getEpisode()).thenReturn(e1);
+            when(s1.getCompetencyTypeIds()).thenReturn(null);
+
+            when(episodeStarRepository.searchEpisodes(userId, List.of(m1Id), null)).thenReturn(List.of(s1));
+
+            EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.ALL, null);
+
+            List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).mindmapId()).isEqualTo(m1Id);
+            assertThat(result.get(0).mindmapName()).isEqualTo("마인드맵1");
+            assertThat(result.get(0).isShared()).isTrue();
+            assertThat(result.get(0).episodes()).hasSize(1);
+            assertThat(result.get(0).episodes().get(0).nodeId()).isEqualTo(e1Id);
+
+            verify(episodeStarRepository).searchEpisodes(userId, List.of(m1Id), null);
+        }
+
+
+        @Test
+        @DisplayName("성공: search='   redis  '이면 trim되어 'redis'로 전달")
+        void searchEpisodes_TrimKeyword() {
+            var m1 = mock(com.yat2.episode.mindmap.Mindmap.class);
+            UUID m1Id = UUID.randomUUID();
+            when(m1.getId()).thenReturn(m1Id);
+            when(m1.getName()).thenReturn("마인드맵1");
+            when(m1.isShared()).thenReturn(false);
+
+            MindmapParticipant p1 = mock(MindmapParticipant.class);
+            when(p1.getMindmap()).thenReturn(m1);
+
+            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1));
+
+            UUID e1Id = UUID.randomUUID();
+            Episode e1 = Episode.create(e1Id, m1Id);
+
+            EpisodeStar s1 = mock(EpisodeStar.class);
+            when(s1.getEpisode()).thenReturn(e1);
+            when(s1.getCompetencyTypeIds()).thenReturn(null);
+
+            when(episodeStarRepository.searchEpisodes(userId, List.of(m1Id), "redis")).thenReturn(List.of(s1));
+
+            EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.ALL, "   redis  ");
+
+            List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
+
+            assertThat(result).hasSize(1);
+            verify(episodeStarRepository).searchEpisodes(userId, List.of(m1Id), "redis");
+        }
+
+
+        @Test
+        @DisplayName("성공: episodeStars가 비면 빈 리스트 반환")
+        void searchEpisodes_ReturnsEmpty_WhenNoStars() {
+            var m1 = mock(com.yat2.episode.mindmap.Mindmap.class);
+            UUID m1Id = UUID.randomUUID();
+            when(m1.getId()).thenReturn(m1Id);
+
+            MindmapParticipant p1 = mock(MindmapParticipant.class);
+            when(p1.getMindmap()).thenReturn(m1);
+
+            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1));
+
+            when(episodeStarRepository.searchEpisodes(userId, List.of(m1Id), "k")).thenReturn(List.of());
+
+            EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.ALL, "k");
+
+            List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: 서로 다른 mindmap의 결과를 mindmapId 기준으로 그룹핑한다")
+        void searchEpisodes_GroupByMindmap() {
+            var m1 = mock(com.yat2.episode.mindmap.Mindmap.class);
+            UUID m1Id = UUID.randomUUID();
+            when(m1.getId()).thenReturn(m1Id);
+            when(m1.getName()).thenReturn("m1");
+            when(m1.isShared()).thenReturn(true);
+
+            var m2 = mock(com.yat2.episode.mindmap.Mindmap.class);
+            UUID m2Id = UUID.randomUUID();
+            when(m2.getId()).thenReturn(m2Id);
+            when(m2.getName()).thenReturn("m2");
+            when(m2.isShared()).thenReturn(false);
+
+            MindmapParticipant p1 = mock(MindmapParticipant.class);
+            when(p1.getMindmap()).thenReturn(m1);
+            MindmapParticipant p2 = mock(MindmapParticipant.class);
+            when(p2.getMindmap()).thenReturn(m2);
+
+            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1, p2));
+
+            UUID e1Id = UUID.randomUUID();
+            Episode e1 = Episode.create(e1Id, m1Id);
+            EpisodeStar s1 = mock(EpisodeStar.class);
+            when(s1.getEpisode()).thenReturn(e1);
+            when(s1.getCompetencyTypeIds()).thenReturn(null);
+
+            UUID e2Id = UUID.randomUUID();
+            Episode e2 = Episode.create(e2Id, m2Id);
+            EpisodeStar s2 = mock(EpisodeStar.class);
+            when(s2.getEpisode()).thenReturn(e2);
+            when(s2.getCompetencyTypeIds()).thenReturn(null);
+
+            when(episodeStarRepository.searchEpisodes(eq(userId), anyList(), eq("k"))).thenReturn(List.of(s1, s2));
+
+            EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.ALL, "k");
+
+            List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
+
+            assertThat(result).hasSize(2);
+            assertThat(result).extracting(MindmapEpisodeRes::mindmapId).containsExactlyInAnyOrder(m1Id, m2Id);
+
+            MindmapEpisodeRes r1 = result.stream().filter(r -> r.mindmapId().equals(m1Id)).findFirst().orElseThrow();
+            MindmapEpisodeRes r2 = result.stream().filter(r -> r.mindmapId().equals(m2Id)).findFirst().orElseThrow();
+
+            assertThat(r1.mindmapName()).isEqualTo("m1");
+            assertThat(r1.isShared()).isTrue();
+            assertThat(r1.episodes()).hasSize(1);
+
+            assertThat(r2.mindmapName()).isEqualTo("m2");
+            assertThat(r2.isShared()).isFalse();
+            assertThat(r2.episodes()).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("성공: mindmapType=PRIVATE이면 shared=false로 participants를 조회한다")
+        void searchEpisodes_Private() {
+            when(mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, false)).thenReturn(
+                    List.of());
+
+            EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.PRIVATE, null);
+
+            List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
+
+            assertThat(result).isEmpty();
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByCreatedAtDesc(userId, false);
+        }
+
+
+        @Test
+        @DisplayName("성공: mindmapType=PUBLIC이면 shared=true로 participants를 조회한다")
+        void searchEpisodes_Public() {
+            when(mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, true)).thenReturn(
+                    List.of());
+
+            EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.PUBLIC, null);
+
+            List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
+
+            assertThat(result).isEmpty();
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByCreatedAtDesc(userId, true);
         }
 
     }

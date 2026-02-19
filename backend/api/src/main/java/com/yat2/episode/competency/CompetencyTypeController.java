@@ -16,7 +16,6 @@ import com.yat2.episode.auth.security.Public;
 import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
-import com.yat2.episode.mindmap.MindmapAccessValidator;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,7 +24,6 @@ import com.yat2.episode.mindmap.MindmapAccessValidator;
 public class CompetencyTypeController {
 
     private final CompetencyTypeService competencyTypeService;
-    private final MindmapAccessValidator mindmapAccessValidator;
 
     @Public
     @Operation(summary = "역량 리스트 조회")
