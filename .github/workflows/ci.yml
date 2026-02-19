@@ -88,14 +88,13 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Get pnpm store path
-        id: pnpm-store
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - name: Set pnpm store dir
+        run: pnpm config set store-dir ~/.pnpm-store
 
       - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('backend/yjs-runner/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
@@ -104,10 +103,10 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build
-        run: pnpm build --if-present
+        run: pnpm build
 
       - name: Test
-        run: pnpm test --if-present
+        run: pnpm test
 
   build_frontend:
     name: Build Frontend
