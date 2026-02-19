@@ -23,7 +23,7 @@ export default function MindmapDetailPage() {
         };
     }, [userInfo?.userId, userInfo?.nickname]);
 
-    const { doc, provider, isInitialized } = useMindmapSession({
+    const { doc, provider, isSynced } = useMindmapSession({
         mindmapId,
         enableAwareness: true,
         userInfo,
@@ -37,13 +37,15 @@ export default function MindmapDetailPage() {
         [],
     );
 
-    if (!mindmapId) return <div>잘못된 접근입니다.</div>;
+    if (!mindmapId) {
+        throw new Error("올바른 접근이 아닙니다.");
+    }
 
-    if (!isInitialized) {
+    if (!isSynced) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <p>.</p>
-                <Spinner contents={"마인드맵 데이터를 불러오는 중입니다.."} />
+            <div className="h-full w-full flex justify-center items-center">
+                Spinner
+                <Spinner contents={"서버에서 마인드맵 데이터를 불러오는 중입니다..."} />
             </div>
         );
     }
