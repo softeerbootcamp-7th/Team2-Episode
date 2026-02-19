@@ -161,3 +161,4 @@ collaboration:
       keep-alive-seconds: 30
       allow-core-thread-timeout: true
       drop-log-interval-ms: 1000
+      update-append-max-retries: 5

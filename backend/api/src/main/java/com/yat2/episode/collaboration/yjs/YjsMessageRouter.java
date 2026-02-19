@@ -1,7 +1,6 @@
 package com.yat2.episode.collaboration.yjs;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -9,30 +8,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 
 import com.yat2.episode.collaboration.SessionRegistry;
-import com.yat2.episode.collaboration.redis.JobStreamStore;
-import com.yat2.episode.collaboration.redis.UpdateStreamStore;
+import com.yat2.episode.collaboration.worker.UpdateAppender;
 
 @Slf4j
 @Component
 public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
-    private final UpdateStreamStore updateStreamStore;
-    private final Executor redisExecutor;
-    private final JobStreamStore jobStreamStore;
+    private final UpdateAppender updateAppender;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
 
-    public YjsMessageRouter(
-            SessionRegistry sessionRegistry, UpdateStreamStore updateStreamStore,
-            @Qualifier("redisExecutor") Executor redisExecutor, JobStreamStore jobStreamStore
-    ) {
+    public YjsMessageRouter(SessionRegistry sessionRegistry, UpdateAppender updateAppender) {
         this.sessionRegistry = sessionRegistry;
-        this.updateStreamStore = updateStreamStore;
-        this.redisExecutor = redisExecutor;
-        this.jobStreamStore = jobStreamStore;
+        this.updateAppender = updateAppender;
     }
 
     public void routeIncoming(UUID roomId, WebSocketSession sender, byte[] payload) {
@@ -43,7 +33,7 @@ public class YjsMessageRouter {
 
         if (YjsProtocolUtil.isUpdateFrame(payload)) {
             sessionRegistry.broadcast(roomId, sender, payload);
-            saveUpdateAsync(roomId, payload);
+            updateAppender.appendUpdateAsync(roomId, payload);
             return;
         }
 
@@ -117,30 +107,6 @@ public class YjsMessageRouter {
 
         if (roomSyncs.isEmpty()) {
             pendingSyncs.remove(roomId, roomSyncs);
-        }
-    }
-
-    private void saveUpdateAsync(UUID roomId, byte[] payload) {
-        try {
-            redisExecutor.execute(() -> {
-                try {
-                    updateStreamStore.appendUpdate(roomId, payload);
-                } catch (Exception e) {
-                    log.warn("Redis append failed. roomId={}", roomId, e);
-                    tryPublishSync(roomId);
-                }
-            });
-        } catch (Exception e) {
-            log.error("Redis schedule failed. roomId={}", roomId, e);
-            tryPublishSync(roomId);
-        }
-    }
-
-    private void tryPublishSync(UUID roomId) {
-        try {
-            jobStreamStore.publishSync(roomId);
-        } catch (Exception e) {
-            log.error("Sync publish failed. roomId={}", roomId, e);
         }
     }
 
