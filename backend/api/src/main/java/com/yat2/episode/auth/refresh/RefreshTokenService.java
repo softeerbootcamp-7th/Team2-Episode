@@ -15,6 +15,8 @@ import java.util.Base64;
 import com.yat2.episode.auth.jwt.AuthJwtProperties;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
+import com.yat2.episode.user.User;
+import com.yat2.episode.user.UserRepository;
 
 @Slf4j
 @Service
@@ -23,13 +25,15 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthJwtProperties authJwtProperties;
+    private final UserRepository userRepository;
 
     @Transactional
     public void save(Long userId, String refreshToken) {
         String tokenHash = hash(refreshToken);
         LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMillis(authJwtProperties.refreshTokenExpiry()));
-
-        refreshTokenRepository.upsertByUserId(userId, tokenHash, expiresAt);
+        User userRef = userRepository.getReferenceById(userId);
+        RefreshToken newRefreshToken = new RefreshToken(userRef, tokenHash, expiresAt);
+        refreshTokenRepository.save(newRefreshToken);
     }
 
     @Transactional(readOnly = true)
