@@ -1,15 +1,18 @@
-import 'dotenv/config';
-import Redis from 'ioredis';
-import {S3SnapshotStorage} from './infrastructure/S3SnapshotStorage';
-import {RedisUpdateRepository} from './infrastructure/UpdateRepository';
-import {DefaultYjsProcessor} from './domain/YjsProcessor';
-import {SnapshotService} from './services/SnapshotService';
-import {RedisStreamJobConsumer} from './infrastructure/JobConsumer';
-import {SnapshotWorker} from './worker/SnapshotWorker';
+import "dotenv/config";
+import Redis from "ioredis";
+import { S3SnapshotStorage } from "./infrastructure/S3SnapshotStorage";
+import { RedisUpdateRepository } from "./infrastructure/UpdateRepository";
+import { DefaultYjsProcessor } from "./domain/YjsProcessor";
+import { SnapshotService } from "./services/SnapshotService";
+import { RedisStreamJobConsumer } from "./infrastructure/JobConsumer";
+import { SnapshotWorker } from "./worker/SnapshotWorker";
+import { MindmapTicketIssuer } from "./infrastructure/MindmapTicketIssuer";
+import { WebsocketSyncClient } from "./infrastructure/WebsocketSyncClient";
 
 const redis = new Redis({
     host: process.env.REDIS_HOST!,
     port: Number(process.env.REDIS_PORT ?? 6379),
+    password: process.env.REDIS_PASSWORD,
 });
 
 const updateRepo = new RedisUpdateRepository(redis, {
@@ -23,12 +26,26 @@ const storage = new S3SnapshotStorage({
     endpoint: process.env.S3_ENDPOINT,
     accessKey: process.env.S3_ACCESS_KEY,
     secretKey: process.env.S3_SECRET_KEY,
-    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
 });
 
 const yjs = new DefaultYjsProcessor();
 
-const service = new SnapshotService({updateRepo, yjs, storage});
+const ttl = Number(process.env.TOKEN_TTL_SEC);
+
+const ticketIssuer = new MindmapTicketIssuer(
+    process.env.JWT_MINDMAP_SECRET!,
+    Number.isFinite(ttl) && ttl > 0 ? ttl : undefined,
+);
+
+const syncClient = new WebsocketSyncClient(ticketIssuer, process.env.WS_BASE_URL!);
+
+const service = new SnapshotService({
+    updateRepo,
+    yjs,
+    storage,
+    syncClient,
+});
 
 const consumer = new RedisStreamJobConsumer(redis, {
     jobStreamKey: process.env.JOB_STREAM_KEY!,
@@ -54,13 +71,13 @@ async function main() {
 
 main();
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
     worker.stop();
     await redis.quit();
     process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+process.on("SIGTERM", async () => {
     worker.stop();
     await redis.quit();
     process.exit(0);

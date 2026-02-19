@@ -14,19 +14,15 @@ import org.springframework.web.socket.WebSocketSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executor;
 
 import com.yat2.episode.collaboration.SessionRegistry;
-import com.yat2.episode.collaboration.redis.JobStreamStore;
-import com.yat2.episode.collaboration.redis.UpdateStreamStore;
+import com.yat2.episode.collaboration.worker.JobPublisher;
+import com.yat2.episode.collaboration.worker.UpdateAppender;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -42,19 +38,16 @@ class YjsMessageRouterTest {
     SessionRegistry sessionRegistry;
 
     @Mock
-    UpdateStreamStore updateStreamStore;
+    JobPublisher jobPublisher;
 
     @Mock
-    JobStreamStore jobStreamStore;
-
-    @Mock
-    Executor redisExecutor;
+    UpdateAppender updateAppender;
 
     YjsMessageRouter router;
 
     @BeforeEach
     void setUp() {
-        router = new YjsMessageRouter(sessionRegistry, updateStreamStore, redisExecutor, jobStreamStore);
+        router = new YjsMessageRouter(sessionRegistry, updateAppender);
     }
 
     private static byte[] awarenessFrame() {
@@ -95,9 +88,8 @@ class YjsMessageRouterTest {
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), captor.capture());
             assertArrayEquals(payload, captor.getValue());
 
-            verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(updateStreamStore);
-            verifyNoInteractions(jobStreamStore);
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(jobPublisher);
             verifyNoMoreInteractions(sessionRegistry);
         }
 
@@ -112,9 +104,8 @@ class YjsMessageRouterTest {
             router.routeIncoming(roomId, sender, payload);
 
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
-            verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(updateStreamStore);
-            verifyNoInteractions(jobStreamStore);
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(jobPublisher);
         }
     }
 
@@ -123,8 +114,8 @@ class YjsMessageRouterTest {
     class UpdateTests {
 
         @Test
-        @DisplayName("Update 프레임이면 broadcast 후 Executor에 저장 task를 넣고, task 실행 시 Redis에 append한다")
-        void routeIncoming_whenUpdate_broadcastsAndAppendsAsync() {
+        @DisplayName("Update 프레임이면 broadcast 후 UpdateAppender에 appendUpdateAsync를 위임한다")
+        void routeIncoming_whenUpdate_broadcastsAndDelegatesToAppender() {
             UUID roomId = UUID.randomUUID();
             WebSocketSession sender = mock(WebSocketSession.class);
 
@@ -136,98 +127,29 @@ class YjsMessageRouterTest {
             verify(sessionRegistry).broadcast(eq(roomId), eq(sender), broadcastCaptor.capture());
             assertArrayEquals(payload, broadcastCaptor.getValue());
 
-            ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
-            verify(redisExecutor).execute(taskCaptor.capture());
+            ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
+            verify(updateAppender).appendUpdateAsync(eq(roomId), payloadCaptor.capture());
+            assertArrayEquals(payload, payloadCaptor.getValue());
 
-            taskCaptor.getValue().run();
-
-            ArgumentCaptor<byte[]> redisCaptor = ArgumentCaptor.forClass(byte[].class);
-            verify(updateStreamStore).appendUpdate(eq(roomId), redisCaptor.capture());
-            assertArrayEquals(payload, redisCaptor.getValue());
-
-            verify(jobStreamStore, never()).publishSync(any());
+            verifyNoInteractions(jobPublisher);
+            verifyNoMoreInteractions(sessionRegistry);
         }
+    }
+
+    @Nested
+    @DisplayName("Snapshot 트리거")
+    class SnapshotTests {
 
         @Test
-        @DisplayName("Redis append 중 예외가 발생해도 task 실행이 죽지 않고 publishSync를 시도한다")
-        void routeIncoming_whenUpdate_redisThrows_doesNotCrash_andPublishSync() {
+        @DisplayName("executeSnapshot은 JobPublisher.publishSnapshotAsync를 위임한다")
+        void executeSnapshot_delegatesToPublisher() {
             UUID roomId = UUID.randomUUID();
-            WebSocketSession sender = mock(WebSocketSession.class);
 
-            byte[] payload = updateFrame();
+            jobPublisher.publishSnapshotAsync(roomId);
 
-            doThrow(new RuntimeException("redis down")).when(updateStreamStore)
-                    .appendUpdate(eq(roomId), any(byte[].class));
-
-            assertThatCode(() -> router.routeIncoming(roomId, sender, payload)).doesNotThrowAnyException();
-
-            ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
-            verify(redisExecutor).execute(taskCaptor.capture());
-
-            assertThatCode(() -> taskCaptor.getValue().run()).doesNotThrowAnyException();
-
-            verify(updateStreamStore).appendUpdate(eq(roomId), any(byte[].class));
-            verify(jobStreamStore).publishSync(eq(roomId));
-        }
-
-        @Test
-        @DisplayName("append 실패 후 publishSync도 예외면 task가 죽지 않는다(tryPublishSync 보호)")
-        void routeIncoming_whenUpdate_appendThrows_andPublishSyncThrows_doesNotCrash() {
-            UUID roomId = UUID.randomUUID();
-            WebSocketSession sender = mock(WebSocketSession.class);
-
-            byte[] payload = updateFrame();
-
-            doThrow(new RuntimeException("redis down")).when(updateStreamStore)
-                    .appendUpdate(eq(roomId), any(byte[].class));
-
-            doThrow(new RuntimeException("job stream down")).when(jobStreamStore).publishSync(eq(roomId));
-
-            router.routeIncoming(roomId, sender, payload);
-
-            ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
-            verify(redisExecutor).execute(taskCaptor.capture());
-
-            assertThatCode(() -> taskCaptor.getValue().run()).doesNotThrowAnyException();
-
-            verify(updateStreamStore).appendUpdate(eq(roomId), any(byte[].class));
-            verify(jobStreamStore).publishSync(eq(roomId));
-        }
-
-        @Test
-        @DisplayName("Executor 스케줄링 자체가 실패해도 routeIncoming 흐름이 죽지 않고 publishSync를 시도한다")
-        void routeIncoming_whenExecutorThrows_doesNotCrash_andPublishSync() {
-            UUID roomId = UUID.randomUUID();
-            WebSocketSession sender = mock(WebSocketSession.class);
-
-            byte[] payload = updateFrame();
-
-            doThrow(new RuntimeException("executor rejected")).when(redisExecutor).execute(any(Runnable.class));
-
-            assertThatCode(() -> router.routeIncoming(roomId, sender, payload)).doesNotThrowAnyException();
-
-            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
-            verifyNoInteractions(updateStreamStore);
-            verify(jobStreamStore).publishSync(eq(roomId));
-        }
-
-        @Test
-        @DisplayName("Executor 스케줄 실패 후 publishSync도 실패해도 routeIncoming은 죽지 않는다")
-        void routeIncoming_whenExecutorThrows_andPublishSyncThrows_doesNotCrash() {
-            UUID roomId = UUID.randomUUID();
-            WebSocketSession sender = mock(WebSocketSession.class);
-
-            byte[] payload = updateFrame();
-
-            doThrow(new RuntimeException("executor rejected")).when(redisExecutor).execute(any(Runnable.class));
-
-            doThrow(new RuntimeException("job stream down")).when(jobStreamStore).publishSync(eq(roomId));
-
-            assertThatCode(() -> router.routeIncoming(roomId, sender, payload)).doesNotThrowAnyException();
-
-            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
-            verifyNoInteractions(updateStreamStore);
-            verify(jobStreamStore).publishSync(eq(roomId));
+            verify(jobPublisher).publishSnapshotAsync(eq(roomId));
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(sessionRegistry);
         }
     }
 
@@ -254,9 +176,8 @@ class YjsMessageRouterTest {
             assertArrayEquals(YjsProtocolUtil.emptySync2Frame(), payloadCaptor.getValue());
 
             verify(sessionRegistry, never()).broadcast(any(), any(), any());
-            verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(updateStreamStore);
-            verifyNoInteractions(jobStreamStore);
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(jobPublisher);
         }
 
         @Test
@@ -271,11 +192,17 @@ class YjsMessageRouterTest {
             when(p1.getId()).thenReturn("P1");
 
             WebSocketSession p2 = mock(WebSocketSession.class);
+            when(p2.getId()).thenReturn("P2");
 
             when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(new ArrayList<>(List.of(p2, p1)));
 
-            lenient().when(sessionRegistry.getConnectedAt(p1)).thenReturn(10L);
-            lenient().when(sessionRegistry.getConnectedAt(p2)).thenReturn(20L);
+            // ✅ 불필요 stubbing 방지: 한 줄 stubbing으로 connectedAt 값 제공
+            when(sessionRegistry.getConnectedAt(any(WebSocketSession.class))).thenAnswer(inv -> {
+                WebSocketSession s = inv.getArgument(0);
+                if ("P1".equals(s.getId())) return 10L;
+                if ("P2".equals(s.getId())) return 20L;
+                return 0L;
+            });
 
             byte[] sync1 = sync1Frame();
 
@@ -283,15 +210,14 @@ class YjsMessageRouterTest {
 
             router.routeIncoming(roomId, requester, sync1);
 
-            verify(sessionRegistry).findAllAlivePeers(roomId, "REQ");
             verify(sessionRegistry).unicast(roomId, "P1", sync1);
             verify(sessionRegistry, never()).unicast(eq(roomId), eq("P2"), any());
-            verify(sessionRegistry, never()).broadcast(any(), any(), any());
 
-            verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(updateStreamStore);
-            verifyNoInteractions(jobStreamStore);
+            verify(sessionRegistry, never()).broadcast(any(), any(), any());
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(jobPublisher);
         }
+
 
         @Test
         @DisplayName("Sync1에서 첫 provider unicast 실패하면 다음 provider로 넘어간다")
@@ -323,9 +249,8 @@ class YjsMessageRouterTest {
             order.verify(sessionRegistry).unicast(eq(roomId), eq("P1"), any(byte[].class));
             order.verify(sessionRegistry).unicast(eq(roomId), eq("P2"), any(byte[].class));
 
-            verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(updateStreamStore);
-            verifyNoInteractions(jobStreamStore);
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(jobPublisher);
         }
 
         @Test
@@ -340,7 +265,6 @@ class YjsMessageRouterTest {
             when(provider.getId()).thenReturn("P1");
 
             when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(new ArrayList<>(List.of(provider)));
-
             when(sessionRegistry.unicast(eq(roomId), eq("P1"), any(byte[].class))).thenReturn(true);
 
             router.routeIncoming(roomId, requester, sync1Frame());
@@ -352,9 +276,8 @@ class YjsMessageRouterTest {
 
             verify(sessionRegistry, never()).broadcast(any(), any(), any());
 
-            verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(updateStreamStore);
-            verifyNoInteractions(jobStreamStore);
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(jobPublisher);
         }
 
         @Test
@@ -369,7 +292,6 @@ class YjsMessageRouterTest {
             when(provider.getId()).thenReturn("P1");
 
             when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(new ArrayList<>(List.of(provider)));
-
             when(sessionRegistry.unicast(eq(roomId), eq("P1"), any(byte[].class))).thenReturn(true);
 
             router.routeIncoming(roomId, requester, sync1Frame());
@@ -380,9 +302,8 @@ class YjsMessageRouterTest {
 
             verify(sessionRegistry, never()).unicast(eq(roomId), eq("REQ"), any(byte[].class));
 
-            verifyNoInteractions(redisExecutor);
-            verifyNoInteractions(updateStreamStore);
-            verifyNoInteractions(jobStreamStore);
+            verifyNoInteractions(updateAppender);
+            verifyNoInteractions(jobPublisher);
         }
     }
 }

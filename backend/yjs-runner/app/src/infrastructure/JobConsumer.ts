@@ -1,7 +1,7 @@
-import type Redis from 'ioredis';
-import {Job, JobType} from '../contracts/Job';
-import {RedisStreamEntry, RedisStreamReadResult} from "../contracts/RedisStreamReadResult";
-import {StreamPendingEntries} from "../contracts/StreamPendingEntries";
+import type Redis from "ioredis";
+import { Job, JobType } from "../contracts/Job";
+import { RedisStreamEntry, RedisStreamReadResult } from "../contracts/RedisStreamReadResult";
+import { StreamPendingEntries } from "../contracts/StreamPendingEntries";
 
 export interface JobConsumer {
     init(): Promise<void>;
@@ -9,6 +9,8 @@ export interface JobConsumer {
     read(blockMs: number, count?: number): Promise<Job[]>;
 
     ack(entryId: string[]): Promise<void>;
+
+    del(messageIds: string[]): Promise<number>;
 }
 
 export type RedisJobConsumerConfig = {
@@ -24,55 +26,52 @@ export type RedisJobConsumerConfig = {
 export class RedisStreamJobConsumer implements JobConsumer {
     constructor(
         private readonly redis: Redis,
-        private readonly config: RedisJobConsumerConfig
-    ) {
-    }
+        private readonly config: RedisJobConsumerConfig,
+    ) {}
 
     async init(): Promise<void> {
         try {
-            await this.redis.xgroup(
-                'CREATE',
-                this.config.jobStreamKey,
-                this.config.groupName,
-                '$',
-                'MKSTREAM'
-            );
+            await this.redis.xgroup("CREATE", this.config.jobStreamKey, this.config.groupName, "$", "MKSTREAM");
         } catch (err: any) {
-            if (!err.message.includes('BUSYGROUP')) {
+            if (!err.message.includes("BUSYGROUP")) {
                 throw err;
             }
         }
     }
 
     async read(blockMs: number, count: number = 1): Promise<Job[]> {
-        const pendingResults = await this.redis.xreadgroup(
-            'GROUP', this.config.groupName, this.config.consumerName,
-            'COUNT', count,
-            'STREAMS', this.config.jobStreamKey,
-            '0'
-        ) as RedisStreamReadResult | null;
+        const pendingResults = (await this.redis.xreadgroup(
+            "GROUP",
+            this.config.groupName,
+            this.config.consumerName,
+            "COUNT",
+            count,
+            "STREAMS",
+            this.config.jobStreamKey,
+            "0",
+        )) as RedisStreamReadResult | null;
 
         if (pendingResults && pendingResults.length > 0 && pendingResults[0][1].length > 0) {
             const pendingJobs = await this.processPending(count, pendingResults);
             if (pendingJobs !== null) return pendingJobs;
         }
 
-        const results = await this.redis.xreadgroup(
-            'GROUP',
+        const results = (await this.redis.xreadgroup(
+            "GROUP",
             this.config.groupName,
             this.config.consumerName,
-            'COUNT',
+            "COUNT",
             count,
-            'BLOCK',
+            "BLOCK",
             blockMs,
-            'STREAMS',
+            "STREAMS",
             this.config.jobStreamKey,
-            '>'
-        ) as RedisStreamReadResult | null;
+            ">",
+        )) as RedisStreamReadResult | null;
 
         if (!results || results.length < 1) return [];
 
-        const {jobs, badEntryIds} = this.parseEntries(results);
+        const { jobs, badEntryIds } = this.parseEntries(results);
         if (badEntryIds.length > 0) {
             await this.ack(badEntryIds);
         }
@@ -82,25 +81,27 @@ export class RedisStreamJobConsumer implements JobConsumer {
     async ack(entryId: string[]): Promise<void> {
         if (entryId == null || entryId.length === 0) return;
 
-        await this.redis.xack(
-            this.config.jobStreamKey,
-            this.config.groupName,
-            ...entryId
-        );
+        await this.redis.xack(this.config.jobStreamKey, this.config.groupName, ...entryId);
+    }
+
+    async del(messageIds: string[]): Promise<number> {
+        if (messageIds.length === 0) return 0;
+        return await this.redis.xdel(this.config.jobStreamKey, ...messageIds);
     }
 
     private async processPending(count: number = 1, pendingResults: RedisStreamReadResult) {
         const [, entries] = pendingResults[0];
         const entryIds = entries.map(([id]) => id);
 
-        const pendingDetails = await this.redis.xpending(
+        const pendingDetails = (await this.redis.xpending(
             this.config.jobStreamKey,
             this.config.groupName,
-            'IDLE', 0,
+            "IDLE",
+            0,
             entryIds[0],
             entryIds[entryIds.length - 1],
-            count
-        ) as StreamPendingEntries;
+            count,
+        )) as StreamPendingEntries;
 
         const validEntries: RedisStreamEntry[] = [];
         const idsToAbandon: string[] = [];
@@ -110,7 +111,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             deliveryById.set(p[0], Number(p[3]));
         }
 
-        entries.forEach((entry,) => {
+        entries.forEach((entry) => {
             const id = entry[0];
             const deliveryCount = deliveryById.get(id);
             if (deliveryCount == null) return;
@@ -127,7 +128,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
         }
 
         if (validEntries.length > 0) {
-            const {jobs, badEntryIds} = this.parseEntries([[this.config.jobStreamKey, validEntries]]);
+            const { jobs, badEntryIds } = this.parseEntries([[this.config.jobStreamKey, validEntries]]);
             if (badEntryIds.length > 0) {
                 await this.ack(badEntryIds);
             }
@@ -163,18 +164,14 @@ export class RedisStreamJobConsumer implements JobConsumer {
                 jobs.push({
                     entryId: entryId,
                     roomId: roomId,
-                    type: rawType
+                    type: rawType,
                 });
             } catch (error) {
-                console.error(
-                    `[RedisJobConsumer] 파싱 실패 entryId=${entryId}`,
-                    error
-                );
+                console.error(`[RedisJobConsumer] 파싱 실패 entryId=${entryId}`, error);
                 badEntryIds.push(entryId);
             }
         }
 
-        return {jobs, badEntryIds};
+        return { jobs, badEntryIds };
     }
 }
-
