@@ -158,13 +158,18 @@ public class EpisodeService {
     public void updateStar(UUID nodeId, long userId, StarUpdateReq starUpdateReq) {
         validateCompetencyIds(starUpdateReq.competencyTypeIds());
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
-        LocalDate newStart = isDeleteDate(starUpdateReq.startDate()) ? null :
-                             resolvePatchedDate(getLocalDate(starUpdateReq.startDate()), episodeStar.getStartDate());
-        LocalDate newEnd = isDeleteDate(starUpdateReq.endDate()) ? null :
-                           resolvePatchedDate(getLocalDate(starUpdateReq.endDate()), episodeStar.getEndDate());
+        LocalDate newStart = calculateNewDate(starUpdateReq.startDate(), episodeStar.getStartDate());
+        LocalDate newEnd = calculateNewDate(starUpdateReq.endDate(), episodeStar.getEndDate());
         validateDates(newStart, newEnd);
 
         episodeStar.update(starUpdateReq, newStart, newEnd);
+    }
+
+    private LocalDate calculateNewDate(String dateString, LocalDate existingDate) {
+        if (isDeleteDate(dateString)) {
+            return null;
+        }
+        return resolvePatchedDate(getLocalDate(dateString), existingDate);
     }
 
     @Transactional
