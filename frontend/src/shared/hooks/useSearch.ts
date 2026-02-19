@@ -17,7 +17,7 @@ export default function useSearch({ onSearchChange, onSearchSubmit }: UseSearchP
     };
 
     const handleSearch = () => {
-        if (value && onSearchSubmit) {
+        if (onSearchSubmit) {
             onSearchSubmit(value);
         }
     };
