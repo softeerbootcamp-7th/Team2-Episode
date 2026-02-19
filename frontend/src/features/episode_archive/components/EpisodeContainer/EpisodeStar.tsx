@@ -1,4 +1,5 @@
 import EpisodeItem from "@/features/episode_archive/components/episodeContainer/EpisodeItem";
+import { useClearEpisode } from "@/features/episode_archive/hooks/useClearEpisode";
 import { EpisodeDetail } from "@/features/episode_archive/types/episode";
 import Chip from "@/shared/components/chip/Chip";
 import Icon from "@/shared/components/icon/Icon";
@@ -11,9 +12,21 @@ type EpisodeStarProps = {
 const ICON_COLOR = "var(--color-text-placeholder)";
 
 export default function EpisodeStar({ detail, onEditClick }: EpisodeStarProps) {
+    const { mutate: clearEpisode, isPending } = useClearEpisode(detail.nodeId);
     const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         onEditClick();
+    };
+
+    const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+
+        // 런타임 보호: 이미 삭제 중이면 중단
+        if (isPending) return;
+
+        if (window.confirm("에피소드의 모든 내용(STAR, 태그, 날짜)이 초기화됩니다. 계속하시겠습니까?")) {
+            clearEpisode();
+        }
     };
 
     return (
@@ -36,7 +49,7 @@ export default function EpisodeStar({ detail, onEditClick }: EpisodeStarProps) {
                 <button onClick={handleEditClick} className="p-1 hover:bg-gray-50 rounded-lg transition-colors">
                     <Icon name="ic_nodemenu_edit" color={ICON_COLOR} size={20} />
                 </button>
-                <button className="p-1 hover:bg-gray-50 rounded-lg transition-colors">
+                <button onClick={handleDeleteClick} className="p-1 hover:bg-gray-50 rounded-lg transition-colors">
                     <Icon name="ic_nodemenu_delete" color={ICON_COLOR} size={20} />
                 </button>
             </div>
