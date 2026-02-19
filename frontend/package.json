@@ -7,8 +7,9 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "preview": "vite preview --config vite.production.ts",
-        "dev": "vite --config vite.development.ts --host",
+        "dev": "vite --config vite.development.ts --host --host",
         "build": "tsc && vite build --config vite.production.ts",
+        "yjs:server": "HOST=0.0.0.0 PORT=1234 npx y-websocket",
         "yjs:server": "HOST=0.0.0.0 PORT=1234 npx y-websocket"
     },
     "dependencies": {
