@@ -10,21 +10,18 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.yat2.episode.collaboration.SessionRegistry;
-import com.yat2.episode.collaboration.worker.JobPublisher;
 import com.yat2.episode.collaboration.worker.UpdateAppender;
 
 @Slf4j
 @Component
 public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
-    private final JobPublisher jobPublisher;
     private final UpdateAppender updateAppender;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
 
-    public YjsMessageRouter(SessionRegistry sessionRegistry, JobPublisher jobPublisher, UpdateAppender updateAppender) {
+    public YjsMessageRouter(SessionRegistry sessionRegistry, UpdateAppender updateAppender) {
         this.sessionRegistry = sessionRegistry;
-        this.jobPublisher = jobPublisher;
         this.updateAppender = updateAppender;
     }
 
@@ -36,7 +33,7 @@ public class YjsMessageRouter {
 
         if (YjsProtocolUtil.isUpdateFrame(payload)) {
             sessionRegistry.broadcast(roomId, sender, payload);
-            saveUpdateAsync(roomId, payload);
+            updateAppender.appendUpdateAsync(roomId, payload);
             return;
         }
 
@@ -51,10 +48,6 @@ public class YjsMessageRouter {
         }
 
         sessionRegistry.broadcast(roomId, sender, payload);
-    }
-
-    public void executeSnapshot(UUID roomId) {
-        jobPublisher.publishSnapshotAsync(roomId);
     }
 
     private void handleSync1(UUID roomId, WebSocketSession requester, byte[] payload) {
@@ -115,10 +108,6 @@ public class YjsMessageRouter {
         if (roomSyncs.isEmpty()) {
             pendingSyncs.remove(roomId, roomSyncs);
         }
-    }
-
-    private void saveUpdateAsync(UUID roomId, byte[] payload) {
-        updateAppender.appendUpdateAsync(roomId, payload);
     }
 
 }

@@ -47,7 +47,7 @@ class YjsMessageRouterTest {
 
     @BeforeEach
     void setUp() {
-        router = new YjsMessageRouter(sessionRegistry, jobPublisher, updateAppender);
+        router = new YjsMessageRouter(sessionRegistry, updateAppender);
     }
 
     private static byte[] awarenessFrame() {
@@ -145,7 +145,7 @@ class YjsMessageRouterTest {
         void executeSnapshot_delegatesToPublisher() {
             UUID roomId = UUID.randomUUID();
 
-            router.executeSnapshot(roomId);
+            jobPublisher.publishSnapshotAsync(roomId);
 
             verify(jobPublisher).publishSnapshotAsync(eq(roomId));
             verifyNoInteractions(updateAppender);

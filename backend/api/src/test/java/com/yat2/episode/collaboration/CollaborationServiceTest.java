@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.yat2.episode.collaboration.worker.JobPublisher;
 import com.yat2.episode.collaboration.yjs.YjsMessageRouter;
 import com.yat2.episode.global.constant.AttributeKeys;
 
@@ -41,11 +42,14 @@ class CollaborationServiceTest {
     @Mock
     YjsMessageRouter yjsMessageRouter;
 
+    @Mock
+    JobPublisher jobPublisher;
+
     CollaborationService service;
 
     @BeforeEach
     void setUp() {
-        service = new CollaborationService(sessionRegistry, yjsMessageRouter);
+        service = new CollaborationService(sessionRegistry, yjsMessageRouter, jobPublisher);
     }
 
     @Nested
@@ -88,7 +92,7 @@ class CollaborationServiceTest {
             order.verify(yjsMessageRouter).onDisconnect(roomId, "S-1");
             order.verify(sessionRegistry).removeSession(roomId, session);
 
-            verify(yjsMessageRouter, never()).executeSnapshot(any(UUID.class));
+            verify(jobPublisher, never()).publishSnapshotAsync(any(UUID.class));
             verifyNoMoreInteractions(yjsMessageRouter, sessionRegistry);
         }
 
@@ -107,10 +111,10 @@ class CollaborationServiceTest {
 
             service.handleDisconnect(session);
 
-            InOrder order = inOrder(yjsMessageRouter, sessionRegistry);
+            InOrder order = inOrder(yjsMessageRouter, sessionRegistry, jobPublisher);
             order.verify(yjsMessageRouter).onDisconnect(roomId, "S-1");
             order.verify(sessionRegistry).removeSession(roomId, session);
-            order.verify(yjsMessageRouter).executeSnapshot(roomId);
+            order.verify(jobPublisher).publishSnapshotAsync(roomId);
 
             verifyNoMoreInteractions(yjsMessageRouter, sessionRegistry);
         }
