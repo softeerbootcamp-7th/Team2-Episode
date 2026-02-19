@@ -1,4 +1,4 @@
-api.episode.io.kr {
+api.episode.io.kr, http://10.0.26.165 {
 
     encode zstd gzip
 
