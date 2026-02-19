@@ -5,7 +5,6 @@ type Props = {
     onSearch: (val: string) => void;
 };
 
-// 2. Props를 받아오도록 수정
 export default function EpisodeSearch({ onSearch }: Props) {
     return (
         <div className="flex items-center gap-3 flex-1 h-full min-w-0">
@@ -13,7 +12,8 @@ export default function EpisodeSearch({ onSearch }: Props) {
             <Search
                 className="h-full w-full"
                 placeholder={placeHolder.episode}
-                onSearchSubmit={(val) => onSearch(val)}
+                onSearchChange={onSearch}
+                onSearchSubmit={onSearch}
             />
         </div>
     );
