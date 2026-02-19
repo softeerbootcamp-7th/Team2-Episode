@@ -25,7 +25,7 @@ export default function EpisodeStar({ detail, onEditClick }: Props) {
             <EpisodeItem>{detail.action}</EpisodeItem>
             <EpisodeItem>{detail.result}</EpisodeItem>
 
-            <div className="flex flex-wrap gap-1 p-4 items-start justify-start border-r border-gray-100">
+            <div className="flex flex-wrap gap-1 content-start p-4 items-start justify-start border-r border-gray-100">
                 {detail.competencyTypes.map((type) => (
                     <Chip key={type.id} as="span" variant="basic" size="sm">
                         {type.competencyType}
