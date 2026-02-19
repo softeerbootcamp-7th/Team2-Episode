@@ -68,7 +68,11 @@ const Popover = ({
             </div>
 
             {visible && (
-                <div ref={contentsRef} className={variants({ direction: safeDirection })}>
+                <div
+                    ref={contentsRef}
+                    className={variants({ direction: safeDirection })}
+                    onClick={(e) => e.stopPropagation()}
+                >
                     {contents}
                 </div>
             )}

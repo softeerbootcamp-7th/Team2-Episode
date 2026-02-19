@@ -37,9 +37,8 @@ export default function EpisodeInfoSection({ className }: EpisodeInfoSectionProp
             setValue("startDate", formattedStart, { shouldDirty: true });
             setValue("endDate", formattedEnd, { shouldDirty: true });
 
-            if (range?.from && range?.to) {
-                setIsCalendarOpen(false);
-            }
+            // ✅ 삭제: 날짜 클릭 시 팝업이 닫히지 않도록 이 로직을 제거합니다.
+            // if (range?.from && range?.to) { setIsCalendarOpen(false); }
         },
         [setValue],
     );
@@ -54,7 +53,8 @@ export default function EpisodeInfoSection({ className }: EpisodeInfoSectionProp
                     direction="bottom_right"
                     wrapperClassName="w-full"
                     contents={
-                        <div className="flex justify-center items-center">
+                        // ✅ 이벤트 전파 방지 추가: 캘린더 클릭이 Popover 트리거를 건드리지 않게 함
+                        <div className="flex justify-center items-center" onClick={(e) => e.stopPropagation()}>
                             <CustomCalendar
                                 selectedRange={{
                                     from: startDate && startDate !== "0000-00-00" ? parseISO(startDate) : undefined,
