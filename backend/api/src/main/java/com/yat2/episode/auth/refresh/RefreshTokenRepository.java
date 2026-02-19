@@ -17,9 +17,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
             value = """
                     INSERT INTO refresh_token (user_id, token_hash, expires_at)
                     VALUES (:userId, :tokenHash, :expiresAt)
-                    ON DUPLICATE KEY UPDATE
-                        token_hash = VALUES(token_hash),
-                        expires_at = VALUES(expires_at)
                     """, nativeQuery = true
     )
     void upsertByUserId(
