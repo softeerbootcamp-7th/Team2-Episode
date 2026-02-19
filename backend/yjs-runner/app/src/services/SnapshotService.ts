@@ -32,8 +32,10 @@ export class SnapshotService {
 			);
 
 			doc = await this.deps.syncClient.sync(doc, job.roomId);
+
 			const newSnapshot = this.deps.yjs.getSnapshotFromDoc(doc);
 			await this.deps.storage.upload(job.roomId, newSnapshot);
+			await this.deps.updateRepo.trim(job.roomId, updates.lastEntryId);
 		}
 	}
 }
