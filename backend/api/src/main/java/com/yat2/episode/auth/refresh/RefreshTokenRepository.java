@@ -25,6 +25,10 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
             @Param("expiresAt") LocalDateTime expiresAt
     );
 
+    @Modifying
+    @Query(value = "DELETE FROM refresh_token WHERE expires_at < NOW()", nativeQuery = true)
+    int deleteExpired();
+
     void deleteByUser_KakaoId(Long kakaoId);
 
     void deleteByTokenHash(String tokenHash);
