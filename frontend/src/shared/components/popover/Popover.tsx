@@ -4,6 +4,7 @@ import { ReactNode, useRef, useState } from "react";
 import useCalcSafeDirection from "@/shared/hooks/useCalcSafeDirection";
 import useClickOutside from "@/shared/hooks/useClickOutside";
 import { NonNullableVariantProps } from "@/shared/types/safe_variant_props";
+import { cn } from "@/utils/cn";
 
 type Props = NonNullableVariantProps<typeof variants> & {
     // uncontrolled
@@ -13,9 +14,19 @@ type Props = NonNullableVariantProps<typeof variants> & {
     // controlled
     isOpen?: boolean;
     isOnOpenChange?: (open: boolean) => void;
+
+    // ✅ Phase 4: wrapper className을 명시적으로 제어
+    wrapperClassName?: string;
 };
 
-const Popover = ({ direction = "bottom_left", children, contents, isOpen, isOnOpenChange }: Props) => {
+const Popover = ({
+    direction = "bottom_left",
+    children,
+    contents,
+    isOpen,
+    isOnOpenChange,
+    wrapperClassName,
+}: Props) => {
     const triggerRef = useRef<HTMLDivElement>(null);
     const contentsRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +57,7 @@ const Popover = ({ direction = "bottom_left", children, contents, isOpen, isOnOp
     });
 
     return (
-        <div ref={triggerRef} className="relative w-fit">
+        <div ref={triggerRef} className={cn("relative w-fit", wrapperClassName)}>
             <div
                 onClick={(e) => {
                     e.stopPropagation();
