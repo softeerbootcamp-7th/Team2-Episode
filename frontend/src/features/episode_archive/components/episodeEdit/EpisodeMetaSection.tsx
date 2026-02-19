@@ -6,8 +6,6 @@ import Chip from "@/shared/components/chip/Chip";
 import { ALL_COMPETENCIES } from "@/shared/constants/competency";
 import { cn } from "@/utils/cn";
 
-// 1. 고정된 역량 리스트 (타입명을 CompetencyTag로 업데이트)
-
 interface EpisodeMetaSectionProps {
     className?: string;
     onCancel: () => void;
@@ -17,11 +15,9 @@ interface EpisodeMetaSectionProps {
 export default function EpisodeMetaSection({ className, onCancel, isSubmitting = false }: EpisodeMetaSectionProps) {
     const { watch, setValue } = useFormContext<EpisodeDetailResponse>();
 
-    // 2. 선택된 역량 모니터링
     const selectedCompetencies = watch("competencyTypes") || [];
 
     const toggleTag = (competency: CompetencyTag) => {
-        // 저장 중에는 수정을 막음
         if (isSubmitting) return;
 
         const isSelected = selectedCompetencies.some((item) => item.id === competency.id);
@@ -30,9 +26,6 @@ export default function EpisodeMetaSection({ className, onCancel, isSubmitting =
             ? selectedCompetencies.filter((item) => item.id !== competency.id)
             : [...selectedCompetencies, competency];
 
-        /** * 3. shouldDirty: true가 핵심입니다.
-         * 이 값이 있어야 폼 제출 시 dirtyFields가 역량 태그 변경을 감지합니다.
-         */
         setValue("competencyTypes", nextCompetencies, {
             shouldValidate: true,
             shouldDirty: true,

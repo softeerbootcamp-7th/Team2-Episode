@@ -1,8 +1,8 @@
 /** frontend/src/features/episode_archive/components/episodeContainer/EpisodeItemColumn.tsx */
 import { memo, useCallback, useState } from "react"; // 1. useState, useCallback 추가
 
-import EpisodeItemHead from "@/features/episode_archive/components/episodeContainer/EpisodeItemHead";
-import EpisodeStar from "@/features/episode_archive/components/episodeContainer/EpisodeStar";
+import EpisodeItemHead from "@/features/episode_archive/components/EpisodeContainer/EpisodeItemHead";
+import EpisodeStar from "@/features/episode_archive/components/EpisodeContainer/EpisodeStar";
 import EpisodeEditBox from "@/features/episode_archive/components/episodeEdit/EpisodeEditBox"; // 2. EditBox 임포트 확인
 import { EpisodeDetail, EpisodeDetailResponse } from "@/features/episode_archive/types/episode";
 

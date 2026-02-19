@@ -18,21 +18,21 @@ type EpisodeContentSectionProps = {
     className?: string;
 };
 
+const fields: FieldConfig[] = [
+    { id: "situation", label: "상황", english: "Situation", char: "S" },
+    { id: "task", label: "과제", english: "Task", char: "T" },
+    { id: "action", label: "행동", english: "Action", char: "A" },
+    { id: "result", label: "결과", english: "Result", char: "R" },
+];
+
+const handleResizeHeight = (e: React.FormEvent<HTMLTextAreaElement>) => {
+    const target = e.currentTarget;
+    target.style.height = "auto";
+    target.style.height = `${target.scrollHeight}px`;
+};
+
 export default function EpisodeContentSection({ className }: EpisodeContentSectionProps) {
     const { register } = useFormContext<EpisodeDetailResponse>();
-
-    const fields: FieldConfig[] = [
-        { id: "situation", label: "상황", english: "Situation", char: "S" },
-        { id: "task", label: "과제", english: "Task", char: "T" },
-        { id: "action", label: "행동", english: "Action", char: "A" },
-        { id: "result", label: "결과", english: "Result", char: "R" },
-    ];
-
-    const handleResizeHeight = (e: React.FormEvent<HTMLTextAreaElement>) => {
-        const target = e.currentTarget;
-        target.style.height = "auto";
-        target.style.height = `${target.scrollHeight}px`;
-    };
 
     return (
         <div className={cn("flex flex-col gap-4", className)}>
@@ -42,7 +42,6 @@ export default function EpisodeContentSection({ className }: EpisodeContentSecti
                         className="list-none"
                         leftSlot={
                             <div className="flex flex-row gap-2 items-center">
-                                {/* 22px는 표준에 없으므로 근사치 5.5(22px) 사용 */}
                                 <div className="flex flex-col justify-center items-center rounded-full bg-primary w-5.5 h-5.5 px-1.5 py-0.5">
                                     <span className="text-white text-xs font-bold leading-none">{field.char}</span>
                                 </div>
@@ -52,7 +51,6 @@ export default function EpisodeContentSection({ className }: EpisodeContentSecti
                         }
                     />
 
-                    {/* 120px -> min-h-30, 14px -> pb-3.5 */}
                     <div className="flex w-full min-h-30 px-5 pt-4 pb-3.5 items-start gap-2.5 rounded-xl border border-gray-300 bg-white shadow-none focus-within:border-primary transition-colors">
                         <textarea
                             {...register(field.id)}

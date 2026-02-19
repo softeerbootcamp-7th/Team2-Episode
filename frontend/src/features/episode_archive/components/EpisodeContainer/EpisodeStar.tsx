@@ -1,4 +1,4 @@
-import EpisodeItem from "@/features/episode_archive/components/episodeContainer/EpisodeItem";
+import EpisodeItem from "@/features/episode_archive/components/EpisodeContainer/EpisodeItem";
 import { useClearEpisode } from "@/features/episode_archive/hooks/useClearEpisode";
 import { EpisodeDetail } from "@/features/episode_archive/types/episode";
 import Chip from "@/shared/components/chip/Chip";
@@ -21,7 +21,6 @@ export default function EpisodeStar({ detail, onEditClick }: EpisodeStarProps) {
     const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
 
-        // 런타임 보호: 이미 삭제 중이면 중단
         if (isPending) return;
 
         if (window.confirm("에피소드의 모든 내용(STAR, 태그, 날짜)이 초기화됩니다. 계속하시겠습니까?")) {
@@ -30,7 +29,6 @@ export default function EpisodeStar({ detail, onEditClick }: EpisodeStarProps) {
     };
 
     return (
-        /* grid 너비 고정: 8rem(역량), 3.75rem(버튼) */
         <div className="grid grid-cols-[1fr_1fr_1fr_1fr_8rem_3.75rem] w-full h-full items-stretch bg-white">
             <EpisodeItem>{detail.situation}</EpisodeItem>
             <EpisodeItem>{detail.task}</EpisodeItem>

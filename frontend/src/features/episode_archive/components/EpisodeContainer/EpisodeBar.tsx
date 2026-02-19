@@ -29,9 +29,7 @@ export default function EpisodeBar() {
                 <div className={barItemVariants()}>ACTION</div>
                 <div className={barItemVariants()}>RESULT</div>
 
-                {/* 역량 영역: w-40에서 w-32로 축소 */}
                 <div className={cn(barItemVariants(), "flex-none w-32")}>역량</div>
-
                 <div className={barItemVariants({ variant: "empty" })} />
             </div>
         </div>

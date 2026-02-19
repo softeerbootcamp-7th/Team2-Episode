@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
 import EmptyEpisode from "@/features/episode_archive/components/EmptyEpisode";
-import MindmapEpisodeContainer from "@/features/episode_archive/components/episodeContainer/MindmapEpisodeContainer";
+import MindmapEpisodeContainer from "@/features/episode_archive/components/EpisodeContainer/MindmapEpisodeContainer";
 import EpisodeHeader from "@/features/episode_archive/components/EpisodeHeader";
 import { useEpisodeSearch } from "@/features/episode_archive/hooks/useEpisodeSearch";
 import { useMindmapList } from "@/features/mindmap/hooks/useMindmapList";

@@ -9,13 +9,9 @@ type EmptyEpisodeProps = {
     username?: string;
 };
 
-/**
- * 2단계: 데이터가 없을 때 표시되는 빈 화면 컴포넌트입니다.
- */
 export default function EmptyEpisode({ username = "사용자" }: EmptyEpisodeProps) {
     return (
         <div className="flex flex-col items-center justify-center w-full py-40">
-            {/* 2. 매핑 객체에서 직접 src를 가져와 가독성을 높임 */}
             <img
                 src={EMPTY_ASSETS.empty}
                 alt="에피소드 없음"
