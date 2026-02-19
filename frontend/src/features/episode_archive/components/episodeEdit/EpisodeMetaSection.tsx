@@ -1,12 +1,12 @@
 import { useFormContext } from "react-hook-form";
 
-import { competencyType, EpisodeDetailResponse } from "@/features/episode_archive/types/episode";
+import { CompetencyTag, EpisodeDetailResponse } from "@/features/episode_archive/types/episode";
 import Button from "@/shared/components/button/Button";
 import Chip from "@/shared/components/chip/Chip";
 import { cn } from "@/utils/cn";
 
-// 1. 고정된 역량 리스트 (id를 number로 수정하여 타입 일치)
-const ALL_COMPETENCIES: competencyType[] = [
+// 1. 고정된 역량 리스트 (타입명을 CompetencyTag로 업데이트)
+const ALL_COMPETENCIES: CompetencyTag[] = [
     { id: 1, category: "공통", competencyType: "팀워크" },
     { id: 2, category: "공통", competencyType: "협업" },
     { id: 3, category: "공통", competencyType: "문제해결" },
@@ -17,22 +17,35 @@ const ALL_COMPETENCIES: competencyType[] = [
     { id: 8, category: "공통", competencyType: "적응력" },
 ];
 
-export default function EpisodeMetaSection({ className, onCancel }: { className?: string; onCancel: () => void }) {
+interface EpisodeMetaSectionProps {
+    className?: string;
+    onCancel: () => void;
+    isSubmitting?: boolean; // 저장 중 로딩 상태 추가
+}
+
+export default function EpisodeMetaSection({ className, onCancel, isSubmitting = false }: EpisodeMetaSectionProps) {
     const { watch, setValue } = useFormContext<EpisodeDetailResponse>();
 
-    // 2. competencyTypes 배열의 타입을 명시적으로 가져옴
+    // 2. 선택된 역량 모니터링
     const selectedCompetencies = watch("competencyTypes") || [];
 
-    const toggleTag = (competency: competencyType) => {
-        // id 비교 시 타입 충돌 해결 (number === number)
+    const toggleTag = (competency: CompetencyTag) => {
+        // 저장 중에는 수정을 막음
+        if (isSubmitting) return;
+
         const isSelected = selectedCompetencies.some((item) => item.id === competency.id);
 
         const nextCompetencies = isSelected
             ? selectedCompetencies.filter((item) => item.id !== competency.id)
             : [...selectedCompetencies, competency];
 
-        // 3. setValue 시 타입 안정성 확보
-        setValue("competencyTypes", nextCompetencies, { shouldValidate: true });
+        /** * 3. shouldDirty: true가 핵심입니다.
+         * 이 값이 있어야 폼 제출 시 dirtyFields가 역량 태그 변경을 감지합니다.
+         */
+        setValue("competencyTypes", nextCompetencies, {
+            shouldValidate: true,
+            shouldDirty: true,
+        });
     };
 
     return (
@@ -50,6 +63,7 @@ export default function EpisodeMetaSection({ className, onCancel }: { className?
                                 onClick={() => toggleTag(item)}
                                 variant={isSelected ? "tertiary_outlined" : "quaternary"}
                                 size="md"
+                                className={cn(isSubmitting && "cursor-not-allowed opacity-50")}
                             >
                                 {item.competencyType}
                             </Chip>
@@ -59,8 +73,15 @@ export default function EpisodeMetaSection({ className, onCancel }: { className?
             </div>
 
             <div className="flex flex-col gap-2 mt-6">
-                <Button type="submit" variant="primary" layout="fullWidth" className="py-3 rounded-xl">
-                    저장하기
+                {/* 4. 저장 버튼 로딩 및 비활성화 처리 */}
+                <Button
+                    type="submit"
+                    variant="primary"
+                    layout="fullWidth"
+                    className="py-3 rounded-xl"
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? "저장 중..." : "저장하기"}
                 </Button>
                 <Button
                     type="button"
@@ -68,6 +89,7 @@ export default function EpisodeMetaSection({ className, onCancel }: { className?
                     layout="fullWidth"
                     onClick={onCancel}
                     className="py-3 rounded-xl bg-gray-200 text-gray-800"
+                    disabled={isSubmitting}
                 >
                     취소하기
                 </Button>

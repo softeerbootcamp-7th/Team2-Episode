@@ -52,3 +52,21 @@ export type SearchEpisodesReq = HttpParams & {
     mindmapType: MindmapType;
     search: string;
 };
+
+/** 에피소드 수정 API 요청 바디 */
+export type UpdateEpisodeRequest = {
+    competencyTypeIds?: number[];
+    situation?: string | null;
+    task?: string | null;
+    action?: string | null;
+    result?: string | null;
+    content?: string | null;
+    startDate?: {
+        present?: boolean;
+        undefined?: boolean;
+    };
+    endDate?: {
+        present?: boolean;
+        undefined?: boolean;
+    };
+};
