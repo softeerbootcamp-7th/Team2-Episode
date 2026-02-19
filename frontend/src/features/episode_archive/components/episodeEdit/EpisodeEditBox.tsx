@@ -55,7 +55,7 @@ export default function EpisodeEditBox({ initialData, onCancel }: EpisodeEditBox
         <FormProvider {...methods}>
             <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="flex w-full items-stretch bg-gray-100 rounded-xl overflow-hidden"
+                className="flex w-full h-full items-stretch bg-gray-100 rounded-xl overflow-hidden"
             >
                 <EpisodeInfoSection className="w-48 p-6 shrink-0" />
                 <EpisodeContentSection className="flex-1 p-6 bg-white/50" />
