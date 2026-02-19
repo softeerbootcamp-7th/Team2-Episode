@@ -14,7 +14,7 @@ const ListRow = ({ variant = "default", leftSlot, contents, rightSlot, className
     return (
         <li
             className={cn(
-                `${variantStyles[variant]} rounded-xl px-3 py-2 flex flex-row justify-between items-center whitespace-nowrap hover:bg-cobalt-100 typo-body-14-regular`,
+                `${variantStyles[variant]} rounded-xl px-3 py-2 flex flex-row justify-between items-center whitespace-nowrap  typo-body-14-regular`,
                 className,
             )}
             {...rest}

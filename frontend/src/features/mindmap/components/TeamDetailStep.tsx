@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { useCreateMindmap } from "@/features/mindmap/hooks/useCreateMindmap";
+import { useInitializeMindmap } from "@/features/mindmap/hooks/useInitializeMindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
 import BottomSticky from "@/shared/components/bottom_sticky/BottomSticky";
 import Button from "@/shared/components/button/Button";
@@ -44,7 +44,10 @@ function DashedAddButton(props: { onClick: () => void; label: string }) {
 }
 
 export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
-    const { mutate: createMindmap, isPending } = useCreateMindmap();
+    const { initialize, isPending } = useInitializeMindmap(() => {
+        // TODO: 임시로 메인으로 보냄
+        funnel.exit(linkTo.mindmap.list(), { replace: false });
+    });
 
     const projectName = funnel.context.projectName ?? "";
     const episodes = funnel.context.episodes ?? [];
@@ -66,20 +69,7 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
     const canNext = projectName.trim().length > 0 && cleanedEpisodes.length > 0;
 
     const handleSubmit = () => {
-        createMindmap(
-            {
-                title: projectName,
-                isShared: true,
-            },
-            {
-                onSuccess: (data) => {
-                    funnel.exit(linkTo.mindmap.detail(data.mindmap.mindmapId), { replace: false });
-                },
-                onError: (error) => {
-                    console.error(error.message || "마인드맵 생성 중 오류가 발생했습니다.");
-                },
-            },
-        );
+        initialize({ title: projectName, isShared: true, items: episodes });
     };
 
     return (
@@ -113,9 +103,6 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
                     <div className="typo-body-14-medium text-text-main2">정리할 에피소드</div>
                 </div>
 
-                {/* 2. 스크롤 영역 (에피소드 리스트) */}
-                {/* flex-1: 남은 공간 모두 차지 */}
-                {/* overflow-y-auto: 내용이 넘치면 이 영역 안에서만 스크롤 발생 */}
                 <div className="flex-1 overflow-y-auto pb-32 min-h-0 basis-0">
                     <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-4">

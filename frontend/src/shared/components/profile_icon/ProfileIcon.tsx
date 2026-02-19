@@ -29,7 +29,7 @@ const profileIconVariants = cva(
         variants: {
             size: {
                 md: "w-10 h-10 typo-body-18-semibold",
-                sm: "w-6 h-6 typo-body-10-semibold",
+                sm: "w-6 h-6 typo-caption-10-semibold",
             },
         },
     },

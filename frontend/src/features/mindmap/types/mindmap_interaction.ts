@@ -1,10 +1,11 @@
-import { NodeDirection, NodeId } from "@/features/mindmap/types/node";
+import { AddNodeDirection, NodeDirection, NodeId } from "@/features/mindmap/types/node";
 
 export type InteractionMode = "idle" | "potential_drag" | "dragging" | "panning" | "pending_creation";
 
 export type BaseNodeInfo = {
     targetId: NodeId | null;
     direction?: NodeDirection | null;
+    side?: AddNodeDirection | null;
 };
 
 export type InteractionStatus = {
@@ -37,7 +38,7 @@ export const EMPTY_INTERACTION_SNAPSHOT: InteractionSnapshot = {
     dragDelta: { x: 0, y: 0 },
     mousePos: { x: 0, y: 0 },
     dragSubtreeIds: null,
-    baseNode: { targetId: null, direction: null },
+    baseNode: { targetId: null, direction: null, side: null },
 };
 
 export const EMPTY_DRAG_SESSION_SNAPSHOT: DragSessionSnapshot = {
