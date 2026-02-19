@@ -3,19 +3,10 @@ import { useFormContext } from "react-hook-form";
 import { CompetencyTag, EpisodeDetailResponse } from "@/features/episode_archive/types/episode";
 import Button from "@/shared/components/button/Button";
 import Chip from "@/shared/components/chip/Chip";
+import { ALL_COMPETENCIES } from "@/shared/constants/competency";
 import { cn } from "@/utils/cn";
 
 // 1. 고정된 역량 리스트 (타입명을 CompetencyTag로 업데이트)
-const ALL_COMPETENCIES: CompetencyTag[] = [
-    { id: 1, category: "공통", competencyType: "팀워크" },
-    { id: 2, category: "공통", competencyType: "협업" },
-    { id: 3, category: "공통", competencyType: "문제해결" },
-    { id: 4, category: "공통", competencyType: "리더십" },
-    { id: 5, category: "공통", competencyType: "의사소통" },
-    { id: 6, category: "공통", competencyType: "기획력" },
-    { id: 7, category: "공통", competencyType: "창의성" },
-    { id: 8, category: "공통", competencyType: "적응력" },
-];
 
 interface EpisodeMetaSectionProps {
     className?: string;
