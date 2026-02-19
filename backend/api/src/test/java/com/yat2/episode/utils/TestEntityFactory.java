@@ -1,7 +1,6 @@
 package com.yat2.episode.utils;
 
 import com.github.f4b6a3.uuid.UuidCreator;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Constructor;
@@ -71,8 +70,8 @@ public class TestEntityFactory {
     public static EpisodeStar createEpisodeStar(UUID nodeId, long userId, Set<Integer> competencyTypeIds) {
         EpisodeStar star = EpisodeStar.create(nodeId, userId);
 
-        star.update(new StarUpdateReq(competencyTypeIds, "situation", "task", "action", "result",
-                                      JsonNullable.of(LocalDate.now()), JsonNullable.of(LocalDate.now().plusDays(1))));
+        star.update(new StarUpdateReq(competencyTypeIds, "situation", "task", "action", "result", null, null),
+                    LocalDate.now(), LocalDate.now().plusDays(1));
 
         ReflectionTestUtils.setField(star, "createdAt", LocalDateTime.now());
         return star;

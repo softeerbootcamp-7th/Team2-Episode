@@ -1,7 +1,6 @@
 package com.yat2.episode.episode;
 
 import lombok.RequiredArgsConstructor;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +42,8 @@ public class EpisodeService {
     private final MindmapAccessValidator mindmapAccessValidator;
     private final MindmapParticipantRepository mindmapParticipantRepository;
 
+    private final static String DELETE_DATE = "0000-00-00";
+
     public EpisodeDetail getEpisodeDetail(UUID nodeId, long userId) {
         return getEpisodeAndStarOrThrow(nodeId, userId);
     }
@@ -66,6 +67,14 @@ public class EpisodeService {
         }
 
         return toMindmapEpisodeResList(episodeStars, participants);
+    }
+
+    private LocalDate getLocalDate(String date) {
+        try {
+            return LocalDate.parse(date);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private List<MindmapEpisodeRes> toMindmapEpisodeResList(
@@ -149,11 +158,13 @@ public class EpisodeService {
     public void updateStar(UUID nodeId, long userId, StarUpdateReq starUpdateReq) {
         validateCompetencyIds(starUpdateReq.competencyTypeIds());
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
-        LocalDate newStart = resolvePatchedDate(starUpdateReq.startDate(), episodeStar.getStartDate());
-        LocalDate newEnd = resolvePatchedDate(starUpdateReq.endDate(), episodeStar.getEndDate());
-
+        LocalDate newStart = isDeleteDate(starUpdateReq.startDate()) ? null :
+                             resolvePatchedDate(getLocalDate(starUpdateReq.startDate()), episodeStar.getStartDate());
+        LocalDate newEnd = isDeleteDate(starUpdateReq.endDate()) ? null :
+                           resolvePatchedDate(getLocalDate(starUpdateReq.endDate()), episodeStar.getEndDate());
         validateDates(newStart, newEnd);
-        episodeStar.update(starUpdateReq);
+
+        episodeStar.update(starUpdateReq, newStart, newEnd);
     }
 
     @Transactional
@@ -213,14 +224,16 @@ public class EpisodeService {
         }
     }
 
-    private LocalDate resolvePatchedDate(JsonNullable<LocalDate> patch, LocalDate before) {
-        if (patch == null || patch.isUndefined()) {
+    private LocalDate resolvePatchedDate(LocalDate newDate, LocalDate before) {
+        if (newDate == null) {
             return before;
         }
-        if (!patch.isPresent() || patch.get() == null) {
-            return null;
-        }
-        return patch.get();
+        return newDate;
+    }
+
+    private boolean isDeleteDate(String date) {
+        if (date == null) return false;
+        return DELETE_DATE.compareTo(date) == 0;
     }
 
     private void validateCompetencyIds(Set<Integer> competencyIds) {
