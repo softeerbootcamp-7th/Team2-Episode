@@ -349,8 +349,8 @@ jobs:
           TAG='${{ needs.resolve_tag.outputs.tag }}'
 
           docker buildx build \
-            --cache-from type=gha \
-            --cache-to type=gha,mode=max \
+            --cache-from type=gha,scope=yjs-runner \
+            --cache-to type=gha,mode=max,scope=yjs-runner \
             --platform linux/arm64 \
             -t "$IMAGE:$TAG" \
             -t "$IMAGE:latest" \
@@ -376,7 +376,8 @@ jobs:
                 --name episode-yjs-runner \
                 --env-file ~/app/.env \
                 --restart unless-stopped \
-                -p 80:80 \
+                --log-opt max-size=10m \
+                --log-opt max-file=3 \
                 "$IMAGE:$TAG"
 
               docker image prune -f

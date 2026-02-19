@@ -1,26 +1,40 @@
-import DropIndicator from "@/features/mindmap/components/canvas/DropIndicator";
-import MovingNodeFragment from "@/features/mindmap/components/canvas/MovingNodeFragment";
+import { useEffect } from "react";
+
+import DropNodePreviewLayer from "@/features/mindmap/core/DropNodePreviewLayer";
+import MovingTreeLayer from "@/features/mindmap/core/MovingTreeLayer";
+import { useMindmapControllerEvents } from "@/features/mindmap/hooks/useMindmapEngineEvents";
+import { useMindmapInteraction } from "@/features/mindmap/hooks/useMindmapStoreState";
 import TempNode, { TEMP_NODE_SIZE } from "@/features/mindmap/node/components/temp_node/TempNode";
-import { InteractionSnapshot } from "@/features/mindmap/types/interaction";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
-type InteractionLayerProps = {
+export default function InteractionLayer({
+    nodeMap,
+    rootRef,
+}: {
     nodeMap: Map<NodeId, NodeElement>;
-    status: InteractionSnapshot;
-};
-export default function InteractionLayer({ nodeMap, status }: InteractionLayerProps) {
+    rootRef: React.RefObject<SVGGElement | null>;
+}) {
+    const status = useMindmapInteraction();
+    useMindmapControllerEvents();
+
+    useEffect(() => {
+        const root = rootRef.current;
+        if (!root) return;
+        root.setAttribute("data-dragging", status.mode === "dragging" ? "true" : "false");
+    }, [status.mode, rootRef]);
+
     const { mode, draggingNodeId, dragDelta, dragSubtreeIds, baseNode, mousePos } = status;
 
-    if (mode === "idle") return null;
+    if (!draggingNodeId || !dragSubtreeIds) return null;
 
     return (
         <g className="interaction-layer">
             {baseNode.targetId && baseNode.direction && (
-                <DropIndicator targetId={baseNode.targetId} direction={baseNode.direction} nodeMap={nodeMap} />
+                <DropNodePreviewLayer targetId={baseNode.targetId} direction={baseNode.direction} nodeMap={nodeMap} />
             )}
 
             {mode === "dragging" && draggingNodeId && dragSubtreeIds && (
-                <MovingNodeFragment filterIds={dragSubtreeIds} nodeMap={nodeMap} delta={dragDelta} />
+                <MovingTreeLayer filterIds={dragSubtreeIds} nodeMap={nodeMap} delta={dragDelta} />
             )}
 
             {mode === "pending_creation" && (
