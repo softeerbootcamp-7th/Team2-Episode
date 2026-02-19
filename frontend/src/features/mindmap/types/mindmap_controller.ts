@@ -87,13 +87,14 @@ export type NodePatch = Partial<Omit<NodeElement, "id">> & RootChildPointers;
 export type AdapterChange = {
     changedIds: NodeId[];
     local: boolean;
-    origin: unknown;
+    origin: string | null | object;
 };
 
 export type TreeAdapter = {
     getMap(): Map<NodeId, NodeElement>;
     get(nodeId: NodeId): NodeElement | undefined;
     set(nodeId: NodeId, node: NodeElement): void;
+    update(nodeId: NodeId, patch: NodePatch): void;
     delete(nodeId: NodeId): void;
 
     transact(fn: () => void, origin?: unknown): void;
