@@ -29,6 +29,20 @@ export class WebsocketSyncClient {
 		return this.syncOnce(doc, url);
 	}
 
+	private toUint8(msg: WebSocket.RawData): Uint8Array {
+		if (Buffer.isBuffer(msg)) {
+			return new Uint8Array(msg.buffer, msg.byteOffset, msg.byteLength);
+		}
+		if (msg instanceof ArrayBuffer) {
+			return new Uint8Array(msg);
+		}
+		if (Array.isArray(msg)) {
+			const b = Buffer.concat(msg);
+			return new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
+		}
+		throw new TypeError(`Unexpected ws message ${typeof msg}`);
+	}
+
 	private buildWsUrl(roomId: string, token?: string) {
 		const qs = token ? `?token=${encodeURIComponent(token)}` : "";
 		return `${this.baseUrl}/${encodeURIComponent(roomId)}${qs}`;
@@ -65,10 +79,7 @@ export class WebsocketSyncClient {
 
 			ws.on("message", (msg: WebSocket.RawData) => {
 				try {
-					const buf =
-						msg instanceof Buffer
-							? new Uint8Array(msg)
-							: new Uint8Array(msg as ArrayBuffer);
+					const buf = this.toUint8(msg);
 
 					const dec = decoding.createDecoder(buf);
 
