@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.yat2.episode.competency.CompetencyTypeRepository;
+import com.yat2.episode.competency.CompetencyTypeService;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
@@ -26,7 +27,7 @@ import com.yat2.episode.mindmap.MindmapParticipantRepository;
 public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
-    private final CompetencyTypeRepository competencyTypeRepository;
+    private final CompetencyTypeService competencyTypeService;
     private final EpisodeStarRepository episodeStarRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
     private final MindmapParticipantRepository mindmapParticipantRepository;
@@ -62,7 +63,7 @@ public class EpisodeService {
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND));
         episode.update(episodeUpsertReq);
 
-        return EpisodeDetail.of(episode, episodeStar);
+        return buildEpisodeDetail(episode, episodeStar);
     }
 
     @Transactional
@@ -96,8 +97,12 @@ public class EpisodeService {
     private EpisodeDetail getEpisodeAndStarOrThrow(UUID nodeId, long userId) {
         EpisodeStar s = episodeStarRepository.findStarDetail(nodeId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+        return buildEpisodeDetail(s.getEpisode(), s);
+    }
 
-        return EpisodeDetail.of(s.getEpisode(), s);
+    private EpisodeDetail buildEpisodeDetail(Episode episode, EpisodeStar star) {
+        List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(star.getCompetencyTypeIds());
+        return EpisodeDetail.of(episode, star, ctResList);
     }
 
     private EpisodeStar getStarOrThrow(UUID nodeId, long userId) {
@@ -123,7 +128,7 @@ public class EpisodeService {
             return;
         }
 
-        long count = competencyTypeRepository.countByIdIn(competencyIds);
+        long count = competencyTypeService.countByIdIn(competencyIds);
         if (count != competencyIds.size()) {
             throw new CustomException(ErrorCode.INVALID_COMPETENCY_TYPE);
         }
