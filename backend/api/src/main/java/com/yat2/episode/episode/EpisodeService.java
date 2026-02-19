@@ -70,6 +70,7 @@ public class EpisodeService {
     }
 
     private LocalDate getLocalDate(String date) {
+        if (date == null) return null;
         try {
             return LocalDate.parse(date);
         } catch (Exception e) {
