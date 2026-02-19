@@ -107,6 +107,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -123,8 +126,8 @@ jobs:
           TAG=${GITHUB_SHA::7}
 
           docker buildx build \
-            --cache-from type=gha \
-            --cache-to type=gha,mode=max \
+            --cache-from type=gha,scope=yjs-runner \
+            --cache-to type=gha,mode=max,scope=yjs-runner \
             --platform linux/arm64 \
             -t $IMAGE:stage \
             -t $IMAGE:stage-$TAG \

@@ -7,8 +7,9 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "preview": "vite preview --config vite.production.ts",
-        "dev": "vite --config vite.development.ts",
-        "build": "tsc && vite build --config vite.production.ts"
+        "dev": "vite --config vite.development.ts --host",
+        "build": "tsc && vite build --config vite.production.ts",
+        "yjs:server": "HOST=0.0.0.0 PORT=1234 npx y-websocket"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.2.2",
@@ -16,6 +17,8 @@
         "@tanstack/react-query": "^5.90.20",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
+        "lodash-es": "^4.17.23",
+        "perfect-cursors": "^1.0.5",
         "date-fns": "^4.1.0",
         "lucide-react": "^0.563.0",
         "nanoid": "^5.1.6",
@@ -30,10 +33,15 @@
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.4.0",
         "tailwindcss": "^4.1.18",
-        "zod": "^4.3.6"
+        "zod": "^4.3.6",
+        "y-indexeddb": "^9.0.12",
+        "y-protocols": "^1.0.7",
+        "y-websocket": "^3.0.0",
+        "yjs": "^13.6.29"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
+        "@types/lodash-es": "^4.17.12",
         "@types/node": "^24.10.1",
         "@types/react": "^19.2.5",
         "@types/react-dom": "^19.2.3",

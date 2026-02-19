@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc",
     "start": "node dist/app/src/server.js",
     "dev": "nodemon app/src/server.ts",
     "test": "jest"
@@ -14,7 +14,9 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.0.0",
+    "@types/ws": "^8.18.1",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
     "testcontainers": "^11.11.0",
@@ -27,8 +29,12 @@
     "@aws-sdk/client-s3": "^3.990.0",
     "dotenv": "^17.3.1",
     "ioredis": "^5.9.3",
+    "jsonwebtoken": "^9.0.3",
     "lib0": "^0.2.117",
     "waait": "^1.0.5",
+    "ws": "^8.19.0",
+    "y-protocols": "^1.0.7",
     "yjs": "^13.6.29"
-  }
+  },
+  "packageManager": "pnpm@10.30.0+sha512.2b5753de015d480eeb88f5b5b61e0051f05b4301808a82ec8b840c9d2adf7748eb352c83f5c1593ca703ff1017295bc3fdd3119abb9686efc96b9fcb18200937"
 }

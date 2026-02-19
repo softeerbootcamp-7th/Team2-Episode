@@ -1,0 +1,11 @@
+.git
+.github
+
+**
+!Dockerfile
+!build/
+!build/libs/
+!build/libs/*.jar
+
+.env
+.env.*

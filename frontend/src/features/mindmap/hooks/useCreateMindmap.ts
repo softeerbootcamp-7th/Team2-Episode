@@ -11,8 +11,20 @@ type CreateMindmapRequest = {
     title: string;
 };
 
-type CreateMindmapResponse = {
+export type CreateMindmapResponse = {
     mindmap: Omit<MindmapItem, "createdAt" | "updatedAt">;
+    uploadInfo: {
+        action: string;
+        fields: {
+            key: string;
+            "x-amz-algorithm": string;
+            "x-amz-credential": string;
+            "x-amz-date": string;
+            "x-amz-security-token"?: string;
+            policy: string;
+            "x-amz-signature": string;
+        };
+    };
 };
 
 const fetchCreateMindmap = (body: CreateMindmapRequest) => {

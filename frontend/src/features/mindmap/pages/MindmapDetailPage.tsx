@@ -1,39 +1,53 @@
-// import { useSearchParams } from "react-router";
+import { useMemo } from "react";
+import { useParams } from "react-router";
 
-// import DiagnosisResultSidebar from "@/features/self_diagnosis/components/DiagnosisResultSideBar";
-// import DiagnosisResultSidePanel from "@/features/self_diagnosis/components/DiagnosisResultSidePanel";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import Mindmap from "@/features/mindmap/core/Mindmap";
+import { useMindmapSession } from "@/features/mindmap/hooks/useMindmapSession";
+import Spinner from "@/shared/components/spinner/Spinner";
 
-const MindmapDetailPage = () => {
-    // const [sp, setSp] = useSearchParams();
-    // const diagnosisIdParam = sp.get("diagnosisId");
-    // const diagnosisId = diagnosisIdParam ? Number(diagnosisIdParam) : null;
+// TODO: 커서 테스트용 컬러
+const COLORS = ["#34a7ff", "#fd69b9", "#0ed038", "#7749ff", "#ff913c"];
 
-    return (
-        <>
-            <main className="flex-1">마인드맵 캔버스 영역</main>
+export default function MindmapDetailPage() {
+    const { mindmapId } = useParams<{ mindmapId: string }>();
 
-            {/* {diagnosisId ? (
-                <DiagnosisResultSidePanel
-                    diagnosisId={diagnosisId}
-                    onClose={() => {
-                        sp.delete("diagnosisId");
-                        setSp(sp);
-                    }}
-                />
-            ) : null} */}
-            {/* <DiagnosisResultSidebar
-                totalCount={11}
-                items={[
-                    { id: "1", title: "팀워크 발휘 사례에 대한 내용 보충하기", tag: "협업" },
-                    { id: "2", title: "갈등 발생 경험에 대한 내용 보충하기", tag: "커뮤니케이션" },
-                    { id: "3", title: "핵심 원인을 분석해낸 내용 보충하기", tag: "분석력" },
-                    { id: "4", title: "어려운 선택을 합리적으로 했던 경험을 보충하기", tag: "의사결정" },
-                ]}
-                onClose={() => {}}
-                onBack={() => {}}
-            /> */}
-        </>
+    const { user: userInfo } = useAuth();
+
+    const user = useMemo(() => {
+        if (!userInfo) return undefined;
+        return {
+            id: String(userInfo.userId),
+            name: userInfo.nickname,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)]!,
+        };
+    }, [userInfo?.userId, userInfo?.nickname]);
+
+    const { doc, provider, isSynced } = useMindmapSession({
+        mindmapId,
+        enableAwareness: true,
+        userInfo,
+    });
+
+    const config = useMemo(
+        () => ({
+            layout: { xGap: 100, yGap: 20 },
+            interaction: { dragThreshold: 5 },
+        }),
+        [],
     );
-};
 
-export default MindmapDetailPage;
+    if (!mindmapId) {
+        throw new Error("올바른 접근이 아닙니다.");
+    }
+
+    if (!isSynced) {
+        return (
+            <div className="h-full w-full flex justify-center items-center">
+                <Spinner contents={"서버에서 마인드맵 데이터를 불러오는 중입니다..."} />
+            </div>
+        );
+    }
+
+    return <Mindmap doc={doc} provider={provider} user={user} mindmapId={mindmapId} config={config} />;
+}

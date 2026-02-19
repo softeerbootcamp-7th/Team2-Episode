@@ -13,14 +13,15 @@ import java.util.concurrent.Executor;
 @Configuration
 public class CollaborationAsyncConfig {
 
-    private static final String THREAD_PREFIX = "redis-append-";
+    private static final String THREAD_PREFIX_UPDATE = "redis-append-";
+    private static final String THREAD_PREFIX_SYNC = "sync-job-";
 
     private final CollaborationAsyncProperties asyncProperties;
 
-    @Bean(name = "redisExecutor")
-    public Executor redisExecutor() {
+    @Bean(name = "updateExecutor")
+    public Executor updateExecutor() {
         ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
-        exec.setThreadNamePrefix(THREAD_PREFIX);
+        exec.setThreadNamePrefix(THREAD_PREFIX_UPDATE);
         exec.setCorePoolSize(asyncProperties.corePoolSize());
         exec.setMaxPoolSize(asyncProperties.maxPoolSize());
         exec.setQueueCapacity(asyncProperties.queueCapacity());
@@ -31,4 +32,23 @@ public class CollaborationAsyncConfig {
         exec.initialize();
         return exec;
     }
+
+    @Bean(name = "jobExecutor")
+    public Executor jobExecutor() {
+        ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
+        exec.setThreadNamePrefix(THREAD_PREFIX_SYNC);
+
+        exec.setCorePoolSize(asyncProperties.corePoolSize());
+        exec.setMaxPoolSize(asyncProperties.maxPoolSize());
+
+        exec.setQueueCapacity(asyncProperties.queueCapacity());
+        exec.setKeepAliveSeconds(asyncProperties.keepAliveSeconds());
+        exec.setAllowCoreThreadTimeOut(true);
+
+        exec.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+
+        exec.initialize();
+        return exec;
+    }
+
 }

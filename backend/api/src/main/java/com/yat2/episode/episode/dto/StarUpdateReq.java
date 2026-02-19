@@ -3,7 +3,6 @@ package com.yat2.episode.episode.dto;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDate;
 import java.util.Set;
 
 public record StarUpdateReq(
@@ -12,6 +11,7 @@ public record StarUpdateReq(
         @Size(max = 200) String task,
         @Size(max = 200) String action,
         @Size(max = 200) String result,
-        LocalDate startDate,
-        LocalDate endDate
+        String startDate,
+        String endDate
 ) {}
+

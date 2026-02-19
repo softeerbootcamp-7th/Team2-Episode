@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.yat2.episode.collaboration.redis.JobStreamStore;
+import com.yat2.episode.collaboration.worker.JobPublisher;
 import com.yat2.episode.collaboration.yjs.YjsMessageRouter;
 import com.yat2.episode.global.constant.AttributeKeys;
 
@@ -43,13 +43,13 @@ class CollaborationServiceTest {
     YjsMessageRouter yjsMessageRouter;
 
     @Mock
-    JobStreamStore jobStreamStore;
+    JobPublisher jobPublisher;
 
     CollaborationService service;
 
     @BeforeEach
     void setUp() {
-        service = new CollaborationService(sessionRegistry, yjsMessageRouter, jobStreamStore);
+        service = new CollaborationService(sessionRegistry, yjsMessageRouter, jobPublisher);
     }
 
     @Nested
@@ -70,12 +70,11 @@ class CollaborationServiceTest {
 
             verify(sessionRegistry).addSession(roomId, session);
             verifyNoInteractions(yjsMessageRouter);
-            verifyNoInteractions(jobStreamStore);
             verifyNoMoreInteractions(sessionRegistry);
         }
 
         @Test
-        @DisplayName("해제 시 router에 disconnect를 알리고 room에서 세션을 제거한다 (remaining > 0이면 snapshot job 발행 안 함)")
+        @DisplayName("해제 시 router에 disconnect를 알리고 room에서 세션을 제거한다 (remaining > 0이면 snapshot 트리거 안 함)")
         void handleDisconnect_notifiesRouterAndRemovesSession_noSnapshotWhenRemaining() {
             UUID roomId = UUID.randomUUID();
             WebSocketSession session = mock(WebSocketSession.class);
@@ -86,19 +85,20 @@ class CollaborationServiceTest {
             when(session.getId()).thenReturn("S-1");
 
             when(sessionRegistry.removeSession(roomId, session)).thenReturn(2);
+
             service.handleDisconnect(session);
 
             InOrder order = inOrder(yjsMessageRouter, sessionRegistry);
             order.verify(yjsMessageRouter).onDisconnect(roomId, "S-1");
             order.verify(sessionRegistry).removeSession(roomId, session);
 
-            verify(jobStreamStore, never()).publishSnapshot(any(UUID.class));
+            verify(jobPublisher, never()).publishSnapshotAsync(any(UUID.class));
             verifyNoMoreInteractions(yjsMessageRouter, sessionRegistry);
         }
 
         @Test
-        @DisplayName("해제 후 방에 남은 세션이 0이면 snapshot job을 발행한다")
-        void handleDisconnect_whenLastSession_publishesSnapshot() {
+        @DisplayName("해제 후 방에 남은 세션이 0이면 snapshot 트리거를 실행한다")
+        void handleDisconnect_whenLastSession_executesSnapshot() {
             UUID roomId = UUID.randomUUID();
             WebSocketSession session = mock(WebSocketSession.class);
 
@@ -111,12 +111,12 @@ class CollaborationServiceTest {
 
             service.handleDisconnect(session);
 
-            InOrder order = inOrder(yjsMessageRouter, sessionRegistry, jobStreamStore);
+            InOrder order = inOrder(yjsMessageRouter, sessionRegistry, jobPublisher);
             order.verify(yjsMessageRouter).onDisconnect(roomId, "S-1");
             order.verify(sessionRegistry).removeSession(roomId, session);
-            order.verify(jobStreamStore).publishSnapshot(roomId);
+            order.verify(jobPublisher).publishSnapshotAsync(roomId);
 
-            verifyNoMoreInteractions(yjsMessageRouter, sessionRegistry, jobStreamStore);
+            verifyNoMoreInteractions(yjsMessageRouter, sessionRegistry);
         }
 
         @Test
@@ -129,8 +129,6 @@ class CollaborationServiceTest {
 
             verifyNoInteractions(yjsMessageRouter);
             verifyNoInteractions(sessionRegistry);
-            verifyNoInteractions(jobStreamStore);
-            verify(jobStreamStore, never()).publishSnapshot(any(UUID.class));
         }
     }
 
@@ -158,7 +156,6 @@ class CollaborationServiceTest {
             assertArrayEquals(frame, payloadCaptor.getValue());
 
             verifyNoInteractions(sessionRegistry);
-            verifyNoInteractions(jobStreamStore);
             verifyNoMoreInteractions(yjsMessageRouter);
         }
 
@@ -174,7 +171,6 @@ class CollaborationServiceTest {
 
             verifyNoInteractions(yjsMessageRouter);
             verifyNoInteractions(sessionRegistry);
-            verifyNoInteractions(jobStreamStore);
         }
     }
 }

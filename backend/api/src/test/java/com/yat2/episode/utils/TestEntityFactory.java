@@ -69,8 +69,10 @@ public class TestEntityFactory {
 
     public static EpisodeStar createEpisodeStar(UUID nodeId, long userId, Set<Integer> competencyTypeIds) {
         EpisodeStar star = EpisodeStar.create(nodeId, userId);
-        star.update(new StarUpdateReq(competencyTypeIds, "situation", "task", "action", "result", LocalDate.now(),
-                                      LocalDate.now().plusDays(1)));
+
+        star.update(new StarUpdateReq(competencyTypeIds, "situation", "task", "action", "result", null, null),
+                    LocalDate.now(), LocalDate.now().plusDays(1));
+
         ReflectionTestUtils.setField(star, "createdAt", LocalDateTime.now());
         return star;
     }

@@ -82,13 +82,13 @@ public class EpisodeStar {
         return episodeStar;
     }
 
-    public void update(StarUpdateReq req) {
+    public void update(StarUpdateReq req, LocalDate startDate, LocalDate endDate) {
         if (req.situation() != null) this.situation = req.situation();
         if (req.task() != null) this.task = req.task();
         if (req.action() != null) this.action = req.action();
         if (req.result() != null) this.result = req.result();
-        if (req.startDate() != null) this.startDate = req.startDate();
-        if (req.endDate() != null) this.endDate = req.endDate();
+        this.startDate = startDate;
+        this.endDate = endDate;
 
         if (req.competencyTypeIds() != null) {
             this.competencyTypeIds.clear();
