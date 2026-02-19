@@ -27,7 +27,7 @@ const DateInput = memo(({ placeholder, value, onClick, registration }: DateInput
             />
             {/* 아이콘이 사라지지 않도록 shrink-0 적용 */}
             <div className="flex items-center justify-center w-5 h-5 shrink-0">
-                <Icon name="ic_calendar_days" size={20} color="var(-text-placeholder)" />
+                <Icon name="ic_calendar_days" size={17} color="var(--color-gray-800)" />
             </div>
         </div>
     );
