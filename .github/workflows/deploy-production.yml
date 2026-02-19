@@ -376,7 +376,8 @@ jobs:
                 --name episode-yjs-runner \
                 --env-file ~/app/.env \
                 --restart unless-stopped \
-                -p 80:80 \
+                --log-opt max-size=10m \
+                --log-opt max-file=3 \
                 "$IMAGE:$TAG"
 
               docker image prune -f
