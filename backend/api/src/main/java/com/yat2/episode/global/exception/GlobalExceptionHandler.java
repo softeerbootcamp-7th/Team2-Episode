@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -56,6 +57,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException e
     ) {
+        if (e.getRequiredType() == UUID.class) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST, "잘못된 UUID 형식입니다. parameter=" + e.getName()));
+        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST, ErrorCode.INVALID_REQUEST.getMessage()));
     }

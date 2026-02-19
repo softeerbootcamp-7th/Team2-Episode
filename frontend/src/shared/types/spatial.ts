@@ -14,6 +14,16 @@ export type Rect = {
     maxY: number;
 };
 
+// fit을 위한 마인드맵 최대 범위
+export type Bounds = {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    width: number;
+    height: number;
+};
+
 export type ViewportTransform = {
     // 카메라 설정 값
     x: number;

@@ -1,24 +1,36 @@
 package com.yat2.episode.episode;
 
 import lombok.RequiredArgsConstructor;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import com.yat2.episode.competency.CompetencyTypeRepository;
+import com.yat2.episode.competency.CompetencyTypeService;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.EpisodeSearchReq;
 import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.MindmapEpisodeRes;
 import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
 import com.yat2.episode.mindmap.MindmapParticipant;
 import com.yat2.episode.mindmap.MindmapParticipantRepository;
+import com.yat2.episode.mindmap.constants.MindmapVisibility;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +38,7 @@ import com.yat2.episode.mindmap.MindmapParticipantRepository;
 public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
-    private final CompetencyTypeRepository competencyTypeRepository;
+    private final CompetencyTypeService competencyTypeService;
     private final EpisodeStarRepository episodeStarRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
     private final MindmapParticipantRepository mindmapParticipantRepository;
@@ -36,10 +48,75 @@ public class EpisodeService {
     }
 
     public List<EpisodeSummaryRes> getMindmapEpisodes(UUID mindmapId, long userId) {
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+        return episodeRepository.findSummariesByMindmapIdAndUserId(mindmapId, userId);
+    }
 
-        return episodeRepository.findDetailsByMindmapIdAndUserId(mindmapId, userId).stream().map(EpisodeSummaryRes::of)
-                .toList();
+    @Transactional(readOnly = true)
+    public List<MindmapEpisodeRes> searchEpisodes(long userId, EpisodeSearchReq req) {
+        List<MindmapParticipant> participants = findParticipantsByFilter(userId, req);
+
+        if (participants.isEmpty()) return List.of();
+
+        List<UUID> allowedMindmapIds = participants.stream().map(p -> p.getMindmap().getId()).toList();
+        String keyword = (req.search() == null) ? null : req.search().trim();
+        List<EpisodeStar> episodeStars = episodeStarRepository.searchEpisodes(userId, allowedMindmapIds, keyword);
+
+        if (episodeStars.isEmpty()) {
+            return List.of();
+        }
+
+        return toMindmapEpisodeResList(episodeStars, participants);
+    }
+
+    private List<MindmapEpisodeRes> toMindmapEpisodeResList(
+            List<EpisodeStar> stars, List<MindmapParticipant> participants) {
+        if (stars == null || stars.isEmpty()) return List.of();
+        Map<Integer, CompetencyTypeRes> ctResMap = competencyTypeService.getAllData().stream()
+                .collect(Collectors.toMap(CompetencyTypeRes::id, Function.identity()));
+
+        Map<UUID, MindmapParticipant> participantByMindmapId = participants.stream()
+                .collect(Collectors.toMap(p -> p.getMindmap().getId(), Function.identity(), (a, b) -> a));
+
+        Map<UUID, List<EpisodeDetail>> episodeDetailsByMindmapId = new LinkedHashMap<>();
+
+        for (EpisodeStar s : stars) {
+            Episode e = s.getEpisode();
+
+            EpisodeDetail detail = buildEpisodeDetail(e, s, ctResMap);
+            episodeDetailsByMindmapId.computeIfAbsent(e.getMindmapId(), k -> new ArrayList<>()).add(detail);
+        }
+
+        List<MindmapEpisodeRes> result = new ArrayList<>(episodeDetailsByMindmapId.size());
+
+        for (Map.Entry<UUID, List<EpisodeDetail>> entry : episodeDetailsByMindmapId.entrySet()) {
+            UUID mindmapId = entry.getKey();
+            List<EpisodeDetail> details = entry.getValue();
+
+            MindmapParticipant p = participantByMindmapId.get(mindmapId);
+            if (p == null) continue;
+
+            String mindmapName = p.getMindmap().getName();
+            boolean isShared = p.getMindmap().isShared();
+
+            result.add(new MindmapEpisodeRes(mindmapId, mindmapName, isShared, List.copyOf(details)));
+        }
+
+        return List.copyOf(result);
+    }
+
+
+    private List<MindmapParticipant> findParticipantsByFilter(long userId, EpisodeSearchReq req) {
+        MindmapVisibility type = req.mindmapType();
+
+        if (req.mindmapId() != null) {
+            return List.of(mindmapAccessValidator.findParticipantOrThrow(req.mindmapId(), userId));
+        }
+
+        return switch (type) {
+            case PRIVATE -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, false);
+            case PUBLIC -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, true);
+            case ALL -> mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        };
     }
 
     @Transactional
@@ -65,14 +142,17 @@ public class EpisodeService {
                 .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND));
         episode.update(episodeUpsertReq);
 
-        return EpisodeDetail.of(episode, episodeStar);
+        return buildEpisodeDetail(episode, episodeStar);
     }
 
     @Transactional
     public void updateStar(UUID nodeId, long userId, StarUpdateReq starUpdateReq) {
-        validateDates(starUpdateReq.startDate(), starUpdateReq.endDate());
         validateCompetencyIds(starUpdateReq.competencyTypeIds());
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
+        LocalDate newStart = resolvePatchedDate(starUpdateReq.startDate(), episodeStar.getStartDate());
+        LocalDate newEnd = resolvePatchedDate(starUpdateReq.endDate(), episodeStar.getEndDate());
+
+        validateDates(newStart, newEnd);
         episodeStar.update(starUpdateReq);
     }
 
@@ -96,13 +176,23 @@ public class EpisodeService {
         episodeStar.clearDates();
     }
 
-    private Episode getEpisodeOrThrow(UUID nodeId) {
-        return episodeRepository.findById(nodeId).orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+    private EpisodeDetail getEpisodeAndStarOrThrow(UUID nodeId, long userId) {
+        EpisodeStar s = episodeStarRepository.findStarDetail(nodeId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+        return buildEpisodeDetail(s.getEpisode(), s);
     }
 
-    private EpisodeDetail getEpisodeAndStarOrThrow(UUID nodeId, long userId) {
-        return episodeRepository.findDetail(nodeId, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EPISODE_NOT_FOUND));
+    private EpisodeDetail buildEpisodeDetail(Episode episode, EpisodeStar star) {
+        List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(star.getCompetencyTypeIds());
+        return EpisodeDetail.of(episode, star, ctResList);
+    }
+
+    private EpisodeDetail buildEpisodeDetail(Episode e, EpisodeStar s, Map<Integer, CompetencyTypeRes> ctMap) {
+        List<CompetencyTypeRes> ctResList = (s.getCompetencyTypeIds() == null) ? List.of() :
+                                            s.getCompetencyTypeIds().stream().map(ctMap::get).filter(Objects::nonNull)
+                                                    .sorted(Comparator.comparing(CompetencyTypeRes::id)).toList();
+
+        return EpisodeDetail.of(e, s, ctResList);
     }
 
     private EpisodeStar getStarOrThrow(UUID nodeId, long userId) {
@@ -117,16 +207,20 @@ public class EpisodeService {
         return episodeRepository.save(newEpisode);
     }
 
-    private EpisodeStar createNewStar(EpisodeId episodeId) {
-        EpisodeStar newEpisodeStar = EpisodeStar.create(episodeId.getNodeId(), episodeId.getUserId());
-
-        return episodeStarRepository.save(newEpisodeStar);
-    }
-
     private void validateDates(LocalDate startDate, LocalDate endDate) {
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
+    }
+
+    private LocalDate resolvePatchedDate(JsonNullable<LocalDate> patch, LocalDate before) {
+        if (patch == null || patch.isUndefined()) {
+            return before;
+        }
+        if (!patch.isPresent() || patch.get() == null) {
+            return null;
+        }
+        return patch.get();
     }
 
     private void validateCompetencyIds(Set<Integer> competencyIds) {
@@ -134,7 +228,7 @@ public class EpisodeService {
             return;
         }
 
-        long count = competencyTypeRepository.countByIdIn(competencyIds);
+        long count = competencyTypeService.countByIdIn(competencyIds);
         if (count != competencyIds.size()) {
             throw new CustomException(ErrorCode.INVALID_COMPETENCY_TYPE);
         }

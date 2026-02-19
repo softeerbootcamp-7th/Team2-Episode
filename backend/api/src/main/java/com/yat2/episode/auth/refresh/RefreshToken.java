@@ -7,7 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,12 +23,18 @@ import com.yat2.episode.user.User;
 @Table(name = "refresh_token")
 public class RefreshToken {
 
+    public RefreshToken(User userRef, String tokenHash, LocalDateTime expiresAt) {
+        this.user = userRef;
+        this.tokenHash = tokenHash;
+        this.expiresAt = expiresAt;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "token_hash", nullable = false, unique = true)
@@ -45,5 +51,10 @@ public class RefreshToken {
 
     public boolean isExpired() {
         return expiresAt.isBefore(LocalDateTime.now());
+    }
+
+    public void rotate(String newTokenHash, LocalDateTime newExpiresAt) {
+        this.tokenHash = newTokenHash;
+        this.expiresAt = newExpiresAt;
     }
 }

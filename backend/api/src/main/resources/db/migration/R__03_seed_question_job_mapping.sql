@@ -1,4 +1,4 @@
-INSERT INTO question_job_mappings (question_id, job_id)
+INSERT IGNORE INTO question_job_mappings (question_id, job_id)
 SELECT q.id, j.id
 FROM (
          SELECT '공동의 목표를 가진 팀 활동 중 가장 기억에 남는 경험을 한 가지 선택하여, 팀에서의 역할과 기여, 성과를 구체적으로 작성해 주세요.' AS q_content, '경영기획·전략·사업기획' AS j_name UNION ALL
@@ -505,7 +505,7 @@ FROM (
          JOIN questions q ON q.content = seed.q_content
          JOIN jobs j ON j.name = seed.j_name;
 
-INSERT INTO question_job_mappings (question_id, job_id)
+INSERT IGNORE INTO question_job_mappings (question_id, job_id)
 SELECT q.id, j.id
 FROM (
          SELECT '주어진 업무 외에 스스로 필요성을 느껴 주도적으로 실행한 경험을 서술해 주십시오.' AS q_content, '견적·원가·시공관리' AS j_name UNION ALL
@@ -1012,7 +1012,7 @@ FROM (
          JOIN questions q ON q.content = seed.q_content
          JOIN jobs j ON j.name = seed.j_name;
 
-INSERT INTO question_job_mappings (question_id, job_id)
+INSERT IGNORE INTO question_job_mappings (question_id, job_id)
 SELECT q.id, j.id
 FROM (
          SELECT '여러 대안 중에서 어려운 선택을 해야 했던 경험을 제시하고, 선택 기준과 의사결정 과정을 상세히 작성해 주세요.' AS q_content, '콘텐츠마케팅' AS j_name UNION ALL
@@ -1519,7 +1519,7 @@ FROM (
          JOIN questions q ON q.content = seed.q_content
          JOIN jobs j ON j.name = seed.j_name;
 
-INSERT INTO question_job_mappings (question_id, job_id)
+INSERT IGNORE INTO question_job_mappings (question_id, job_id)
 SELECT q.id, j.id
 FROM (
          SELECT '주변에서 모두가 당연하게 받아들이던 방식을 창의적으로 바꾸어 성과를 낸 사례가 있다면 설명해 주십시오.' AS q_content, '방송·영상제작' AS j_name UNION ALL

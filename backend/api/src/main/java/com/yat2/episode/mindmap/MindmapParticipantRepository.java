@@ -61,4 +61,34 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
             @Param("userId") Long userId
     );
 
+
+    @Query(
+            """
+                        SELECT p
+                        FROM MindmapParticipant p
+                        JOIN FETCH p.mindmap m
+                        WHERE p.user.kakaoId = :userId
+                          AND m.shared = :shared
+                        ORDER BY p.createdAt DESC
+                    """
+    )
+    List<MindmapParticipant> findByUserIdAndSharedOrderByCreatedAtDesc(
+            @Param("userId") Long userId,
+            @Param("shared") boolean shared
+    );
+
+
+    @Query(
+            """
+                        SELECT p
+                        FROM MindmapParticipant p
+                        JOIN FETCH p.mindmap m
+                        WHERE p.user.kakaoId = :userId
+                        ORDER BY p.createdAt DESC
+                    """
+    )
+    List<MindmapParticipant> findByUserIdOrderByCreatedAtDesc(
+            @Param("userId") Long userId
+    );
+
 }

@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.EpisodeSummaryRes;
 import com.yat2.episode.mindmap.Mindmap;
 import com.yat2.episode.utils.AbstractRepositoryTest;
 
@@ -29,6 +29,8 @@ class EpisodeRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     EpisodeRepository episodeRepository;
+    @Autowired
+    EpisodeStarRepository episodeStarRepository;
     @Autowired
     EntityManager em;
 
@@ -55,8 +57,8 @@ class EpisodeRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("상세 리스트 조회")
-    void findDetailsByMindmapIdAndUserId() {
+    @DisplayName("요약 리스트 조회")
+    void findSummariesByMindmapIdAndUserId() {
         Mindmap m1 = createMindmap("mm-1");
         em.persist(m1);
 
@@ -74,15 +76,15 @@ class EpisodeRepositoryTest extends AbstractRepositoryTest {
 
         flushAndClear();
 
-        List<EpisodeDetail> details = episodeRepository.findDetailsByMindmapIdAndUserId(m1.getId(), userId);
+        List<EpisodeSummaryRes> summaries = episodeRepository.findSummariesByMindmapIdAndUserId(m1.getId(), userId);
 
-        assertThat(details).hasSize(2);
-        assertThat(details).extracting(EpisodeDetail::nodeId).containsExactlyInAnyOrder(node1, node2);
+        assertThat(summaries).hasSize(2);
+        assertThat(summaries).extracting(EpisodeSummaryRes::nodeId).containsExactlyInAnyOrder(node1, node2);
     }
 
     @Test
-    @DisplayName("에피소드 상세 조회")
-    void findDetail() {
+    @DisplayName("에피소드 상세 조회 (Star fetch)")
+    void findStarDetail() {
         Mindmap m1 = createMindmap("mm-1");
         em.persist(m1);
 
@@ -95,15 +97,16 @@ class EpisodeRepositoryTest extends AbstractRepositoryTest {
 
         flushAndClear();
 
-        Optional<EpisodeDetail> opt = episodeRepository.findDetail(node, userId);
+        Optional<EpisodeStar> opt = episodeStarRepository.findStarDetail(node, userId);
 
         assertThat(opt).isPresent();
-        assertThat(opt.get().nodeId()).isEqualTo(node);
-        assertThat(opt.get().competencyTypeIds()).containsExactlyInAnyOrder(7, 8);
+        assertThat(opt.get().getEpisode().getId()).isEqualTo(node);
+        assertThat(opt.get().getCompetencyTypeIds()).containsExactlyInAnyOrder(7, 8);
+        assertThat(opt.get().getEpisode().getMindmapId()).isEqualTo(m1.getId());
     }
 
     @Test
-    @DisplayName("Mindmap에 속한 competencyTypeIds 중복 제거 조회")
+    @DisplayName("Mindmap에 속한 competencyTypeIds 중복 제거 조회 (user별)")
     void findCompetencyTypesByMindmapId() {
         Mindmap m1 = createMindmap("mm-1");
         em.persist(m1);
@@ -124,9 +127,9 @@ class EpisodeRepositoryTest extends AbstractRepositoryTest {
 
         flushAndClear();
 
-        List<Integer> ids = episodeRepository.findCompetencyTypesByMindmapId(m1.getId());
+        List<Integer> ids = episodeStarRepository.findCompetencyTypesByMindmapId(m1.getId(), userA);
 
-        assertThat(ids).containsExactlyInAnyOrder(1, 2, 3, 4);
+        assertThat(ids).containsExactlyInAnyOrder(1, 2, 3);
     }
 
     private void flushAndClear() {

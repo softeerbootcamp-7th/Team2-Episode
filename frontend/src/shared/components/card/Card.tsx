@@ -15,6 +15,8 @@ const Card = ({
     gap = "md",
     yPadding = "lg",
     xPadding = "lg",
+    hoverable = true,
+    outlined = true,
     header,
     bottomContents,
     contents,
@@ -23,7 +25,7 @@ const Card = ({
     ...rest
 }: Props) => {
     return (
-        <div className={cn(variants({ yPadding, xPadding, gap }), className)} {...rest}>
+        <div className={cn(variants({ yPadding, xPadding, gap, hoverable, outlined }), className)} {...rest}>
             <div className="flex flex-col gap-4">
                 {header}
                 {contents}
@@ -39,25 +41,33 @@ const Card = ({
 
 export default Card;
 
-const variants = cva(
-    "text-gray-800 w-full h-full flex flex-col justify-between bg-white outline outline-gray-400 rounded-xl hover:outline-primary hover:outline-2 hover:shadow-lg transition-all",
-    {
-        variants: {
-            yPadding: {
-                sm: "py-3",
-                md: "py-4",
-                lg: "py-6",
-            },
-            xPadding: {
-                sm: "px-3",
-                md: "px-4",
-                lg: "px-6",
-            },
-            gap: {
-                sm: "gap-1",
-                md: "gap-2",
-                lg: "gap-3",
-            },
+const variants = cva("text-gray-800 w-full h-full flex flex-col justify-between bg-white rounded-xl transition-all", {
+    variants: {
+        yPadding: {
+            sm: "py-3",
+            md: "py-4",
+            lg: "py-6",
+        },
+        xPadding: {
+            sm: "px-3",
+            md: "px-4",
+            lg: "px-6",
+        },
+        gap: {
+            sm: "gap-1",
+            md: "gap-2",
+            lg: "gap-3",
+        },
+        hoverable: {
+            true: "hover:outline-primary hover:outline-2 hover:shadow-lg cursor-pointer",
+            false: "",
+        },
+        outlined: {
+            true: "outline outline-gray-400",
+            false: "",
         },
     },
-);
+    defaultVariants: {
+        hoverable: true,
+    },
+});

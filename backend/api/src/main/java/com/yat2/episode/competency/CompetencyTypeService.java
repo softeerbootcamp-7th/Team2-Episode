@@ -4,22 +4,34 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.yat2.episode.competency.dto.CompetencyTypeRes;
-import com.yat2.episode.episode.EpisodeRepository;
 
 @Service
 @RequiredArgsConstructor
 public class CompetencyTypeService {
     private final CompetencyTypeRepository competencyTypeRepository;
-    private final EpisodeRepository episodeRepository;
 
     public List<CompetencyTypeRes> getAllData() {
-        return competencyTypeRepository.findAll().stream().map(CompetencyTypeRes::of).toList();
+        return competencyTypeRepository.findAll().stream().map(CompetencyTypeRes::of)
+                .sorted(java.util.Comparator.comparing(CompetencyTypeRes::id)).toList();
     }
 
-    public List<Integer> getCompetencyTypesInMindmap(UUID mindmapId) {
-        return episodeRepository.findCompetencyTypesByMindmapId(mindmapId);
+    public List<CompetencyTypeRes> getCompetencyTypesInIds(Iterable<Integer> ids) {
+        return competencyTypeRepository.findAllById(ids).stream().map(CompetencyTypeRes::of)
+                .sorted(java.util.Comparator.comparing(CompetencyTypeRes::id)).toList();
+    }
+
+    public Map<Integer, CompetencyTypeRes> getCompetencyTypeResMap(Iterable<Integer> ids) {
+        return competencyTypeRepository.findAllById(ids).stream().map(CompetencyTypeRes::of)
+                .collect(Collectors.toMap(CompetencyTypeRes::id, Function.identity()));
+    }
+
+    public long countByIdIn(Set<Integer> ids) {
+        return competencyTypeRepository.countByIdIn(ids);
     }
 }

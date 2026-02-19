@@ -1,6 +1,8 @@
 package com.yat2.episode.episode;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.EpisodeSearchReq;
+import com.yat2.episode.episode.dto.MindmapEpisodeRes;
 import com.yat2.episode.episode.dto.StarUpdateReq;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
@@ -29,7 +34,7 @@ import static com.yat2.episode.global.constant.AttributeKeys.USER_ID;
 @RestController
 @AuthRequiredErrors
 @RequiredArgsConstructor
-@RequestMapping("/episodes/{nodeId}")
+@RequestMapping("/episodes")
 @Tag(name = "Episode", description = "에피소드 STAR 관련 API")
 public class EpisodeController {
 
@@ -37,7 +42,7 @@ public class EpisodeController {
 
     @Operation(summary = "에피소드 정보 조회", description = "에피소드 세부 정보를 조회합니다.")
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR })
-    @GetMapping
+    @GetMapping("/{nodeId}")
     public EpisodeDetail getEpisodeDetail(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId
@@ -53,7 +58,7 @@ public class EpisodeController {
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
               ErrorCode.EPISODE_STAR_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND }
     )
-    @PatchMapping("/stars")
+    @PatchMapping("/{nodeId}/stars")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateStar(
             @PathVariable UUID nodeId,
@@ -70,7 +75,7 @@ public class EpisodeController {
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
               ErrorCode.MINDMAP_NOT_FOUND }
     )
-    @DeleteMapping
+    @DeleteMapping("/{nodeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteEpisode(
             @PathVariable UUID nodeId,
@@ -84,7 +89,7 @@ public class EpisodeController {
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.EPISODE_STAR_NOT_FOUND,
               ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND }
     )
-    @PutMapping("/stars/clear")
+    @PutMapping("/{nodeId}/stars/clear")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearStar(
             @PathVariable UUID nodeId,
@@ -98,12 +103,25 @@ public class EpisodeController {
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND,
               ErrorCode.INTERNAL_ERROR }
     )
-    @DeleteMapping("/dates")
+    @DeleteMapping("/{nodeId}/dates")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearEpisodeDates(
             @PathVariable UUID nodeId,
             @RequestAttribute(USER_ID) long userId
     ) {
         episodeService.clearEpisodeDates(nodeId, userId);
+    }
+
+
+    @Operation(summary = "마인드맵 및 에피소드 목록 검색")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
+    @AuthRequiredErrors
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @GetMapping()
+    public List<MindmapEpisodeRes> getEpisodeListSearch(
+            @RequestAttribute(USER_ID) long userId,
+            @Valid EpisodeSearchReq req
+    ) {
+        return episodeService.searchEpisodes(userId, req);
     }
 }

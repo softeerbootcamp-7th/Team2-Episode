@@ -25,17 +25,18 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
 import com.yat2.episode.global.utils.UriUtil;
-import com.yat2.episode.mindmap.dto.MindmapCreateReq;
-import com.yat2.episode.mindmap.dto.MindmapDetailRes;
-import com.yat2.episode.mindmap.dto.MindmapNameRes;
-import com.yat2.episode.mindmap.dto.MindmapNameUpdateReq;
-import com.yat2.episode.mindmap.dto.MindmapSessionJoinRes;
-import com.yat2.episode.mindmap.dto.MindmapSummaryRes;
-import com.yat2.episode.mindmap.dto.MindmapUploadUrlRes;
+import com.yat2.episode.mindmap.constants.MindmapVisibility;
+import com.yat2.episode.mindmap.dto.request.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.request.MindmapNameUpdateReq;
+import com.yat2.episode.mindmap.dto.response.MindmapDetailRes;
+import com.yat2.episode.mindmap.dto.response.MindmapSessionJoinRes;
+import com.yat2.episode.mindmap.dto.response.MindmapSummaryRes;
+import com.yat2.episode.mindmap.dto.response.MindmapUploadUrlRes;
 import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 
 import static com.yat2.episode.global.constant.AttributeKeys.USER_ID;
@@ -89,7 +90,7 @@ public class MindmapController {
     )
     @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND })
     @GetMapping("/titles")
-    public List<MindmapNameRes> getMyMindmapNames(
+    public List<MindmapSummaryRes> getMyMindmapNames(
             @RequestAttribute(USER_ID) long userId
     ) {
         return mindmapService.getMindmapList(userId);
@@ -124,7 +125,7 @@ public class MindmapController {
 
     @Operation(
             summary = "마인드맵 공동 편집 참여", description = """
-            팀 마인드맵의 공동 편집 참여 전 인증 및 사용자 참여 정보를 생성합니다.
+            마인드맵의 공동 편집 참여 전 인증 및 사용자 참여 정보를 생성합니다.
             응답으로는 wss 최초 연결 시 필요한 토큰 데이터와 스냅샷용 presigned url을 제공합니다.
             """
     )
@@ -162,7 +163,7 @@ public class MindmapController {
     @Operation(summary = "마인드맵 즐겨찾기 상태 변경", description = "마인드맵의 즐겨찾기 여부를 설정하거나 해제합니다.")
     @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @PatchMapping("/{mindmapId}/favorite")
-    public MindmapDetailRes updateFavoriteStatus(
+    public MindmapSummaryRes updateFavoriteStatus(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId,
             @RequestParam boolean status
@@ -171,13 +172,16 @@ public class MindmapController {
     }
 
     @Operation(summary = "마인드맵 이름 변경", description = "마인드맵의 이름을 변경합니다. 팀 마인드맵 또한 모든 사용자에게 반영되는 수정 사항입니다.")
-    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @ApiErrorCodes(
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.INVALID_REQUEST }
+    )
     @PatchMapping("/{mindmapId}/name")
-    public MindmapDetailRes updateName(
+    public MindmapSummaryRes updateName(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId,
-            @Valid
             @RequestBody
+            @Valid
             MindmapNameUpdateReq request
     ) {
         return mindmapService.updateName(userId, mindmapId, request.name());
@@ -190,14 +194,22 @@ public class MindmapController {
               ErrorCode.MINDMAP_ACCESS_FORBIDDEN }
     )
     @PostMapping("/{mindmapId}/participants")
-    public MindmapDetailRes addParticipant(
+    public MindmapSummaryRes addParticipant(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
         return mindmapService.saveMindmapParticipant(userId, mindmapId);
     }
 
-    public enum MindmapVisibility {
-        ALL, PRIVATE, PUBLIC
+    @Operation(summary = "특정 마인드맵 내 역량 리스트 조회")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
+    @AuthRequiredErrors
+    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @GetMapping("/{mindmapId}/competency-types")
+    public List<CompetencyTypeRes> getCompetenciesInMindmap(
+            @RequestAttribute(USER_ID) long userId,
+            @PathVariable UUID mindmapId
+    ) {
+        return mindmapService.getCompetencyTypesInMindmap(mindmapId, userId);
     }
 }

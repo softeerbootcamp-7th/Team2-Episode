@@ -1,5 +1,5 @@
-import type {JobConsumer} from '../infrastructure/JobConsumer';
-import type {SnapshotService} from '../services/SnapshotService';
+import type { JobConsumer } from "../infrastructure/JobConsumer";
+import type { SnapshotService } from "../services/SnapshotService";
 import wait from "waait";
 
 export class SnapshotWorker {
@@ -11,9 +11,8 @@ export class SnapshotWorker {
             service: SnapshotService;
             blockMs: number;
             count?: number;
-        }
-    ) {
-    }
+        },
+    ) {}
 
     async init(): Promise<void> {
         await this.deps.consumer.init();
@@ -23,10 +22,35 @@ export class SnapshotWorker {
         this.running = true;
 
         while (this.running) {
-            // todo: consumer 읽기
-            // todo: 읽어온 job 기준으로 snapshot 처리
-            // todo: job ack 처리
-            await wait(3000);
+            try {
+                const jobs = await this.deps.consumer.read(this.deps.blockMs, this.deps.count);
+                if (!jobs || jobs.length === 0) continue;
+
+                const successIds: string[] = [];
+
+                for (const job of jobs) {
+                    try {
+                        await this.deps.service.process(job);
+                        successIds.push(job.entryId);
+                        console.log(
+                            `[Worker] ${job.type} Job 처리 완료 entryId: ${job.entryId}  roomId: ${job.roomId}`,
+                        );
+                    } catch (error) {
+                        console.error(
+                            `[Worker] ${job.type} Job 처리 실패! entryId: ${job.entryId}  roomId: ${job.roomId}`,
+                            error,
+                        );
+                    }
+                }
+
+                if (successIds.length) {
+                    await this.deps.consumer.ack(successIds);
+                    await this.deps.consumer.del(successIds);
+                }
+            } catch (e) {
+                console.error("[Worker] 전역 Error:", e);
+                await wait(this.deps.blockMs);
+            }
         }
     }
 

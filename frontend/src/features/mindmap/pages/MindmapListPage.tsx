@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { useNavigate } from "react-router";
 
-import MindmapList from "@/features/mindmap/components/MindmapList";
-import { MindmapProvider } from "@/features/mindmap/engine/MindmapProvider";
+import MindmapList from "@/features/mindmap/components/list/MindmapList";
 import { MindmapType } from "@/features/mindmap/types/mindmap";
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
