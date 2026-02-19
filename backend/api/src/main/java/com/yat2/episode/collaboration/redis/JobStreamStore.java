@@ -32,15 +32,15 @@ public class JobStreamStore {
     }
 
     private void publish(JobType type, UUID roomId, Duration dedupeTtl) {
-        if (!tryDedupe(type, roomId, dedupeTtl)) {
-            return;
-        }
-
-        Map<String, String> fields = new HashMap<>();
-        fields.put(redisProperties.jobStream().fields().type(), type.name());
-        fields.put(redisProperties.jobStream().fields().roomId(), roomId.toString());
-
         try {
+            if (type != JobType.SNAPSHOT && !tryDedupe(type, roomId, dedupeTtl)) {
+                return;
+            }
+
+            Map<String, String> fields = new HashMap<>();
+            fields.put(redisProperties.jobStream().fields().type(), type.name());
+            fields.put(redisProperties.jobStream().fields().roomId(), roomId.toString());
+
             StreamOperations<String, String, String> ops = stringRedisTemplate.opsForStream();
             MapRecord<String, String, String> record =
                     StreamRecords.newRecord().in(redisProperties.jobStream().key()).ofMap(fields);
