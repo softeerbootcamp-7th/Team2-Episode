@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -186,7 +187,7 @@ public class EpisodeService {
     private EpisodeDetail buildEpisodeDetail(Episode e, EpisodeStar s, Map<Integer, CompetencyTypeRes> ctMap) {
         List<CompetencyTypeRes> ctResList = (s.getCompetencyTypeIds() == null) ? List.of() :
                                             s.getCompetencyTypeIds().stream().map(ctMap::get).filter(Objects::nonNull)
-                                                    .toList();
+                                                    .sorted(Comparator.comparing(CompetencyTypeRes::id)).toList();
 
         return EpisodeDetail.of(e, s, ctResList);
     }
