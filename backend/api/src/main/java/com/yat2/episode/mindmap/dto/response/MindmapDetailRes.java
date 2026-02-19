@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.mindmap.MindmapParticipant;
 
 public record MindmapDetailRes(
@@ -11,14 +12,14 @@ public record MindmapDetailRes(
         String mindmapName,
         boolean isFavorite,
         boolean isShared,
-        List<Integer> competencyTypeIds,
+        List<CompetencyTypeRes> competencyTypes,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static MindmapDetailRes of(MindmapParticipant mindmapParticipant, List<Integer> competencyTypeIds) {
+    public static MindmapDetailRes of(MindmapParticipant mindmapParticipant, List<CompetencyTypeRes> competencyTypes) {
         return new MindmapDetailRes(mindmapParticipant.getMindmap().getId(), mindmapParticipant.getMindmap().getName(),
                                     mindmapParticipant.isFavorite(), mindmapParticipant.getMindmap().isShared(),
-                                    competencyTypeIds, mindmapParticipant.getMindmap().getCreatedAt(),
+                                    competencyTypes, mindmapParticipant.getMindmap().getCreatedAt(),
                                     mindmapParticipant.getMindmap().getUpdatedAt());
     }
 }

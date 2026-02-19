@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
 import com.yat2.episode.episode.dto.StarUpdateReq;
@@ -48,6 +49,8 @@ class EpisodeServiceTest {
     private MindmapAccessValidator mindmapAccessValidator;
     @Mock
     private MindmapParticipantRepository mindmapParticipantRepository;
+    @Mock
+    private CompetencyTypeService competencyTypeService;
 
     private UUID nodeId;
     private UUID mindmapId;
@@ -70,7 +73,6 @@ class EpisodeServiceTest {
             Episode episode = Episode.create(nodeId, mindmapId);
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
 
-            // EpisodeStar 내부 episode 필드는 보통 JPA가 채우지만, 단위 테스트에선 직접 주입이 어려우니 spy/mock로 처리
             EpisodeStar spyStar = org.mockito.Mockito.spy(star);
             when(spyStar.getEpisode()).thenReturn(episode);
 
