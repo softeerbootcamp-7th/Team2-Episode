@@ -79,10 +79,8 @@ public class EpisodeService {
 
         for (EpisodeStar s : stars) {
             Episode e = s.getEpisode();
-            List<CompetencyTypeRes> cts = (s.getCompetencyTypeIds() == null) ? List.of() :
-                                          s.getCompetencyTypeIds().stream().map(ctResMap::get).filter(Objects::nonNull)
-                                                  .toList();
-            EpisodeDetail detail = EpisodeDetail.of(e, s, cts);
+
+            EpisodeDetail detail = buildEpisodeDetail(e, s, ctResMap);
             episodeDetailsByMindmapId.computeIfAbsent(e.getMindmapId(), k -> new ArrayList<>()).add(detail);
         }
 
@@ -183,6 +181,14 @@ public class EpisodeService {
     private EpisodeDetail buildEpisodeDetail(Episode episode, EpisodeStar star) {
         List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(star.getCompetencyTypeIds());
         return EpisodeDetail.of(episode, star, ctResList);
+    }
+
+    private EpisodeDetail buildEpisodeDetail(Episode e, EpisodeStar s, Map<Integer, CompetencyTypeRes> ctMap) {
+        List<CompetencyTypeRes> ctResList = (s.getCompetencyTypeIds() == null) ? List.of() :
+                                            s.getCompetencyTypeIds().stream().map(ctMap::get).filter(Objects::nonNull)
+                                                    .toList();
+
+        return EpisodeDetail.of(e, s, ctResList);
     }
 
     private EpisodeStar getStarOrThrow(UUID nodeId, long userId) {
