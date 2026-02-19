@@ -54,7 +54,7 @@ export const MOCK_EPISODE_DETAILS: Record<string, EpisodeDetailResponse> = {
         updatedAt: "2024-08-31T00:00:00Z",
     },
     n2: {
-        nodeId: "n1",
+        nodeId: "n2",
         mindmapId: "m1",
         content: "고객 데이터 분석으로 게시물 참여율 상승",
         startDate: "2024.03.05",
@@ -72,7 +72,7 @@ export const MOCK_EPISODE_DETAILS: Record<string, EpisodeDetailResponse> = {
         updatedAt: "2024-08-31T00:00:00Z",
     },
     n3: {
-        nodeId: "n1",
+        nodeId: "n3",
         mindmapId: "m1",
         content: "고객 데이터 분석으로 게시물 참여율 상승",
         startDate: "2024.03.05",

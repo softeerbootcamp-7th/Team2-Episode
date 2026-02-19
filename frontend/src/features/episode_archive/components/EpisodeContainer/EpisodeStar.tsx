@@ -5,24 +5,26 @@ import Icon from "@/shared/components/icon/Icon";
 
 type Props = {
     detail: EpisodeDetailResponse;
+    onEditClick: () => void; // 수정 모드 진입 콜백
 };
 
-export default function EpisodeStar({ detail }: Props) {
-    const iconColor = "var(--color-text-placeholder)";
+const iconColor = "var(--color-text-placeholder)";
+
+export default function EpisodeStar({ detail, onEditClick }: Props) {
+    const handleButtonClick = (e: React.MouseEvent) => {
+        console.log("✅ [Star] 수정 버튼 클   릭됨");
+        // 이벤트 버블링(부모로 클릭이 퍼지는 현상)을 막기 위해 추가
+        e.stopPropagation();
+        onEditClick();
+    };
 
     return (
-        /**
-         * EpisodeBar의 flex-1 내부 구조와 일치시킴:
-         * 1fr 1fr 1fr 1fr (STAR) | w-32 (역량) | w-15 (아이콘 영역)
-         */
         <div className="grid grid-cols-[1fr_1fr_1fr_1fr_8rem_3.75rem] w-full h-full items-stretch bg-white">
-            {/* 1fr 영역 (SITUATION, TASK, ACTION, RESULT) */}
             <EpisodeItem>{detail.situation}</EpisodeItem>
             <EpisodeItem>{detail.task}</EpisodeItem>
             <EpisodeItem>{detail.action}</EpisodeItem>
             <EpisodeItem>{detail.result}</EpisodeItem>
 
-            {/* w-32 영역 (역량) - 8rem */}
             <div className="flex flex-wrap gap-1 p-4 items-start justify-start border-r border-gray-100">
                 {detail.competencyTypes.map((type) => (
                     <Chip key={type.id} as="span" variant="basic" size="sm">
@@ -31,9 +33,8 @@ export default function EpisodeStar({ detail }: Props) {
                 ))}
             </div>
 
-            {/* w-15 영역 (아이콘/Empty 대응) - 3.75rem */}
             <div className="flex flex-col items-start justify-start gap-4 p-4">
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                <button onClick={handleButtonClick} className="p-1 hover:bg-gray-100 rounded transition-colors">
                     <Icon name="ic_nodemenu_edit" color={iconColor} size={20} />
                 </button>
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors">
