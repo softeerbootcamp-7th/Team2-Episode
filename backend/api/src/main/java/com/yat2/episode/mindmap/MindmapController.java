@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -205,7 +206,7 @@ public class MindmapController {
     @AuthRequiredErrors
     @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
     @GetMapping("/{mindmapId}/competency-types")
-    public List<Integer> getCompetenciesInMindmap(
+    public List<CompetencyTypeRes> getCompetenciesInMindmap(
             @RequestAttribute(USER_ID) long userId,
             @PathVariable UUID mindmapId
     ) {
