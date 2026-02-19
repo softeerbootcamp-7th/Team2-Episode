@@ -58,7 +58,7 @@ public interface EpisodeStarRepository extends JpaRepository<EpisodeStar, Episod
                             s.task LIKE %:keyword% OR
                             s.action LIKE %:keyword% OR
                             s.result LIKE %:keyword%
-                          )
+                          ) ORDER BY s.createdAt DESC
                     """
     )
     List<EpisodeStar> searchEpisodes(
