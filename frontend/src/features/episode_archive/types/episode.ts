@@ -1,36 +1,40 @@
-/** 에피소드 요약 정보 (리스트 조회용) */
-export type EpisodeSummary = {
+import { MindmapType } from "@/features/mindmap/types/mindmap";
+import { HttpParams } from "@/shared/api/types";
+
+/** 에피소드 내 역량 태그 타입 */
+export type CompetencyTag = {
+    id: number;
+    category: string;
+    competencyType: string;
+};
+
+/** 에피소드 상세 정보 (STAR 및 메타데이터 포함) */
+export type EpisodeDetail = {
     nodeId: string;
     mindmapId: string;
     content: string;
-    startDate: string;
-    endDate: string;
-};
-
-/** 에피소드 STAR 컨텐츠 및 역량 필드 */
-export type EpisodeContent = {
-    competencyTypes: competencyType[];
     situation: string;
     task: string;
     action: string;
     result: string;
-};
-
-/** 에피소드 수정을 위한 요청 데이터 (모든 필드 필수값) */
-export type UpdateEpisodeRequest = EpisodeContent & {
     startDate: string;
     endDate: string;
+    competencyTypes: CompetencyTag[];
+    createdAt: string;
+    updatedAt: string;
 };
 
-/** 에피소드 상세 정보 응답 데이터 */
-export type EpisodeDetailResponse = EpisodeSummary &
-    EpisodeContent & {
-        createdAt: string;
-        updatedAt: string;
-    };
+/** 통합 검색 응답: 마인드맵 그룹 구조 */
+export type MindmapGroupResponse = {
+    mindmapId: string;
+    mindmapName: string;
+    isShared: boolean;
+    episodes: EpisodeDetail[];
+};
 
-export type competencyType = {
-    id: number;
-    category: string;
-    competencyType: string;
+/** 에피소드 통합 검색 요청 파라미터 (HttpParams 확장) */
+export type SearchEpisodesReq = HttpParams & {
+    mindmapId?: string;
+    mindmapType: MindmapType;
+    search: string;
 };
