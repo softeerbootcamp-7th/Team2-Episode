@@ -19,6 +19,21 @@ import { createMindmapStore, MindmapStoreState, StoreChannel } from "@/features/
 import { KeyLikeEvent, PointerLikeEvent, WheelLikeEvent } from "@/shared/types/native_like_event";
 import type { Rect } from "@/shared/types/spatial";
 
+function getTxOriginType(origin: AdapterChange["origin"]): string | boolean | null {
+    if (!origin) return null;
+    if (typeof origin === "string") return origin;
+
+    if (typeof origin === "object" && origin !== null && "type" in origin) {
+        const typeValue = (origin as { type: unknown }).type;
+
+        if (typeof typeValue === "string" || typeof typeValue === "boolean") {
+            return typeValue;
+        }
+    }
+
+    return null;
+}
+
 function cloneNodesMapForLayout(nodes: Map<NodeId, NodeElement>): Map<NodeId, NodeElement> {
     const out = new Map<NodeId, NodeElement>();
     nodes.forEach((node, id) => {
@@ -28,6 +43,7 @@ function cloneNodesMapForLayout(nodes: Map<NodeId, NodeElement>): Map<NodeId, No
     });
     return out;
 }
+
 function makeMeta(partial?: Partial<MindmapCommandMeta>): MindmapCommandMeta {
     return {
         origin: partial?.origin ?? "local",
@@ -89,7 +105,6 @@ export class MindmapController implements IMindmapController {
 
     private unsubAdapter: (() => void) | null = null;
 
-    // viewport store commit coalesce(rAF)
     private viewportCommitScheduled = false;
 
     private destroyed = false;
@@ -173,7 +188,6 @@ export class MindmapController implements IMindmapController {
                 }
             }
 
-            // added
             for (const [id] of nextMap.entries()) {
                 const prev = prevMap.get(id);
                 if (!prev) changed.add(id);
@@ -240,7 +254,6 @@ export class MindmapController implements IMindmapController {
 
         this.canvas = svg;
 
-        // viewport는 viewBox를 직접 업데이트 (React 리렌더 X)
         this.viewport = new ViewportController(svg, () => this.scheduleViewportCommit());
 
         this.interaction = new InteractionMachine({
@@ -432,7 +445,6 @@ export class MindmapController implements IMindmapController {
         const runLayout = enriched.some((c) => c.scope === "remote" && (c.meta.layout ?? "auto") !== "skip");
 
         if (!hasShared) {
-            // local only
             for (const c of enriched) this.applyLocalCommand(c);
             return;
         }
@@ -510,7 +522,7 @@ export class MindmapController implements IMindmapController {
                 type: "NODE/UPDATE_CONTENTS",
                 scope: "remote",
                 payload: { nodeId, contents },
-                meta: makeMeta({ origin: "local", layout: "skip" }),
+                meta: makeMeta({ origin: "local", layout: "auto" }),
             });
         },
 
@@ -607,17 +619,14 @@ export class MindmapController implements IMindmapController {
             if (hit.kind !== "node") return;
 
             const node = this.tree.safeGetNode(hit.nodeId);
-            if (!node || node.type === "root") return; // root는 lock 금지
+            if (!node || node.type === "root") return;
 
-            // presence 없으면 lock 불가
             if (!this.presenceManager) return;
 
-            // 다른 사람이 lock 중이면 획득 불가
             if (this.isNodeLockedByOther(hit.nodeId)) return;
 
             const curSelfLocked = this.store.getState().locks.selfLockedNodeId;
 
-            // toggle
             if (curSelfLocked === hit.nodeId) {
                 this.presenceManager.setLock(null);
             } else {
@@ -688,12 +697,9 @@ export class MindmapController implements IMindmapController {
         switch (cmd.type) {
             case "NODE/ADD": {
                 const { baseId, direction, side, data } = cmd.payload;
-                // 1. 노드를 먼저 생성/연결합니다.
+
                 const newId = this.tree.attachTo({ baseNodeId: baseId, direction, addNodeDirection: side });
 
-                // 2. 전달받은 data에 contents가 있다면 flat하게 업데이트합니다.
-                // cmd.payload.data.contents -> cmd.payload.contents 혹은 구조에 맞춰 접근
-                // 보통 ADD 페이로드에 초기 contents가 포함되어 옵니다.
                 if (data?.contents !== undefined) {
                     this.tree.update(newId, { contents: data.contents });
                 }
@@ -725,7 +731,6 @@ export class MindmapController implements IMindmapController {
                 const cur = this.tree.safeGetNode(nodeId);
                 if (!cur) return;
 
-                // ✅ 수정: data.contents가 아닌 flat한 contents로 직접 업데이트
                 this.tree.update(nodeId, { contents });
                 return;
             }
@@ -736,9 +741,8 @@ export class MindmapController implements IMindmapController {
     }
 
     private handleAdapterChange(change: AdapterChange) {
-        console.log("변해따");
-        // this.quadTree.clear();
-        // this.adapter.getMap().forEach((node) => this.quadTree.insert(node));
+        this.quadTree.clear();
+        this.adapter.getMap().forEach((node) => this.quadTree.insert(node));
 
         const changedChannels: StoreChannel[] = ["graph"];
         for (const id of change.changedIds) changedChannels.push(`node:${id}` as const);
@@ -747,7 +751,6 @@ export class MindmapController implements IMindmapController {
         const selectionCleared = selected ? !this.adapter.get(selected) : false;
         if (selectionCleared) changedChannels.push("selection");
 
-        console.log(changedChannels);
         this.store.setState(
             (prev) => ({
                 ...prev,
@@ -763,15 +766,17 @@ export class MindmapController implements IMindmapController {
             { channels: changedChannels },
         );
 
-        // ✅ 핵심: remote 수신 처리에서 Yjs에 write(레이아웃 commit) 하지 않기
+        const origin = change.origin;
+        if (!origin) {
+            return;
+        }
 
-        // // (선택) local에서만, 그리고 auto-layout 같은 내부 트랜잭션은 제외하고 싶다면:
-        // const originType = getTxOriginType(change.origin);
-        // const isLayoutTransaction = originType === "auto" || originType === "mindmap-init-layout";
-        // if (isLayoutTransaction) return;
+        const originType = getTxOriginType(origin);
+        const isLayoutTransaction = originType === "auto" || originType === "mindmap-init-layout";
 
-        // 보통은 여기서도 굳이 auto-layout을 다시 commit할 필요가 없습니다.
-        // dispatch에서 이미 layout을 포함해 쓰고 있으니까요.
+        if (isLayoutTransaction) {
+            return;
+        }
     }
 
     private refreshGraphChannels(channels: StoreChannel[]) {
