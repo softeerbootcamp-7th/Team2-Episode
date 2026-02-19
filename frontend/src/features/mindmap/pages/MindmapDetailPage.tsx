@@ -44,7 +44,6 @@ export default function MindmapDetailPage() {
     if (!isSynced) {
         return (
             <div className="h-full w-full flex justify-center items-center">
-                Spinner
                 <Spinner contents={"서버에서 마인드맵 데이터를 불러오는 중입니다..."} />
             </div>
         );
