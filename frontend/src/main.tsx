@@ -9,7 +9,9 @@ import { queryClient } from "@/shared/api/query_client";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
-    <QueryClientProvider client={queryClient}>
-        <App />
-    </QueryClientProvider>,
+    <StrictMode>
+        <QueryClientProvider client={queryClient}>
+            <App />
+        </QueryClientProvider>
+    </StrictMode>,
 );
