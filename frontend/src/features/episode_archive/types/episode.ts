@@ -8,6 +8,17 @@ export type CompetencyTag = {
     competencyType: string;
 };
 
+/** * 에피소드 요약 정보 (리스트 조회용)
+ * EpisodeDetail에서 상세 STAR 내용을 제외한 구조입니다.
+ */
+export type EpisodeSummary = {
+    nodeId: string;
+    mindmapId: string;
+    content: string;
+    startDate: string;
+    endDate: string;
+};
+
 /** 에피소드 상세 정보 (STAR 및 메타데이터 포함) */
 export type EpisodeDetail = {
     nodeId: string;
@@ -23,6 +34,9 @@ export type EpisodeDetail = {
     createdAt: string;
     updatedAt: string;
 };
+
+/** 상세 정보 응답 타입 (상세 조회 API 전용) */
+export type EpisodeDetailResponse = EpisodeDetail;
 
 /** 통합 검색 응답: 마인드맵 그룹 구조 */
 export type MindmapGroupResponse = {

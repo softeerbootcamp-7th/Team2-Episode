@@ -1,11 +1,13 @@
 import EpisodeBar from "@/features/episode_archive/components/episodeContainer/EpisodeBar";
 import EpisodeItemColumn from "@/features/episode_archive/components/episodeContainer/EpisodeItemColumn";
-import { EpisodeSummary } from "@/features/episode_archive/types/episode";
+// EpisodeSummary 대신 EpisodeDetail을 가져옵니다.
+import { EpisodeDetail } from "@/features/episode_archive/types/episode";
 import { cn } from "@/utils/cn";
 
 type Props = {
     mindmapName: string;
-    episodes: EpisodeSummary[];
+    // 타입을 EpisodeDetail[]로 변경하여 하위 컴포넌트와의 타입 불일치를 해결합니다.
+    episodes: EpisodeDetail[];
 };
 
 export default function MindmapEpisodeContainer({ mindmapName, episodes }: Props) {
@@ -18,7 +20,7 @@ export default function MindmapEpisodeContainer({ mindmapName, episodes }: Props
 
                 <div className="flex flex-col w-full">
                     <EpisodeBar />
-                    {/* 에피소드 리스트 간격: mt-2 (8px) */}
+                    {/* 이제 ep는 EpisodeDetail 타입이므로 EpisodeItemColumn에 전달 시 에러가 나지 않습니다. */}
                     <div className="flex flex-col mt-2">
                         {episodes.map((ep) => (
                             <EpisodeItemColumn key={ep.nodeId} summary={ep} />
@@ -27,12 +29,8 @@ export default function MindmapEpisodeContainer({ mindmapName, episodes }: Props
                 </div>
             </section>
 
-            {/* 컨테이너 간 구분선 (5px)
-              - h-[5px]: 커스텀 높이
-              - bg-gray-100: 테마에 정의된 #f7f7f9 적용
-              - shadow-[inset...]: 테마의 gray-500(#acadb4)을 활용한 안쪽 그림자
-            */}
-            <div className={cn("h-1.25 w-full self-stretch border-none", "bg-gray-100")} />
+            {/* 컨테이너 간 구분선 (5px) */}
+            <div className={cn("h-1.25 w-full self-stretch border-none bg-gray-100")} />
         </div>
     );
 }

@@ -12,8 +12,9 @@ export const mindmapEndpoints = {
     node: (mindmapId: string, nodeId: string) => `/mindmaps/${mindmapId}/nodes/${nodeId}`,
 } as const;
 
+const EPISODE_BASE = "/episodes";
 export const episodeEndpoints = {
-    // 생성
+    search: EPISODE_BASE,
 
     /** 2번: 마인드맵 내 에피소드 리스트 전체 조회 */
     list: (mindmapId: string) => `/mindmaps/${mindmapId}/episodes`,
