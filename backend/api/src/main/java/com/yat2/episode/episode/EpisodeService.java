@@ -111,13 +111,11 @@ public class EpisodeService {
             return List.of(mindmapAccessValidator.findParticipantOrThrow(req.mindmapId(), userId));
         }
 
-        List<MindmapParticipant> participants = switch (type) {
+        return switch (type) {
             case PRIVATE -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, false);
             case PUBLIC -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, true);
             case ALL -> mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId);
         };
-
-        return participants;
     }
 
     @Transactional
