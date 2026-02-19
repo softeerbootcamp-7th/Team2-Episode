@@ -52,4 +52,9 @@ public class RefreshToken {
     public boolean isExpired() {
         return expiresAt.isBefore(LocalDateTime.now());
     }
+
+    public void rotate(String newTokenHash, LocalDateTime newExpiresAt) {
+        this.tokenHash = newTokenHash;
+        this.expiresAt = newExpiresAt;
+    }
 }

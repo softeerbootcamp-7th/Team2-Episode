@@ -36,6 +36,18 @@ public class RefreshTokenService {
         refreshTokenRepository.save(newRefreshToken);
     }
 
+    @Transactional
+    public void upsert(Long userId, String newRefreshToken, String beforeRefreshToken) {
+        String beforeHash = hash(beforeRefreshToken);
+        String newHash = hash(newRefreshToken);
+        LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMillis(authJwtProperties.refreshTokenExpiry()));
+
+        RefreshToken rt = refreshTokenRepository.findByTokenHashAndUser_KakaoId(beforeHash, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
+
+        rt.rotate(newHash, expiresAt);
+    }
+
     @Transactional(readOnly = true)
     public void validateSession(String refreshToken) {
         String tokenHash = hash(refreshToken);

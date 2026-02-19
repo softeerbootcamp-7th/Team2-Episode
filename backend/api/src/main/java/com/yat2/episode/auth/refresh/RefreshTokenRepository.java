@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
     @Modifying
@@ -16,4 +15,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
 
     void deleteByTokenHash(String tokenHash);
+
+    Optional<RefreshToken> findByTokenHashAndUser_KakaoId(String tokenHash, Long userId);
 }
+
