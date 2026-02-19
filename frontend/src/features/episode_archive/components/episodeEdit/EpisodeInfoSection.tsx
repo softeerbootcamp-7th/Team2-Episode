@@ -43,43 +43,43 @@ export default function EpisodeInfoSection({ className }: { className?: string }
             <div className="flex flex-col gap-3 w-full">
                 <label className="typo-body-14-semibold text-text-main1">진행 기간</label>
 
-                <div className="flex flex-col items-center gap-2 w-full">
-                    {/* 상단 입력창 */}
-                    <DateInput
-                        registration={register("startDate")}
-                        value={getDisplayDate(startDate)}
-                        placeholder="연도. 월. 일."
-                        onClick={handleOpen}
-                    />
+                {/* ✅ Phase 1: Popover를 상단으로 이동 - 두 DateInput을 모두 포함 */}
+                <Popover
+                    isOpen={isCalendarOpen}
+                    isOnOpenChange={setIsCalendarOpen}
+                    direction="bottom_right"
+                    contents={
+                        <div className="flex justify-center items-center">
+                            <CustomCalendar
+                                selectedRange={{
+                                    from: startDate ? parseISO(startDate) : undefined,
+                                    to: endDate ? parseISO(endDate) : undefined,
+                                }}
+                                onSelect={handleSelect}
+                            />
+                        </div>
+                    }
+                >
+                    <div className="flex flex-col items-center gap-2 w-full">
+                        {/* 상단 입력창 */}
+                        <DateInput
+                            registration={register("startDate")}
+                            value={getDisplayDate(startDate)}
+                            placeholder="연도. 월. 일."
+                            onClick={handleOpen}
+                        />
 
-                    <span className="typo-body-14-reg text-text-placeholder">~</span>
+                        <span className="typo-body-14-reg text-text-placeholder">~</span>
 
-                    {/* 하단 입력창 + Popover (w-full 추가하여 너비 맞춤) */}
-                    <Popover
-                        isOpen={isCalendarOpen}
-                        isOnOpenChange={setIsCalendarOpen}
-                        direction="bottom_right"
-                        contents={
-                            <div className="flex justify-center items-center">
-                                <CustomCalendar
-                                    selectedRange={{
-                                        from: startDate ? parseISO(startDate) : undefined,
-                                        to: endDate ? parseISO(endDate) : undefined,
-                                    }}
-                                    onSelect={handleSelect}
-                                />
-                            </div>
-                        }
-                    >
-                        {/* Popover 내부에서도 DateInput이 w-full을 유지하도록 함 */}
+                        {/* 하단 입력창 */}
                         <DateInput
                             registration={register("endDate")}
                             value={getDisplayDate(endDate)}
                             placeholder="연도. 월. 일."
                             onClick={handleOpen}
                         />
-                    </Popover>
-                </div>
+                    </div>
+                </Popover>
             </div>
 
             <div className="flex flex-col gap-3 w-full">
