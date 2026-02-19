@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import * as Y from "yjs";
 
-import { createMindmapController } from "@/features/mindmap/engine/MindmapController";
+import { createMindmapController } from "@/features/mindmap/core/MindmapController";
 import { AwarenessLike, CollaboratorInfo } from "@/features/mindmap/types/mindmap_collaboration";
 import { IMindmapController, MindmapOptions } from "@/features/mindmap/types/mindmap_controller";
 

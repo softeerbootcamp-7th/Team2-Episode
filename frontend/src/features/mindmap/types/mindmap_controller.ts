@@ -1,6 +1,6 @@
 import type * as Y from "yjs";
 
-import { MindmapConfig } from "@/features/mindmap/engine/Mindmap";
+import { MindmapConfig } from "@/features/mindmap/core/Mindmap";
 import { AwarenessLike, CollaboratorInfo } from "@/features/mindmap/types/mindmap_collaboration";
 import { MindmapCommand, MindmapCommandMeta } from "@/features/mindmap/types/mindmap_command";
 import { AddNodeDirection, NodeDirection, NodeElement, NodeId } from "@/features/mindmap/types/node";

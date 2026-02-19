@@ -9,7 +9,6 @@ export const PATHS = {
     self_diagnoses: {
         list: "/self_diagnoses",
         detail: "/self_diagnoses/:selfDiagnosisId",
-        detail: "/self_diagnoses/:selfDiagnosisId",
         start: "/self_diagnoses/start",
         question: "/self_diagnoses/:jobId",
         question_result: "/self_diagnoses/:jobId",

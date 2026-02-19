@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { useInitializeMindmap } from "@/features/mindmap/engine/useInitializeMindmap";
+import { useInitializeMindmap } from "@/features/mindmap/hooks/useInitializeMindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
 import BottomSticky from "@/shared/components/bottom_sticky/BottomSticky";
 import Button from "@/shared/components/button/Button";

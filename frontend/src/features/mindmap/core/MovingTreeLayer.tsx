@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useMemo, useRef } from "react";
 
-import EdgeLayer from "@/features/mindmap/engine/EdgeLayer";
+import EdgeLayer from "@/features/mindmap/core/EdgeLayer";
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 

@@ -1,9 +1,9 @@
-import { CollaborationManager } from "@/features/mindmap/engine/CollaborationManager";
-import { InteractionMachine } from "@/features/mindmap/engine/InteractionMachine";
-import QuadTree from "@/features/mindmap/engine/QuadTree";
-import { TreeModel } from "@/features/mindmap/engine/TreeModel";
-import { ViewportController } from "@/features/mindmap/engine/ViewportController";
-import { YjsAdapter } from "@/features/mindmap/engine/YjsAdaptor";
+import { CollaborationManager } from "@/features/mindmap/core/CollaborationManager";
+import { InteractionMachine } from "@/features/mindmap/core/InteractionMachine";
+import QuadTree from "@/features/mindmap/core/QuadTree";
+import { TreeModel } from "@/features/mindmap/core/TreeModel";
+import { ViewportController } from "@/features/mindmap/core/ViewportController";
+import { YjsAdapter } from "@/features/mindmap/core/YjsAdaptor";
 import { AwarenessLike, CollaboratorInfo, LockInfo } from "@/features/mindmap/types/mindmap_collaboration";
 import { MindmapCommand, MindmapCommandMeta } from "@/features/mindmap/types/mindmap_command";
 import {
@@ -254,7 +254,13 @@ export class MindmapController implements IMindmapController {
 
         this.canvas = svg;
 
-        this.viewport = new ViewportController(svg, () => this.scheduleViewportCommit());
+        this.viewport = new ViewportController(
+            svg,
+
+            // FIX: getBounds 함수를 넘겨줘야합니다.
+            () => null,
+            () => this.scheduleViewportCommit(),
+        );
 
         this.interaction = new InteractionMachine({
             getRootNode: () => this.tree.getRootNode(),
@@ -677,6 +683,11 @@ export class MindmapController implements IMindmapController {
             case "VIEWPORT/SET": {
                 const { x, y, scale } = cmd.payload;
                 this.viewport?.setViewport(x, y, scale);
+                return;
+            }
+
+            case "VIEWPORT/FIT_CONTENT": {
+                this.viewport?.fitToWorldRect();
                 return;
             }
 

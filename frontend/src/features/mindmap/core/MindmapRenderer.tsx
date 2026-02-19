@@ -1,9 +1,9 @@
 import { useRef } from "react";
 
-import CollaborationCursorsLayer from "@/features/mindmap/engine/CollaborationCursorsLayer";
-import InteractionLayer from "@/features/mindmap/engine/InteractionLayer";
-import { useMindmapControllerContext } from "@/features/mindmap/engine/MindmapProvider";
-import TreeLayer from "@/features/mindmap/engine/TreeLayer";
+import CollaborationCursorsLayer from "@/features/mindmap/core/CollaborationCursorsLayer";
+import InteractionLayer from "@/features/mindmap/core/InteractionLayer";
+import { useMindmapControllerContext } from "@/features/mindmap/core/MindmapProvider";
+import TreeLayer from "@/features/mindmap/core/TreeLayer";
 import { useMindmapReady } from "@/features/mindmap/hooks/useMindmapStoreState";
 import { useMindmapGraphRevision } from "@/features/mindmap/hooks/useMindmapStoreState";
 

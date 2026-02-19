@@ -55,14 +55,6 @@ export class InteractionMachine {
         this.deps.emitInteraction(this.interactionSnapshot);
         this.deps.emitDragSession(this.dragSessionSnapshot);
     }
-    getSelectedNodeId() {
-        return this.selectedNodeId;
-    }
-
-    startCreating() {
-        this.mode = "pending_creation";
-        this.emitInteractionFrame();
-    }
 
     pointerDown(hit: HitResult, e: { clientX: number; clientY: number; button?: number; buttons?: number }) {
         if (hit.kind === "node") {
@@ -147,6 +139,7 @@ export class InteractionMachine {
         }
 
         this.lastMousePos = { x: clientX, y: clientY };
+        return { dx, dy };
     }
 
     pointerUp() {
@@ -185,7 +178,6 @@ export class InteractionMachine {
         this.deps.onSelectNode(null);
     }
 
-    // ---- internal: drop target ----
     private updateDropTarget(clientX: number, clientY: number) {
         if (this.mode !== "dragging" && this.mode !== "pending_creation") return;
 
@@ -196,7 +188,6 @@ export class InteractionMachine {
 
         let parentNode: NodeElement = this.deps.getRootNode();
 
-        // root는 mouseX 기준으로 side 결정
         let side: AddNodeDirection = mouseX < parentNode.x ? "left" : "right";
 
         let depthGuard = 0;
@@ -324,5 +315,25 @@ export class InteractionMachine {
     private emitDragSession() {
         this.commitDragSessionSnapshot();
         this.deps.emitDragSession(this.dragSessionSnapshot);
+    }
+
+    getInteractionSnapshot(): InteractionSnapshot {
+        return this.interactionSnapshot;
+    }
+
+    getDragSessionSnapshot(): DragSessionSnapshot {
+        return this.dragSessionSnapshot;
+    }
+
+    getSelectedNodeId() {
+        return this.selectedNodeId;
+    }
+
+    startCreating() {
+        this.mode = "pending_creation";
+    }
+
+    getInteractionMode() {
+        return this.mode;
     }
 }

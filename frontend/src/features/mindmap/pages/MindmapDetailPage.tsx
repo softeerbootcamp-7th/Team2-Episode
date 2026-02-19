@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import Mindmap from "@/features/mindmap/engine/Mindmap";
+import Mindmap from "@/features/mindmap/core/Mindmap";
 import { useMindmapSession } from "@/features/mindmap/hooks/useMindmapSession";
 import Spinner from "@/shared/components/spinner/Spinner";
 

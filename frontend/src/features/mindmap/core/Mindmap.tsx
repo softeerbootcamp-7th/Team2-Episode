@@ -2,9 +2,9 @@ import { useMemo, useRef } from "react";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
-import CollaborationList from "@/features/mindmap/engine/CollaborationList";
-import { MindmapProvider } from "@/features/mindmap/engine/MindmapProvider";
-import MindmapRenderer from "@/features/mindmap/engine/MindmapRenderer";
+import CollaborationList from "@/features/mindmap/core/CollaborationList";
+import { MindmapProvider } from "@/features/mindmap/core/MindmapProvider";
+import MindmapRenderer from "@/features/mindmap/core/MindmapRenderer";
 import { CollaboratorInfo } from "@/features/mindmap/types/mindmap_collaboration";
 
 export type MindmapConfig = {

@@ -1,5 +1,5 @@
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useInitializeMindmap } from "@/features/mindmap/engine/useInitializeMindmap";
+import { useInitializeMindmap } from "@/features/mindmap/hooks/useInitializeMindmap";
 import { ACTIVITY_CATEGORIES, ActivityCategory } from "@/features/mindmap/types/mindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
 import BottomSticky from "@/shared/components/bottom_sticky/BottomSticky";

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useMindmapControllerContext } from "@/features/mindmap/engine/MindmapProvider";
+import { useMindmapControllerContext } from "@/features/mindmap/core/MindmapProvider";
 
 export function useMindmapControllerEvents() {
     const engine = useMindmapControllerContext();

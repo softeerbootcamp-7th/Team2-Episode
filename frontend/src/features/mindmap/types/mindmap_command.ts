@@ -60,4 +60,5 @@ export type MindmapCommand =
     | BaseCommand<"SELECTION/SET", "local", { nodeId: NodeId | null }>
     | BaseCommand<"INTERACTION/START_CREATE", "local">
     | BaseCommand<"INTERACTION/CANCEL", "local">
-    | BaseCommand<"VIEWPORT/SET", "local", { x: number; y: number; scale: number }>;
+    | BaseCommand<"VIEWPORT/SET", "local", { x: number; y: number; scale: number }>
+    | BaseCommand<"VIEWPORT/FIT_CONTENT", "local">;
