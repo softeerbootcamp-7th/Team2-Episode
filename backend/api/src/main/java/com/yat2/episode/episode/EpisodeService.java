@@ -1,6 +1,7 @@
 package com.yat2.episode.episode;
 
 import lombok.RequiredArgsConstructor;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,9 +69,12 @@ public class EpisodeService {
 
     @Transactional
     public void updateStar(UUID nodeId, long userId, StarUpdateReq starUpdateReq) {
-        validateDates(starUpdateReq.startDate(), starUpdateReq.endDate());
         validateCompetencyIds(starUpdateReq.competencyTypeIds());
         EpisodeStar episodeStar = getStarOrThrow(nodeId, userId);
+        LocalDate newStart = resolvePatchedDate(starUpdateReq.startDate(), episodeStar.getStartDate());
+        LocalDate newEnd = resolvePatchedDate(starUpdateReq.endDate(), episodeStar.getEndDate());
+
+        validateDates(newStart, newEnd);
         episodeStar.update(starUpdateReq);
     }
 
@@ -121,6 +125,16 @@ public class EpisodeService {
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
+    }
+
+    private LocalDate resolvePatchedDate(JsonNullable<LocalDate> patch, LocalDate before) {
+        if (patch == null || patch.isUndefined()) {
+            return before;
+        }
+        if (!patch.isPresent() || patch.get() == null) {
+            return null;
+        }
+        return patch.get();
     }
 
     private void validateCompetencyIds(Set<Integer> competencyIds) {
