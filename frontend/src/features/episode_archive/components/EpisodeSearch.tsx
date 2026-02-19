@@ -1,4 +1,5 @@
 import Search from "@/shared/components/search/Search";
+import { placeHolder } from "@/shared/constants/placeholder";
 
 type Props = {
     onSearch: (val: string) => void;
@@ -11,7 +12,7 @@ export default function EpisodeSearch({ onSearch }: Props) {
             <span className="typo-body-14-semibold text-text-main2 shrink-0">검색</span>
             <Search
                 className="h-full w-full"
-                placeholder="에피소드, 경험, STAR 내용으로 검색해보세요"
+                placeholder={placeHolder.episode}
                 onSearchSubmit={(val) => onSearch(val)}
             />
         </div>

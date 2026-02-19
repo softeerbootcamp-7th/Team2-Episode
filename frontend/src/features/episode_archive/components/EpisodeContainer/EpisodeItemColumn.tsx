@@ -53,7 +53,7 @@ const EpisodeItemColumn = memo(({ summary }: EpisodeItemColumnProps) => {
                 startDate={detail?.startDate || summary.startDate}
                 endDate={detail?.endDate || summary.endDate}
                 episodeTitle={detail?.content || summary.content}
-                className="w-48 shrink-0 py-10"
+                className="w-48 shrink-0 py-5 px-2"
             />
             <div className="flex-1 bg-white">
                 {detail ? (

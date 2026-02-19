@@ -10,7 +10,7 @@ type EpisodeItemHeadProps = {
 /** 에피소드 아이템의 왼쪽 섹션으로, 배지, 활동 기간, 제목을 표시합니다. */
 export default function EpisodeItemHead({ startDate, endDate, episodeTitle, className }: EpisodeItemHeadProps) {
     return (
-        <div className={cn("flex flex-col w-50 gap-5 shrink-0 items-start justify-start", className)}>
+        <div className={cn("flex flex-col w-50 shrink-0 items-start justify-start", className)}>
             {/* 배지 (상단 정렬) */}
 
             <div className="flex flex-col gap-2 items-start">

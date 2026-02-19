@@ -56,7 +56,22 @@ export default function EpisodeContentSection({ className }: { className?: strin
                             {...register(field.id)}
                             onInput={handleResizeHeight}
                             placeholder={placeHolder.STAR[field.char]}
-                            className="w-full typo-body-14-reg text-text-main1 placeholder:text-text-main1 border-none outline-none resize-none overflow-hidden p-0"
+                            className="
+        w-full
+        typo-body-14-reg
+        text-text-main1
+        border-none
+        outline-none
+        resize-none
+        overflow-hidden
+        p-0
+
+        placeholder:text-text-placeholder
+        placeholder:font-normal
+        placeholder:text-14
+        placeholder:leading-[140%]
+        placeholder:tracking-[-0.28px]
+    "
                         />
                     </div>
                 </div>
