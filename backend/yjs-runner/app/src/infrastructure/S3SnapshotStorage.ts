@@ -1,4 +1,4 @@
-import {GetObjectCommand, NoSuchKey, PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
+import { GetObjectCommand, NoSuchKey, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export interface SnapshotStorage {
     upload(roomId: string, data: Uint8Array): Promise<void>;
@@ -24,12 +24,13 @@ export class S3SnapshotStorage implements SnapshotStorage {
             region: config.region,
             endpoint: config.endpoint,
             forcePathStyle: config.forcePathStyle ?? !!config.endpoint,
-            credentials: (config.accessKey && config.secretKey)
-                ? {
-                    accessKeyId: config.accessKey,
-                    secretAccessKey: config.secretKey,
-                }
-                : undefined,
+            credentials:
+                config.accessKey && config.secretKey
+                    ? {
+                          accessKeyId: config.accessKey,
+                          secretAccessKey: config.secretKey,
+                      }
+                    : undefined,
         });
     }
 
@@ -42,7 +43,7 @@ export class S3SnapshotStorage implements SnapshotStorage {
             Bucket: this.config.bucket,
             Key: this.getFullKey(roomId),
             Body: data,
-            ContentType: 'application/octet-stream',
+            ContentType: "application/octet-stream",
         });
 
         await this.client.send(command);
@@ -61,7 +62,6 @@ export class S3SnapshotStorage implements SnapshotStorage {
             }
 
             return await response.Body.transformToByteArray();
-
         } catch (error) {
             if (error instanceof NoSuchKey) {
                 console.info(`[S3Storage] 해당 roomId에 대한 데이터가 존재하지 않습니다.: ${roomId}.`);

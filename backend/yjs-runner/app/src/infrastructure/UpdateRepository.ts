@@ -1,6 +1,6 @@
-import type Redis from 'ioredis';
-import * as decoding from 'lib0/decoding';
-import {SnapshotBuildContext} from "../contracts/SnapshotBuildContext";
+import type Redis from "ioredis";
+import * as decoding from "lib0/decoding";
+import { SnapshotBuildContext } from "../contracts/SnapshotBuildContext";
 
 export interface UpdateRepository {
     fetchAllUpdates(roomId: string): Promise<SnapshotBuildContext>;
@@ -13,14 +13,13 @@ export type UpdateRepositoryConfig = {
 };
 
 export class RedisUpdateRepository implements UpdateRepository {
-    private readonly defaultLastEntryId = "0-0"
+    private readonly defaultLastEntryId = "0-0";
     private static readonly FIELD_U = 0x75; // 'u'
 
     constructor(
         private readonly redis: Redis,
-        private readonly config: UpdateRepositoryConfig
-    ) {
-    }
+        private readonly config: UpdateRepositoryConfig,
+    ) {}
 
     private getStreamKey(roomId: string): string {
         return `${this.config.updateStreamKeyPrefix}${roomId}`;
@@ -28,13 +27,13 @@ export class RedisUpdateRepository implements UpdateRepository {
 
     async fetchAllUpdates(roomId: string): Promise<SnapshotBuildContext> {
         const key = this.getStreamKey(roomId);
-        const entries = await this.redis.xrangeBuffer(key, '-', '+') as unknown as [Buffer, Buffer[]][];
+        const entries = (await this.redis.xrangeBuffer(key, "-", "+")) as unknown as [Buffer, Buffer[]][];
 
         if (!entries || entries.length === 0) {
             return {
                 lastEntryId: this.defaultLastEntryId,
                 roomId,
-                updateFrameList: []
+                updateFrameList: [],
             };
         }
 
@@ -54,14 +53,14 @@ export class RedisUpdateRepository implements UpdateRepository {
         return {
             lastEntryId,
             roomId,
-            updateFrameList
+            updateFrameList,
         };
     }
 
     async trim(roomId: string, lastEntryId: string): Promise<void> {
         if (lastEntryId === this.defaultLastEntryId) return;
         const key = this.getStreamKey(roomId);
-        await this.redis.xtrim(key, 'MINID', lastEntryId);
+        await this.redis.xtrim(key, "MINID", lastEntryId);
         await this.redis.xdel(key, lastEntryId);
     }
 
@@ -84,5 +83,4 @@ export class RedisUpdateRepository implements UpdateRepository {
             return null;
         }
     }
-
 }
