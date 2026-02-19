@@ -9,5 +9,6 @@ public record CollaborationAsyncProperties(
         int queueCapacity,
         int keepAliveSeconds,
         boolean allowCoreThreadTimeout,
-        long dropLogIntervalMs
+        long dropLogIntervalMs,
+        int updateAppendMaxRetries
 ) {}
