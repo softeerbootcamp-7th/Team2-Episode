@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useState } from "react";
 
-import MindmapEpisodeContainer from "@/features/episode_archive/components/EpisodeContainer/MindmapEpisodeContainer";
+import MindmapEpisodeContainer from "@/features/episode_archive/components/episodeContainer/MindmapEpisodeContainer";
 import EpisodeHeader from "@/features/episode_archive/components/EpisodeHeader";
 import { MOCK_EPISODE_LIST, MOCK_MINDMAPS } from "@/features/episode_archive/data";
 import { useMindmapList } from "@/features/mindmap/hooks/useMindmapList";
