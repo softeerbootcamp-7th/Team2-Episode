@@ -1,4 +1,5 @@
-import { useCreateMindmap } from "@/features/mindmap/hooks/useCreateMindmap";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useInitializeMindmap } from "@/features/mindmap/hooks/useInitializeMindmap";
 import { ACTIVITY_CATEGORIES, ActivityCategory } from "@/features/mindmap/types/mindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
 import BottomSticky from "@/shared/components/bottom_sticky/BottomSticky";
@@ -11,7 +12,10 @@ import { linkTo } from "@/shared/utils/route";
 type CategoryStepFunnel = Extract<FunnelInstance<CreateMindmapFunnel>, { step: "CATEGORY" }>;
 
 export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) {
-    const { mutate: createMindmap, isPending } = useCreateMindmap();
+    const { initialize, isPending } = useInitializeMindmap(() => {
+        // TODO: 임시로 메인으로 보냄
+        funnel.exit(linkTo.mindmap.list(), { replace: false });
+    });
 
     const selected = funnel.context.categories ?? [];
 
@@ -25,21 +29,10 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
 
     const canSubmit = selected.length > 0;
 
+    const { user } = useAuth();
+
     const handleSubmit = () => {
-        createMindmap(
-            {
-                isShared: false,
-                title: "새로운 마인드맵",
-            },
-            {
-                onSuccess: (data) => {
-                    funnel.exit(linkTo.mindmap.detail(data.mindmap.mindmapId), { replace: false });
-                },
-                onError: (e) => {
-                    console.error("마인드맵 생성에 실패했습니다.", e);
-                },
-            },
-        );
+        initialize({ title: `${user?.nickname ?? "아무개"}의 마인드맵`, isShared: false, items: selected });
     };
 
     return (

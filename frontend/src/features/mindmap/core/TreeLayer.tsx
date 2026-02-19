@@ -1,12 +1,15 @@
-import EdgeLayer from "@/features/mindmap/components/canvas/EdgeLayer";
+import EdgeLayer from "@/features/mindmap/core/EdgeLayer";
+import { useHideDraggingNodes } from "@/features/mindmap/hooks/useHideDraggingNodes";
 import NodeItem from "@/features/mindmap/node/components/node/NodeItem";
 import { NodeElement, NodeId } from "@/features/mindmap/types/node";
 
-type StaticLayerProps = {
+type Props = {
     nodeMap: Map<NodeId, NodeElement>;
 };
 
-export default function StaticLayer({ nodeMap }: StaticLayerProps) {
+export default function TreeLayer({ nodeMap }: Props) {
+    useHideDraggingNodes();
+
     const allNodes = Array.from(nodeMap.values());
 
     return (

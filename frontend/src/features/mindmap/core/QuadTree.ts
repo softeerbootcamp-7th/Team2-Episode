@@ -1,4 +1,4 @@
-import { Point, Rect } from "@/features/mindmap/types/spatial";
+import { Point, Rect } from "@/shared/types/spatial";
 import { isIntersected, isPointInRect } from "@/shared/utils/rect_helper";
 
 /**
