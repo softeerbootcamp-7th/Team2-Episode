@@ -132,7 +132,8 @@ management:
 collaboration:
   ws:
     send-timeout: 10000
-    buffer-size: 524288
+    buffer-size: 1048576
+    max-message-size: 524288
     path-prefix: /ws/mindmap
     allowed-origin-patterns:
       - "http://localhost:*"
