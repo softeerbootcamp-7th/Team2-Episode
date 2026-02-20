@@ -10,7 +10,6 @@ import { linkTo } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
 
 type Props = {
-    // rightSlot?: ReactNode;
     variant?: "white" | "transparent";
     className?: string;
 };
