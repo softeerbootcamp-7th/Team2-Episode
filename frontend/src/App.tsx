@@ -18,18 +18,19 @@ import LoginPage from "@/features/user/login/pages/LoginPage";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { PATHS } from "@/shared/utils/route";
+import { cn } from "@/utils/cn";
 
 function RootLayout() {
     const location = useLocation();
-
     const isLandingView = location.pathname === PATHS.home;
 
     return (
         <div className="flex flex-col h-screen overflow-hidden">
-            <header className="relative z-50 shrink-0">
+            <header className={isLandingView ? "fixed top-0 left-0 right-0 z-50" : "relative z-50 shrink-0"}>
                 <GlobalNavigationBar variant={isLandingView ? "transparent" : "white"} />
             </header>
-            <main className="flex-1 overflow-hidden">
+
+            <main className={cn("w-full", isLandingView ? "h-full" : "flex-1 overflow-hidden")}>
                 <Outlet />
             </main>
         </div>

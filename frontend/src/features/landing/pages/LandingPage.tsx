@@ -72,7 +72,7 @@ const LandingPage = () => {
             },
             {
                 root,
-                rootMargin: "-45% 0px -45% 0px",
+                rootMargin: "-10% 0PX -10% 0px",
                 threshold: thresholds,
             },
         );
