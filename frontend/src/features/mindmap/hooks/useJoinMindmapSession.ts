@@ -13,25 +13,27 @@ const postParticipants = (mindmapId: string) => {
     return post({ endpoint: `/mindmaps/${mindmapId}/participants` });
 };
 
-const fetchJoinSession = async (mindmapId: string, maxRetryCount: number): Promise<JoinSessionResponse> => {
+const fetchJoinSession = async (
+    mindmapId: string,
+    maxRetryCount: number,
+    curRetryCount: number = 0,
+): Promise<JoinSessionResponse> => {
     try {
         return await post<JoinSessionResponse, { mindmapId: string }>({
             endpoint: `/mindmaps/${mindmapId}/sessions/join`,
         });
     } catch (e) {
-        if (!(e instanceof ApiError) || e.status !== 403) {
+        if (!(e instanceof ApiError) || e.status !== 403 || curRetryCount >= maxRetryCount) {
             throw new Error("알 수 없는 오류입니다. 다시 시도해주세요.");
         }
 
-        let retryCount = 0;
-        if (retryCount < maxRetryCount) {
+        if (curRetryCount < maxRetryCount) {
             try {
                 await postParticipants(mindmapId);
 
                 toast.success(`참여 등록이 완료되었습니다. 마인드맵 참여를 시작합니다.`);
 
-                retryCount += 1;
-                return await fetchJoinSession(mindmapId, retryCount + 1);
+                return await fetchJoinSession(mindmapId, maxRetryCount, curRetryCount + 1);
             } catch (participantError) {
                 console.error("참여자 등록 실패:", participantError);
                 throw participantError;
