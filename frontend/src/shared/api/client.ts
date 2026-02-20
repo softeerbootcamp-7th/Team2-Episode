@@ -2,7 +2,7 @@ import { toSafeApiError } from "@/features/auth/api/error";
 import { getRefreshState, refreshToken, setRefreshState } from "@/features/auth/api/refresh";
 import { ApiError } from "@/features/auth/types/api";
 import type { FetchOptions } from "@/shared/api/types";
-import { ERROR_CODES, ErrorCodeKey } from "@/shared/constants/error";
+import { ERROR_CODES, ErrorCode } from "@/shared/constants/error";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -78,7 +78,7 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
                 errorData = await response.json();
             } catch {
                 errorData = {
-                    code: "UNKNOWN_ERROR" as ErrorCodeKey,
+                    code: "UNKNOWN_ERROR" as ErrorCode,
                     message: `HTTP ${response.status}: ${response.statusText}`,
                 };
             }

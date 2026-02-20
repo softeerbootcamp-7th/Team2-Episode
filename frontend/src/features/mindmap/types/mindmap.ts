@@ -1,4 +1,4 @@
-export type MindmapType = "ALL" | "PUBLIC" | "PRIVATE";
+export type MindmapType = "PUBLIC" | "PRIVATE";
 
 export type MindmapId = string;
 
@@ -7,7 +7,7 @@ export type MindmapSummary = {
     title: string;
 };
 
-export const MINDMAP_TABS: { id: MindmapType; label: string }[] = [
+export const MINDMAP_TABS: { id: MindmapType | "ALL"; label: string }[] = [
     { id: "ALL", label: "전체" },
     { id: "PRIVATE", label: "개인 마인드맵" },
     { id: "PUBLIC", label: "팀 마인드맵" },

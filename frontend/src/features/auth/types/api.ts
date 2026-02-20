@@ -1,13 +1,13 @@
-import { ERROR_CODES, ErrorCodeKey } from "@/shared/constants/error";
+import { ERROR_CODES, ErrorCode } from "@/shared/constants/error";
 
 /**
  * API 에러 응답
  */
 export class ApiError extends Error {
     public readonly status: number;
-    public readonly code: ErrorCodeKey;
+    public readonly code: ErrorCode;
 
-    constructor(status: number, code: ErrorCodeKey, message: (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string) {
+    constructor(status: number, code: ErrorCode, message: (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string) {
         super(message);
 
         this.status = status;
