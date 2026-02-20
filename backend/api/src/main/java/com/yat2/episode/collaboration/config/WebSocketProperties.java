@@ -8,6 +8,7 @@ import java.util.List;
 public record WebSocketProperties(
         int sendTimeout,
         int bufferSize,
+        int maxMessageSize,
         String pathPrefix,
         List<String> allowedOriginPatterns
 ) {}
