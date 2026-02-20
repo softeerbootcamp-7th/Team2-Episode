@@ -8,7 +8,6 @@ import LandingPage from "@/features/landing/pages/LandingPage";
 import CreateMindmapFunnelPage from "@/features/mindmap/pages/CreateMindmapPage";
 import MindmapDetailPage from "@/features/mindmap/pages/MindmapDetailPage";
 import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
-import SelfDiagnosisPage from "@/features/self_diagnosis/pages/SelfDiagnosisPage";
 import LoginPage from "@/features/user/login/pages/LoginPage";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { PATHS } from "@/shared/utils/route";
@@ -41,10 +40,6 @@ const router = createBrowserRouter([
                     {
                         path: PATHS.episode_archive,
                         element: <EpisodeArchivePage />,
-                    },
-                    {
-                        path: PATHS.self_diagnoses.list,
-                        element: <SelfDiagnosisPage />,
                     },
                     {
                         path: PATHS.mindmap.create,

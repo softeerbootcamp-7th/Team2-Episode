@@ -7,7 +7,7 @@ import Row from "@/shared/components/row/Row";
 import Search from "@/shared/components/search/Search";
 import { cn } from "@/utils/cn";
 
-export type ActiveAction = "selfTest" | "star" | null;
+export type ActiveAction = "star" | null;
 
 type Props = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
     title: string;
@@ -27,7 +27,6 @@ type Props = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
     filterPopover: React.ReactNode;
 
     activeAction: ActiveAction;
-    onSelfTestClick: () => void;
     onStarOrganizeClick: () => void;
 };
 
@@ -41,7 +40,6 @@ export default function MindmapHeaderToolBar({
     hasSelectedSkills,
     filterPopover,
     activeAction,
-    onSelfTestClick,
     onStarOrganizeClick,
     className,
     ...rest
@@ -120,20 +118,6 @@ export default function MindmapHeaderToolBar({
                 }
                 rightSlot={
                     <div className="shrink-0 flex items-center gap-2">
-                        <Button
-                            type="button"
-                            variant={activeAction === "selfTest" ? "primary" : "ghost"}
-                            size="sm"
-                            borderRadius="2xl"
-                            leftSlot={<Icon name="ic_circle_check" size={18} />}
-                            onClick={() => {
-                                onFilterOpenChange(false);
-                                onSelfTestClick();
-                            }}
-                        >
-                            기출문항 셀프진단
-                        </Button>
-
                         <Button
                             type="button"
                             variant={activeAction === "star" ? "primary" : "ghost"}

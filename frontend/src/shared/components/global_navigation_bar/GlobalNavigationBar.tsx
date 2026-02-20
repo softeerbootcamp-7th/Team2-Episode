@@ -41,13 +41,6 @@ export default function GlobalNavigationBar({ variant = "white", rightSlot, clas
                 >
                     에피소드 보관함
                 </Button>
-                <Button
-                    size="sm"
-                    onClick={() => navigate(linkTo.self_diagnosis.list())}
-                    variant={includePath(linkTo.self_diagnosis.list()) ? "tertiary" : "ghost"}
-                >
-                    기출문항 셀프진단
-                </Button>
             </div>
 
             {rightSlot}
