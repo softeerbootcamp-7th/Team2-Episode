@@ -34,7 +34,7 @@ class MindmapRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @DisplayName("사용자 ID로 참여 중인 마인드맵 목록을 최신순으로 조회한다")
-    void findByUserIdOrderByCreatedDesc_Success() {
+    void findByUserIdOrderByLastJoinedDesc_Success() {
         User user = createUser(12345L);
         userRepository.save(user);
 
@@ -45,7 +45,7 @@ class MindmapRepositoryTest extends AbstractRepositoryTest {
         participantRepository.save(createParticipant(m1, user));
         participantRepository.save(createParticipant(m2, user));
 
-        List<Mindmap> result = mindmapRepository.findByUserIdOrderByCreatedDesc(12345L);
+        List<Mindmap> result = mindmapRepository.findByUserIdOrderByLastJoinedDesc(12345L);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getName()).isEqualTo("나중에 만든 마인드맵");
