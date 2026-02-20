@@ -12,6 +12,10 @@ const COLORS = ["#34a7ff", "#fd69b9", "#0ed038", "#7749ff", "#ff913c"];
 export default function MindmapDetailPage() {
     const { mindmapId } = useParams<{ mindmapId: string }>();
 
+    if (!mindmapId) {
+        throw new Error("올바르지 않은 마인드맵 접근입니다.1");
+    }
+
     const { user: userInfo } = useAuth();
 
     const user = useMemo(() => {
@@ -36,10 +40,6 @@ export default function MindmapDetailPage() {
         }),
         [],
     );
-
-    if (!mindmapId) {
-        throw new Error("올바른 접근이 아닙니다.");
-    }
 
     if (!isSynced) {
         return (
