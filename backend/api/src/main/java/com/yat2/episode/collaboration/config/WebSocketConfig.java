@@ -34,8 +34,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
         container.setMaxTextMessageBufferSize(webSocketProperties.maxMessageSize());
         container.setMaxBinaryMessageBufferSize(webSocketProperties.maxMessageSize());
 
-        container.setMaxSessionIdleTimeout(300000L);
-
         return container;
     }
 }
