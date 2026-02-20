@@ -1,9 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { ApiError } from "@/features/auth/types/api";
-import { mindmapEndpoints } from "@/features/mindmap/api/mindmap_endpoints";
 import { mindmapKeys } from "@/features/mindmap/api/mindmap_query_keys";
 import { MindmapItem, MindmapType } from "@/features/mindmap/types/mindmap";
+import { mindmapEndpoints } from "@/shared/api/api";
 import { get } from "@/shared/api/method";
 
 const fetchGetMindmapList = (type: MindmapType = "ALL") => {
