@@ -2,7 +2,7 @@ import type Redis from "ioredis";
 import { Job, JobType } from "../../contracts/Job";
 import { RedisStreamEntry, RedisStreamReadResult } from "../../contracts/RedisStreamReadResult";
 import { StreamPendingEntries } from "../../contracts/StreamPendingEntries";
-import { REDIS_KEYS } from "./constants";
+import { REDIS_KEYS } from "./Constants";
 
 export interface JobConsumer {
     init(): Promise<void>;

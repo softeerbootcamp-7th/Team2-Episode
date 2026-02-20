@@ -1,7 +1,7 @@
 import type Redis from "ioredis";
 import * as decoding from "lib0/decoding";
 import { SnapshotBuildContext } from "../../contracts/SnapshotBuildContext";
-import { REDIS_KEYS } from "./constants";
+import { REDIS_KEYS } from "./Constants";
 
 export interface UpdateRepository {
     fetchAllUpdates(roomId: string): Promise<SnapshotBuildContext>;

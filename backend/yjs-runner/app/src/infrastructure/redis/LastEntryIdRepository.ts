@@ -1,5 +1,5 @@
 import type Redis from "ioredis";
-import { REDIS_KEYS } from "./constants";
+import { REDIS_KEYS } from "./Constants";
 
 export class LastEntryIdRepository {
     constructor(private readonly redis: Redis) {}
