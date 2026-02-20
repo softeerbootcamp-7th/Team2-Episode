@@ -32,9 +32,17 @@ export type CompetencyType = {
     competencyType: string;
 };
 
-export type ActivityCategory = "INTERN" | "STUDY" | "CLUB" | "PROJECT" | "VOLUNTEER" | "PARTTIME" | "CONTEST" | "ETC";
+export type ActivityCategoryName =
+    | "INTERN"
+    | "STUDY"
+    | "CLUB"
+    | "PROJECT"
+    | "VOLUNTEER"
+    | "PARTTIME"
+    | "CONTEST"
+    | "ETC";
 
-export const ACTIVITY_CATEGORIES: ReadonlyArray<{ id: ActivityCategory; label: string; emoji: string }> = [
+export const ACTIVITY_CATEGORIES: ReadonlyArray<{ id: ActivityCategoryName; label: string; emoji: string }> = [
     { id: "INTERN", label: "인턴", emoji: "💼" },
     { id: "STUDY", label: "학업", emoji: "📚" },
     { id: "CLUB", label: "동아리", emoji: "🎯" },
@@ -44,3 +52,5 @@ export const ACTIVITY_CATEGORIES: ReadonlyArray<{ id: ActivityCategory; label: s
     { id: "CONTEST", label: "공모전", emoji: "🏆" },
     { id: "ETC", label: "기타", emoji: "✨" },
 ];
+
+export type ActivityCategoryItem = (typeof ACTIVITY_CATEGORIES)[number];
