@@ -153,7 +153,10 @@ public class MindmapController {
             """
     )
     @ApiResponses({ @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content) })
-    @ApiErrorCodes({ ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @ApiErrorCodes(
+            { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.S3_DELETE_FAIL }
+    )
     @DeleteMapping("/{mindmapId}")
     public ResponseEntity<?> deleteMindmap(
             @RequestAttribute(USER_ID) long userId,
