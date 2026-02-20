@@ -33,7 +33,7 @@ const fetchJoinSession = async (
 
                 toast.success(`참여 등록이 완료되었습니다. 마인드맵 참여를 시작합니다.`);
 
-                return await fetchJoinSession(mindmapId, curRetryCount + 1);
+                return await fetchJoinSession(mindmapId, maxRetryCount, curRetryCount + 1);
             } catch (participantError) {
                 console.error("참여자 등록 실패:", participantError);
                 throw participantError;
