@@ -18,7 +18,7 @@ export async function authMiddleWare() {
             });
             queryClient.setQueryData(AUTH_QUERY_KEYS.user, user);
         } catch {
-            throw redirect(linkTo.landing());
+            throw redirect(linkTo.home());
         }
     }
 }

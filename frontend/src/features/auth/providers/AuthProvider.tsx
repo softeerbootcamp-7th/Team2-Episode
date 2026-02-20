@@ -36,7 +36,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         mutationFn: async () => logoutApi(),
         onSuccess: () => {
             queryClient.removeQueries({ queryKey: AUTH_QUERY_KEYS.user });
-            navigate(linkTo.landing(), { replace: true }); // 뒤로 가기 히스토리 제어, 보호 라우트는 middleware가 막아 landing으로 튕김
+            navigate(linkTo.home(), { replace: true }); // 뒤로 가기 히스토리 제어, 보호 라우트는 middleware가 막아 landing으로 튕김
+            // navigate(linkTo.landing(), { replace: true }); // 뒤로 가기 히스토리 제어, 보호 라우트는 middleware가 막아 landing으로 튕김
         },
     });
 
