@@ -1,6 +1,7 @@
 package com.yat2.episode.mindmap;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -35,6 +36,7 @@ import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
+@Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
@@ -169,7 +171,11 @@ public class MindmapService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    snapshotRepository.deleteSnapshot(key);
+                    try {
+                        snapshotRepository.deleteSnapshot(key);
+                    } catch (Exception e) {
+                        log.error("Delete snapshot failed.", e);
+                    }
                 }
             });
         }
