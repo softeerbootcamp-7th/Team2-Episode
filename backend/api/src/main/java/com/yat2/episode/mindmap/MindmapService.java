@@ -190,6 +190,7 @@ public class MindmapService {
 
     @Transactional
     public MindmapSummaryRes updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.updateFavorite(status);
 
@@ -198,6 +199,7 @@ public class MindmapService {
 
     @Transactional
     public MindmapSummaryRes updateName(long userId, UUID mindmapId, String name) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.getMindmap().updateName(name);
 
@@ -229,6 +231,7 @@ public class MindmapService {
     }
 
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
 
@@ -239,6 +242,7 @@ public class MindmapService {
     }
 
     public List<CompetencyTypeRes> getCompetencyTypesInMindmap(UUID mindmapId, long userId) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         List<Integer> ids = getSortedCompetencyTypeIds(mindmapId, userId);
         return competencyTypeService.getCompetencyTypesInIds(ids);

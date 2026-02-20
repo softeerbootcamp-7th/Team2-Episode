@@ -36,13 +36,12 @@ import com.yat2.episode.mindmap.constants.MindmapVisibility;
 @Transactional(readOnly = true)
 public class EpisodeService {
 
+    private final static String DELETE_DATE = "0000-00-00";
     private final EpisodeRepository episodeRepository;
     private final CompetencyTypeService competencyTypeService;
     private final EpisodeStarRepository episodeStarRepository;
     private final MindmapAccessValidator mindmapAccessValidator;
     private final MindmapParticipantRepository mindmapParticipantRepository;
-
-    private final static String DELETE_DATE = "0000-00-00";
 
     public EpisodeDetail getEpisodeDetail(UUID nodeId, long userId) {
         return getEpisodeAndStarOrThrow(nodeId, userId);
@@ -119,6 +118,7 @@ public class EpisodeService {
         MindmapVisibility type = req.mindmapType();
 
         if (req.mindmapId() != null) {
+            mindmapAccessValidator.findMindmapOrThrow(req.mindmapId());
             return List.of(mindmapAccessValidator.findParticipantOrThrow(req.mindmapId(), userId));
         }
 
@@ -134,6 +134,8 @@ public class EpisodeService {
             UUID nodeId, long userId, UUID mindmapId,
             EpisodeUpsertContentReq episodeUpsertReq
     ) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
+
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> {
             mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);

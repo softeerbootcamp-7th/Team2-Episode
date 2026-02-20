@@ -14,7 +14,7 @@ public enum ErrorCode {
     S3_DELETE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S3_DELETE_FAIL", "스냅샷 삭제에 실패했습니다."),
 
     //Mindmap Participant
-    MINDMAP_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MINDMAP_PARTICIPANT_NOT_FOUND", "해당 마인드맵에 사용자가 참여하고 있지 않습니다."),
+    MINDMAP_PARTICIPANT_NOT_FOUND(HttpStatus.FORBIDDEN, "MINDMAP_PARTICIPANT_NOT_FOUND", "해당 마인드맵에 사용자가 참여하고 있지 않습니다."),
 
 
     //CompetencyType
