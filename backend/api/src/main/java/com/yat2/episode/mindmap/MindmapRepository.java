@@ -64,4 +64,9 @@ public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
             @Param("mindmapId") UUID mindmapId
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select m.id from Mindmap m where m.id = :id")
+    Optional<UUID> lockWithId(
+            @Param("id") UUID id
+    );
 }

@@ -157,8 +157,9 @@ public class MindmapService {
 
     @Transactional
     public void deleteMindmap(long userId, UUID mindmapId) {
+        mindmapRepository.lockWithId(mindmapId).orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
         int deletedCount = mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, userId);
-        if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_NOT_FOUND);
+        if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND);
 
         boolean isMindmapDeleted = mindmapRepository.deleteIfNoParticipants(mindmapId) > 0;
 
