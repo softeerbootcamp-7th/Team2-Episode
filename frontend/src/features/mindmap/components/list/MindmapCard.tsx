@@ -29,7 +29,13 @@ type Props = {
     className?: string;
 };
 
-const MindmapCard = ({ data, type = "PUBLIC", interaction = "navigate", selected, onSelect, className }: Props) => {
+const MindmapCard = ({ data, interaction = "navigate", selected, onSelect, className }: Props) => {
+    const displayTags = data.competencyTypes.slice(0, 4);
+    const hiddenTagCount = data.competencyTypes.length - 4;
+
+    const displayedParticipants = data.participants.slice(0, 4);
+    const hiddenParticipants = data.participants.length - 4;
+
     const { mutate: deleteMindmap } = useDeleteMindmap();
     const { mutate: updateMindmapName } = useUpdateMindmapName();
     const { mutate: updateMindmapFavorite } = useUpdateMindmapFavorite();
@@ -185,12 +191,59 @@ const MindmapCard = ({ data, type = "PUBLIC", interaction = "navigate", selected
                     )}
                 </div>
             }
-            bottomContents={<div className="flex flex-wrap gap-1.5 mt-2" />}
+            bottomContents={
+                <div className="flex flex-col gap-1.5">
+                    <div>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                            {displayedParticipants.map((name, index) => (
+                                <Chip
+                                    key={index}
+                                    variant="secondary"
+                                    size="sm"
+                                    className="bg-blue-50 text-blue-600 font-medium border-0"
+                                >
+                                    {name}
+                                </Chip>
+                            ))}
+                            {hiddenParticipants > 0 && (
+                                <Chip
+                                    variant="secondary"
+                                    size="sm"
+                                    className="bg-blue-50 text-blue-600 font-medium border-0"
+                                >
+                                    +{hiddenParticipants}
+                                </Chip>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                        {displayTags.map((tag, index) => (
+                            <Chip
+                                key={index}
+                                variant="secondary"
+                                size="sm"
+                                className="bg-blue-50 text-blue-600 font-medium border-0"
+                            >
+                                {tag.competencyType}
+                            </Chip>
+                        ))}
+                        {hiddenTagCount > 0 && (
+                            <Chip
+                                variant="secondary"
+                                size="sm"
+                                className="bg-blue-50 text-blue-600 font-medium border-0"
+                            >
+                                +{hiddenTagCount}
+                            </Chip>
+                        )}
+                    </div>
+                </div>
+            }
             footer={
                 <div className="flex items-center justify-between text-body-14-regular text-gray-500 pt-4 border-t border-transparent">
                     <span>{getRelativeTime(data.updatedAt)}</span>
                     <div className="flex items-center gap-2">
-                        {type === "PUBLIC" && (
+                        {data.isShared && (
                             <Chip
                                 size="sm"
                                 variant="notification"
