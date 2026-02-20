@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,9 +41,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MindmapService 단위 테스트")
@@ -117,34 +121,113 @@ class MindmapServiceTest {
     @DisplayName("deleteMindmap")
     class DeleteMindmap {
 
-        @Test
-        @DisplayName("마지막 참여자가 마인드맵을 삭제하면 실제 마인드맵 엔티티도 삭제된다")
-        void should_delete_mindmap_entity_when_no_participants_left() {
-            Mindmap mindmap = createMindmap("삭제될 마인드맵", false);
+        @BeforeEach
+        void initTxSync() {
+            TransactionSynchronizationManager.initSynchronization();
+        }
 
-            given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
-            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
-                                                                                 testUserId)).willReturn(1);
-            given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(false);
+        @org.junit.jupiter.api.AfterEach
+        void clearTxSync() {
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.clearSynchronization();
+            }
+        }
 
-            mindmapService.deleteMindmap(testUserId, mindmap.getId());
-
-            verify(mindmapRepository).delete(mindmap);
+        private void runAfterCommitCallbacks() {
+            var syncs = TransactionSynchronizationManager.getSynchronizations();
+            for (TransactionSynchronization s : syncs) {
+                s.afterCommit();
+            }
         }
 
         @Test
-        @DisplayName("다른 참여자가 남아있으면 참여 정보만 삭제되고 마인드맵 엔티티는 유지된다")
-        void should_only_delete_participant_when_others_remain() {
-            Mindmap mindmap = createMindmap("유지될 마인드맵", true);
+        @DisplayName("참여 정보 삭제가 0건이면 MINDMAP_NOT_FOUND 예외가 발생한다")
+        void should_throw_when_participant_not_found() {
+            UUID mindmapId = UUID.randomUUID();
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(0);
 
-            given(mindmapRepository.findByIdWithLock(mindmap.getId())).willReturn(Optional.of(mindmap));
-            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmap.getId(),
-                                                                                 testUserId)).willReturn(1);
-            given(mindmapParticipantRepository.existsByMindmap_Id(mindmap.getId())).willReturn(true);
+            assertThatThrownBy(() -> mindmapService.deleteMindmap(testUserId, mindmapId)).isInstanceOf(
+                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
 
-            mindmapService.deleteMindmap(testUserId, mindmap.getId());
+            verify(mindmapRepository, never()).deleteIfNoParticipants(any());
+            verifyNoInteractions(s3ObjectKeyGenerator, snapshotRepository);
+            assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
+        }
 
-            verify(mindmapRepository, never()).delete(any());
+        @Test
+        @DisplayName("마지막 참여자면 mindmap 삭제가 수행되고 커밋 후 스냅샷이 삭제된다")
+        void should_delete_snapshot_after_commit_when_mindmap_deleted() {
+            UUID mindmapId = UUID.randomUUID();
+            String key = "snapshots/" + mindmapId;
+
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
+            given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(1);
+            given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(key);
+
+            mindmapService.deleteMindmap(testUserId, mindmapId);
+
+            verify(mindmapRepository).deleteIfNoParticipants(mindmapId);
+
+            verify(snapshotRepository, never()).deleteSnapshot(any());
+            assertThat(TransactionSynchronizationManager.getSynchronizations()).hasSize(1);
+
+            runAfterCommitCallbacks();
+
+            verify(snapshotRepository).deleteSnapshot(key);
+        }
+
+        @Test
+        @DisplayName("다른 참여자가 남아있으면 mindmap 삭제는 수행되지 않고 스냅샷 삭제도 등록되지 않는다")
+        void should_not_register_snapshot_delete_when_mindmap_not_deleted() {
+            UUID mindmapId = UUID.randomUUID();
+
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
+            given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(0);
+
+            mindmapService.deleteMindmap(testUserId, mindmapId);
+
+            verify(mindmapRepository).deleteIfNoParticipants(mindmapId);
+            verifyNoInteractions(s3ObjectKeyGenerator, snapshotRepository);
+
+            assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("mindmap 삭제가 되었더라도 afterCommit 실행 전에는 스냅샷 삭제가 호출되지 않는다")
+        void should_not_delete_snapshot_before_commit() {
+            UUID mindmapId = UUID.randomUUID();
+            String key = "snapshots/" + mindmapId;
+
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
+            given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(1);
+            given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(key);
+
+            mindmapService.deleteMindmap(testUserId, mindmapId);
+
+            verify(snapshotRepository, never()).deleteSnapshot(any());
+            assertThat(TransactionSynchronizationManager.getSynchronizations()).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("afterCommit에서 예외가 발생해도 서비스 호출 자체는 성공적으로 끝난다")
+        void should_finish_service_call_even_if_after_commit_fails() {
+            UUID mindmapId = UUID.randomUUID();
+            String key = "snapshots/" + mindmapId;
+
+            given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
+            given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(1);
+            given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(key);
+            doThrow(new RuntimeException("s3 fail")).when(snapshotRepository).deleteSnapshot(key);
+
+            mindmapService.deleteMindmap(testUserId, mindmapId);
+
+            assertThat(TransactionSynchronizationManager.getSynchronizations()).hasSize(1);
+
+            assertThatThrownBy(this::runAfterCommitCallbacks).isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("s3 fail");
+
+            verify(snapshotRepository).deleteSnapshot(key);
         }
     }
 
