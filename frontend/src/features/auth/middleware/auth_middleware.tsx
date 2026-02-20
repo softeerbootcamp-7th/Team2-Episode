@@ -14,7 +14,7 @@ export async function authMiddleWare() {
         try {
             user = await get<User>({
                 endpoint: USER_ME_ENDPOINT,
-                options: { skipRefresh: true },
+                options: { skipRefresh: false },
             });
             queryClient.setQueryData(AUTH_QUERY_KEYS.user, user);
         } catch {
