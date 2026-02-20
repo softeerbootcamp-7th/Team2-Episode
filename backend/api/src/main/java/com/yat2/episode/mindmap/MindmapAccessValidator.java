@@ -21,7 +21,7 @@ public class MindmapAccessValidator {
     }
 
     public Mindmap findMindmapOrThrow(UUID mindmapId) {
-        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
+        Mindmap mindmap = mindmapRepository.findById(mindmapId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
         return mindmap;
     }
