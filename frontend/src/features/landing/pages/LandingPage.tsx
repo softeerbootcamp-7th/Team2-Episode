@@ -98,50 +98,52 @@ const LandingPage = () => {
     }, []);
 
     return (
-        // 1. 전체 컨테이너를 h-screen overflow-hidden으로 고정
-        <div className="flex flex-col h-screen overflow-hidden bg-landing">
-            {/* 2. GNB를 스크롤 영역 밖으로 배치 (Popover가 잘리지 않음) */}
-            <GlobalNavigationBar
-                variant="transparent"
-                className="z-50"
-                rightSlot={
-                    user ? (
-                        <Popover
-                            direction="bottom_left"
-                            contents={
-                                <button
-                                    type="button"
-                                    onClick={logout}
-                                    className="bg-white border border-gray-200 rounded-lg px-4 py-2 typo-body-14-medium text-text-main2 shadow-md"
-                                >
-                                    로그아웃
-                                </button>
-                            }
-                        >
-                            <UserBox name={user.nickname} />
-                        </Popover>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            <Link to={linkTo.login()}>
-                                <Button size="xs" borderRadius="md" variant="quaternary_accent_outlined">
-                                    로그인
-                                </Button>
-                            </Link>
-                            <Link to={linkTo.login()}>
-                                <Button size="xs" borderRadius="md" variant="primary">
-                                    가입하기
-                                </Button>
-                            </Link>
-                        </div>
-                    )
-                }
-            />
+        // 레이아웃 전체 컨테이너: h-screen과 overflow-hidden으로 뷰포트를 고정합니다.
+        <div className="relative flex flex-col h-screen w-full overflow-hidden bg-landing">
+            {/* GNB 컨테이너: 고정 높이를 부여하고 상단에 고정합니다. */}
+            <header className="relative z-50 h-[74px] shrink-0">
+                <GlobalNavigationBar
+                    variant="transparent"
+                    rightSlot={
+                        user ? (
+                            <Popover
+                                direction="bottom_left"
+                                contents={
+                                    <button
+                                        type="button"
+                                        onClick={logout}
+                                        className="bg-white border border-gray-200 rounded-lg px-4 py-2 typo-body-14-medium text-text-main2 shadow-md whitespace-nowrap"
+                                    >
+                                        로그아웃
+                                    </button>
+                                }
+                            >
+                                <UserBox name={user.nickname} />
+                            </Popover>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Link to={linkTo.login()}>
+                                    <Button size="xs" borderRadius="md" variant="quaternary_accent_outlined">
+                                        로그인
+                                    </Button>
+                                </Link>
+                                <Link to={linkTo.login()}>
+                                    <Button size="xs" borderRadius="md" variant="primary">
+                                        가입하기
+                                    </Button>
+                                </Link>
+                            </div>
+                        )
+                    }
+                />
+            </header>
 
-            {/* 3. 실제 스크롤이 발생하는 본문 영역 */}
+            {/* 본문 스크롤 영역: flex-1로 남은 공간을 모두 차지하며 독립적인 스크롤을 가집니다. */}
             <main
                 ref={scrollRootRef}
-                className={cn("flex-1 overflow-y-auto overflow-x-hidden", "snap-y snap-mandatory scroll-smooth")}
+                className={cn("flex-1 w-full overflow-y-auto overflow-x-hidden", "snap-y snap-mandatory scroll-smooth")}
             >
+                {/* 메인 섹션 */}
                 <section className="relative snap-start min-h-screen w-full pt-24 pb-16">
                     <div className="mx-auto w-full max-w-5xl px-6 flex flex-col items-center">
                         <p className="typo-body-18-medium text-gray-500 pb-5">경험의 경로를 알려주다</p>
@@ -177,7 +179,7 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                {/* 반복되는 섹션 구조 (예시: 마인드맵) */}
+                {/* 마인드맵 섹션 */}
                 <section
                     ref={setSectionRef("mindmap")}
                     data-section="mindmap"
@@ -188,17 +190,34 @@ const LandingPage = () => {
                     )}
                 >
                     <div className="mx-auto w-full max-w-5xl px-6">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-8 md:p-10 relative">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-10 relative">
                             <div className="flex flex-col md:flex-row items-center gap-10">
                                 <LandingInfo
                                     name="mindmap"
                                     alt="마인드맵 기능"
-                                    // w-115(460px) 대신 Tailwind 표준 w-[460px] 혹은 근사값 사용
                                     className="w-full md:w-[460px] h-auto rounded-xl border border-gray-100"
                                 />
                                 <div className="flex-1 w-full">
                                     <h2 className="typo-title-28-bold text-text-main1">마인드맵</h2>
-                                    {/* ...내용 생략... */}
+                                    <p className="mt-3 typo-body-16-reg text-text-sub1">
+                                        경험을 시각적으로 구조화하고 관리하세요.
+                                        <br />
+                                        노드로 연결하며 개요 구조를 체계적으로 정리할 수 있어요.
+                                    </p>
+                                    <ul className="mt-6 space-y-3">
+                                        <li className="flex items-start gap-3">
+                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
+                                            <span className="typo-body-14-reg text-text-sub1">
+                                                한줄 카테고리/클러스터 구조화
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
+                                            <span className="typo-body-14-reg text-text-sub1">
+                                                실시간 협업 및 공유 기능
+                                            </span>
+                                        </li>
+                                    </ul>
                                     <div className="mt-8 flex justify-end">
                                         <Link to={getHref("mindmap")}>
                                             <CallToActionButton variant="quaternary_accent_outlined">
@@ -212,8 +231,117 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                {/* 나머지 섹션들(self_diagnosis, episode_archive)도 동일한 방식으로 구성 */}
+                {/* 기출문항 셀프진단 섹션 */}
+                <section
+                    ref={setSectionRef("self_diagnosis")}
+                    data-section="self_diagnosis"
+                    className={cn(
+                        "snap-center snap-always min-h-screen w-full flex items-center justify-center py-14",
+                        "transition-all duration-500 ease-out",
+                        focused === "self_diagnosis" ? "opacity-100 blur-0" : "opacity-40 blur-sm",
+                    )}
+                >
+                    <div className="mx-auto w-full max-w-5xl px-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-10 relative">
+                            <div className="flex flex-col md:flex-row items-center gap-10">
+                                <div className="flex-1 w-full order-2 md:order-1">
+                                    <h2 className="typo-title-28-bold text-text-main1">기술문제 셀프진단</h2>
+                                    <p className="mt-3 typo-body-16-reg text-text-sub1">
+                                        기술 자소서 문항을 기준으로 빈틈을 점검하세요.
+                                        <br />
+                                        부족한 역량을 발견하고, 에피소드를 준비할 수 있어요.
+                                    </p>
+                                    <ul className="mt-6 space-y-3">
+                                        <li className="flex items-start gap-3">
+                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
+                                            <span className="typo-body-14-reg text-text-sub1">
+                                                주요 직무별 자소서 문항 분석
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
+                                            <span className="typo-body-14-reg text-text-sub1">
+                                                기술 역량을 드러내는 질문 추천
+                                            </span>
+                                        </li>
+                                    </ul>
+                                    <div className="mt-8 flex justify-start">
+                                        <Link to={getHref("self_diagnosis")}>
+                                            <CallToActionButton variant="quaternary_accent_outlined">
+                                                기술문제 셀프진단 하기
+                                            </CallToActionButton>
+                                        </Link>
+                                    </div>
+                                </div>
+                                <LandingInfo
+                                    name="self_test"
+                                    alt="기술문제 셀프진단 기능"
+                                    className="w-full md:w-[460px] h-auto rounded-xl border border-gray-100 order-1 md:order-2"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
+                {/* 에피소드 보관함 섹션 */}
+                <section
+                    ref={setSectionRef("episode_archive")}
+                    data-section="episode_archive"
+                    className={cn(
+                        "snap-center snap-always min-h-screen w-full flex items-center justify-center py-14",
+                        "transition-all duration-500 ease-out",
+                        focused === "episode_archive" ? "opacity-100 blur-0" : "opacity-40 blur-sm",
+                    )}
+                >
+                    <div className="mx-auto w-full max-w-5xl px-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-10 relative">
+                            <div className="flex flex-col md:flex-row items-center gap-10">
+                                <LandingInfo
+                                    name="episode"
+                                    alt="에피소드 보관함 기능"
+                                    className="w-full md:w-[460px] h-auto rounded-xl border border-gray-100"
+                                />
+                                <div className="flex-1 w-full">
+                                    <h2 className="typo-title-28-bold text-text-main1">에피소드 보관함</h2>
+                                    <p className="mt-3 typo-body-16-reg text-text-sub1">
+                                        모든 경험을 STAR 기반으로 체계적으로 정리해요.
+                                        <br />
+                                        자기소개서에 필요한 에피소드를 완성할 수 있어요.
+                                    </p>
+                                    <ul className="mt-6 space-y-3">
+                                        <li className="flex items-start gap-3">
+                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
+                                            <span className="typo-body-14-reg text-text-sub1">
+                                                STAR 형식으로 에피소드 작성
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
+                                            <span className="typo-body-14-reg text-text-sub1">
+                                                마인드맵 기반 에피소드 연결
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
+                                            <span className="typo-body-14-reg text-text-sub1">
+                                                태그 기반 검색 및 정리
+                                            </span>
+                                        </li>
+                                    </ul>
+                                    <div className="mt-8 flex justify-end">
+                                        <Link to={getHref("episode_archive")}>
+                                            <CallToActionButton variant="quaternary_accent_outlined">
+                                                에피소드 보관함 가기
+                                            </CallToActionButton>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 하단 CTA 섹션 */}
                 <section className="snap-start min-h-[70vh] w-full flex items-center justify-center pb-24">
                     <Link to={getHref("start")}>
                         <CallToActionButton variant="quaternary_accent_outlined">에피소드 시작하기</CallToActionButton>

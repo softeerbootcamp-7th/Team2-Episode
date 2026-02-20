@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
 import { linkTo } from "@/shared/utils/route";
+import { cn } from "@/utils/cn";
 
 type Props = {
     rightSlot?: ReactNode;
@@ -21,7 +22,7 @@ export default function GlobalNavigationBar({ variant = "white", rightSlot, clas
     };
 
     return (
-        <div className={(variants({ variant }), className)}>
+        <div className={cn(variants({ variant }), className)}>
             <Link to="/">
                 <Icon name="ic_logo" viewBox="0 0 87 16" height="16px" width="87px" />
             </Link>
