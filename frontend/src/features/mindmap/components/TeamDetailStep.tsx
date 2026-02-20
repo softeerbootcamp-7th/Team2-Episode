@@ -51,11 +51,11 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
     const projectName = funnel.context.projectName ?? "";
     const episodes = funnel.context.episodes ?? [];
 
-    const updateProjectName = (v: string) => funnel.history.setContext({ projectName: v });
-    const updateEpisode = (index: number, v: string) => {
+    const updateProjectName = (nextName: string) => funnel.history.setContext({ projectName: nextName });
+    const updateEpisode = (index: number, nextEpisode: string) => {
         funnel.history.setContext((prev) => {
             const next = [...(prev.episodes || [])];
-            next[index] = v;
+            next[index] = nextEpisode;
             return { ...prev, episodes: next };
         });
     };
@@ -64,11 +64,15 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
         funnel.history.setContext((prev) => ({ ...prev, episodes: [...(prev.episodes || []), ""] }));
     };
 
-    const cleanedEpisodes = useMemo(() => episodes.map((e) => e.trim()).filter(Boolean), [episodes]);
+    const cleanedEpisodes = useMemo(
+        () => episodes.map((item) => item.trim()).filter((item) => item !== ""),
+        [episodes],
+    );
+
     const canNext = projectName.trim().length > 0 && cleanedEpisodes.length > 0;
 
     const handleSubmit = () => {
-        initialize({ title: projectName, isShared: true, items: episodes });
+        initialize({ title: projectName, isShared: true, items: cleanedEpisodes });
     };
 
     return (
