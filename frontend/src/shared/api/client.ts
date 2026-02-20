@@ -51,23 +51,22 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
         if (response.status === 401 && !skipRefresh) {
             const { isRefreshing, refreshPromise } = getRefreshState();
 
+            let refreshed = false;
             if (isRefreshing && refreshPromise) {
-                const refreshed = await refreshPromise;
-                if (!refreshed) {
-                    throw TOKEN_REFRESH_ERROR;
-                }
+                refreshed = await refreshPromise;
             } else {
                 const promise = refreshToken();
                 setRefreshState(true, promise);
 
                 try {
-                    const refreshed = await promise;
-                    if (!refreshed) {
-                        throw TOKEN_REFRESH_ERROR;
-                    }
+                    refreshed = await promise;
                 } finally {
                     setRefreshState(false, null);
                 }
+            }
+
+            if (!refreshed) {
+                throw TOKEN_REFRESH_ERROR;
             }
 
             response = await fetch(url, config);
