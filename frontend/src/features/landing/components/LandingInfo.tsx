@@ -3,10 +3,9 @@ import { ComponentPropsWithoutRef } from "react";
 import landingEpisode from "@/assets/img/img_landing_episode.png";
 import landingMain from "@/assets/img/img_landing_main.png";
 import landingMindmap from "@/assets/img/img_landing_mindmap.png";
-import landingSelfTest from "@/assets/img/img_landing_selftest.png";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
 
-type LandingInfoType = "episode" | "main" | "mindmap" | "self_test";
+type LandingInfoType = "episode" | "main" | "mindmap";
 type Props = ComponentPropsWithoutRef<"img"> & {
     name: LandingInfoType;
 };
@@ -25,9 +24,6 @@ const getLandingInfo = (type: LandingInfoType) => {
             return landingMain;
         case "mindmap":
             return landingMindmap;
-        case "self_test":
-            return landingSelfTest;
-
         default:
             exhaustiveCheck(`${type}의 landing info 는 올바르지 않습니다.`);
     }

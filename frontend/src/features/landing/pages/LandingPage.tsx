@@ -12,7 +12,7 @@ import UserBox from "@/shared/components/user_box/UserBox";
 import { linkTo } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
 
-type FocusKey = "mindmap" | "self_diagnosis" | "episode_archive";
+type FocusKey = "mindmap" | "episode_archive";
 
 const LandingPage = () => {
     const { user, logout } = useAuth();
@@ -21,7 +21,6 @@ const LandingPage = () => {
 
     const sectionRefs = useRef<Record<FocusKey, HTMLElement | null>>({
         mindmap: null,
-        self_diagnosis: null,
         episode_archive: null,
     });
 
@@ -43,8 +42,6 @@ const LandingPage = () => {
                     return linkTo.mindmap.list();
                 case "episode_archive":
                     return linkTo.episode_archive();
-                case "self_diagnosis":
-                    return linkTo.self_diagnosis.list();
                 default:
                     return linkTo.home();
             }
@@ -98,9 +95,8 @@ const LandingPage = () => {
     }, []);
 
     return (
-        // 레이아웃 전체 컨테이너: h-screen과 overflow-hidden으로 뷰포트를 고정합니다.
-        <div className="relative flex flex-col h-screen w-full overflow-hidden bg-landing">
-            {/* GNB 컨테이너: 고정 높이를 부여하고 상단에 고정합니다. */}
+        <div className="relative flex h-screen w-full flex-col overflow-hidden bg-landing">
+            {/* GNB 컨테이너 */}
             <header className="relative z-50 h-[74px] shrink-0">
                 <GlobalNavigationBar
                     variant="transparent"
@@ -112,7 +108,7 @@ const LandingPage = () => {
                                     <button
                                         type="button"
                                         onClick={logout}
-                                        className="bg-white border border-gray-200 rounded-lg px-4 py-2 typo-body-14-medium text-text-main2 shadow-md whitespace-nowrap"
+                                        className="whitespace-nowrap rounded-lg border border-gray-200 bg-white px-4 py-2 typo-body-14-medium text-text-main2 shadow-md"
                                     >
                                         로그아웃
                                     </button>
@@ -138,15 +134,14 @@ const LandingPage = () => {
                 />
             </header>
 
-            {/* 본문 스크롤 영역: flex-1로 남은 공간을 모두 차지하며 독립적인 스크롤을 가집니다. */}
             <main
                 ref={scrollRootRef}
                 className={cn("flex-1 w-full overflow-y-auto overflow-x-hidden", "snap-y snap-mandatory scroll-smooth")}
             >
                 {/* 메인 섹션 */}
-                <section className="relative snap-start min-h-screen w-full pt-24 pb-16">
-                    <div className="mx-auto w-full max-w-5xl px-6 flex flex-col items-center">
-                        <p className="typo-body-18-medium text-gray-500 pb-5">경험의 경로를 알려주다</p>
+                <section className="relative min-h-screen w-full snap-start pb-16 pt-24">
+                    <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-6">
+                        <p className="pb-5 typo-body-18-medium text-gray-500">경험의 경로를 알려주다</p>
                         <Icon name="ic_logo" width="360" height="68" viewBox="0 0 87 16" />
                         <p className="mt-10 text-center typo-body-24-medium text-text-main1">
                             흩어진 경험을 하나의 흐름으로,
@@ -172,7 +167,7 @@ const LandingPage = () => {
                                 <LandingInfo
                                     name="main"
                                     alt="EPISODE 메인 화면"
-                                    className="w-full h-auto rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 bg-white"
+                                    className="h-auto w-full rounded-2xl border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]"
                                 />
                             </div>
                         </div>
@@ -190,14 +185,14 @@ const LandingPage = () => {
                     )}
                 >
                     <div className="mx-auto w-full max-w-5xl px-6">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-10 relative">
-                            <div className="flex flex-col md:flex-row items-center gap-10">
+                        <div className="relative rounded-2xl border border-gray-100 bg-white p-10 shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
+                            <div className="flex flex-col items-center gap-10 md:flex-row">
                                 <LandingInfo
                                     name="mindmap"
                                     alt="마인드맵 기능"
-                                    className="w-full md:w-[460px] h-auto rounded-xl border border-gray-100"
+                                    className="h-auto w-full rounded-xl border border-gray-100 md:w-[460px]"
                                 />
-                                <div className="flex-1 w-full">
+                                <div className="w-full flex-1">
                                     <h2 className="typo-title-28-bold text-text-main1">마인드맵</h2>
                                     <p className="mt-3 typo-body-16-reg text-text-sub1">
                                         경험을 시각적으로 구조화하고 관리하세요.
@@ -231,58 +226,6 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                {/* 기출문항 셀프진단 섹션 */}
-                <section
-                    ref={setSectionRef("self_diagnosis")}
-                    data-section="self_diagnosis"
-                    className={cn(
-                        "snap-center snap-always min-h-screen w-full flex items-center justify-center py-14",
-                        "transition-all duration-500 ease-out",
-                        focused === "self_diagnosis" ? "opacity-100 blur-0" : "opacity-40 blur-sm",
-                    )}
-                >
-                    <div className="mx-auto w-full max-w-5xl px-6">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-10 relative">
-                            <div className="flex flex-col md:flex-row items-center gap-10">
-                                <div className="flex-1 w-full order-2 md:order-1">
-                                    <h2 className="typo-title-28-bold text-text-main1">기술문제 셀프진단</h2>
-                                    <p className="mt-3 typo-body-16-reg text-text-sub1">
-                                        기술 자소서 문항을 기준으로 빈틈을 점검하세요.
-                                        <br />
-                                        부족한 역량을 발견하고, 에피소드를 준비할 수 있어요.
-                                    </p>
-                                    <ul className="mt-6 space-y-3">
-                                        <li className="flex items-start gap-3">
-                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
-                                            <span className="typo-body-14-reg text-text-sub1">
-                                                주요 직무별 자소서 문항 분석
-                                            </span>
-                                        </li>
-                                        <li className="flex items-start gap-3">
-                                            <span className="mt-1.75 inline-block size-2 rounded-full bg-primary" />
-                                            <span className="typo-body-14-reg text-text-sub1">
-                                                기술 역량을 드러내는 질문 추천
-                                            </span>
-                                        </li>
-                                    </ul>
-                                    <div className="mt-8 flex justify-start">
-                                        <Link to={getHref("self_diagnosis")}>
-                                            <CallToActionButton variant="quaternary_accent_outlined">
-                                                기술문제 셀프진단 하기
-                                            </CallToActionButton>
-                                        </Link>
-                                    </div>
-                                </div>
-                                <LandingInfo
-                                    name="self_test"
-                                    alt="기술문제 셀프진단 기능"
-                                    className="w-full md:w-[460px] h-auto rounded-xl border border-gray-100 order-1 md:order-2"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
                 {/* 에피소드 보관함 섹션 */}
                 <section
                     ref={setSectionRef("episode_archive")}
@@ -294,14 +237,14 @@ const LandingPage = () => {
                     )}
                 >
                     <div className="mx-auto w-full max-w-5xl px-6">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-10 relative">
-                            <div className="flex flex-col md:flex-row items-center gap-10">
+                        <div className="relative rounded-2xl border border-gray-100 bg-white p-10 shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
+                            <div className="flex flex-col items-center gap-10 md:flex-row">
                                 <LandingInfo
                                     name="episode"
                                     alt="에피소드 보관함 기능"
-                                    className="w-full md:w-[460px] h-auto rounded-xl border border-gray-100"
+                                    className="h-auto w-full rounded-xl border border-gray-100 md:w-[460px]"
                                 />
-                                <div className="flex-1 w-full">
+                                <div className="w-full flex-1">
                                     <h2 className="typo-title-28-bold text-text-main1">에피소드 보관함</h2>
                                     <p className="mt-3 typo-body-16-reg text-text-sub1">
                                         모든 경험을 STAR 기반으로 체계적으로 정리해요.
@@ -342,7 +285,7 @@ const LandingPage = () => {
                 </section>
 
                 {/* 하단 CTA 섹션 */}
-                <section className="snap-start min-h-[70vh] w-full flex items-center justify-center pb-24">
+                <section className="flex min-h-[70vh] w-full items-center justify-center snap-start pb-24">
                     <Link to={getHref("start")}>
                         <CallToActionButton variant="quaternary_accent_outlined">에피소드 시작하기</CallToActionButton>
                     </Link>
