@@ -9,6 +9,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
@@ -19,6 +20,21 @@ import java.net.URI;
 public class S3Config {
 
     private final S3Properties s3Properties;
+
+    @Bean
+    @Profile("local")
+    public S3Client localS3Client(AwsCredentialsProvider credentialsProvider) {
+        return S3Client.builder().region(Region.of(s3Properties.getRegion()))
+                .endpointOverride(URI.create(s3Properties.getEndpoint())).credentialsProvider(credentialsProvider)
+                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build()).build();
+    }
+
+    @Bean
+    @Profile("prod")
+    public S3Client prodS3Client(AwsCredentialsProvider credentialsProvider) {
+        return S3Client.builder().region(Region.of(s3Properties.getRegion())).credentialsProvider(credentialsProvider)
+                .build();
+    }
 
     @Bean
     @Profile("local")
