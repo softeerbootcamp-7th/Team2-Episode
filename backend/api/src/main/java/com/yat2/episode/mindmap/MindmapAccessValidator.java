@@ -17,7 +17,13 @@ public class MindmapAccessValidator {
 
     public MindmapParticipant findParticipantOrThrow(UUID mindmapId, long userId) {
         return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND));
+    }
+
+    public Mindmap findMindmapOrThrow(UUID mindmapId) {
+        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
+        return mindmap;
     }
 
     public Mindmap validateTeamMindmap(UUID mindmapId) {

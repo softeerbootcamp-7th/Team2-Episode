@@ -119,6 +119,7 @@ public class EpisodeService {
         MindmapVisibility type = req.mindmapType();
 
         if (req.mindmapId() != null) {
+            mindmapAccessValidator.findMindmapOrThrow(req.mindmapId());
             return List.of(mindmapAccessValidator.findParticipantOrThrow(req.mindmapId(), userId));
         }
 
@@ -134,6 +135,8 @@ public class EpisodeService {
             UUID nodeId, long userId, UUID mindmapId,
             EpisodeUpsertContentReq episodeUpsertReq
     ) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
+        
         EpisodeId episodeId = new EpisodeId(nodeId, userId);
         Episode episode = episodeRepository.findById(nodeId).orElseGet(() -> {
             mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);

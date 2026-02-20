@@ -73,7 +73,10 @@ public class MindmapController {
             입력된 마인드맵의 UUID를 기반으로 마인드맵 데이터를 조회합니다.
             """
     )
-    @ApiErrorCodes({ ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND })
+    @ApiErrorCodes(
+            { ErrorCode.INTERNAL_ERROR, ErrorCode.USER_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND }
+    )
     @GetMapping("/{mindmapId}")
     public MindmapDetailRes getMindmap(
             @RequestAttribute(USER_ID) long userId,
@@ -131,7 +134,7 @@ public class MindmapController {
     )
     @ApiErrorCodes(
             { ErrorCode.USER_NOT_FOUND, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
-              ErrorCode.MINDMAP_ACCESS_FORBIDDEN }
+              ErrorCode.MINDMAP_ACCESS_FORBIDDEN, ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND }
     )
     @PostMapping("/{mindmapId}/sessions/join")
     public MindmapSessionJoinRes joinMindmapSession(
