@@ -1,5 +1,10 @@
 export type MindmapType = "ALL" | "PUBLIC" | "PRIVATE";
 
+export type MindmapSummary = {
+    isShared: string;
+    title: string;
+};
+
 export const MINDMAP_TABS: { id: MindmapType; label: string }[] = [
     { id: "ALL", label: "전체" },
     { id: "PRIVATE", label: "개인 마인드맵" },
@@ -11,9 +16,18 @@ export type MindmapTabId = (typeof MINDMAP_TABS)[number]["id"];
 export type MindmapItem = {
     mindmapId: string;
     mindmapName: string;
+    isFavorite: boolean;
     createdAt: string;
     updatedAt: string;
-    isFavorite: boolean;
+    isShared: boolean;
+    competencyTypes: CompetencyType[];
+    participants: string[];
+};
+
+export type CompetencyType = {
+    id: number;
+    category: string;
+    competencyType: string;
 };
 
 export type ActivityCategory = "INTERN" | "STUDY" | "CLUB" | "PROJECT" | "VOLUNTEER" | "PARTTIME" | "CONTEST" | "ETC";
