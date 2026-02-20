@@ -10,7 +10,7 @@ type ConnectionStatus = "disconnected" | "connecting" | "connected";
 type SnapshotStatus = "idle" | "loading" | "success" | "error";
 
 type Props = {
-    mindmapId?: string;
+    mindmapId: string;
     enableAwareness?: boolean;
     userInfo: User | null;
 };
@@ -27,7 +27,7 @@ export function useMindmapSession({ mindmapId }: Props) {
     const [snapshotStatus, setSnapshotStatus] = useState<SnapshotStatus>("idle");
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
 
-    const { mutate: joinSession } = useJoinMindmapSession();
+    const { mutate: joinSession } = useJoinMindmapSession({ mindmapId });
 
     useEffect(() => {
         if (!mindmapId) return;
