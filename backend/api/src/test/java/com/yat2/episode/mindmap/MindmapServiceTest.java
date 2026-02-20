@@ -141,17 +141,37 @@ class MindmapServiceTest {
         }
 
         @Test
-        @DisplayName("참여 정보 삭제가 0건이면 MINDMAP_NOT_FOUND 예외가 발생한다")
+        @DisplayName("참여 정보 삭제가 0건이면 MINDMAP_PARTICIPANT_NOT_FOUND 예외가 발생한다")
         void should_throw_when_participant_not_found() {
             UUID mindmapId = UUID.randomUUID();
+
+            given(mindmapRepository.lockWithId(mindmapId)).willReturn(Optional.of(mindmapId));
             given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(0);
+
+            assertThatThrownBy(() -> mindmapService.deleteMindmap(testUserId, mindmapId)).isInstanceOf(
+                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND);
+
+            verify(mindmapRepository).lockWithId(mindmapId);
+            verify(mindmapRepository, never()).deleteIfNoParticipants(any());
+
+            verifyNoInteractions(s3ObjectKeyGenerator, snapshotRepository);
+            assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("mindmap이 존재하지 않으면 MINDMAP_NOT_FOUND 예외가 발생한다")
+        void should_throw_when_mindmap_not_found() {
+            UUID mindmapId = UUID.randomUUID();
+
+            given(mindmapRepository.lockWithId(mindmapId)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> mindmapService.deleteMindmap(testUserId, mindmapId)).isInstanceOf(
                             CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
 
-            verify(mindmapRepository, never()).deleteIfNoParticipants(any());
-            verifyNoInteractions(s3ObjectKeyGenerator, snapshotRepository);
+            verify(mindmapRepository).lockWithId(mindmapId);
+            verifyNoInteractions(mindmapParticipantRepository, s3ObjectKeyGenerator, snapshotRepository);
             assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
         }
 
@@ -161,12 +181,14 @@ class MindmapServiceTest {
             UUID mindmapId = UUID.randomUUID();
             String key = "snapshots/" + mindmapId;
 
+            given(mindmapRepository.lockWithId(mindmapId)).willReturn(Optional.of(mindmapId));
             given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
             given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(1);
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(key);
 
             mindmapService.deleteMindmap(testUserId, mindmapId);
 
+            verify(mindmapRepository).lockWithId(mindmapId);
             verify(mindmapRepository).deleteIfNoParticipants(mindmapId);
 
             verify(snapshotRepository, never()).deleteSnapshot(any());
@@ -182,14 +204,16 @@ class MindmapServiceTest {
         void should_not_register_snapshot_delete_when_mindmap_not_deleted() {
             UUID mindmapId = UUID.randomUUID();
 
+            given(mindmapRepository.lockWithId(mindmapId)).willReturn(Optional.of(mindmapId));
             given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
             given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(0);
 
             mindmapService.deleteMindmap(testUserId, mindmapId);
 
+            verify(mindmapRepository).lockWithId(mindmapId);
             verify(mindmapRepository).deleteIfNoParticipants(mindmapId);
-            verifyNoInteractions(s3ObjectKeyGenerator, snapshotRepository);
 
+            verifyNoInteractions(s3ObjectKeyGenerator, snapshotRepository);
             assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
         }
 
@@ -199,12 +223,14 @@ class MindmapServiceTest {
             UUID mindmapId = UUID.randomUUID();
             String key = "snapshots/" + mindmapId;
 
+            given(mindmapRepository.lockWithId(mindmapId)).willReturn(Optional.of(mindmapId));
             given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
             given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(1);
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(key);
 
             mindmapService.deleteMindmap(testUserId, mindmapId);
 
+            verify(mindmapRepository).lockWithId(mindmapId);
             verify(snapshotRepository, never()).deleteSnapshot(any());
             assertThat(TransactionSynchronizationManager.getSynchronizations()).hasSize(1);
         }
@@ -215,6 +241,7 @@ class MindmapServiceTest {
             UUID mindmapId = UUID.randomUUID();
             String key = "snapshots/" + mindmapId;
 
+            given(mindmapRepository.lockWithId(mindmapId)).willReturn(Optional.of(mindmapId));
             given(mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, testUserId)).willReturn(1);
             given(mindmapRepository.deleteIfNoParticipants(mindmapId)).willReturn(1);
             given(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId)).willReturn(key);
