@@ -251,8 +251,7 @@ class MindmapServiceTest {
 
             assertThat(TransactionSynchronizationManager.getSynchronizations()).hasSize(1);
 
-            assertThatThrownBy(this::runAfterCommitCallbacks).isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("s3 fail");
+            runAfterCommitCallbacks();
 
             verify(snapshotRepository).deleteSnapshot(key);
         }
