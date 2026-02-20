@@ -13,13 +13,15 @@ public record MindmapDetailRes(
         boolean isFavorite,
         boolean isShared,
         List<CompetencyTypeRes> competencyTypes,
+        List<String> participants,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static MindmapDetailRes of(MindmapParticipant mindmapParticipant, List<CompetencyTypeRes> competencyTypes) {
+    public static MindmapDetailRes of(
+            MindmapParticipant mindmapParticipant, List<CompetencyTypeRes> competencyTypes, List<String> participants) {
         return new MindmapDetailRes(mindmapParticipant.getMindmap().getId(), mindmapParticipant.getMindmap().getName(),
                                     mindmapParticipant.isFavorite(), mindmapParticipant.getMindmap().isShared(),
-                                    competencyTypes, mindmapParticipant.getMindmap().getCreatedAt(),
+                                    competencyTypes, participants, mindmapParticipant.getMindmap().getCreatedAt(),
                                     mindmapParticipant.getMindmap().getUpdatedAt());
     }
 }
