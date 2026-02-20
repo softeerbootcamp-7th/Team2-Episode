@@ -20,7 +20,7 @@ export class SnapshotService {
 
         if (job.type === JobType.SNAPSHOT) {
             const newSnapshot = this.deps.yjs.buildUpdatedSnapshot(baseSnapshot, updates.updateFrameList);
-            await this.deps.storage.upload(job.roomId, newSnapshot);
+            await this.deps.storage.upload(job.roomId, updates.lastEntryId, newSnapshot);
             await this.deps.updateRepo.trim(job.roomId, updates.lastEntryId);
         } else if (job.type === JobType.SYNC) {
             let doc = this.deps.yjs.getUpdatedYDocFromSnapshot(baseSnapshot, updates.updateFrameList);
@@ -28,7 +28,7 @@ export class SnapshotService {
             doc = await this.deps.syncClient.sync(doc, job.roomId);
 
             const newSnapshot = this.deps.yjs.getSnapshotFromDoc(doc);
-            await this.deps.storage.upload(job.roomId, newSnapshot);
+            await this.deps.storage.upload(job.roomId, updates.lastEntryId, newSnapshot);
             await this.deps.updateRepo.trim(job.roomId, updates.lastEntryId);
         }
     }
