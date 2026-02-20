@@ -12,9 +12,8 @@ export const mindmapEndpoints = {
     node: (mindmapId: string, nodeId: string) => `/mindmaps/${mindmapId}/nodes/${nodeId}`,
 } as const;
 
-const EPISODE_BASE = "/episodes";
 export const episodeEndpoints = {
-    search: EPISODE_BASE,
+    search: "/episodes",
     update: (nodeId: string) => `/episodes/${nodeId}/stars`,
     clear: (nodeId: string) => `/episodes/${nodeId}/stars/clear`,
 } as const;
