@@ -15,7 +15,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const queryClient = useQueryClient();
 
     const { data: user, isLoading } = useQuery({
-        queryKey: [AUTH_QUERY_KEYS.user],
+        queryKey: AUTH_QUERY_KEYS.user,
         queryFn: async () =>
             get<User>({
                 endpoint: USER_ME_ENDPOINT,
@@ -26,13 +26,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     const login = async (newUser: User): Promise<void> => {
-        queryClient.setQueryData([AUTH_QUERY_KEYS.user], newUser);
+        queryClient.setQueryData(AUTH_QUERY_KEYS.user, newUser);
     };
 
     const logoutMutation = useMutation({
         mutationFn: async () => logoutApi(),
         onSuccess: () => {
-            queryClient.removeQueries({ queryKey: [AUTH_QUERY_KEYS.user] });
+            queryClient.removeQueries({ queryKey: AUTH_QUERY_KEYS.user });
         },
     });
 
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 isLoading,
                 login,
                 logout: logoutMutation.mutateAsync,
-                checkAuth: () => queryClient.refetchQueries({ queryKey: [AUTH_QUERY_KEYS.user] }),
+                checkAuth: () => queryClient.refetchQueries({ queryKey: AUTH_QUERY_KEYS.user }),
             }}
         >
             {children}
