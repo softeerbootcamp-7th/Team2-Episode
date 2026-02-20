@@ -117,7 +117,7 @@ const MindmapCard = ({ data, interaction = "navigate", selected, onSelect, class
     return (
         <Card
             className={cn(
-                "min-h-50 overflow-hidden w-full",
+                "min-h-54 overflow-hidden w-full",
                 selected && "outline-primary outline-2 shadow-md",
                 className,
             )}
@@ -192,51 +192,35 @@ const MindmapCard = ({ data, interaction = "navigate", selected, onSelect, class
                 </div>
             }
             bottomContents={
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                     <div>
-                        <div className="flex flex-wrap gap-1.5 mt-2">
+                        <div className="flex flex-wrap gap-1.5">
                             {displayedParticipants.map((name, index) => (
-                                <Chip
-                                    key={index}
-                                    variant="secondary"
-                                    size="sm"
-                                    className="bg-blue-50 text-blue-600 font-medium border-0"
-                                >
+                                <Chip key={index} variant="basic" size="sm">
                                     {name}
                                 </Chip>
                             ))}
                             {hiddenParticipants > 0 && (
-                                <Chip
-                                    variant="secondary"
-                                    size="sm"
-                                    className="bg-blue-50 text-blue-600 font-medium border-0"
-                                >
+                                <Chip variant="basic" size="sm">
                                     +{hiddenParticipants}
                                 </Chip>
                             )}
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                        {displayTags.map((tag, index) => (
-                            <Chip
-                                key={index}
-                                variant="secondary"
-                                size="sm"
-                                className="bg-blue-50 text-blue-600 font-medium border-0"
-                            >
-                                {tag.competencyType}
-                            </Chip>
-                        ))}
-                        {hiddenTagCount > 0 && (
-                            <Chip
-                                variant="secondary"
-                                size="sm"
-                                className="bg-blue-50 text-blue-600 font-medium border-0"
-                            >
-                                +{hiddenTagCount}
-                            </Chip>
-                        )}
-                    </div>
+                    {data.competencyTypes.length !== 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                            {displayTags.map((tag, index) => (
+                                <Chip key={index} variant="tertiary" size="sm">
+                                    {tag.competencyType}
+                                </Chip>
+                            ))}
+                            {hiddenTagCount > 0 && (
+                                <Chip variant="tertiary" size="sm">
+                                    +{hiddenTagCount}
+                                </Chip>
+                            )}
+                        </div>
+                    )}
                 </div>
             }
             footer={
