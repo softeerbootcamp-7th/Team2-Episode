@@ -7,6 +7,8 @@ import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 import java.util.UUID;
@@ -29,13 +31,20 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
             Map attributes
     ) {
-        String token =
-                org.springframework.web.util.UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams()
-                        .getFirst("token");
+        UriComponents uri = UriComponentsBuilder.fromUri(request.getURI()).build();
+
+        String token = uri.getQueryParams().getFirst("token");
+        String lastEntryId = uri.getQueryParams().getFirst("last-entry-id");
 
         if (token == null || token.isBlank()) {
             log.warn("WebSocket 토큰 누락");
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return false;
+        }
+
+        if (lastEntryId == null || lastEntryId.isBlank()) {
+            log.warn("lastEntryId 누락");
+            response.setStatusCode(HttpStatus.BAD_REQUEST);
             return false;
         }
 
@@ -51,6 +60,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
 
             attributes.put(AttributeKeys.USER_ID, mindmapTicketPayload.userId());
             attributes.put(AttributeKeys.MINDMAP_ID, mindmapTicketPayload.mindmapId());
+            attributes.put(AttributeKeys.LAST_ENTRY_ID, lastEntryId);
             return true;
         } catch (Exception e) {
             log.warn("WebSocket handshake 실패", e);
