@@ -66,10 +66,10 @@ public class MindmapService {
     public List<MindmapDetailRes> getMindmaps(Long userId, MindmapVisibility type) {
         List<MindmapParticipant> participants = switch (type) {
             case PRIVATE ->
-                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, false);
+                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(userId, false);
             case PUBLIC ->
-                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, true);
-            default -> mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId);
+                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(userId, true);
+            default -> mindmapParticipantRepository.findByUserIdOrderByFavoriteAndLastJoinedDesc(userId);
         };
 
         if (participants.isEmpty()) return List.of();
@@ -102,7 +102,7 @@ public class MindmapService {
 
 
     public List<MindmapSummaryRes> getMindmapList(Long userId) {
-        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapSummaryRes::of).toList();
+        return mindmapRepository.findByUserIdOrderByLastJoinedDesc(userId).stream().map(MindmapSummaryRes::of).toList();
     }
 
     @Transactional
@@ -230,13 +230,16 @@ public class MindmapService {
         return MindmapSummaryRes.of(participant);
     }
 
+    @Transactional
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
         mindmapAccessValidator.findMindmapOrThrow(mindmapId);
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+        MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
 
         String presignedUrl =
                 snapshotRepository.createPresignedGetURL(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
+
+        participant.updateLastJoinedAt();
 
         return new MindmapSessionJoinRes(ticket, presignedUrl);
     }

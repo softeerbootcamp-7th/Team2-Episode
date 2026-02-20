@@ -426,7 +426,7 @@ class MindmapServiceTest {
         @Test
         @DisplayName("성공: 참여 중인 마인드맵이 없으면 빈 리스트 반환 + 추가 조회(역량 조회) 안 함")
         void should_return_empty_when_participants_empty() {
-            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(testUserId)).willReturn(
+            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndLastJoinedDesc(testUserId)).willReturn(
                     List.of());
 
             List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.ALL);
@@ -449,7 +449,7 @@ class MindmapServiceTest {
             MindmapParticipant p1 = new MindmapParticipant(u1, mindmap);
             MindmapParticipant p2 = new MindmapParticipant(u2, mindmap);
 
-            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(testUserId)).willReturn(
+            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndLastJoinedDesc(testUserId)).willReturn(
                     List.of(p1, p2));
 
             given(episodeStarRepository.findCompetencyTypesByMindmapIds(List.of(mindmapId), testUserId)).willReturn(
@@ -479,7 +479,7 @@ class MindmapServiceTest {
             MindmapParticipant p1 = new MindmapParticipant(testUser, m1);
             MindmapParticipant p2 = new MindmapParticipant(testUser, m2);
 
-            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(testUserId)).willReturn(
+            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndLastJoinedDesc(testUserId)).willReturn(
                     List.of(p1, p2));
 
             // m1 -> {2,1}, m2 -> {3}
@@ -510,27 +510,29 @@ class MindmapServiceTest {
         @Test
         @DisplayName("성공: mindmapType=PRIVATE이면 shared=false로 조회한다")
         void should_query_private_participants() {
-            given(mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId,
-                                                                                                  false)).willReturn(
+            given(mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(testUserId,
+                                                                                                     false)).willReturn(
                     List.of());
 
             List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.PRIVATE);
 
             assertThat(result).isEmpty();
-            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId, false);
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(testUserId,
+                                                                                                       false);
         }
 
         @Test
         @DisplayName("성공: mindmapType=PUBLIC이면 shared=true로 조회한다")
         void should_query_public_participants() {
-            given(mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId,
-                                                                                                  true)).willReturn(
+            given(mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(testUserId,
+                                                                                                     true)).willReturn(
                     List.of());
 
             List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.PUBLIC);
 
             assertThat(result).isEmpty();
-            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId, true);
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(testUserId,
+                                                                                                       true);
         }
     }
 
