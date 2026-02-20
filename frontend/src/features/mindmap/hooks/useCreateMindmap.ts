@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/features/auth/types/api";
 import { mindmapEndpoints } from "@/features/mindmap/api/mindmap_endpoints";
 import { mindmapKeys } from "@/features/mindmap/api/mindmap_query_keys";
-import { MindmapItem } from "@/features/mindmap/types/mindmap";
 import { post } from "@/shared/api/method";
 
 type CreateMindmapRequest = {
@@ -12,7 +11,11 @@ type CreateMindmapRequest = {
 };
 
 export type CreateMindmapResponse = {
-    mindmap: Omit<MindmapItem, "createdAt" | "updatedAt">;
+    mindmap: {
+        mindmapId: string;
+        mindmapName: string;
+        isFavorite: boolean;
+    };
     uploadInfo: {
         action: string;
         fields: {
