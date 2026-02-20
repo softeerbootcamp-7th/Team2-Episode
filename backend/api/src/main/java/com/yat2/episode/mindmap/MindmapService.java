@@ -3,6 +3,8 @@ package com.yat2.episode.mindmap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -155,16 +157,20 @@ public class MindmapService {
 
     @Transactional
     public void deleteMindmap(long userId, UUID mindmapId) {
-        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
-
         int deletedCount = mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, userId);
         if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_NOT_FOUND);
 
-        boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapId);
+        boolean isMindmapDeleted = mindmapRepository.deleteIfNoParticipants(mindmapId) > 0;
 
-        if (!hasOtherParticipants) {
-            mindmapRepository.delete(mindmap);
+        if (isMindmapDeleted) {
+            String key = s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    snapshotRepository.deleteSnapshot(key);
+                }
+            });
         }
     }
 

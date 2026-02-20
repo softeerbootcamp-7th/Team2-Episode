@@ -3,6 +3,7 @@ package com.yat2.episode.mindmap;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -46,6 +47,21 @@ public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
     @Query("select m from Mindmap m where m.id = :id")
     Optional<Mindmap> findByIdWithLock(
             @Param("id") UUID id
+    );
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            """
+                        DELETE FROM Mindmap m
+                        WHERE m.id = :mindmapId
+                          AND NOT EXISTS (
+                              SELECT p FROM MindmapParticipant p
+                              WHERE p.mindmap.id = :mindmapId
+                          )
+                    """
+    )
+    int deleteIfNoParticipants(
+            @Param("mindmapId") UUID mindmapId
     );
 
 }
