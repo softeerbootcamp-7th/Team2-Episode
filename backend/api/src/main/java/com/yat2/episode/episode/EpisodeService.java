@@ -123,9 +123,9 @@ public class EpisodeService {
         }
 
         return switch (type) {
-            case PRIVATE -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, false);
-            case PUBLIC -> mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, true);
-            case ALL -> mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            case PRIVATE -> mindmapParticipantRepository.findByUserIdAndSharedOrderByLastJoinedDesc(userId, false);
+            case PUBLIC -> mindmapParticipantRepository.findByUserIdAndSharedOrderByLastJoinedDesc(userId, true);
+            case ALL -> mindmapParticipantRepository.findByUserIdOrderByLastJoinedDesc(userId);
         };
     }
 

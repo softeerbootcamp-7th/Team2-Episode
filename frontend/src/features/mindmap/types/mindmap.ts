@@ -5,6 +5,14 @@ export type MindmapSummary = {
     title: string;
 };
 
+export const MINDMAP_TABS: { id: MindmapType; label: string }[] = [
+    { id: "ALL", label: "전체" },
+    { id: "PRIVATE", label: "개인 마인드맵" },
+    { id: "PUBLIC", label: "팀 마인드맵" },
+] as const;
+
+export type MindmapTabId = (typeof MINDMAP_TABS)[number]["id"];
+
 export type MindmapItem = {
     mindmapId: string;
     mindmapName: string;

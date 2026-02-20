@@ -21,10 +21,10 @@ public interface MindmapRepository extends JpaRepository<Mindmap, UUID> {
                         FROM MindmapParticipant p
                         JOIN p.mindmap m
                         WHERE p.user.kakaoId = :userId
-                        ORDER BY m.createdAt DESC
+                        ORDER BY p.lastJoinedAt DESC
                     """
     )
-    List<Mindmap> findByUserIdOrderByCreatedDesc(
+    List<Mindmap> findByUserIdOrderByLastJoinedDesc(
             @Param("userId") Long userId
     );
 

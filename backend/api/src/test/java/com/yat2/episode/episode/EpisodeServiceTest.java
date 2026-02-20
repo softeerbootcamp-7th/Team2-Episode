@@ -330,7 +330,7 @@ class EpisodeServiceTest {
             MindmapParticipant p1 = mock(MindmapParticipant.class);
             when(p1.getMindmap()).thenReturn(m1);
 
-            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1));
+            when(mindmapParticipantRepository.findByUserIdOrderByLastJoinedDesc(userId)).thenReturn(List.of(p1));
 
             UUID e1Id = UUID.randomUUID();
             Episode e1 = Episode.create(e1Id, m1Id);
@@ -368,7 +368,7 @@ class EpisodeServiceTest {
             MindmapParticipant p1 = mock(MindmapParticipant.class);
             when(p1.getMindmap()).thenReturn(m1);
 
-            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1));
+            when(mindmapParticipantRepository.findByUserIdOrderByLastJoinedDesc(userId)).thenReturn(List.of(p1));
 
             UUID e1Id = UUID.randomUUID();
             Episode e1 = Episode.create(e1Id, m1Id);
@@ -398,7 +398,7 @@ class EpisodeServiceTest {
             MindmapParticipant p1 = mock(MindmapParticipant.class);
             when(p1.getMindmap()).thenReturn(m1);
 
-            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1));
+            when(mindmapParticipantRepository.findByUserIdOrderByLastJoinedDesc(userId)).thenReturn(List.of(p1));
 
             when(episodeStarRepository.searchEpisodes(userId, List.of(m1Id), "k")).thenReturn(List.of());
 
@@ -429,7 +429,7 @@ class EpisodeServiceTest {
             MindmapParticipant p2 = mock(MindmapParticipant.class);
             when(p2.getMindmap()).thenReturn(m2);
 
-            when(mindmapParticipantRepository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(p1, p2));
+            when(mindmapParticipantRepository.findByUserIdOrderByLastJoinedDesc(userId)).thenReturn(List.of(p1, p2));
 
             UUID e1Id = UUID.randomUUID();
             Episode e1 = Episode.create(e1Id, m1Id);
@@ -467,7 +467,7 @@ class EpisodeServiceTest {
         @Test
         @DisplayName("성공: mindmapType=PRIVATE이면 shared=false로 participants를 조회한다")
         void searchEpisodes_Private() {
-            when(mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, false)).thenReturn(
+            when(mindmapParticipantRepository.findByUserIdAndSharedOrderByLastJoinedDesc(userId, false)).thenReturn(
                     List.of());
 
             EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.PRIVATE, null);
@@ -475,14 +475,14 @@ class EpisodeServiceTest {
             List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
 
             assertThat(result).isEmpty();
-            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByCreatedAtDesc(userId, false);
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByLastJoinedDesc(userId, false);
         }
 
 
         @Test
         @DisplayName("성공: mindmapType=PUBLIC이면 shared=true로 participants를 조회한다")
         void searchEpisodes_Public() {
-            when(mindmapParticipantRepository.findByUserIdAndSharedOrderByCreatedAtDesc(userId, true)).thenReturn(
+            when(mindmapParticipantRepository.findByUserIdAndSharedOrderByLastJoinedDesc(userId, true)).thenReturn(
                     List.of());
 
             EpisodeSearchReq req = new EpisodeSearchReq(null, MindmapVisibility.PUBLIC, null);
@@ -490,7 +490,7 @@ class EpisodeServiceTest {
             List<MindmapEpisodeRes> result = episodeService.searchEpisodes(userId, req);
 
             assertThat(result).isEmpty();
-            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByCreatedAtDesc(userId, true);
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByLastJoinedDesc(userId, true);
         }
 
     }
