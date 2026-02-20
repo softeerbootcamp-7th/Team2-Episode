@@ -15,14 +15,20 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
+import com.yat2.episode.competency.CompetencyTypeService;
+import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.EpisodeRepository;
 import com.yat2.episode.episode.EpisodeStarRepository;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.constants.MindmapConstants;
+import com.yat2.episode.mindmap.constants.MindmapVisibility;
+import com.yat2.episode.mindmap.dto.MindmapCompetencyRow;
 import com.yat2.episode.mindmap.dto.request.MindmapCreateReq;
+import com.yat2.episode.mindmap.dto.response.MindmapDetailRes;
 import com.yat2.episode.mindmap.dto.response.MindmapSessionJoinRes;
 import com.yat2.episode.mindmap.dto.response.MindmapSummaryRes;
 import com.yat2.episode.mindmap.jwt.MindmapJwtProperties;
@@ -66,6 +72,8 @@ class MindmapServiceTest {
     private EpisodeStarRepository episodeStarRepository;
     @Mock
     private UserService userService;
+    @Mock
+    private CompetencyTypeService competencyTypeService;
     @Mock
     private S3ObjectKeyGenerator s3ObjectKeyGenerator;
     @Spy
@@ -410,4 +418,182 @@ class MindmapServiceTest {
                     .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
         }
     }
+
+    @Nested
+    @DisplayName("getMindmaps")
+    class GetMindmaps {
+
+        @Test
+        @DisplayName("성공: 참여 중인 마인드맵이 없으면 빈 리스트 반환 + 추가 조회(역량 조회) 안 함")
+        void should_return_empty_when_participants_empty() {
+            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(testUserId)).willReturn(
+                    List.of());
+
+            List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.ALL);
+
+            assertThat(result).isEmpty();
+            verify(episodeStarRepository, never()).findCompetencyTypesByMindmapIds(anyList(), any(Long.class));
+            verify(competencyTypeService, never()).getCompetencyTypesInIds(any(Set.class));
+        }
+
+        @Test
+        @DisplayName("성공: mindmapId별 participant nickname이 그룹핑되어 MindmapDetailRes에 전달된다")
+        void should_group_participant_names_by_mindmapId() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("맵1", true);
+            ReflectionTestUtils.setField(mindmap, "id", mindmapId);
+
+            User u1 = User.newUser(1L, "애플");
+            User u2 = User.newUser(2L, "바나나");
+
+            MindmapParticipant p1 = new MindmapParticipant(u1, mindmap);
+            MindmapParticipant p2 = new MindmapParticipant(u2, mindmap);
+
+            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(testUserId)).willReturn(
+                    List.of(p1, p2));
+
+            given(episodeStarRepository.findCompetencyTypesByMindmapIds(List.of(mindmapId), testUserId)).willReturn(
+                    List.of());
+
+            given(competencyTypeService.getCompetencyTypesInIds(Set.of())).willReturn(List.of());
+
+            List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.ALL);
+
+            assertThat(result).hasSize(2);
+
+            assertThat(result.get(0).participants()).containsExactlyInAnyOrder("애플", "바나나");
+            assertThat(result.get(1).participants()).containsExactlyInAnyOrder("애플", "바나나");
+        }
+
+        @Test
+        @DisplayName("성공: mindmapId별 competencyTypeIds가 매핑되어 ctResList로 내려간다")
+        void should_map_competencies_by_mindmapId() {
+            UUID m1Id = UUID.randomUUID();
+            Mindmap m1 = createMindmap("m1", true);
+            ReflectionTestUtils.setField(m1, "id", m1Id);
+
+            UUID m2Id = UUID.randomUUID();
+            Mindmap m2 = createMindmap("m2", false);
+            ReflectionTestUtils.setField(m2, "id", m2Id);
+
+            MindmapParticipant p1 = new MindmapParticipant(testUser, m1);
+            MindmapParticipant p2 = new MindmapParticipant(testUser, m2);
+
+            given(mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(testUserId)).willReturn(
+                    List.of(p1, p2));
+
+            // m1 -> {2,1}, m2 -> {3}
+            given(episodeStarRepository.findCompetencyTypesByMindmapIds(List.of(m1Id, m2Id), testUserId)).willReturn(
+                    List.of(new MindmapCompetencyRow(m1Id, 2), new MindmapCompetencyRow(m1Id, 1),
+                            new MindmapCompetencyRow(m2Id, 3)));
+
+            CompetencyTypeRes c1 = mock(CompetencyTypeRes.class);
+            given(c1.id()).willReturn(1);
+            CompetencyTypeRes c2 = mock(CompetencyTypeRes.class);
+            given(c2.id()).willReturn(2);
+            CompetencyTypeRes c3 = mock(CompetencyTypeRes.class);
+            given(c3.id()).willReturn(3);
+
+            given(competencyTypeService.getCompetencyTypesInIds(Set.of(1, 2, 3))).willReturn(List.of(c1, c2, c3));
+
+            List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.ALL);
+
+            assertThat(result).hasSize(2);
+
+            MindmapDetailRes r1 = result.stream().filter(r -> r.mindmapId().equals(m1Id)).findFirst().orElseThrow();
+            MindmapDetailRes r2 = result.stream().filter(r -> r.mindmapId().equals(m2Id)).findFirst().orElseThrow();
+
+            assertThat(r1.competencyTypes()).extracting(CompetencyTypeRes::id).containsExactly(1, 2);
+            assertThat(r2.competencyTypes()).extracting(CompetencyTypeRes::id).containsExactly(3);
+        }
+
+        @Test
+        @DisplayName("성공: mindmapType=PRIVATE이면 shared=false로 조회한다")
+        void should_query_private_participants() {
+            given(mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId,
+                                                                                                  false)).willReturn(
+                    List.of());
+
+            List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.PRIVATE);
+
+            assertThat(result).isEmpty();
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId, false);
+        }
+
+        @Test
+        @DisplayName("성공: mindmapType=PUBLIC이면 shared=true로 조회한다")
+        void should_query_public_participants() {
+            given(mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId,
+                                                                                                  true)).willReturn(
+                    List.of());
+
+            List<MindmapDetailRes> result = mindmapService.getMindmaps(testUserId, MindmapVisibility.PUBLIC);
+
+            assertThat(result).isEmpty();
+            verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(testUserId, true);
+        }
+    }
+
+    @Nested
+    @DisplayName("getMindmapById")
+    class GetMindmapById {
+
+        @Test
+        @DisplayName("성공: 참여자 목록 조회 후 내 participant를 찾고, 역량/참여자 닉네임 리스트를 포함하여 반환한다")
+        void should_return_detail_with_competencies_and_participant_names() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("맵", true);
+            ReflectionTestUtils.setField(mindmap, "id", mindmapId);
+
+            User me = User.newUser(testUserId, "애플");
+            User other = User.newUser(2L, "바나나");
+
+            MindmapParticipant myP = new MindmapParticipant(me, mindmap);
+            MindmapParticipant otherP = new MindmapParticipant(other, mindmap);
+
+            given(mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId)).willReturn(List.of(myP, otherP));
+
+            given(mindmapAccessValidator.findUserInParticipantsOrThrow(List.of(myP, otherP), testUserId)).willReturn(
+                    myP);
+
+            given(episodeStarRepository.findCompetencyTypesByMindmapId(mindmapId, testUserId)).willReturn(
+                    List.of(3, 1, 2));
+
+            CompetencyTypeRes c1 = mock(CompetencyTypeRes.class);
+            given(c1.id()).willReturn(1);
+            CompetencyTypeRes c2 = mock(CompetencyTypeRes.class);
+            given(c2.id()).willReturn(2);
+            CompetencyTypeRes c3 = mock(CompetencyTypeRes.class);
+            given(c3.id()).willReturn(3);
+
+            given(competencyTypeService.getCompetencyTypesInIds(List.of(1, 2, 3))).willReturn(List.of(c1, c2, c3));
+
+            MindmapDetailRes result = mindmapService.getMindmapById(testUserId, mindmapId);
+
+            assertThat(result.mindmapId()).isEqualTo(mindmapId);
+            assertThat(result.participants()).containsExactlyInAnyOrder("애플", "바나나");
+            assertThat(result.competencyTypes()).extracting(CompetencyTypeRes::id).containsExactly(1, 2, 3);
+        }
+
+        @Test
+        @DisplayName("실패: 참여자 목록에 userId가 없으면 validator에서 예외를 던진다")
+        void should_throw_when_user_not_in_participants() {
+            UUID mindmapId = UUID.randomUUID();
+            Mindmap mindmap = createMindmap("맵", true);
+            ReflectionTestUtils.setField(mindmap, "id", mindmapId);
+
+            User other = User.newUser(2L, "바나나");
+            MindmapParticipant otherP = new MindmapParticipant(other, mindmap);
+
+            given(mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId)).willReturn(List.of(otherP));
+
+            given(mindmapAccessValidator.findUserInParticipantsOrThrow(List.of(otherP), testUserId)).willThrow(
+                    new CustomException(ErrorCode.MINDMAP_NOT_FOUND)); // 또는 권한 관련 에러코드면 그걸로
+
+            assertThatThrownBy(() -> mindmapService.getMindmapById(testUserId, mindmapId)).isInstanceOf(
+                            CustomException.class).extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MINDMAP_NOT_FOUND);
+        }
+    }
+
 }

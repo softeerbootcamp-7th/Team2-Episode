@@ -53,10 +53,14 @@ public class MindmapService {
     private final CompetencyTypeService competencyTypeService;
 
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
-        MindmapParticipant p = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+
+        List<MindmapParticipant> participants = mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId);
+        MindmapParticipant p = mindmapAccessValidator.findUserInParticipantsOrThrow(participants, userId);
         List<Integer> competencyTypeIds = getSortedCompetencyTypeIds(mindmapId, userId);
         List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(competencyTypeIds);
-        return MindmapDetailRes.of(p, ctResList);
+        return MindmapDetailRes.of(p, ctResList,
+                                   participants.stream().map((participant) -> participant.getUser().getNickname())
+                                           .toList());
     }
 
     public List<MindmapDetailRes> getMindmaps(Long userId, MindmapVisibility type) {
@@ -84,12 +88,15 @@ public class MindmapService {
                 competencyTypeService.getCompetencyTypesInIds(allCompetencyIds).stream()
                         .collect(Collectors.toMap(CompetencyTypeRes::id, java.util.function.Function.identity()));
 
+        Map<UUID, List<String>> participantNames = participants.stream().collect(
+                Collectors.groupingBy(p -> p.getMindmap().getId(),
+                                      Collectors.mapping(p -> p.getUser().getNickname(), Collectors.toList())));
         return participants.stream().map(p -> {
             UUID id = p.getMindmap().getId();
             List<CompetencyTypeRes> ctResList =
                     competencyMap.getOrDefault(id, Set.of()).stream().sorted().map(competencyResMap::get)
                             .filter(java.util.Objects::nonNull).toList();
-            return MindmapDetailRes.of(p, ctResList);
+            return MindmapDetailRes.of(p, ctResList, participantNames.getOrDefault(p.getMindmap().getId(), List.of()));
         }).toList();
     }
 
