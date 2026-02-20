@@ -1,5 +1,7 @@
 export type MindmapType = "ALL" | "PUBLIC" | "PRIVATE";
 
+export type MindmapId = string;
+
 export type MindmapSummary = {
     isShared: string;
     title: string;

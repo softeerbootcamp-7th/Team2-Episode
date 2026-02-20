@@ -12,9 +12,8 @@ import { linkTo } from "@/shared/utils/route";
 type CategoryStepFunnel = Extract<FunnelInstance<CreateMindmapFunnel>, { step: "CATEGORY" }>;
 
 export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) {
-    const { initialize, isPending } = useInitializeMindmap(() => {
-        // TODO: 임시로 메인으로 보냄
-        funnel.exit(linkTo.mindmap.list(), { replace: false });
+    const { initialize, isPending } = useInitializeMindmap((mindmapId) => {
+        funnel.exit(linkTo.mindmap.detail(mindmapId));
     });
 
     const selected = funnel.context.categories ?? [];
