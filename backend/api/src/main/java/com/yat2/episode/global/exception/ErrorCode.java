@@ -11,9 +11,10 @@ public enum ErrorCode {
     MINDMAP_TITLE_REQUIRED(HttpStatus.BAD_REQUEST, "MINDMAP_TITLE_REQUIRED", "팀 마인드맵 생성 시에는 title 입력이 필수 입니다."),
     MINDMAP_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "MINDMAP_ACCESS_FORBIDDEN", "해당 마인드맵은 개인 마인드맵입니다."),
     S3_URL_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S3_URL_FAIL", "스냅샷 업로드를 위한 URL 생성에 실패했습니다."),
+    S3_DELETE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S3_DELETE_FAIL", "스냅샷 삭제에 실패했습니다."),
 
     //Mindmap Participant
-    MINDMAP_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MINDMAP_PARTICIPANT_NOT_FOUND", "해당 마인드맵에 사용자가 참여하고 있지 않습니다."),
+    MINDMAP_PARTICIPANT_NOT_FOUND(HttpStatus.FORBIDDEN, "MINDMAP_PARTICIPANT_NOT_FOUND", "해당 마인드맵에 사용자가 참여하고 있지 않습니다."),
 
 
     //CompetencyType

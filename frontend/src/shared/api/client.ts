@@ -2,16 +2,11 @@ import { toSafeApiError } from "@/features/auth/api/error";
 import { getRefreshState, refreshToken, setRefreshState } from "@/features/auth/api/refresh";
 import { ApiError } from "@/features/auth/types/api";
 import type { FetchOptions } from "@/shared/api/types";
-import { ERROR_CODES } from "@/shared/constants/error";
+import { ERROR_CODES, ErrorCodeKey } from "@/shared/constants/error";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const TOKEN_REFRESH_ERROR: ApiError = {
-    status: 401,
-    code: "TOKEN_EXPIRED",
-    message: ERROR_CODES.TOKEN_EXPIRED,
-};
-
+const TOKEN_REFRESH_ERROR = new ApiError(401, "TOKEN_EXPIRED", ERROR_CODES.TOKEN_EXPIRED);
 /**
  * 토큰 만료 시 자동 갱신 및 재시도하는 API 요청 래퍼
  * @throws {ApiError} 모든 에러를 ApiError 타입으로 변환하여 던집니다
@@ -56,35 +51,39 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
         if (response.status === 401 && !skipRefresh) {
             const { isRefreshing, refreshPromise } = getRefreshState();
 
+            let refreshed = false;
             if (isRefreshing && refreshPromise) {
-                const refreshed = await refreshPromise;
-                if (!refreshed) {
-                    throw TOKEN_REFRESH_ERROR;
-                }
+                refreshed = await refreshPromise;
             } else {
                 const promise = refreshToken();
                 setRefreshState(true, promise);
 
                 try {
-                    const refreshed = await promise;
-                    if (!refreshed) {
-                        throw TOKEN_REFRESH_ERROR;
-                    }
+                    refreshed = await promise;
                 } finally {
                     setRefreshState(false, null);
                 }
+            }
+
+            if (!refreshed) {
+                throw TOKEN_REFRESH_ERROR;
             }
 
             response = await fetch(url, config);
         }
 
         if (!response.ok) {
-            const error: ApiError = await response.json().catch(() => ({
-                status: response.status,
-                code: "UNKNOWN_ERROR",
-                message: `HTTP ${response.status}: ${response.statusText}`,
-            }));
-            throw error;
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch {
+                errorData = {
+                    code: "UNKNOWN_ERROR" as ErrorCodeKey,
+                    message: `HTTP ${response.status}: ${response.statusText}`,
+                };
+            }
+
+            throw new ApiError(response.status, errorData.code, errorData.message);
         }
 
         if (response.status === 204) {
@@ -93,6 +92,10 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
 
         return await response.json();
     } catch (error) {
+        if (error instanceof ApiError) {
+            throw error;
+        }
+
         throw toSafeApiError(error);
     }
 }

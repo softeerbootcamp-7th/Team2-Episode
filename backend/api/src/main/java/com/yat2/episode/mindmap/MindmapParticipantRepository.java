@@ -30,19 +30,18 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
             @Param("mindmapId") UUID mindmapId
     );
 
-    boolean existsByMindmap_Id(UUID mindmapId);
-
     @Query(
             """
                         SELECT p
                         FROM MindmapParticipant p
                         JOIN FETCH p.mindmap m
+                        JOIN FETCH p.user u
                         WHERE p.user.kakaoId = :userId
                           AND m.shared = :shared
-                        ORDER BY p.isFavorite DESC, m.updatedAt DESC
+                        ORDER BY p.isFavorite DESC, p.lastJoinedAt DESC
                     """
     )
-    List<MindmapParticipant> findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(
+    List<MindmapParticipant> findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(
             @Param("userId") Long userId,
             @Param("shared") boolean shared
     );
@@ -53,11 +52,12 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
                         SELECT p
                         FROM MindmapParticipant p
                         JOIN FETCH p.mindmap m
+                        JOIN FETCH p.user u
                         WHERE p.user.kakaoId = :userId
-                        ORDER BY p.isFavorite DESC, m.updatedAt DESC
+                        ORDER BY p.isFavorite DESC, p.lastJoinedAt DESC
                     """
     )
-    List<MindmapParticipant> findByUserIdOrderByFavoriteAndUpdatedDesc(
+    List<MindmapParticipant> findByUserIdOrderByFavoriteAndLastJoinedDesc(
             @Param("userId") Long userId
     );
 
@@ -69,10 +69,10 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
                         JOIN FETCH p.mindmap m
                         WHERE p.user.kakaoId = :userId
                           AND m.shared = :shared
-                        ORDER BY p.createdAt DESC
+                        ORDER BY p.lastJoinedAt DESC
                     """
     )
-    List<MindmapParticipant> findByUserIdAndSharedOrderByCreatedAtDesc(
+    List<MindmapParticipant> findByUserIdAndSharedOrderByLastJoinedDesc(
             @Param("userId") Long userId,
             @Param("shared") boolean shared
     );
@@ -84,10 +84,10 @@ public interface MindmapParticipantRepository extends JpaRepository<MindmapParti
                         FROM MindmapParticipant p
                         JOIN FETCH p.mindmap m
                         WHERE p.user.kakaoId = :userId
-                        ORDER BY p.createdAt DESC
+                        ORDER BY p.lastJoinedAt DESC
                     """
     )
-    List<MindmapParticipant> findByUserIdOrderByCreatedAtDesc(
+    List<MindmapParticipant> findByUserIdOrderByLastJoinedDesc(
             @Param("userId") Long userId
     );
 

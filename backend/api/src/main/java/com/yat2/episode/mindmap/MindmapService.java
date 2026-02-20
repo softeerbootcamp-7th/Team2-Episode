@@ -1,8 +1,11 @@
 package com.yat2.episode.mindmap;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +36,7 @@ import com.yat2.episode.mindmap.s3.dto.S3UploadFieldsRes;
 import com.yat2.episode.user.User;
 import com.yat2.episode.user.UserService;
 
+@Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
@@ -49,19 +53,23 @@ public class MindmapService {
     private final CompetencyTypeService competencyTypeService;
 
     public MindmapDetailRes getMindmapById(Long userId, UUID mindmapId) {
-        MindmapParticipant p = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+
+        List<MindmapParticipant> participants = mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId);
+        MindmapParticipant p = mindmapAccessValidator.findUserInParticipantsOrThrow(participants, userId);
         List<Integer> competencyTypeIds = getSortedCompetencyTypeIds(mindmapId, userId);
         List<CompetencyTypeRes> ctResList = competencyTypeService.getCompetencyTypesInIds(competencyTypeIds);
-        return MindmapDetailRes.of(p, ctResList);
+        return MindmapDetailRes.of(p, ctResList,
+                                   participants.stream().map((participant) -> participant.getUser().getNickname())
+                                           .toList());
     }
 
     public List<MindmapDetailRes> getMindmaps(Long userId, MindmapVisibility type) {
         List<MindmapParticipant> participants = switch (type) {
             case PRIVATE ->
-                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, false);
+                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(userId, false);
             case PUBLIC ->
-                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndUpdatedDesc(userId, true);
-            default -> mindmapParticipantRepository.findByUserIdOrderByFavoriteAndUpdatedDesc(userId);
+                    mindmapParticipantRepository.findByUserIdAndSharedOrderByFavoriteAndLastJoinedDesc(userId, true);
+            default -> mindmapParticipantRepository.findByUserIdOrderByFavoriteAndLastJoinedDesc(userId);
         };
 
         if (participants.isEmpty()) return List.of();
@@ -80,18 +88,21 @@ public class MindmapService {
                 competencyTypeService.getCompetencyTypesInIds(allCompetencyIds).stream()
                         .collect(Collectors.toMap(CompetencyTypeRes::id, java.util.function.Function.identity()));
 
+        Map<UUID, List<String>> participantNames = participants.stream().collect(
+                Collectors.groupingBy(p -> p.getMindmap().getId(),
+                                      Collectors.mapping(p -> p.getUser().getNickname(), Collectors.toList())));
         return participants.stream().map(p -> {
             UUID id = p.getMindmap().getId();
             List<CompetencyTypeRes> ctResList =
                     competencyMap.getOrDefault(id, Set.of()).stream().sorted().map(competencyResMap::get)
                             .filter(java.util.Objects::nonNull).toList();
-            return MindmapDetailRes.of(p, ctResList);
+            return MindmapDetailRes.of(p, ctResList, participantNames.getOrDefault(p.getMindmap().getId(), List.of()));
         }).toList();
     }
 
 
     public List<MindmapSummaryRes> getMindmapList(Long userId) {
-        return mindmapRepository.findByUserIdOrderByCreatedDesc(userId).stream().map(MindmapSummaryRes::of).toList();
+        return mindmapRepository.findByUserIdOrderByLastJoinedDesc(userId).stream().map(MindmapSummaryRes::of).toList();
     }
 
     @Transactional
@@ -155,21 +166,31 @@ public class MindmapService {
 
     @Transactional
     public void deleteMindmap(long userId, UUID mindmapId) {
-        Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
-
+        mindmapRepository.lockWithId(mindmapId).orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
         int deletedCount = mindmapParticipantRepository.deleteByMindmap_IdAndUser_KakaoId(mindmapId, userId);
-        if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_NOT_FOUND);
+        if (deletedCount == 0) throw new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND);
 
-        boolean hasOtherParticipants = mindmapParticipantRepository.existsByMindmap_Id(mindmapId);
+        boolean isMindmapDeleted = mindmapRepository.deleteIfNoParticipants(mindmapId) > 0;
 
-        if (!hasOtherParticipants) {
-            mindmapRepository.delete(mindmap);
+        if (isMindmapDeleted) {
+            String key = s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        snapshotRepository.deleteSnapshot(key);
+                    } catch (Exception e) {
+                        log.error("Delete snapshot failed.", e);
+                    }
+                }
+            });
         }
     }
 
     @Transactional
     public MindmapSummaryRes updateFavoriteStatus(long userId, UUID mindmapId, boolean status) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.updateFavorite(status);
 
@@ -178,6 +199,7 @@ public class MindmapService {
 
     @Transactional
     public MindmapSummaryRes updateName(long userId, UUID mindmapId, String name) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         participant.getMindmap().updateName(name);
 
@@ -208,17 +230,22 @@ public class MindmapService {
         return MindmapSummaryRes.of(participant);
     }
 
+    @Transactional
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
-        mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
+        MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
 
         String presignedUrl =
                 snapshotRepository.createPresignedGetURL(s3ObjectKeyGenerator.generateMindmapSnapshotKey(mindmapId));
 
+        participant.updateLastJoinedAt();
+
         return new MindmapSessionJoinRes(ticket, presignedUrl);
     }
 
     public List<CompetencyTypeRes> getCompetencyTypesInMindmap(UUID mindmapId, long userId) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
         mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         List<Integer> ids = getSortedCompetencyTypeIds(mindmapId, userId);
         return competencyTypeService.getCompetencyTypesInIds(ids);

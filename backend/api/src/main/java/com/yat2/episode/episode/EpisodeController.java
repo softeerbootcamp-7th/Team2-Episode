@@ -56,7 +56,7 @@ public class EpisodeController {
     )
     @ApiErrorCodes(
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
-              ErrorCode.EPISODE_STAR_NOT_FOUND, ErrorCode.MINDMAP_NOT_FOUND }
+              ErrorCode.EPISODE_STAR_NOT_FOUND }
     )
     @PatchMapping("/{nodeId}/stars")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -116,7 +116,10 @@ public class EpisodeController {
     @Operation(summary = "마인드맵 및 에피소드 목록 검색")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
     @AuthRequiredErrors
-    @ApiErrorCodes({ ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND })
+    @ApiErrorCodes(
+            { ErrorCode.INVALID_REQUEST, ErrorCode.INTERNAL_ERROR, ErrorCode.MINDMAP_NOT_FOUND,
+              ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND }
+    )
     @GetMapping()
     public List<MindmapEpisodeRes> getEpisodeListSearch(
             @RequestAttribute(USER_ID) long userId,

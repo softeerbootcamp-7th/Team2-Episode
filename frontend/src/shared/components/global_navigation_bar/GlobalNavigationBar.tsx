@@ -9,9 +9,10 @@ import { linkTo } from "@/shared/utils/route";
 type Props = {
     rightSlot?: ReactNode;
     variant?: "white" | "transparent";
+    className?: string;
 };
 
-export default function GlobalNavigationBar({ variant = "white", rightSlot }: Props) {
+export default function GlobalNavigationBar({ variant = "white", rightSlot, className }: Props) {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -20,7 +21,7 @@ export default function GlobalNavigationBar({ variant = "white", rightSlot }: Pr
     };
 
     return (
-        <div className={variants({ variant })}>
+        <div className={(variants({ variant }), className)}>
             <Link to="/">
                 <Icon name="ic_logo" viewBox="0 0 87 16" height="16px" width="87px" />
             </Link>

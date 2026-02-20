@@ -56,9 +56,16 @@ public class MindmapParticipant {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "last_joined_at", nullable = false, insertable = false)
+    private LocalDateTime lastJoinedAt;
+
     public MindmapParticipant(User user, Mindmap mindmap) {
         this.user = user;
         this.mindmap = mindmap;
+    }
+
+    public void updateLastJoinedAt() {
+        this.lastJoinedAt = LocalDateTime.now();
     }
 
     public void updateFavorite(boolean status) {
