@@ -17,7 +17,7 @@ import type { AddNodeDirection, NodeDirection, NodeElement, NodeId } from "@/fea
 import { computeMindmapLayout } from "@/features/mindmap/utils/compute_mindmap_layout";
 import { createMindmapStore, MindmapStoreState, StoreChannel } from "@/features/mindmap/utils/mindmap_store";
 import { KeyLikeEvent, PointerLikeEvent, WheelLikeEvent } from "@/shared/types/native_like_event";
-import type { Bounds, Rect } from "@/shared/types/spatial";
+import type { Bounds, Point, Rect, SpatialStats } from "@/shared/types/spatial";
 
 function getTxOriginType(origin: AdapterChange["origin"]): string | boolean | null {
     if (!origin) return null;
@@ -92,10 +92,11 @@ export class MindmapController implements IMindmapController {
 
     private adapter: TreeAdapter;
     private tree: TreeModel;
+    private spatialStats: SpatialStats = { maxHalfW: 100, maxHalfH: 40 };
 
     private presenceManager: CollaborationManager | null = null;
 
-    private quadTree: QuadTree;
+    private quadTree: QuadTree<Point>;
     private canvas: SVGSVGElement | null = null;
     private viewport: ViewportController | null = null;
 
@@ -124,7 +125,7 @@ export class MindmapController implements IMindmapController {
 
         this.tree = new TreeModel(this.adapter);
 
-        this.quadTree = new QuadTree(this.calculateInitialBounds());
+        this.quadTree = new QuadTree<Point>(this.calculateInitialBounds());
         this.rebuildSpatialIndexesAndCacheBounds();
 
         this.unsubAdapter = this.adapter.onChange((c) => this.handleAdapterChange(c));
@@ -356,6 +357,14 @@ export class MindmapController implements IMindmapController {
 
     getStore() {
         return this.store;
+    }
+
+    getSpatialStats(): SpatialStats {
+        return this.spatialStats;
+    }
+
+    querySpatialPointsInRange(range: Rect): Array<Point> {
+        return this.quadTree.getPointsInRange(range);
     }
 
     private isNodeLockedByOther(nodeId: NodeId): boolean {
@@ -806,17 +815,26 @@ export class MindmapController implements IMindmapController {
     private rebuildSpatialIndexesAndCacheBounds() {
         this.quadTree.clear();
 
+        let maxHalfW = 0;
+        let maxHalfH = 0;
+
         let minX = Infinity;
         let maxX = -Infinity;
         let minY = Infinity;
         let maxY = -Infinity;
 
         this.adapter.getMap().forEach((node) => {
-            // QuadTree는 drag/탐색용 (기존 유지)
-            this.quadTree.insert(node);
-
             const w = typeof node.width === "number" && node.width > 0 ? node.width : 200;
             const h = typeof node.height === "number" && node.height > 0 ? node.height : 80;
+
+            const halfW = w / 2;
+            const halfH = h / 2;
+
+            if (halfW > maxHalfW) maxHalfW = halfW;
+            if (halfH > maxHalfH) maxHalfH = halfH;
+
+            const p: Point = { id: node.id, x: node.x, y: node.y };
+            this.quadTree.insert(p);
 
             const left = node.x - w / 2;
             const right = node.x + w / 2;
