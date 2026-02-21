@@ -38,10 +38,9 @@ public class MindmapAccessValidator {
 
     public MindmapParticipant validateJoin(UUID mindmapId, long userId) {
         Mindmap mindmap = findMindmapOrThrow(mindmapId);
-        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).orElseThrow(() -> {
-            if (mindmap.isShared()) return new CustomException(ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND);
-            else return new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
-        });
+        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).orElseThrow(
+                () -> new CustomException(mindmap.isShared() ? ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND :
+                                          ErrorCode.MINDMAP_ACCESS_FORBIDDEN));
     }
 
     public Mindmap validateTeamMindmapWithLock(UUID mindmapId) {
