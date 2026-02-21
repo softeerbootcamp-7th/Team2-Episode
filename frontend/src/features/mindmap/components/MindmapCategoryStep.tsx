@@ -35,6 +35,9 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
         });
     };
 
+    const isSelected = (item: ActivityCategoryItem) =>
+        selectedCategoryItems.some((selected) => selected.id === item.id);
+
     const canSubmit = selectedCategoryItems.length > 0;
 
     const { user } = useAuth();
@@ -71,7 +74,7 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
                             key={item.id}
                             emoji={item.emoji}
                             label={item.label}
-                            selected={selectedCategoryItems.includes(item)}
+                            selected={isSelected(item)}
                             onClick={() => toggleCategoryItem(item)}
                         />
                     ))}
