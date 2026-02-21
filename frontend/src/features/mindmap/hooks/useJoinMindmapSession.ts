@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { ApiError } from "@/features/auth/types/api";
 import { post } from "@/shared/api/method";
+import { BaseError } from "@/shared/utils/errors";
 
 export type JoinSessionResponse = {
     token: string;
@@ -24,7 +25,7 @@ const fetchJoinSession = async (
         });
     } catch (e) {
         if (!(e instanceof ApiError) || e.status !== 403 || curRetryCount >= maxRetryCount) {
-            throw new Error("알 수 없는 오류입니다. 다시 시도해주세요.");
+            throw e;
         }
 
         if (curRetryCount < maxRetryCount) {
@@ -53,8 +54,8 @@ export const useJoinMindmapSession = ({
 }) => {
     return useMutation<JoinSessionResponse, ApiError, string>({
         mutationFn: () => fetchJoinSession(mindmapId, maxRetryCount),
-        onError: (error) => {
-            console.error("세션 참여 실패:", error.message);
+        throwOnError: (error) => {
+            return error instanceof BaseError && error.displayType === "replace";
         },
     });
 };

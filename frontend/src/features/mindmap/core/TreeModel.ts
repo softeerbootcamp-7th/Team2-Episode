@@ -1,3 +1,4 @@
+import { TEMP_NEW_NODE_ID } from "@/features/mindmap/constants/node";
 import { TreeAdapter } from "@/features/mindmap/types/mindmap_controller";
 import type { AddNodeDirection, NodeDirection, NodeElement, NodeId, NodeType } from "@/features/mindmap/types/node";
 import { exhaustiveCheck } from "@/utils/exhaustive_check";
@@ -101,6 +102,31 @@ export class TreeModel {
 
     private patchNode(nodeId: NodeId, patch: NodePatch) {
         this.adapter.update(nodeId, patch);
+    }
+
+    /** 이동 작업에 사용할 노드를 확보 */
+    private ensureMovingNode(
+        movingNodeId: NodeId,
+        initialBaseNode: NodeElement,
+        addNodeDirection?: AddNodeDirection,
+    ): NodeElement {
+        const isTempNew = movingNodeId === TEMP_NEW_NODE_ID;
+        const existingMoving = this.safeGetNode(movingNodeId);
+
+        // 1. 유효성 검사: 존재하지도 않고 임시 노드도 아닌 경우 에러 발생
+        if (!existingMoving && !isTempNew) {
+            throw new Error(`[TreeModel.moveTo] Critical error: moving node not found. ID: ${movingNodeId}`);
+        }
+
+        // 2. 이동 대상 확보
+        return (
+            existingMoving ??
+            this.generateNewNodeElement({
+                contents: "새 노드",
+                addNodeDirection:
+                    initialBaseNode.type === "root" ? (addNodeDirection ?? "right") : initialBaseNode.addNodeDirection,
+            })
+        );
     }
 
     update(nodeId: NodeId, newNodeData: Partial<Omit<NodeElement, "id">>) {
@@ -305,36 +331,48 @@ export class TreeModel {
         const { baseNodeId, movingNodeId, direction, addNodeDirection } = args;
 
         if (baseNodeId === movingNodeId) return;
-        if (direction === "child" && baseNodeId === movingNodeId) return;
 
+        // 1. 이동할 노드 확보
         const initialBaseNode = this.getNode(baseNodeId);
-        const movingNode = this.getNode(movingNodeId);
+        const movingNode = this.ensureMovingNode(movingNodeId, initialBaseNode, addNodeDirection);
 
-        // Ancestor Check
-        const checkNodeId = direction === "child" ? initialBaseNode.id : initialBaseNode.parentId;
-        let temp = this.safeGetNode(checkNodeId);
-        while (temp) {
-            if (temp.id === movingNodeId) throw new Error("Cannot move under descendant");
-            if (temp.type === "root") break;
-            temp = this.safeGetNode(temp.parentId);
+        // 2. 기존 노드인 경우 순환 참조 방지 및 분리
+        const isExistingNode = this.nodes.has(movingNodeId);
+        if (isExistingNode) {
+            const checkNodeId = direction === "child" ? initialBaseNode.id : initialBaseNode.parentId;
+            let temp: NodeElement | undefined = this.safeGetNode(checkNodeId);
+
+            while (temp) {
+                if (temp.id === movingNode.id) {
+                    throw new Error("Cannot move a node into its own descendant subtree.");
+                }
+                if (temp.type === "root") break;
+                temp = this.safeGetNode(temp.parentId);
+            }
+
+            this.detach(movingNode);
         }
 
-        this.detach(movingNode);
-
         const freshBaseNode = this.getNode(baseNodeId);
-
-        const freshMovingNode = this.getNode(movingNodeId);
+        const freshMovingNode = this.getNode(movingNode.id);
 
         switch (direction) {
             case "next":
                 this.attachNext(freshBaseNode, freshMovingNode);
                 break;
+
             case "prev":
                 this.attachPrev(freshBaseNode, freshMovingNode);
                 break;
+
             case "child":
-                this.appendChild({ parentNodeId: freshBaseNode.id, childNodeId: freshMovingNode.id, addNodeDirection });
+                this.appendChild({
+                    parentNodeId: freshBaseNode.id,
+                    childNodeId: freshMovingNode.id,
+                    addNodeDirection,
+                });
                 break;
+
             default:
                 exhaustiveCheck(direction);
         }

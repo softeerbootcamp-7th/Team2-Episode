@@ -39,6 +39,8 @@ export type IMindmapController = {
         updateNodeContents(nodeId: NodeId, contents: string): void;
 
         selectNode(nodeId: NodeId | null): void;
+        resetViewport(): void;
+        fitToContent(): void;
         startCreating(): void;
         cancelInteraction(): void;
 
