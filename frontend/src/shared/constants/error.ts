@@ -6,6 +6,8 @@ export const ERROR_CODES = {
     INVALID_MINDMAP_UUID: "알맞지 않은 uuid 입니다.",
     MINDMAP_TITLE_REQUIRED: "팀 마인드맵 생성 시에는 title 입력이 필수 입니다.",
     S3_URL_FAIL: "스냅샷 업로드를 위한 URL 생성에 실패했습니다.",
+    MINDMAP_ACCESS_FORBIDDEN: "개인 마인드맵입니다.",
+    MINDMAP_PARTICIPANT_NOT_FOUND: "참여가 필요한 팀 마인드맵 입니다.",
 
     // Auth
     TOKEN_EXPIRED: "토큰이 만료되었습니다.",
