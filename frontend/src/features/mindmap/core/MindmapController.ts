@@ -107,10 +107,7 @@ export class MindmapController implements IMindmapController {
 
     private destroyed = false;
 
-    // 🟢 fit_content용 bounds 캐시 (O(1) 조회)
     private contentBoundsCache: Bounds | null = null;
-
-    // 🟢 viewport store 커밋 rAF 중복 방지
     private viewportCommitScheduled = false;
 
     constructor(opts: MindmapOptions) {
@@ -262,8 +259,8 @@ export class MindmapController implements IMindmapController {
         this.viewport = new ViewportController(
             svg,
             () => this.quadTree.getBounds(),
-            () => this.contentBoundsCache, // 🟢 fit_content는 content bounds 사용
-            () => this.scheduleViewportCommit(), // 🟢 applyViewBox → store 반영 연결
+            () => this.contentBoundsCache,
+            () => this.scheduleViewportCommit(),
         );
 
         this.interaction = new InteractionMachine({
@@ -555,8 +552,8 @@ export class MindmapController implements IMindmapController {
 
         cancelInteraction: () => {
             if (this.interaction) {
-                this.interaction.cancel(); // 🟢
-                return; // 🟢
+                this.interaction.cancel();
+                return;
             }
 
             this.store.setState(
@@ -572,8 +569,7 @@ export class MindmapController implements IMindmapController {
 
     input = {
         pointerDown: (e: PointerLikeEvent) => {
-            // 🟢 pending_creation 중 클릭은 pointerUp에서만 처리 (panning/selection 방지)
-            if (this.interaction?.getInteractionMode() === "pending_creation") return; // 🟢
+            if (this.interaction?.getInteractionMode() === "pending_creation") return;
 
             this.assertNotDestroyed();
             if (!this.interaction) return;
@@ -627,8 +623,7 @@ export class MindmapController implements IMindmapController {
         wheel: (e: WheelLikeEvent) => {
             this.assertNotDestroyed();
             e.preventDefault?.();
-            // this.viewport?.zoomByWheel(e.deltaY, e.clientX, e.clientY);
-            this.viewport?.zoomHandler(e.deltaY, { clientX: e.clientX, clientY: e.clientY }); // 🟢
+            this.viewport?.zoomHandler(e.deltaY, { clientX: e.clientX, clientY: e.clientY });
         },
 
         keyDown: (e: KeyLikeEvent) => {
@@ -640,9 +635,8 @@ export class MindmapController implements IMindmapController {
             }
 
             if (e.key === "Escape") {
-                // 🟢 pending_creation 취소
                 if (this.interaction?.getInteractionMode() === "pending_creation") {
-                    this.actions.cancelInteraction(); // 🟢
+                    this.actions.cancelInteraction();
                 }
                 return;
             }

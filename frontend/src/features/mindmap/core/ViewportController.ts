@@ -64,7 +64,7 @@ export class ViewportController {
     }
 
     /**
-     * 🟢 줌아웃 최소값을 동적으로 계산
+     * 줌아웃 최소값을 동적으로 계산
      * - “쿼드트리 월드가 화면에 다 보이는” zoom 값을 minZoom으로 삼는다.
      * - 월드가 작아 fitZoom이 1보다 커지는 케이스에서 "강제 줌인"은 피하려고 1로 캡(=줌아웃만 제한)
      */
@@ -85,13 +85,11 @@ export class ViewportController {
         const fitZoom = Math.min(zoomX, zoomY);
         if (!Number.isFinite(fitZoom) || fitZoom <= 0) return BASE_MIN_ZOOM;
 
-        // 🟢 "줌아웃 한계"만 다루기 위해 1로 캡(월드가 작은 경우 강제 줌인 방지)
         return Math.min(fitZoom, 1);
     }
 
     /** 리사이즈 반영 */
     handleResize(): void {
-        // 🟢 리사이즈로 인해 minZoom이 올라갔는데 현재 zoom이 더 작으면 보정
         const minZoom = this.getMinZoomToFitWorldBounds();
         if (this.zoom < minZoom) this.zoom = minZoom;
 
@@ -107,34 +105,19 @@ export class ViewportController {
     }
 
     setViewport(x: number, y: number, scale: number): void {
-        this.cancelAnimation(); // 🟢 (일관성)
+        this.cancelAnimation();
 
-        const minZoom = this.getMinZoomToFitWorldBounds(); // 🟢
+        const minZoom = this.getMinZoomToFitWorldBounds();
         this.panX = x;
         this.panY = y;
-        this.zoom = Math.min(BASE_MAX_ZOOM, Math.max(scale, minZoom)); // 🟢 clamp
+        this.zoom = Math.min(BASE_MAX_ZOOM, Math.max(scale, minZoom));
 
         this.applyViewBox();
     }
 
     getCurrentTransform() {
-        // const rect = this.canvas.getBoundingClientRect();
-        // const viewWidth = rect.width / this.zoom;
-        // const viewHeight = rect.height / this.zoom;
-
-        // return {
-        //     x: -(this.panX - viewWidth / 2),
-        //     y: -(this.panY - viewHeight / 2),
-        //     scale: this.zoom,
-        // };
         return { x: this.panX, y: this.panY, scale: this.zoom };
     }
-
-    // panning(dx: number, dy: number) {
-    //     this.panX -= dx / this.zoom;
-    //     this.panY -= dy / this.zoom;
-    //     this.applyViewBox();
-    // }
 
     zoomByWheel(deltaY: number, clientX: number, clientY: number) {
         this.cancelAnimation();
@@ -148,7 +131,7 @@ export class ViewportController {
         const scaleChange = Math.exp(-deltaY * zoomSpeed);
         const rawZoom = this.zoom * scaleChange;
 
-        const minZoom = this.getMinZoomToFitWorldBounds(); // 🟢
+        const minZoom = this.getMinZoomToFitWorldBounds();
         const nextZoom = Math.min(BASE_MAX_ZOOM, Math.max(rawZoom, minZoom)); // 🟡 (기존 softMinZoom → 동적 minZoom)
 
         this.zoom = nextZoom;
@@ -214,7 +197,6 @@ export class ViewportController {
 
     fitToWorldRect() {
         const bounds = this.getContentBounds();
-        console.log("bounds", bounds);
         const cw = this.canvas.clientWidth;
         const ch = this.canvas.clientHeight;
 
@@ -230,10 +212,10 @@ export class ViewportController {
         const zoomY = ch / targetHeight;
 
         const rawZoom = Math.min(zoomX, zoomY);
-        const minZoom = this.getMinZoomToFitWorldBounds(); // 🟢
+        const minZoom = this.getMinZoomToFitWorldBounds();
 
         // 4. 최종 줌 결정 (둘 중 작은 값을 선택해야 영역이 잘리지 않음)
-        const newZoom = Math.min(BASE_MAX_ZOOM, Math.max(rawZoom, minZoom)); // 🟢 clamp
+        const newZoom = Math.min(BASE_MAX_ZOOM, Math.max(rawZoom, minZoom));
 
         const centerX = bounds.minX + bounds.width / 2;
         const centerY = bounds.minY + bounds.height / 2;

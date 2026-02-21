@@ -310,27 +310,24 @@ export class TreeModel {
 
         const initialBaseNode = this.getNode(baseNodeId);
 
-        const isTempNew = movingNodeId === TEMP_NEW_NODE_ID; // 🟢
-        const existingMoving = this.safeGetNode(movingNodeId); // 🟢
+        const isTempNew = movingNodeId === TEMP_NEW_NODE_ID;
+        const existingMoving = this.safeGetNode(movingNodeId);
 
-        // 🟢 TEMP가 아닌데 moving이 없으면: 잘못된 요청이므로 무시(새 노드 생성하면 버그 숨김)
         if (!existingMoving && !isTempNew) {
-            console.warn(`[TreeModel.moveTo] moving node not found: ${movingNodeId}`); // 🟢
+            console.warn(`[TreeModel.moveTo] moving node not found: ${movingNodeId}`);
             return;
         }
 
-        // 🟢 TEMP_NEW_NODE_ID이면 여기서 "실제 노드"를 생성한다 (contents 기본값: "새 노드")
+        // TEMP_NEW_NODE_ID이면 여기서 "실제 노드"를 생성
         const ensuredMovingNode: NodeElement =
             existingMoving ??
             this.generateNewNodeElement({
-                contents: "새 노드", // 🟢
+                contents: "새 노드",
                 addNodeDirection:
-                    initialBaseNode.type === "root"
-                        ? (addNodeDirection ?? "right") // 🟢 root child side 반영
-                        : initialBaseNode.addNodeDirection,
+                    initialBaseNode.type === "root" ? (addNodeDirection ?? "right") : initialBaseNode.addNodeDirection,
             });
 
-        // 🟢 기존 노드 이동(드래그)일 때만: 자손 아래로 이동 방지 + detach
+        // 기존 노드 이동
         if (existingMoving) {
             const checkNodeId = direction === "child" ? initialBaseNode.id : initialBaseNode.parentId;
             let temp = this.safeGetNode(checkNodeId);

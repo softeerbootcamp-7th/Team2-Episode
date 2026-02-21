@@ -21,7 +21,7 @@ export default function InteractionLayer({
         const root = rootRef.current;
         if (!root) return;
 
-        const isInteracting = ["dragging", "pending_creation"].includes(status.mode); // 🟢
+        const isInteracting = ["dragging", "pending_creation"].includes(status.mode);
         root.setAttribute("data-dragging", isInteracting ? "true" : "false");
     }, [status.mode, rootRef]);
 

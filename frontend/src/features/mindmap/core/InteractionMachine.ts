@@ -58,7 +58,6 @@ export class InteractionMachine {
     }
 
     pointerDown(hit: HitResult, e: { clientX: number; clientY: number; button?: number; buttons?: number }) {
-        // 🟢 pending_creation 중에는 클릭으로 panning/drag 시작하지 않음 (확정은 pointerUp에서 처리)
         if (this.mode === "pending_creation") return;
 
         if (hit.kind === "node") {
@@ -154,9 +153,9 @@ export class InteractionMachine {
             const targetId = this.baseNode.targetId;
             const direction = this.baseNode.direction;
 
-            const movingId: NodeId | null = isDragging ? this.draggingNodeId : TEMP_NEW_NODE_ID; // 🟢
+            const movingId: NodeId | null = isDragging ? this.draggingNodeId : TEMP_NEW_NODE_ID;
             if (movingId) {
-                const droppingOnDescendant = isDragging ? !!this.dragSubtreeIds?.has(targetId) : false; // 🟢
+                const droppingOnDescendant = isDragging ? !!this.dragSubtreeIds?.has(targetId) : false;
                 if (!droppingOnDescendant) {
                     const targetNode = this.deps.safeGetNode(targetId);
                     if (targetNode) {
@@ -339,22 +338,21 @@ export class InteractionMachine {
     }
 
     startCreating() {
-        this.mode = "pending_creation"; // 🟢
-        this.draggingNodeId = null; // 🟢
-        this.dragDelta = { x: 0, y: 0 }; // 🟢
-        this.dragSubtreeIds = null; // 🟢
-        this.baseNode = { targetId: null, direction: null, side: null }; // 🟢
+        this.mode = "pending_creation";
+        this.draggingNodeId = null;
+        this.dragDelta = { x: 0, y: 0 };
+        this.dragSubtreeIds = null;
+        this.baseNode = { targetId: null, direction: null, side: null };
 
-        // 버튼 클릭만으로도 UI가 즉시 반응하도록 스냅샷 emit // 🟢
-        this.emitDragSession(); // 🟢
-        this.emitInteractionFrame(); // 🟢
+        this.emitDragSession();
+        this.emitInteractionFrame();
     }
 
     cancel() {
-        if (this.mode === "idle") return; // 🟢
-        this.clearStatus(); // 🟢
-        this.emitDragSession(); // 🟢
-        this.emitInteractionFrame(); // 🟢
+        if (this.mode === "idle") return;
+        this.clearStatus();
+        this.emitDragSession();
+        this.emitInteractionFrame();
     }
 
     getInteractionMode() {
