@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.request.EpisodeDeleteBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeSearchReq;
 import com.yat2.episode.episode.dto.request.EpisodeUpsertBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
@@ -630,6 +631,78 @@ class EpisodeServiceTest {
             verify(mindmapAccessValidator, times(1)).findMindmapOrThrow(mindmapId);
             verify(episodeRepository, never()).findAllById(anyList());
             verify(episodeStarRepository, never()).findAllById(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("에피소드 bulk 삭제 테스트")
+    class BulkDeleteTests {
+
+        @Test
+        @DisplayName("성공: 모두 접근 가능한 nodeId면 deleteAllByIdInBatch로 일괄 삭제한다")
+        void deleteEpisodes_Success_AllAllowed() {
+            UUID n1 = UUID.randomUUID();
+            UUID n2 = UUID.randomUUID();
+
+            List<UUID> nodeIds = List.of(n1, n2);
+
+            when(episodeStarRepository.findNodeIdsByUserIdAndNodeIdIn(userId, nodeIds)).thenReturn(List.of(n1, n2));
+
+            episodeService.deleteEpisodes(new EpisodeDeleteBatchReq(nodeIds), userId);
+
+            verify(episodeStarRepository, times(1)).findNodeIdsByUserIdAndNodeIdIn(userId, nodeIds);
+
+            verify(episodeRepository, times(1)).deleteAllByIdInBatch(nodeIds);
+        }
+
+        @Test
+        @DisplayName("실패: 일부 nodeId에 접근 권한이 없거나 존재하지 않으면 EPISODE_NOT_FOUND")
+        void deleteEpisodes_Fail_WhenNotAllAllowed() {
+            UUID n1 = UUID.randomUUID();
+            UUID n2 = UUID.randomUUID();
+
+            List<UUID> nodeIds = List.of(n1, n2);
+
+            when(episodeStarRepository.findNodeIdsByUserIdAndNodeIdIn(userId, nodeIds)).thenReturn(List.of(n1));
+
+            assertThatThrownBy(
+                    () -> episodeService.deleteEpisodes(new EpisodeDeleteBatchReq(nodeIds), userId)).isInstanceOf(
+                    CustomException.class).hasFieldOrPropertyWithValue("errorCode", ErrorCode.EPISODE_NOT_FOUND);
+
+            verify(episodeRepository, never()).deleteAllByIdInBatch(anyList());
+        }
+
+        @Test
+        @DisplayName("실패: 빈 리스트면 INVALID_REQUEST")
+        void deleteEpisodes_Fail_WhenEmpty() {
+            assertThatThrownBy(
+                    () -> episodeService.deleteEpisodes(new EpisodeDeleteBatchReq(List.of()), userId)).isInstanceOf(
+                    CustomException.class).hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST);
+
+            verify(episodeStarRepository, never()).findNodeIdsByUserIdAndNodeIdIn(any(Long.class), anyList());
+            verify(episodeRepository, never()).deleteAllByIdInBatch(anyList());
+        }
+
+        @Test
+        @DisplayName("성공: 중복 nodeId가 포함되어도 distinct 후 1번만 삭제한다")
+        void deleteEpisodes_Success_Dedup() {
+            UUID n1 = UUID.randomUUID();
+            UUID n2 = UUID.randomUUID();
+
+            List<UUID> nodeIds = List.of(n1, n1, n2);
+
+            List<UUID> dedup = List.of(n1, n2);
+
+            when(episodeStarRepository.findNodeIdsByUserIdAndNodeIdIn(userId, dedup)).thenReturn(dedup);
+
+            episodeService.deleteEpisodes(new EpisodeDeleteBatchReq(nodeIds), userId);
+
+            verify(episodeStarRepository, times(1)).findNodeIdsByUserIdAndNodeIdIn(userId, dedup);
+
+            ArgumentCaptor<List<UUID>> captor = ArgumentCaptor.forClass(List.class);
+            verify(episodeRepository, times(1)).deleteAllByIdInBatch(captor.capture());
+
+            assertThat(captor.getValue()).containsExactlyInAnyOrderElementsOf(dedup);
         }
     }
 }
