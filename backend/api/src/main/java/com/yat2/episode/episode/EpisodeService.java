@@ -165,7 +165,7 @@ public class EpisodeService {
     public List<EpisodeDetail> upsertEpisodes(UUID mindmapId, long userId, EpisodeUpsertBatchReq items) {
         mindmapAccessValidator.findMindmapOrThrow(mindmapId);
 
-        if (items == null || items.isEmpty()) return List.of();
+        if (items == null || items.items().isEmpty()) return List.of();
 
         Map<UUID, String> reqByNodeId = new LinkedHashMap<>();
         for (EpisodeUpsertItemReq it : items.items()) {
@@ -267,7 +267,7 @@ public class EpisodeService {
 
     @Transactional
     public void deleteEpisodes(EpisodeDeleteBatchReq req, long userId) {
-        if (req == null || req.isEmpty()) {
+        if (req == null || req.nodeIds().isEmpty()) {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
         List<UUID> dedup = req.nodeIds().stream().distinct().toList();

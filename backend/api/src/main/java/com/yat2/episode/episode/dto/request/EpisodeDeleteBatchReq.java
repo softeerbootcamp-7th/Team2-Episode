@@ -12,8 +12,4 @@ public record EpisodeDeleteBatchReq(
     public EpisodeDeleteBatchReq(List<UUID> nodeIds) {
         this.nodeIds = nodeIds;
     }
-
-    public boolean isEmpty() {
-        return nodeIds.isEmpty();
-    }
 }
