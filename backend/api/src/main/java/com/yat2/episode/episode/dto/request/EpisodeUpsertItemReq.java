@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public record EpisodeUpsertItemReq(
         UUID nodeId,
-        @Size(max = 100) @NotNull String content
+        @Size(max = 200) @NotNull String content
 ) {}

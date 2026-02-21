@@ -27,7 +27,7 @@ public class Episode {
     @Column(name = "mindmap_id", nullable = false)
     private UUID mindmapId;
 
-    @Column(length = 100)
+    @Column(length = 200)
     private String content;
 
     public static Episode create(UUID nodeId, UUID mindmapId) {
