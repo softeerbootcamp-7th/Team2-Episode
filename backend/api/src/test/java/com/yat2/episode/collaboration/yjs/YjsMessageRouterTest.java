@@ -273,6 +273,9 @@ class YjsMessageRouterTest {
             WebSocketSession requester = mock(WebSocketSession.class);
             when(requester.getId()).thenReturn("REQ");
 
+            var attrs = new java.util.HashMap<String, Object>();
+            when(requester.getAttributes()).thenReturn(attrs);
+
             WebSocketSession provider = mock(WebSocketSession.class);
             when(provider.getId()).thenReturn("P1");
 
@@ -281,10 +284,15 @@ class YjsMessageRouterTest {
 
             when(sessionRegistry.unicast(eq(roomId), eq("P1"), any())).thenReturn(true);
 
+            when(sessionRegistry.getAliveSession(eq(roomId), eq("REQ"))).thenReturn(requester);
+
             router.routeIncoming(roomId, requester, sync1Frame());
             router.routeIncoming(roomId, provider, sync2Frame());
 
             verify(sessionRegistry).unicast(eq(roomId), eq("REQ"), eq(sync2Frame()));
+
+            org.assertj.core.api.Assertions.assertThat(attrs.get(IS_SYNCED)).isEqualTo(true);
+            org.assertj.core.api.Assertions.assertThat(attrs).doesNotContainKey(LAST_ENTRY_ID);
         }
     }
 }
