@@ -1,6 +1,7 @@
 import type Redis from "ioredis";
 import * as decoding from "lib0/decoding";
-import { SnapshotBuildContext } from "../contracts/SnapshotBuildContext";
+import { SnapshotBuildContext } from "../../contracts/SnapshotBuildContext";
+import { REDIS_KEYS } from "./Constants";
 
 export interface UpdateRepository {
     fetchAllUpdates(roomId: string): Promise<SnapshotBuildContext>;
@@ -8,21 +9,14 @@ export interface UpdateRepository {
     trim(roomId: string, lastEntryId: string): Promise<void>;
 }
 
-export type UpdateRepositoryConfig = {
-    updateStreamKeyPrefix: string; // ex) "collab:room:"
-};
-
 export class RedisUpdateRepository implements UpdateRepository {
     private readonly defaultLastEntryId = "0-0";
     private static readonly FIELD_U = 0x75; // 'u'
 
-    constructor(
-        private readonly redis: Redis,
-        private readonly config: UpdateRepositoryConfig,
-    ) {}
+    constructor(private readonly redis: Redis) {}
 
     private getStreamKey(roomId: string): string {
-        return `${this.config.updateStreamKeyPrefix}${roomId}`;
+        return `${REDIS_KEYS.ROOM_STREAM_PREFIX}${roomId}`;
     }
 
     async fetchAllUpdates(roomId: string): Promise<SnapshotBuildContext> {

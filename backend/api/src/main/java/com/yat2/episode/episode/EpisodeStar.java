@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.StarUpdateReq;
+import com.yat2.episode.episode.dto.request.StarUpdateReq;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
