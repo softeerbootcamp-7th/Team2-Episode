@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { ApiError } from "@/features/auth/types/api";
 import { post } from "@/shared/api/method";
-import { BaseError } from "@/shared/utils/errors";
+import { BadRequestError, BaseError } from "@/shared/utils/errors";
 
 export type JoinSessionResponse = {
     token: string;
@@ -25,7 +25,13 @@ const fetchJoinSession = async (
         });
     } catch (e) {
         if (!(e instanceof ApiError) || e.status !== 403 || curRetryCount >= maxRetryCount) {
-            throw e;
+            throw new BadRequestError("잘못된 요청입니다.");
+        }
+
+        // 개인마인드맵에 join하려하면 403 + MINDMAP_ACCESS_FORBIDDEN로 오류옵니다.
+        // participants가 필요한거면 403 + MINDMAP_PARTICIPANT_NOT_FOUND 오류옵니다.
+        if (e instanceof ApiError && e.status === 403 && e.code === "MINDMAP_ACCESS_FORBIDDEN") {
+            throw new BadRequestError("개인 마인드맵에는 참여할 수 없습니다.");
         }
 
         if (curRetryCount < maxRetryCount) {
