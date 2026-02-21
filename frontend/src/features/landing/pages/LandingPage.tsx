@@ -3,19 +3,16 @@ import { Link } from "react-router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import LandingInfo from "@/features/landing/components/LandingInfo";
-import Button from "@/shared/components/button/Button";
 import CallToActionButton from "@/shared/components/call_to_action_button/CallToActionButton";
-import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 import Icon from "@/shared/components/icon/Icon";
-import Popover from "@/shared/components/popover/Popover";
-import UserBox from "@/shared/components/user_box/UserBox";
 import { linkTo } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
 
 type FocusKey = "mindmap" | "episode_archive";
 
 const LandingPage = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
+
     const scrollRootRef = useRef<HTMLDivElement | null>(null);
     const [focused, setFocused] = useState<FocusKey>("mindmap");
 
@@ -37,7 +34,7 @@ const LandingPage = () => {
 
             switch (from) {
                 case "start":
-                    return linkTo.home();
+                    return linkTo.mindmap.list();
                 case "mindmap":
                     return linkTo.mindmap.list();
                 case "episode_archive":
@@ -48,16 +45,6 @@ const LandingPage = () => {
         },
         [user],
     );
-
-    const scrollTo = useCallback((key: FocusKey) => {
-        const target = sectionRefs.current[key];
-        if (!target) return;
-
-        target.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-        });
-    }, []);
 
     useEffect(() => {
         const root = scrollRootRef.current;
@@ -85,7 +72,7 @@ const LandingPage = () => {
             },
             {
                 root,
-                rootMargin: "-45% 0px -45% 0px",
+                rootMargin: "-10% 0PX -10% 0px",
                 threshold: thresholds,
             },
         );
@@ -94,46 +81,9 @@ const LandingPage = () => {
         return () => observer.disconnect();
     }, []);
 
+    const newLocal = "h-auto w-full rounded-xl border border-gray-100 md:w-[460px]";
     return (
         <div className="relative flex h-screen w-full flex-col overflow-hidden bg-landing">
-            {/* GNB 컨테이너 */}
-            <header className="relative z-50 h-[74px] shrink-0">
-                <GlobalNavigationBar
-                    variant="transparent"
-                    rightSlot={
-                        user ? (
-                            <Popover
-                                direction="bottom_left"
-                                contents={
-                                    <button
-                                        type="button"
-                                        onClick={logout}
-                                        className="whitespace-nowrap rounded-lg border border-gray-200 bg-white px-4 py-2 typo-body-14-medium text-text-main2 shadow-md"
-                                    >
-                                        로그아웃
-                                    </button>
-                                }
-                            >
-                                <UserBox name={user.nickname} />
-                            </Popover>
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <Link to={linkTo.login()}>
-                                    <Button size="xs" borderRadius="md" variant="quaternary_accent_outlined">
-                                        로그인
-                                    </Button>
-                                </Link>
-                                <Link to={linkTo.login()}>
-                                    <Button size="xs" borderRadius="md" variant="primary">
-                                        가입하기
-                                    </Button>
-                                </Link>
-                            </div>
-                        )
-                    }
-                />
-            </header>
-
             <main
                 ref={scrollRootRef}
                 className={cn("flex-1 w-full overflow-y-auto overflow-x-hidden", "snap-y snap-mandatory scroll-smooth")}
@@ -149,17 +99,8 @@ const LandingPage = () => {
                             취업 준비의 모든 과정을 한 곳에서
                         </p>
                         <div className="mt-10 flex items-center gap-3">
-                            <Button
-                                type="button"
-                                variant="quaternary_accent_outlined"
-                                borderRadius="md"
-                                size="sm"
-                                onClick={() => scrollTo("mindmap")}
-                            >
-                                둘러보기
-                            </Button>
                             <Link to={getHref("start")}>
-                                <CallToActionButton variant="primary">에피소드 시작하기</CallToActionButton>
+                                <CallToActionButton variant="primary">마인드맵 시작하기</CallToActionButton>
                             </Link>
                         </div>
                         <div className="mt-10 w-full">
@@ -190,7 +131,7 @@ const LandingPage = () => {
                                 <LandingInfo
                                     name="mindmap"
                                     alt="마인드맵 기능"
-                                    className="h-auto w-full rounded-xl border border-gray-100 md:w-[460px]"
+                                    className="h-auto w-full rounded-xl border border-gray-100 md:w-115"
                                 />
                                 <div className="w-full flex-1">
                                     <h2 className="typo-title-28-bold text-text-main1">마인드맵</h2>
@@ -239,11 +180,7 @@ const LandingPage = () => {
                     <div className="mx-auto w-full max-w-5xl px-6">
                         <div className="relative rounded-2xl border border-gray-100 bg-white p-10 shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
                             <div className="flex flex-col items-center gap-10 md:flex-row">
-                                <LandingInfo
-                                    name="episode"
-                                    alt="에피소드 보관함 기능"
-                                    className="h-auto w-full rounded-xl border border-gray-100 md:w-[460px]"
-                                />
+                                <LandingInfo name="episode" alt="에피소드 보관함 기능" className={newLocal} />
                                 <div className="w-full flex-1">
                                     <h2 className="typo-title-28-bold text-text-main1">에피소드 보관함</h2>
                                     <p className="mt-3 typo-body-16-reg text-text-sub1">
@@ -282,13 +219,6 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
-                </section>
-
-                {/* 하단 CTA 섹션 */}
-                <section className="flex min-h-[70vh] w-full items-center justify-center snap-start pb-24">
-                    <Link to={getHref("start")}>
-                        <CallToActionButton variant="quaternary_accent_outlined">에피소드 시작하기</CallToActionButton>
-                    </Link>
                 </section>
             </main>
         </div>

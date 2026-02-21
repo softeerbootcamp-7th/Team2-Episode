@@ -8,7 +8,6 @@ export const PATHS = {
     },
     episode_archive: "/episode_archive",
     login: "/login",
-    landing: "/landing",
 } as const;
 
 export const linkTo = {
@@ -24,5 +23,4 @@ export const linkTo = {
     episode_archive: () => PATHS.episode_archive,
 
     login: () => PATHS.login,
-    landing: () => PATHS.landing,
 };
