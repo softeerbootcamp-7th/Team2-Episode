@@ -19,7 +19,7 @@ export default class QuadTree {
         SE: QuadTree;
     } | null = null;
 
-    constructor(bounds: Rect, limit: number = 4) {
+    constructor(bounds: Rect, limit: number = 10) {
         this.bounds = bounds;
         this.limit = limit;
     }
@@ -102,6 +102,13 @@ export default class QuadTree {
 
     /** 현재 영역을 4개의 하위 영역으로 분할 */
     private split() {
+        console.log(
+            "split",
+            this.bounds,
+            "points",
+            this.points.size,
+            Array.from(this.points).map((p) => [p.x, p.y]),
+        );
         const { minX, maxX, minY, maxY } = this.bounds;
 
         const midX = (minX + maxX) / 2;

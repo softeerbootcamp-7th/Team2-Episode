@@ -19,9 +19,15 @@ export const logout = async (): Promise<void | ApiError> => {
     }
 };
 
-export const getUserQueryOptions = () =>
-    queryOptions<User | null>({
-        // ✅ (User → User | null)
-        queryKey: AUTH_QUERY_KEYS.user,
-        queryFn: fetchMeOrNull,
-    });
+type AuthUser = User | null;
+
+const userQueryOptions = queryOptions<AuthUser>({
+    queryKey: AUTH_QUERY_KEYS.user,
+    queryFn: fetchMeOrNull,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: "always",
+});
+
+export const getUserQueryOptions = () => userQueryOptions;
