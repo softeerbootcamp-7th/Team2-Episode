@@ -3,7 +3,7 @@ import { getRefreshState, refreshToken, setRefreshState } from "@/features/auth/
 import { ApiError } from "@/features/auth/types/api";
 import type { FetchOptions } from "@/shared/api/types";
 import { ERROR_CODES, ErrorCode } from "@/shared/constants/error";
-import { BadRequestError, InternalServerError, NotFoundError, UnauthorizedError } from "@/shared/utils/errors";
+import { BadRequestError, InternalServerError, NotFoundError } from "@/shared/utils/errors";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
