@@ -17,6 +17,7 @@ export type KeyLikeEvent = {
     key: string;
     ctrlKey?: boolean;
     metaKey?: boolean;
+    target: EventTarget | null;
 
     preventDefault?: () => void;
 };
