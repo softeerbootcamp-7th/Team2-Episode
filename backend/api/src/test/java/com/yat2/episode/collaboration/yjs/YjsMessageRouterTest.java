@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 import com.yat2.episode.collaboration.worker.JobPublisher;
 import com.yat2.episode.collaboration.worker.UpdateAppender;
 
@@ -43,11 +44,14 @@ class YjsMessageRouterTest {
     @Mock
     UpdateAppender updateAppender;
 
+    @Mock
+    UpdateStreamStore updateStreamStore;
+
     YjsMessageRouter router;
 
     @BeforeEach
     void setUp() {
-        router = new YjsMessageRouter(sessionRegistry, updateAppender);
+        router = new YjsMessageRouter(sessionRegistry, updateAppender, updateStreamStore);
     }
 
     private static byte[] awarenessFrame() {

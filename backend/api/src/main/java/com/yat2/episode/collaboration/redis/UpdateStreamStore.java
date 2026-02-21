@@ -14,14 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.yat2.episode.collaboration.config.CollaborationRedisProperties;
+import com.yat2.episode.collaboration.config.RedisProperties;
 
 @Service
 @RequiredArgsConstructor
 public class UpdateStreamStore {
 
     private final RedisTemplate<String, byte[]> redisBinaryTemplate;
-    private final CollaborationRedisProperties redisProperties;
+    private final RedisProperties redisProperties;
 
     public RecordId appendUpdate(UUID roomId, byte[] update) {
         String key = redisProperties.updateStream().keyPrefix() + roomId;
