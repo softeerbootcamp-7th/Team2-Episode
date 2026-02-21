@@ -37,7 +37,7 @@ const useApplyMindmapSnapshot = ({ url, doc }: Props) => {
                 if (e instanceof Error && e.name === "AbortError") return;
 
                 setStatus("error");
-                throw new BadRequestError("마인드맵 스냅샷 반영에 ");
+                throw new BadRequestError("마인드맵 스냅샷 반영에 실패했습니다.");
             }
         })();
 
