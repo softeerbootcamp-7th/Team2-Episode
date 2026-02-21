@@ -7,6 +7,7 @@ import { type ApiError } from "@/features/auth/types/api";
 import type { User } from "@/features/auth/types/user";
 import { fetchMeOrNull } from "@/features/auth/utils/fetchMeOrNull";
 import { post } from "@/shared/api/method";
+import { queryClient } from "@/shared/api/query_client";
 
 export const AUTH_LOGOUT_ENDPOINT = `${AUTH_ENDPOINT}/logout`;
 
@@ -20,6 +21,12 @@ export const logout = async (): Promise<void | ApiError> => {
 };
 
 type AuthUser = User | null;
+
+queryClient.setQueryDefaults(AUTH_QUERY_KEYS.user, {
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+});
 
 const userQueryOptions = queryOptions<AuthUser>({
     queryKey: AUTH_QUERY_KEYS.user,
