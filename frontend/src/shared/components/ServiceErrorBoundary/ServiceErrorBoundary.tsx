@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRouteError } from "react-router";
 
-import GlobalErrorFallback from "@/shared/components/RootErrorBoundary/ErrorFallback";
+import GlobalErrorFallback from "@/shared/components/ServiceErrorBoundary/ErrorFallback";
 import { BaseError } from "@/shared/utils/errors";
 
 export default function ServiceErrorBoundary() {
