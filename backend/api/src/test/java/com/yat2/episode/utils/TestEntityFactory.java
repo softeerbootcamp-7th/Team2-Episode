@@ -11,7 +11,6 @@ import java.util.UUID;
 
 import com.yat2.episode.episode.Episode;
 import com.yat2.episode.episode.EpisodeStar;
-import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
 import com.yat2.episode.episode.dto.request.StarUpdateReq;
 import com.yat2.episode.mindmap.Mindmap;
 import com.yat2.episode.mindmap.MindmapParticipant;
@@ -63,7 +62,7 @@ public class TestEntityFactory {
 
     public static Episode createEpisode(UUID nodeId, UUID mindmapId, String content) {
         Episode episode = Episode.create(nodeId, mindmapId);
-        episode.update(new EpisodeUpsertContentReq(content));
+        episode.updateContent(content);
         return episode;
     }
 

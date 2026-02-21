@@ -12,8 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
-
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
@@ -35,10 +33,6 @@ public class Episode {
         episode.id = nodeId;
         episode.mindmapId = mindmapId;
         return episode;
-    }
-
-    public void update(EpisodeUpsertContentReq req) {
-        this.content = req.content();
     }
 
     public void updateContent(String content) {
