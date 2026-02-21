@@ -6,9 +6,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +44,24 @@ class SessionRegistryTest {
     @Nested
     @DisplayName("세션 등록/제거")
     class SessionManagementTests {
+        @Test
+        @DisplayName("세션을 등록하면 ConcurrentWebSocketSessionDecorator로 저장된다")
+        void addSession_storesDecoratedSession() {
+            UUID roomId = UUID.randomUUID();
+
+            WebSocketSession s1 = mock(WebSocketSession.class);
+            when(s1.getId()).thenReturn("s1");
+            when(s1.isOpen()).thenReturn(true);
+
+            Map<String, Object> attrs = new HashMap<>();
+            when(s1.getAttributes()).thenReturn(attrs);
+
+            registry.addSession(roomId, s1);
+
+            List<WebSocketSession> peers = registry.findAllAlivePeers(roomId, "NONE");
+            assertThat(peers).hasSize(1);
+            assertThat(peers.get(0)).isInstanceOf(ConcurrentWebSocketSessionDecorator.class);
+        }
 
         @Test
         @DisplayName("세션을 등록한다 (alive peers에 포함되고 CONNECTED_AT이 설정된다)")
@@ -63,8 +85,8 @@ class SessionRegistryTest {
         }
 
         @Test
-        @DisplayName("세션 ID 기준으로 제거한다 (남은 세션 수를 반환)")
-        void removeSession_removesById_andReturnsRemaining() {
+        @DisplayName("세션 ID 기준으로 제거한다")
+        void removeSession_removesById() {
             UUID roomId = UUID.randomUUID();
 
             WebSocketSession s1 = mock(WebSocketSession.class);
@@ -74,35 +96,9 @@ class SessionRegistryTest {
 
             registry.addSession(roomId, s1);
 
-            int remaining = registry.removeSession(roomId, s1);
+            registry.removeSession(roomId, s1);
 
-            assertThat(remaining).isEqualTo(0);
             assertThat(registry.findAllAlivePeers(roomId, "NONE")).isEmpty();
-        }
-
-        @Test
-        @DisplayName("세션을 여러 개 등록 후 하나 제거하면 remaining이 감소한다")
-        void removeSession_multiple_sessions_remainingDecreases() {
-            UUID roomId = UUID.randomUUID();
-
-            WebSocketSession s1 = mock(WebSocketSession.class);
-            when(s1.getId()).thenReturn("s1");
-            when(s1.isOpen()).thenReturn(true);
-            when(s1.getAttributes()).thenReturn(new HashMap<>());
-
-            WebSocketSession s2 = mock(WebSocketSession.class);
-            when(s2.getId()).thenReturn("s2");
-            when(s2.isOpen()).thenReturn(true);
-            when(s2.getAttributes()).thenReturn(new HashMap<>());
-
-            registry.addSession(roomId, s1);
-            registry.addSession(roomId, s2);
-
-            int remaining = registry.removeSession(roomId, s1);
-
-            assertThat(remaining).isEqualTo(1);
-            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(1).extracting(WebSocketSession::getId)
-                    .containsExactly("s2");
         }
     }
 
@@ -128,9 +124,7 @@ class SessionRegistryTest {
             registry.addSession(roomId, sender);
             registry.addSession(roomId, r1);
 
-            byte[] payload = new byte[]{ 1, 2, 3, 4 };
-
-            registry.broadcast(roomId, sender, payload);
+            registry.broadcast(roomId, sender, new byte[]{ 1, 2, 3 });
 
             verify(sender, never()).sendMessage(any(BinaryMessage.class));
             verify(r1).sendMessage(any(BinaryMessage.class));
@@ -161,8 +155,8 @@ class SessionRegistryTest {
         }
 
         @Test
-        @DisplayName("전송 중 예외가 발생한 세션은 제거한다")
-        void broadcast_removesSessionsThatThrowOnSend() throws Exception {
+        @DisplayName("전송 중 예외가 발생해도 세션은 제거하지 않는다")
+        void broadcast_sendThrows_notRemoved() throws Exception {
             UUID roomId = UUID.randomUUID();
 
             WebSocketSession sender = mock(WebSocketSession.class);
@@ -180,10 +174,9 @@ class SessionRegistryTest {
             registry.addSession(roomId, sender);
             registry.addSession(roomId, bad);
 
-            registry.broadcast(roomId, sender, new byte[]{ 1, 2 });
+            registry.broadcast(roomId, sender, new byte[]{ 1 });
 
-            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(1).extracting(WebSocketSession::getId)
-                    .containsExactly("sender");
+            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(2);
         }
     }
 
@@ -218,8 +211,8 @@ class SessionRegistryTest {
         }
 
         @Test
-        @DisplayName("sendMessage가 예외면 제거하고 false")
-        void unicast_whenSendThrows_removedAndFalse() throws Exception {
+        @DisplayName("sendMessage가 예외면 제거하지 않고 false만 반환")
+        void unicast_whenSendThrows_notRemoved() throws Exception {
             UUID roomId = UUID.randomUUID();
 
             WebSocketSession receiver = mock(WebSocketSession.class);
@@ -233,7 +226,39 @@ class SessionRegistryTest {
             boolean ok = registry.unicast(roomId, "r1", new byte[]{ 1 });
 
             assertThat(ok).isFalse();
-            assertThat(registry.findAllAlivePeers(roomId, "NONE")).isEmpty();
+            assertThat(registry.findAllAlivePeers(roomId, "NONE")).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("unicastAll은 payloads가 null/empty면 true를 반환한다")
+        void unicastAll_whenNullOrEmpty_returnsTrue() {
+            UUID roomId = UUID.randomUUID();
+
+            assertThat(registry.unicastAll(roomId, "missing", null)).isTrue();
+            assertThat(registry.unicastAll(roomId, "missing", List.of())).isTrue();
+        }
+
+        @Test
+        @DisplayName("unicastAll은 payloads 개수만큼 전송하고 null payload는 skip한다")
+        void unicastAll_sendsEachPayload_skipsNull() throws Exception {
+            UUID roomId = UUID.randomUUID();
+
+            WebSocketSession receiver = mock(WebSocketSession.class);
+            when(receiver.getId()).thenReturn("r1");
+            when(receiver.isOpen()).thenReturn(true);
+            when(receiver.getAttributes()).thenReturn(new HashMap<>());
+
+            registry.addSession(roomId, receiver);
+
+            List<byte[]> payloads = new ArrayList<>();
+            payloads.add(new byte[]{ 1 });
+            payloads.add(null);
+            payloads.add(new byte[]{ 2 });
+
+            boolean ok = registry.unicastAll(roomId, "r1", payloads);
+
+            assertThat(ok).isTrue();
+            verify(receiver, times(2)).sendMessage(any(BinaryMessage.class));
         }
     }
 }

@@ -1,7 +1,9 @@
 package com.yat2.episode.collaboration.yjs;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Comparator;
@@ -10,20 +12,23 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.redis.LastEntryIdStore;
+import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 import com.yat2.episode.collaboration.worker.UpdateAppender;
 
+import static com.yat2.episode.global.constant.AttributeKeys.IS_SYNCED;
+import static com.yat2.episode.global.constant.AttributeKeys.LAST_ENTRY_ID;
+
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
     private final UpdateAppender updateAppender;
+    private final UpdateStreamStore updateStreamStore;
+    private final LastEntryIdStore lastEntryIdStore;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
-
-    public YjsMessageRouter(SessionRegistry sessionRegistry, UpdateAppender updateAppender) {
-        this.sessionRegistry = sessionRegistry;
-        this.updateAppender = updateAppender;
-    }
 
     public void routeIncoming(UUID roomId, WebSocketSession sender, byte[] payload) {
         if (YjsProtocolUtil.isAwarenessFrame(payload)) {
@@ -52,12 +57,19 @@ public class YjsMessageRouter {
 
     private void handleSync1(UUID roomId, WebSocketSession requester, byte[] payload) {
 
-        List<WebSocketSession> candidates = sessionRegistry.findAllAlivePeers(roomId, requester.getId());
-
-        if (candidates.isEmpty()) {
-            sessionRegistry.unicast(roomId, requester, YjsProtocolUtil.emptySync2Frame());
+        if (delegateToProvider(roomId, requester, payload)) {
             return;
         }
+
+        if (!handleSoloSync(roomId, requester)) {
+            return;
+        }
+
+        sessionRegistry.unicast(roomId, requester.getId(), YjsProtocolUtil.emptySync2Frame());
+    }
+
+    private boolean delegateToProvider(UUID roomId, WebSocketSession requester, byte[] payload) {
+        List<WebSocketSession> candidates = sessionRegistry.findAllAlivePeers(roomId, requester.getId());
 
         candidates.sort(Comparator.comparingLong(sessionRegistry::getConnectedAt));
 
@@ -75,10 +87,58 @@ public class YjsMessageRouter {
                     roomSyncs.remove(providerId, requesterId);
                     continue;
                 }
-                return;
+                return true;
             }
         }
-        sessionRegistry.unicast(roomId, requester, YjsProtocolUtil.emptySync2Frame());
+
+        return false;
+    }
+
+    private boolean handleSoloSync(UUID roomId, WebSocketSession requester) {
+        boolean isSynced = Boolean.TRUE.equals(requester.getAttributes().get(IS_SYNCED));
+
+        if (isSynced) {
+            return true;
+        }
+
+        List<byte[]> updates;
+        try {
+            updates = updateStreamStore.readAllUpdates(roomId);
+        } catch (Exception e) {
+            log.error("Error reading updates for room {}", roomId, e);
+            updates = List.of();
+        }
+
+        if (updates.isEmpty()) {
+            String runnerLastEntry;
+            try {
+                runnerLastEntry = lastEntryIdStore.get(roomId).orElse("0-0");
+            } catch (Exception e) {
+                log.error("Error reading lastEntryId for room {}", roomId, e);
+                closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
+                return false;
+            }
+
+            String clientLastEntry = String.valueOf(requester.getAttributes().getOrDefault(LAST_ENTRY_ID, "0-0"));
+
+            if (!clientLastEntry.equals(runnerLastEntry)) {
+                closeSessionQuietly(requester, new CloseStatus(4000, "LAST_ENTRY_MISMATCH"));
+                return false;
+            }
+
+        } else {
+            boolean ok = sessionRegistry.unicastAll(roomId, requester.getId(), updates);
+
+            if (!ok) {
+                closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
+                return false;
+            }
+        }
+
+        requester.getAttributes().put(IS_SYNCED, true);
+        requester.getAttributes().remove(LAST_ENTRY_ID);
+
+        return true;
     }
 
     private void handleSync2(UUID roomId, WebSocketSession provider, byte[] payload) {
@@ -91,10 +151,23 @@ public class YjsMessageRouter {
 
         if (requesterId != null) {
             sessionRegistry.unicast(roomId, requesterId, payload);
+
+            WebSocketSession session = sessionRegistry.getAliveSession(roomId, requesterId);
+            if (session != null) {
+                session.getAttributes().put(IS_SYNCED, true);
+                session.getAttributes().remove(LAST_ENTRY_ID);
+            }
         }
 
         if (roomSyncs.isEmpty()) {
             pendingSyncs.remove(roomId, roomSyncs);
+        }
+    }
+
+    private void closeSessionQuietly(WebSocketSession session, CloseStatus status) {
+        try {
+            session.close(status);
+        } catch (Exception ignored) {
         }
     }
 

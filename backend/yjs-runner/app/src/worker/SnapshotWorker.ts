@@ -1,4 +1,4 @@
-import type { JobConsumer } from "../infrastructure/JobConsumer";
+import type { JobConsumer } from "../infrastructure/redis/JobConsumer";
 import type { SnapshotService } from "../services/SnapshotService";
 import wait from "waait";
 

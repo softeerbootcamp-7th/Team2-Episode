@@ -40,7 +40,7 @@ export class WebsocketSyncClient {
     }
 
     private buildWsUrl(roomId: string, token?: string) {
-        const qs = token ? `?token=${encodeURIComponent(token)}` : "";
+        const qs = token ? `?token=${encodeURIComponent(token)}&lastEntryId=2yat` : "";
         return `${this.baseUrl}/${encodeURIComponent(roomId)}${qs}`;
     }
 

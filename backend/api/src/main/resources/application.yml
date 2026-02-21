@@ -153,6 +153,8 @@ collaboration:
       dedupe-ttl:
         sync: "PT30S"
         snapshot: "PT120S"
+    last-entry-id-store:
+      key-suffix: ":last-entry-id"
 
   async:
     executor:
