@@ -314,8 +314,8 @@ export class TreeModel {
         const existingMoving = this.safeGetNode(movingNodeId);
 
         if (!existingMoving && !isTempNew) {
-            console.warn(`[TreeModel.moveTo] moving node not found: ${movingNodeId}`);
-            return;
+            const errorMessage = `[TreeModel.moveTo] Critical error: moving node not found. ID: ${movingNodeId}`;
+            throw new Error(errorMessage);
         }
 
         // TEMP_NEW_NODE_ID이면 여기서 "실제 노드"를 생성
