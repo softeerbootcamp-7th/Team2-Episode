@@ -628,6 +628,14 @@ export class MindmapController implements IMindmapController {
         keyDown: (e: KeyLikeEvent) => {
             this.assertNotDestroyed();
 
+            const target = e.target as HTMLElement | null;
+            const isEditingText =
+                target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+
+            if (isEditingText) {
+                return;
+            }
+
             if (e.key === "Delete" || e.key === "Backspace") {
                 const selected = this.store.getState().selection.selectedNodeId;
                 if (selected) this.actions.deleteNode(selected);
@@ -638,6 +646,27 @@ export class MindmapController implements IMindmapController {
                     this.actions.cancelInteraction();
                 }
                 return;
+            }
+
+            // Ctrl, Cmd, Alt 등의 수식 키가 함께 눌린 경우 단축키 처리 무시
+            if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            const code = e.code;
+
+            // N 키 (한글 'ㅜ')
+            if (code === "KeyN" || key === "n" || key === "ㅜ") {
+                this.actions.startCreating();
+            }
+            // F 키 (한글 'ㄹ')
+            else if (code === "KeyF" || key === "f" || key === "ㄹ") {
+                this.actions.fitToContent();
+            }
+            // C 키 (한글 'ㅊ')
+            else if (code === "KeyC" || key === "c" || key === "ㅊ") {
+                this.actions.resetViewport();
             }
         },
 

@@ -8,6 +8,8 @@ import { isIntersected, isPointInRect } from "@/shared/utils/rect_helper";
  *  limit: bounds에 저장할 수 있는 최대 노드 수
  *  children: 자식 쿼드
  */
+const DEFAULT_QUADTREE_LIMIT = 10;
+
 export default class QuadTree {
     private bounds: Rect;
     private points: Set<Point> = new Set();
@@ -19,7 +21,7 @@ export default class QuadTree {
         SE: QuadTree;
     } | null = null;
 
-    constructor(bounds: Rect, limit: number = 3) {
+    constructor(bounds: Rect, limit: number = DEFAULT_QUADTREE_LIMIT) {
         this.bounds = bounds;
         this.limit = limit;
     }

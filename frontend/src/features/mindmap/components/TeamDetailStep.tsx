@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 import { useInitializeMindmap } from "@/features/mindmap/hooks/useInitializeMindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
@@ -9,6 +10,7 @@ import Top from "@/shared/components/top/Top";
 import { FunnelInstance } from "@/shared/hooks/useFunnel";
 import { linkTo } from "@/shared/utils/route";
 
+const MAX_EPISODE_COUNT = 8;
 type TeamDetailStepFunnel = Extract<FunnelInstance<CreateMindmapFunnel>, { step: "TEAM_DETAIL" }>;
 
 function TextField(props: {
@@ -61,7 +63,14 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
     };
 
     const addEpisode = () => {
-        funnel.history.setContext((prev) => ({ ...prev, episodes: [...(prev.episodes || []), ""] }));
+        funnel.history.setContext((prev) => {
+            if (prev.episodes.length >= MAX_EPISODE_COUNT) {
+                toast.error(`에피소드는 ${MAX_EPISODE_COUNT}개까지 넣을 수 있어요.`);
+                return prev;
+            }
+
+            return { ...prev, episodes: [...(prev.episodes || []), ""] };
+        });
     };
 
     const cleanedEpisodes = useMemo(

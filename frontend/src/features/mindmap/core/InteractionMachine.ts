@@ -85,6 +85,8 @@ export class InteractionMachine {
         this.startMousePos = { x: e.clientX, y: e.clientY };
         this.lastMousePos = { x: e.clientX, y: e.clientY };
         this.mode = "panning";
+
+        this.emitInteractionFrame();
     }
 
     pointerMove(e: { clientX: number; clientY: number; buttons?: number }) {
@@ -148,6 +150,7 @@ export class InteractionMachine {
     pointerUp() {
         const isDragging = this.mode === "dragging";
         const isCreating = this.mode === "pending_creation";
+        const isPanning = this.mode === "panning";
 
         if ((isCreating || isDragging) && this.baseNode.targetId && this.baseNode.direction) {
             const targetId = this.baseNode.targetId;
@@ -170,7 +173,7 @@ export class InteractionMachine {
             }
         }
 
-        const shouldUpdate = isDragging || isCreating;
+        const shouldUpdate = isDragging || isCreating || isPanning;
         this.clearStatus();
 
         if (shouldUpdate) {

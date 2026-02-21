@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeSummaryRes;
+import com.yat2.episode.episode.dto.response.EpisodeSummaryRes;
 
 @Repository
 public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
@@ -19,7 +19,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
 
     @Query(
             """
-                    SELECT new com.yat2.episode.episode.dto.EpisodeSummaryRes(
+                    SELECT new com.yat2.episode.episode.dto.response.EpisodeSummaryRes(
                         e.id,
                         e.mindmapId,
                         e.content,

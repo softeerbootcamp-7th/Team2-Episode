@@ -62,14 +62,6 @@ export function useMindmapNode(nodeId: NodeId) {
     return useMindmapChannel(channel, (s) => s.graph.nodes.get(nodeId));
 }
 
-export const useMindMapActions = () => useMindmapActions();
-
-export const useMindMapVersion = () => useMindmapGraphRevision();
-
-export const useMindMapInteractionFrame = () => useMindmapInteraction();
-
-export const useMindMapDragSession = () => useMindmapDragSession();
-
 export function useViewportEvents() {
     useMindmapControllerEvents();
 }

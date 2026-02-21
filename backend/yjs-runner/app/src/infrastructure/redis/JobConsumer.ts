@@ -1,7 +1,8 @@
 import type Redis from "ioredis";
-import { Job, JobType } from "../contracts/Job";
-import { RedisStreamEntry, RedisStreamReadResult } from "../contracts/RedisStreamReadResult";
-import { StreamPendingEntries } from "../contracts/StreamPendingEntries";
+import { Job, JobType } from "../../contracts/Job";
+import { RedisStreamEntry, RedisStreamReadResult } from "../../contracts/RedisStreamReadResult";
+import { StreamPendingEntries } from "../../contracts/StreamPendingEntries";
+import { REDIS_KEYS } from "./Constants";
 
 export interface JobConsumer {
     init(): Promise<void>;
@@ -14,8 +15,6 @@ export interface JobConsumer {
 }
 
 export type RedisJobConsumerConfig = {
-    jobStreamKey: string;
-    jobDedupePrefix: string;
     groupName: string;
     consumerName: string;
     roomIdField: string;
@@ -31,7 +30,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
 
     async init(): Promise<void> {
         try {
-            await this.redis.xgroup("CREATE", this.config.jobStreamKey, this.config.groupName, "$", "MKSTREAM");
+            await this.redis.xgroup("CREATE", REDIS_KEYS.JOB_STREAM, this.config.groupName, "$", "MKSTREAM");
         } catch (err: any) {
             if (!err.message.includes("BUSYGROUP")) {
                 throw err;
@@ -47,7 +46,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             "COUNT",
             count,
             "STREAMS",
-            this.config.jobStreamKey,
+            REDIS_KEYS.JOB_STREAM,
             "0",
         )) as RedisStreamReadResult | null;
 
@@ -65,7 +64,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
             "BLOCK",
             blockMs,
             "STREAMS",
-            this.config.jobStreamKey,
+            REDIS_KEYS.JOB_STREAM,
             ">",
         )) as RedisStreamReadResult | null;
 
@@ -81,12 +80,12 @@ export class RedisStreamJobConsumer implements JobConsumer {
     async ack(entryId: string[]): Promise<void> {
         if (entryId == null || entryId.length === 0) return;
 
-        await this.redis.xack(this.config.jobStreamKey, this.config.groupName, ...entryId);
+        await this.redis.xack(REDIS_KEYS.JOB_STREAM, this.config.groupName, ...entryId);
     }
 
     async del(messageIds: string[]): Promise<number> {
         if (messageIds.length === 0) return 0;
-        return await this.redis.xdel(this.config.jobStreamKey, ...messageIds);
+        return await this.redis.xdel(REDIS_KEYS.JOB_STREAM, ...messageIds);
     }
 
     private async processPending(count: number = 1, pendingResults: RedisStreamReadResult) {
@@ -94,7 +93,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
         const entryIds = entries.map(([id]) => id);
 
         const pendingDetails = (await this.redis.xpending(
-            this.config.jobStreamKey,
+            REDIS_KEYS.JOB_STREAM,
             this.config.groupName,
             "IDLE",
             0,
@@ -128,7 +127,7 @@ export class RedisStreamJobConsumer implements JobConsumer {
         }
 
         if (validEntries.length > 0) {
-            const { jobs, badEntryIds } = this.parseEntries([[this.config.jobStreamKey, validEntries]]);
+            const { jobs, badEntryIds } = this.parseEntries([[REDIS_KEYS.JOB_STREAM, validEntries]]);
             if (badEntryIds.length > 0) {
                 await this.ack(badEntryIds);
             }

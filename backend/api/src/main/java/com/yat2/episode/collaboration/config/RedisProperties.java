@@ -5,9 +5,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.Duration;
 
 @ConfigurationProperties(prefix = "collaboration.redis")
-public record CollaborationRedisProperties(
+public record RedisProperties(
         UpdateStream updateStream,
-        JobStream jobStream
+        JobStream jobStream,
+        LastEntryIdStore lastEntryIdStore
 ) {
     public record UpdateStream(
             String keyPrefix,
@@ -31,4 +32,8 @@ public record CollaborationRedisProperties(
                 Duration snapshot
         ) {}
     }
+
+    public record LastEntryIdStore(
+            String keySuffix
+    ) {}
 }

@@ -119,7 +119,6 @@ export class YjsAdapter implements TreeAdapter {
     }
 
     transact(fn: () => void, origin: unknown = "user-command"): void {
-        console.log("✍️ 현재 쓰고 있는 Doc ID:", this.doc.clientID); // 여기!!
         this.doc.transact(fn, origin);
     }
 

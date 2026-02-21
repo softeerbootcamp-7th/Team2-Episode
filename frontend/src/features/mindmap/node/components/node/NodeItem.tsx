@@ -8,6 +8,7 @@ import { cn } from "@/utils/cn";
 
 const FIXED_WIDTH = 200;
 const MIN_HEIGHT = 80;
+const MAX_CONTENTS_LENGTH = 200;
 
 // TODO: 컨트롤러의 actions이용하는 거로 변경
 function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
@@ -57,6 +58,29 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
     const pendingContentsRef = useRef<string | null>(null);
     const rafIdRef = useRef<number | null>(null);
 
+    useEffect(() => {
+        if (lockedByMe) {
+            setDraft(contents ?? "");
+        }
+    }, [contents, lockedByMe]);
+
+    useEffect(() => {
+        if (!lockedByMe) return;
+        textareaRef.current?.focus();
+    }, [lockedByMe]);
+
+    useEffect(() => {
+        if (lockedByMe && textareaRef.current) {
+            textareaRef.current.focus();
+            // [추가] 진입 시점에 텍스트 양에 따라 높이 즉시 계산
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        }
+    }, [lockedByMe]);
+
+    const lockLabel = locked && lock.info ? `🔒 ${lock.info?.user.name}` : null;
+    const lockColor = locked && lock.info ? lock.info?.user.color : "#999";
+
     const flushBroadcast = useCallback(
         (value?: string) => {
             const next = value ?? pendingContentsRef.current ?? draft;
@@ -69,6 +93,12 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
         },
         [draft, nodeId, updateNodeContents],
     );
+
+    const commitDraft = useCallback(() => {
+        if (draft !== (contents ?? "")) {
+            updateNodeContents(nodeId, draft);
+        }
+    }, [contents, draft, nodeId, updateNodeContents]);
 
     const scheduleBroadcast = useCallback(
         (value: string) => {
@@ -85,30 +115,9 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
         [nodeId, updateNodeContents],
     );
 
-    useEffect(() => {
-        if (lockedByMe) {
-            setDraft(contents ?? "");
-        }
-    }, [contents, lockedByMe]);
-
-    useEffect(() => {
-        if (!lockedByMe) return;
-        textareaRef.current?.focus();
-    }, [lockedByMe]);
-
-    const commitDraft = useCallback(() => {
-        if (draft !== (contents ?? "")) {
-            updateNodeContents(nodeId, draft);
-        }
-    }, [contents, draft, nodeId, updateNodeContents]);
-
     const exitEdit = useCallback(() => {
         if (lockedByMe) unlockNode();
     }, [lockedByMe, unlockNode]);
-
-    const lockLabel = locked && lock.info ? `🔒 ${lock.info?.user.name}` : null;
-    const lockColor = locked && lock.info ? lock.info?.user.color : "#999";
-
     return (
         <foreignObject
             x={x - (nodeW || FIXED_WIDTH) / 2}
@@ -147,11 +156,13 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
                         />
 
                         <Node.Content
+                            nodeId={nodeData.id}
                             data-action="select"
                             size={"sm"}
                             color={"violet"}
+                            highlight={lockedByMe}
                             className={cn(
-                                isRoot ? "bg-primary text-white" : "", // FIX: RootNode임을 임시로 표현하기 위한 하드코딩
+                                isRoot ? "bg-primary text-white" : "",
                                 "min-h-20 h-auto p-4 flex items-center justify-center",
                             )}
                             onClick={() => {
@@ -164,15 +175,24 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
                                 <textarea
                                     ref={textareaRef}
                                     value={draft}
+                                    maxLength={MAX_CONTENTS_LENGTH} // 1. 네이티브 maxLength 속성 추가
                                     placeholder="내용을 입력하세요"
-                                    // 텍스트 길이에 따라 자동으로 높이가 늘어나도록 설정
-                                    className="w-full bg-transparent outline-none resize-none overflow-hidden text-center"
-                                    style={{ height: "auto" }}
+                                    className="w-full bg-transparent outline-none resize-none overflow-hidden text-center leading-normal"
+                                    style={{
+                                        height: "auto",
+                                        minHeight: "1.5em", // 최소 한 줄 보장
+                                        display: "block", // inline-block보다 정렬에 유리
+                                    }}
                                     rows={1}
                                     onChange={(e) => {
-                                        const next = e.target.value;
+                                        let next = e.target.value;
+
+                                        if (next.length > MAX_CONTENTS_LENGTH) {
+                                            next = next.slice(0, MAX_CONTENTS_LENGTH);
+                                            toast.warning(`${MAX_CONTENTS_LENGTH}자까지만 입력 가능합니다.`);
+                                        }
+
                                         setDraft(next);
-                                        // 텍스트입력 시 textarea 높이 조절
                                         e.target.style.height = "auto";
                                         e.target.style.height = `${e.target.scrollHeight}px`;
                                         scheduleBroadcast(next);
@@ -194,7 +214,9 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
                                     }}
                                 />
                             ) : (
-                                <div className="whitespace-pre-wrap break-all w-full text-center">
+                                <div
+                                    className={`whitespace-pre-wrap break-all w-full text-center select-none ${!contents ? "text-gray-400" : "text-text-main1"}`}
+                                >
                                     {contents || "빈 칸"}
                                 </div>
                             )}
