@@ -9,7 +9,7 @@ import MindmapDetailPage from "@/features/mindmap/pages/MindmapDetailPage";
 import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
 import LoginPage from "@/features/user/login/pages/LoginPage";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
-import RootErrorBoundary from "@/shared/components/RootErrorBoundary/RootErrorBoundary";
+import ServiceErrorBoundary from "@/shared/components/ServiceErrorBoundary/ServiceErrorBoundary";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { PATHS } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
@@ -38,13 +38,15 @@ const router = createBrowserRouter([
                 <RootLayout />
             </AuthProvider>
         ),
-        errorElement: <RootErrorBoundary />,
+        errorElement: <ServiceErrorBoundary />,
         children: [
             {
                 path: "/",
                 element: <HomePage />,
             },
             {
+                errorElement: <ServiceErrorBoundary />,
+
                 // 로그인 필수 경로 그룹
                 middleware: [authProtectedRouteMiddleware],
                 children: [

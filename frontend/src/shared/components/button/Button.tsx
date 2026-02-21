@@ -56,8 +56,6 @@ const buttonVariants = cva(
                 basic_accent: COLOR_SET.basic_accent,
                 alert: COLOR_SET.alert,
                 ghost: "text-text-main2 bg-transparent hover:bg-gray-100 active:bg-gray-200",
-                sidebar:
-                    "bg-white border border-base-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.10)] hover:bg-gray-50",
             },
             size: {
                 xs: "typo-body-14-medium py-2 px-3",
