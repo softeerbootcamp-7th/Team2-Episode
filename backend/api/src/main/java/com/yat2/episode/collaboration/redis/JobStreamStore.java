@@ -24,35 +24,28 @@ public class JobStreamStore {
     private final CollaborationRedisProperties redisProperties;
 
     public void publishSnapshot(UUID roomId) {
-        publish(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
+        publishNoNeedDedupe(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
     }
 
     public void publishSnapshotTrigger(UUID roomId) {
-        publish(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
+        publishNeedDedupe(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
     }
 
     public void publishSync(UUID roomId) {
-        publish(JobType.SYNC, roomId, redisProperties.jobStream().dedupeTtl().sync());
+        publishNeedDedupe(JobType.SYNC, roomId, redisProperties.jobStream().dedupeTtl().sync());
     }
 
-    private void publishWithDedupe(JobType type, UUID roomId, Duration dedupeTtl) {
-        try {
-            if (!tryDedupe(type, roomId, dedupeTtl)) return;
-
-            Map<String, String> fields = new HashMap<>();
-            fields.put(redisProperties.jobStream().fields().type(), type.name());
-            fields.put(redisProperties.jobStream().fields().roomId(), roomId.toString());
-
-            stringRedisTemplate.opsForStream()
-                    .add(StreamRecords.newRecord().in(redisProperties.jobStream().key()).ofMap(fields));
-        } catch (Exception e) {
-            log.error("Failed to publish job. type={}, roomId={}", type, roomId, e);
-        }
+    public void publishNoNeedDedupe(JobType type, UUID roomId, Duration dedupeTtl) {
+        publish(type, roomId, dedupeTtl, false);
     }
 
-    private void publish(JobType type, UUID roomId, Duration dedupeTtl) {
+    public void publishNeedDedupe(JobType type, UUID roomId, Duration dedupeTtl) {
+        publish(type, roomId, dedupeTtl, true);
+    }
+
+    private void publish(JobType type, UUID roomId, Duration dedupeTtl, boolean needDedupe) {
         try {
-            if (type != JobType.SNAPSHOT && !tryDedupe(type, roomId, dedupeTtl)) {
+            if (needDedupe && !tryDedupe(type, roomId, dedupeTtl)) {
                 return;
             }
 
