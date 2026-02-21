@@ -1,22 +1,25 @@
-import { useEffect } from "react";
+// @/shared/components/ServiceErrorBoundary/ServiceErrorBoundary.tsx
+import { ReactNode } from "react";
 import { useRouteError } from "react-router";
 
 import GlobalErrorFallback from "@/shared/components/ServiceErrorBoundary/ErrorFallback";
-import { BaseError } from "@/shared/utils/errors";
 
-export default function ServiceErrorBoundary() {
+interface Props {
+    children?: ReactNode; // children 추가
+}
+
+export default function ServiceErrorBoundary({ children }: Props) {
     const error = useRouteError();
 
-    const normalizedError =
-        error instanceof Error
-            ? error
-            : new Error(typeof error === "string" ? error : "알 수 없는 오류가 발생했습니다.");
-
-    useEffect(() => {
-        if (normalizedError instanceof BaseError) {
-            console.error(`[Error ${normalizedError.code}]: ${normalizedError.message}`);
+    if (error) {
+        if (error instanceof Response && error.status >= 300 && error.status < 400) {
+            throw error;
         }
-    }, [normalizedError]);
 
-    return <GlobalErrorFallback error={normalizedError} resetErrorBoundary={() => window.location.reload()} />;
+        const normalizedError =
+            error instanceof Error ? error : new Error(typeof error === "string" ? error : "알 수 없는 오류");
+        return <GlobalErrorFallback error={normalizedError} resetErrorBoundary={() => window.location.reload()} />;
+    }
+
+    return <>{children}</>;
 }

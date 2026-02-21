@@ -1,6 +1,7 @@
+import { Suspense } from "react";
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router";
 
-import { authProtectedRouteMiddleware } from "@/features/auth/middleware/authProtectedRoutedMiddleware";
+import { authMiddleWare } from "@/features/auth/middleware/authMiddleware";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchivePage";
 import HomePage from "@/features/home/pages/HomePage";
@@ -10,13 +11,17 @@ import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
 import LoginPage from "@/features/user/login/pages/LoginPage";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 import ServiceErrorBoundary from "@/shared/components/ServiceErrorBoundary/ServiceErrorBoundary";
+import Spinner from "@/shared/components/spinner/Spinner";
 import { Toaster } from "@/shared/components/ui/sonner";
+import { useAuthToast } from "@/shared/hooks/useAuthToast";
 import { PATHS } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
 
 function RootLayout() {
     const location = useLocation();
     const isLandingView = location.pathname === PATHS.home;
+
+    useAuthToast();
 
     return (
         <div className="flex flex-col h-screen overflow-hidden">
@@ -34,9 +39,13 @@ function RootLayout() {
 const router = createBrowserRouter([
     {
         element: (
-            <AuthProvider>
-                <RootLayout />
-            </AuthProvider>
+            <ServiceErrorBoundary>
+                <Suspense fallback={<Spinner />}>
+                    <AuthProvider>
+                        <RootLayout />
+                    </AuthProvider>
+                </Suspense>
+            </ServiceErrorBoundary>
         ),
         errorElement: <ServiceErrorBoundary />,
         children: [
@@ -48,7 +57,7 @@ const router = createBrowserRouter([
                 errorElement: <ServiceErrorBoundary />,
 
                 // 로그인 필수 경로 그룹
-                middleware: [authProtectedRouteMiddleware],
+                middleware: [authMiddleWare],
                 children: [
                     { path: PATHS.mindmap.list, element: <MindmapListPage /> },
                     { path: PATHS.episode_archive, element: <EpisodeArchivePage /> },

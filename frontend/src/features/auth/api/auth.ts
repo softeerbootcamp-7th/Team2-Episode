@@ -1,7 +1,12 @@
+import { queryOptions } from "@tanstack/react-query";
+
 import { AUTH_ENDPOINT } from "@/features/auth/api/api";
-import { toSafeApiError } from "@/features/auth/api/error";
+import { isApiError, toSafeApiError } from "@/features/auth/api/error";
+import { AUTH_QUERY_KEYS } from "@/features/auth/constants/query_key";
 import { type ApiError } from "@/features/auth/types/api";
-import { post } from "@/shared/api/method";
+import { User } from "@/features/auth/types/user";
+import { USER_ME_ENDPOINT } from "@/shared/api/api";
+import { get, post } from "@/shared/api/method";
 
 export const AUTH_LOGOUT_ENDPOINT = `${AUTH_ENDPOINT}/logout`;
 
@@ -13,3 +18,23 @@ export const logout = async (): Promise<void | ApiError> => {
         return toSafeApiError(error);
     }
 };
+
+export const fetchCurrentUser = async (skipRefresh = true): Promise<User | null> => {
+    try {
+        return await get<User>({
+            endpoint: USER_ME_ENDPOINT,
+            options: { skipRefresh },
+        });
+    } catch (error: unknown) {
+        if (isApiError(error) && (error.status === 401 || error.status === 403)) {
+            return null;
+        }
+        throw error;
+    }
+};
+
+export const authQueryOptions = queryOptions({
+    queryKey: AUTH_QUERY_KEYS.user,
+    queryFn: () => fetchCurrentUser(true),
+    staleTime: 1000 * 60 * 5,
+});
