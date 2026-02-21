@@ -43,13 +43,13 @@ export default function ControllerSideBar() {
             <Col
                 upSlot={
                     <>
-                        <Tooltip contents={<SquareButtonToolTip>화면 맞춤</SquareButtonToolTip>}>
+                        <Tooltip contents={<SquareButtonToolTip>화면 맞춤 (F)</SquareButtonToolTip>}>
                             <SquareButton onClick={handleFit}>
                                 <Icon name="ic_tool_fit" color={iconColor} size="16" />
                             </SquareButton>
                         </Tooltip>
 
-                        <Tooltip contents={<SquareButtonToolTip>중앙으로 이동</SquareButtonToolTip>}>
+                        <Tooltip contents={<SquareButtonToolTip>중앙으로 이동 (C)</SquareButtonToolTip>}>
                             <SquareButton onClick={handleReset}>
                                 <Icon name="ic_target" color={iconColor} size="16" />
                             </SquareButton>
@@ -57,7 +57,7 @@ export default function ControllerSideBar() {
                     </>
                 }
                 bottomSlot={
-                    <Tooltip contents={<SquareButtonToolTip>노드 추가</SquareButtonToolTip>}>
+                    <Tooltip contents={<SquareButtonToolTip>노드 추가 (N)</SquareButtonToolTip>}>
                         <SquareButton onClick={handleNewNode}>
                             <Icon name="ic_plus" color={iconColor} size="16" />
                         </SquareButton>
