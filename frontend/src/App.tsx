@@ -13,12 +13,15 @@ import GlobalNavigationBar from "@/shared/components/global_navigation_bar/Globa
 import ServiceErrorBoundary from "@/shared/components/ServiceErrorBoundary/ServiceErrorBoundary";
 import Spinner from "@/shared/components/spinner/Spinner";
 import { Toaster } from "@/shared/components/ui/sonner";
+import { useAuthToast } from "@/shared/hooks/useAuthToast";
 import { PATHS } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
 
 function RootLayout() {
     const location = useLocation();
     const isLandingView = location.pathname === PATHS.home;
+
+    useAuthToast();
 
     return (
         <div className="flex flex-col h-screen overflow-hidden">

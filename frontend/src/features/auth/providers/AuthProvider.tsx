@@ -8,6 +8,7 @@ import { AuthContext } from "@/features/auth/hooks/useAuth";
 import type { User } from "@/features/auth/types/user";
 import { USER_ME_ENDPOINT } from "@/shared/api/api";
 import { get } from "@/shared/api/method";
+import { AUTH_MESSAGES } from "@/shared/constants/authMessage";
 import { linkTo } from "@/shared/utils/route";
 
 type AuthProviderProps = {
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         mutationFn: async () => logoutApi(),
         onSuccess: () => {
             queryClient.removeQueries({ queryKey: AUTH_QUERY_KEYS.user });
-            navigate(linkTo.home(), { replace: true }); // 뒤로 가기 히스토리 제어, 보호 라우트는 middleware가 막아 landing으로 튕김
+            navigate(`${linkTo.home()}?${AUTH_MESSAGES.AUTH_ERROR}=${AUTH_MESSAGES.LOGOUT}`, { replace: true }); // 뒤로 가기 히스토리 제어, 보호 라우트는 middleware가 막아 landing으로 튕김
         },
     });
 
