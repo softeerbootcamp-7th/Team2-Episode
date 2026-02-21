@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,9 @@ import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.request.EpisodeSearchReq;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertItemReq;
 import com.yat2.episode.episode.dto.request.StarUpdateReq;
 import com.yat2.episode.episode.dto.response.EpisodeSummaryRes;
 import com.yat2.episode.episode.dto.response.MindmapEpisodeRes;
@@ -155,6 +158,78 @@ public class EpisodeService {
         episode.update(episodeUpsertReq);
 
         return buildEpisodeDetail(episode, episodeStar);
+    }
+
+    @Transactional
+    public List<EpisodeDetail> upsertEpisodes(UUID mindmapId, long userId, EpisodeUpsertBatchReq items) {
+        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
+
+        if (items == null || items.isEmpty()) return List.of();
+
+        Map<UUID, String> reqByNodeId = new LinkedHashMap<>();
+        for (EpisodeUpsertItemReq it : items.items()) {
+            if (it == null || it.nodeId() == null) {
+                throw new CustomException(ErrorCode.INVALID_REQUEST);
+            }
+            reqByNodeId.put(it.nodeId(), it.content() == null ? null : it.content());
+        }
+        List<UUID> nodeIds = new ArrayList<>(reqByNodeId.keySet());
+
+        List<Episode> existing = episodeRepository.findAllById(nodeIds);
+        Map<UUID, Episode> episodeMap = new HashMap<>();
+        for (Episode e : existing) {
+            if (!mindmapId.equals(e.getMindmapId())) {
+                throw new CustomException(ErrorCode.EPISODE_NOT_FOUND);
+            }
+            episodeMap.put(e.getId(), e);
+        }
+
+        List<UUID> toCreate = nodeIds.stream().filter(id -> !episodeMap.containsKey(id)).toList();
+
+        if (!toCreate.isEmpty()) {
+            mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+
+            List<MindmapParticipant> participants = mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId);
+
+            List<Episode> newEpisodes = toCreate.stream().map(nodeId -> Episode.create(nodeId, mindmapId)).toList();
+            episodeRepository.saveAll(newEpisodes);
+
+            List<EpisodeStar> newStars = new ArrayList<>(toCreate.size() * participants.size());
+            for (UUID nodeId : toCreate) {
+                for (MindmapParticipant p : participants) {
+                    newStars.add(EpisodeStar.create(nodeId, p.getUser().getKakaoId()));
+                }
+            }
+            episodeStarRepository.saveAll(newStars);
+
+            for (Episode e : newEpisodes) {
+                episodeMap.put(e.getId(), e);
+            }
+        }
+
+        List<EpisodeId> starIds = nodeIds.stream().map(nodeId -> new EpisodeId(nodeId, userId)).toList();
+
+        List<EpisodeStar> stars = episodeStarRepository.findAllById(starIds);
+        Map<UUID, EpisodeStar> starMap = new HashMap<>();
+        for (EpisodeStar s : stars) {
+            starMap.put(s.getId().getNodeId(), s);
+        }
+
+        List<EpisodeDetail> result = new ArrayList<>(nodeIds.size());
+        for (UUID nodeId : nodeIds) {
+            Episode episode = episodeMap.get(nodeId);
+            if (episode == null) throw new CustomException(ErrorCode.EPISODE_NOT_FOUND);
+
+            EpisodeStar episodeStar = starMap.get(nodeId);
+            if (episodeStar == null) throw new CustomException(ErrorCode.EPISODE_STAR_NOT_FOUND);
+
+            String req = reqByNodeId.get(nodeId);
+            episode.updateContent(req);
+
+            result.add(buildEpisodeDetail(episode, episodeStar));
+        }
+
+        return result;
     }
 
     @Transactional

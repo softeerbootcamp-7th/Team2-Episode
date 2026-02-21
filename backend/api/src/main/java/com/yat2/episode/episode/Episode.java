@@ -40,4 +40,8 @@ public class Episode {
     public void update(EpisodeUpsertContentReq req) {
         this.content = req.content();
     }
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
 }

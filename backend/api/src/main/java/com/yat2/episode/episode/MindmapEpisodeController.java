@@ -86,6 +86,6 @@ public class MindmapEpisodeController {
             @RequestBody
             EpisodeUpsertBatchReq episodeUpsertReq
     ) {
-        return List.of();//episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
+        return episodeService.upsertEpisodes(mindmapId, userId, episodeUpsertReq);
     }
 }

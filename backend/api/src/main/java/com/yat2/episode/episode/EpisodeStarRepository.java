@@ -81,4 +81,7 @@ public interface EpisodeStarRepository extends JpaRepository<EpisodeStar, Episod
             @Param("mindmapIds") List<UUID> mindmapIds,
             @Param("userId") long userId
     );
+
+
+    List<EpisodeStar> findAllByIdIn(Iterable<EpisodeId> ids);
 }
