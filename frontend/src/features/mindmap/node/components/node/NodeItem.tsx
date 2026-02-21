@@ -160,6 +160,7 @@ function NodeItem({ nodeId }: { nodeId: NodeId; measure?: boolean }) {
                             data-action="select"
                             size={"sm"}
                             color={"violet"}
+                            highlight={lockedByMe}
                             className={cn(
                                 isRoot ? "bg-primary text-white" : "",
                                 "min-h-20 h-auto p-4 flex items-center justify-center",

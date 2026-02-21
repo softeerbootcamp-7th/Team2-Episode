@@ -5,7 +5,7 @@ import { useMindmapActions } from "@/features/mindmap/hooks/useMindmapStoreState
 import AddNode from "@/features/mindmap/node/components/add_node/AddNode";
 import { NodeColor } from "@/features/mindmap/node/constants/colors";
 import { NodeVariant } from "@/features/mindmap/node/types/node";
-import { colorBySize } from "@/features/mindmap/node/utils/style";
+import { colorBySize, shadowClass } from "@/features/mindmap/node/utils/style";
 import { NodeId } from "@/features/mindmap/types/node";
 import Icon from "@/shared/components/icon/Icon";
 import List from "@/shared/components/list/List";
@@ -88,7 +88,13 @@ function NodeContent({
 
     return (
         <div
-            className={cn(nodeVariants({ size }), colorClass, variant, className)}
+            className={cn(
+                nodeVariants({ size }),
+                colorClass,
+                variant,
+                className,
+                variant !== "idle" ? shadowClass(color) : "",
+            )}
             onPointerEnter={() => setIsHover(true)}
             onPointerLeave={() => setIsHover(false)}
             {...rest}
