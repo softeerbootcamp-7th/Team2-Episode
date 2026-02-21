@@ -5,7 +5,7 @@ import MindmapEpisodeContainer from "@/features/episode_archive/components/Episo
 import EpisodeHeader from "@/features/episode_archive/components/EpisodeHeader";
 import { useEpisodeSearch } from "@/features/episode_archive/hooks/useEpisodeSearch";
 import { useMindmapList } from "@/features/mindmap/hooks/useMindmapList";
-import { MINDMAP_TABS, MindmapType } from "@/features/mindmap/types/mindmap";
+import { MINDMAP_TABS, MindmapTabId } from "@/features/mindmap/types/mindmap";
 import Spinner from "@/shared/components/spinner/Spinner";
 import Tab from "@/shared/components/tabs/Tab";
 import TabItem from "@/shared/components/tabs/TabItem";
@@ -16,7 +16,7 @@ export function EpisodeContent() {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [selectedMindmapId, setSelectedMindmapId] = useState<string>("");
 
-    const { selectedValue: tabId, onChange: onTabChange } = useTabs<MindmapType>("ALL");
+    const { selectedValue: tabId, onChange: onTabChange } = useTabs<MindmapTabId>("ALL");
     const debouncedSearch = useDebounce<string>(searchQuery, 500);
 
     // useSuspenseQuery를 내부에서 사용하므로, 상위 Suspense Boundary에서 로딩을 가로챕니다.
@@ -29,7 +29,7 @@ export function EpisodeContent() {
     });
 
     const handleTabChange = useCallback(
-        (id: MindmapType) => {
+        (id: MindmapTabId) => {
             onTabChange(id);
             setSelectedMindmapId("");
         },

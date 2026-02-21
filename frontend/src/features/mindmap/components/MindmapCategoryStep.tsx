@@ -1,6 +1,6 @@
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useInitializeMindmap } from "@/features/mindmap/hooks/useInitializeMindmap";
-import { ACTIVITY_CATEGORIES, ActivityCategory } from "@/features/mindmap/types/mindmap";
+import { ACTIVITY_CATEGORIES, ActivityCategoryItem } from "@/features/mindmap/types/mindmap";
 import { CreateMindmapFunnel } from "@/features/mindmap/types/mindmap_funnel";
 import BottomSticky from "@/shared/components/bottom_sticky/BottomSticky";
 import Button from "@/shared/components/button/Button";
@@ -12,27 +12,42 @@ import { linkTo } from "@/shared/utils/route";
 type CategoryStepFunnel = Extract<FunnelInstance<CreateMindmapFunnel>, { step: "CATEGORY" }>;
 
 export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) {
-    const { initialize, isPending } = useInitializeMindmap(() => {
-        // TODO: 임시로 메인으로 보냄
-        funnel.exit(linkTo.mindmap.list(), { replace: false });
+    const { initialize, isPending } = useInitializeMindmap((mindmapId) => {
+        funnel.exit(linkTo.mindmap.detail(mindmapId));
     });
 
-    const selected = funnel.context.categories ?? [];
+    const selectedCategoryItems = funnel.context.categories ?? [];
 
-    const toggle = (id: ActivityCategory) => {
+    const toggleCategoryItem = (item: ActivityCategoryItem) => {
         funnel.history.setContext((prev) => {
-            const prevSelected = prev.categories ?? [];
-            const next = prevSelected.includes(id) ? prevSelected.filter((x) => x !== id) : [...prevSelected, id];
-            return { ...prev, categories: next };
+            const nextItemMap = new Map<string, ActivityCategoryItem>();
+
+            const prevItems: ActivityCategoryItem[] = prev.categories ?? [];
+            prevItems.map((item) => nextItemMap.set(item.id, item));
+
+            if (nextItemMap.has(item.id)) {
+                nextItemMap.delete(item.id);
+            } else {
+                nextItemMap.set(item.id, item);
+            }
+
+            return { ...prev, categories: [...nextItemMap.values()] };
         });
     };
 
-    const canSubmit = selected.length > 0;
+    const isSelected = (item: ActivityCategoryItem) =>
+        selectedCategoryItems.some((selected) => selected.id === item.id);
+
+    const canSubmit = selectedCategoryItems.length > 0;
 
     const { user } = useAuth();
 
     const handleSubmit = () => {
-        initialize({ title: `${user?.nickname ?? "아무개"}의 마인드맵`, isShared: false, items: selected });
+        initialize({
+            title: `${user?.nickname ?? "아무개"}의 마인드맵`,
+            isShared: false,
+            items: selectedCategoryItems.map((item) => item.label),
+        });
     };
 
     return (
@@ -54,13 +69,13 @@ export function MindmapCategoryStep({ funnel }: { funnel: CategoryStepFunnel }) 
                 />
 
                 <div className="grid grid-cols-2 gap-4 pb-10">
-                    {ACTIVITY_CATEGORIES.map((c) => (
+                    {ACTIVITY_CATEGORIES.map((item) => (
                         <EmojiCard
-                            key={c.id}
-                            emoji={c.emoji}
-                            label={c.label}
-                            selected={selected.includes(c.id)}
-                            onClick={() => toggle(c.id)}
+                            key={item.id}
+                            emoji={item.emoji}
+                            label={item.label}
+                            selected={isSelected(item)}
+                            onClick={() => toggleCategoryItem(item)}
                         />
                     ))}
                 </div>

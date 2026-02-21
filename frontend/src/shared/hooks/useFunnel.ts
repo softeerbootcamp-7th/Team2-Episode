@@ -277,7 +277,7 @@ export function useFunnel<SCM extends StepContextMap, InitialStep extends StepKe
     }, []);
 
     const exit = useCallback(
-        (url: string, options?: { replace?: boolean }) => {
+        (url: string, options: { replace?: boolean } = { replace: false }) => {
             if (typeof window === "undefined") return;
 
             const depth = snapshotRef.current.depth;

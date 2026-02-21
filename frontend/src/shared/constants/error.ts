@@ -1,4 +1,4 @@
-export type ErrorCodeKey = keyof typeof ERROR_CODES;
+export type ErrorCode = keyof typeof ERROR_CODES;
 
 export const ERROR_CODES = {
     // Mindmap
