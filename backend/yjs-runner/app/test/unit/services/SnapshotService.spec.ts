@@ -1,9 +1,10 @@
 import { SnapshotService } from "../../../src/services/SnapshotService";
-import { UpdateRepository } from "../../../src/infrastructure/UpdateRepository";
+import { UpdateRepository } from "../../../src/infrastructure/redis/UpdateRepository";
 import { YjsProcessor } from "../../../src/domain/YjsProcessor";
 import { SnapshotStorage } from "../../../src/infrastructure/S3SnapshotStorage";
 import { JobType } from "../../../src/contracts/Job";
 import { WebsocketSyncClient } from "../../../src/infrastructure/WebsocketSyncClient";
+import { LastEntryIdRepository } from "../../../src/infrastructure/redis/LastEntryIdRepository";
 
 describe("SnapshotService", () => {
     let service: SnapshotService;
@@ -28,14 +29,19 @@ describe("SnapshotService", () => {
         sync: jest.fn(),
     } as unknown as jest.Mocked<WebsocketSyncClient>;
 
+    const mockLastEntryIdRepo = {
+        set: jest.fn(),
+    } as unknown as jest.Mocked<LastEntryIdRepository>;
+
     beforeEach(() => {
+        jest.clearAllMocks();
         service = new SnapshotService({
             updateRepo: mockUpdateRepo,
             yjs: mockYjs,
             storage: mockStorage,
             syncClient: mockSyncClient,
+            lastEntryIdRepo: mockLastEntryIdRepo,
         });
-        jest.clearAllMocks();
     });
 
     it("성공 시나리오: 데이터를 가져와서 병합 후 업로드하고 저장소를 정리해야 한다", async () => {
@@ -46,7 +52,7 @@ describe("SnapshotService", () => {
 
         const mockPacket = {
             lastEntryId: "123-0",
-            roomId: roomId,
+            roomId,
             updateFrameList: mockUpdates,
         };
 
@@ -65,7 +71,11 @@ describe("SnapshotService", () => {
         expect(mockStorage.download).toHaveBeenCalledWith(roomId);
         expect(mockUpdateRepo.fetchAllUpdates).toHaveBeenCalledWith(roomId);
         expect(mockYjs.buildUpdatedSnapshot).toHaveBeenCalledWith(mockBase, mockUpdates);
-        expect(mockStorage.upload).toHaveBeenCalledWith(roomId, mockNewSnapshot);
+
+        expect(mockStorage.upload).toHaveBeenCalledWith(roomId, mockPacket.lastEntryId, mockNewSnapshot);
+
+        expect(mockLastEntryIdRepo.set).toHaveBeenCalledWith(roomId, mockPacket.lastEntryId);
+
         expect(mockUpdateRepo.trim).toHaveBeenCalledWith(roomId, mockPacket.lastEntryId);
     });
 
@@ -84,6 +94,7 @@ describe("SnapshotService", () => {
 
         expect(mockYjs.buildUpdatedSnapshot).not.toHaveBeenCalled();
         expect(mockStorage.upload).not.toHaveBeenCalled();
+        expect(mockLastEntryIdRepo.set).not.toHaveBeenCalled();
         expect(mockUpdateRepo.trim).not.toHaveBeenCalled();
     });
 
@@ -108,6 +119,7 @@ describe("SnapshotService", () => {
             }),
         ).rejects.toThrow("S3 Connection Failed");
 
+        expect(mockLastEntryIdRepo.set).not.toHaveBeenCalled();
         expect(mockUpdateRepo.trim).not.toHaveBeenCalled();
     });
 });
