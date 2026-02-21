@@ -1,4 +1,4 @@
-import { MindmapType } from "@/features/mindmap/types/mindmap";
+import { MindmapTabId, MindmapType } from "@/features/mindmap/types/mindmap";
 import { HttpParams } from "@/shared/api/types";
 
 /** 에피소드 내 역량 태그 타입 */
@@ -49,7 +49,7 @@ export type MindmapGroupResponse = {
 /** 에피소드 통합 검색 요청 파라미터 (HttpParams 확장) */
 export type SearchEpisodesReq = HttpParams & {
     mindmapId?: string;
-    mindmapType: MindmapType;
+    mindmapType: MindmapTabId;
     search: string;
 };
 
