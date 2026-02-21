@@ -6,6 +6,6 @@ import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public record EpisodeUpsertItemReq(
-        UUID nodeId,
+        @NotNull UUID nodeId,
         @Size(max = 200) @NotNull String content
 ) {}

@@ -8,8 +8,4 @@ import java.util.UUID;
 
 public record EpisodeDeleteBatchReq(
         @NotEmpty List<@NotNull UUID> nodeIds
-) {
-    public EpisodeDeleteBatchReq(List<UUID> nodeIds) {
-        this.nodeIds = nodeIds;
-    }
-}
+) {}

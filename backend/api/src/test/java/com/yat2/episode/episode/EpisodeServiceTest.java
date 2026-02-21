@@ -623,14 +623,21 @@ class EpisodeServiceTest {
         }
 
         @Test
-        @DisplayName("성공: 빈 리스트면 빈 결과를 반환")
+        @DisplayName("실패: items가 비면 INVALID_REQUEST")
         void upsertEpisodes_Empty() {
-            var result = episodeService.upsertEpisodes(mindmapId, userId, new EpisodeUpsertBatchReq(List.of()));
-            assertThat(result).isEmpty();
+            EpisodeUpsertBatchReq emptyReq = new EpisodeUpsertBatchReq(List.of());
+
+            assertThatThrownBy(() -> episodeService.upsertEpisodes(mindmapId, userId, emptyReq)).isInstanceOf(
+                    CustomException.class).hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST);
 
             verify(mindmapAccessValidator, times(1)).findMindmapOrThrow(mindmapId);
+
             verify(episodeRepository, never()).findAllById(anyList());
+            verify(episodeRepository, never()).saveAll(anyList());
             verify(episodeStarRepository, never()).findAllById(any());
+            verify(episodeStarRepository, never()).saveAll(anyList());
+            verify(mindmapParticipantRepository, never()).findAllByMindmapIdWithUser(any());
+            verify(mindmapAccessValidator, never()).findParticipantOrThrow(any(), any(Long.class));
         }
     }
 

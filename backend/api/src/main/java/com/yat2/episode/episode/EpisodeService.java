@@ -164,15 +164,16 @@ public class EpisodeService {
     @Transactional
     public List<EpisodeDetail> upsertEpisodes(UUID mindmapId, long userId, EpisodeUpsertBatchReq items) {
         mindmapAccessValidator.findMindmapOrThrow(mindmapId);
-
-        if (items == null || items.items().isEmpty()) return List.of();
+        if (items == null || items.items() == null || items.items().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
 
         Map<UUID, String> reqByNodeId = new LinkedHashMap<>();
         for (EpisodeUpsertItemReq it : items.items()) {
             if (it == null || it.nodeId() == null) {
                 throw new CustomException(ErrorCode.INVALID_REQUEST);
             }
-            reqByNodeId.put(it.nodeId(), it.content() == null ? null : it.content());
+            reqByNodeId.put(it.nodeId(), it.content());
         }
         List<UUID> nodeIds = new ArrayList<>(reqByNodeId.keySet());
 
