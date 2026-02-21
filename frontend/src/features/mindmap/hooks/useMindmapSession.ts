@@ -33,6 +33,7 @@ export function useMindmapSession({ mindmapId }: Props) {
         if (!mindmapId) return;
         setToken(null);
         setConnectionStatus("disconnected");
+        setSnapshotUrl(null);
         setIsSynced(false);
 
         joinSession(mindmapId, {
