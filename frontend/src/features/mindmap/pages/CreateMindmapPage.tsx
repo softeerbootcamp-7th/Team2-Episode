@@ -24,7 +24,7 @@ const CreateMindmapFunnelPage = () => {
     });
 
     return (
-        <MaxWidth gap="md" maxWidth="md" className="flex-1 flex flex-col pt-15">
+        <MaxWidth gap="md" maxWidth="md" className="flex-1 flex flex-col pt-15 h-full">
             <Top
                 leftSlot={
                     <button onClick={() => funnel.history.back()}>

@@ -1,6 +1,6 @@
 import { nodeVariants } from "@/features/mindmap/node/components/node/Node";
 import { DefinedVariantProps } from "@/shared/types/safe_variant_props";
 
-export type NodeMode = "default" | "highlight" | "selected";
+export type NodeVariant = "idle" | "interactive" | "highlighted";
 
-export type Size = DefinedVariantProps<typeof nodeVariants>["size"];
+export type NodeSize = DefinedVariantProps<typeof nodeVariants>["size"];

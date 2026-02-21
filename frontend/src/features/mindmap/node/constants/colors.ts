@@ -6,6 +6,7 @@ export type OpacityLevel = 5 | 10 | 15 | 20 | 30 | 100;
 type ColorClassMap = {
     bg: Record<NodeColor, Record<OpacityLevel, string>>;
     border: Record<NodeColor, Record<OpacityLevel, string>>;
+    ring: Record<NodeColor, Record<OpacityLevel, string>>; // ring 타입 추가
 };
 
 export const COLOR_CLASS_MAP: ColorClassMap = {
@@ -139,6 +140,72 @@ export const COLOR_CLASS_MAP: ColorClassMap = {
             20: "border-node-navy-op-20",
             30: "border-node-navy-op-30",
             100: "border-node-navy-op-100",
+        },
+    },
+    ring: {
+        violet: {
+            5: "ring-node-violet-op-5",
+            10: "ring-node-violet-op-10",
+            15: "ring-node-violet-op-15",
+            20: "ring-node-violet-op-20",
+            30: "ring-node-violet-op-30",
+            100: "ring-node-violet-op-100",
+        },
+        blue: {
+            5: "ring-node-blue-op-5",
+            10: "ring-node-blue-op-10",
+            15: "ring-node-blue-op-15",
+            20: "ring-node-blue-op-20",
+            30: "ring-node-blue-op-30",
+            100: "ring-node-blue-op-100",
+        },
+        skyblue: {
+            5: "ring-node-skyblue-op-5",
+            10: "ring-node-skyblue-op-10",
+            15: "ring-node-skyblue-op-15",
+            20: "ring-node-skyblue-op-20",
+            30: "ring-node-skyblue-op-30",
+            100: "ring-node-skyblue-op-100",
+        },
+        mint: {
+            5: "ring-node-mint-op-5",
+            10: "ring-node-mint-op-10",
+            15: "ring-node-mint-op-15",
+            20: "ring-node-mint-op-20",
+            30: "ring-node-mint-op-30",
+            100: "ring-node-mint-op-100",
+        },
+        cyan: {
+            5: "ring-node-cyan-op-5",
+            10: "ring-node-cyan-op-10",
+            15: "ring-node-cyan-op-15",
+            20: "ring-node-cyan-op-20",
+            30: "ring-node-cyan-op-30",
+            100: "ring-node-cyan-op-100",
+        },
+        purple: {
+            5: "ring-node-purple-op-5",
+            10: "ring-node-purple-op-10",
+            15: "ring-node-purple-op-15",
+            20: "ring-node-purple-op-20",
+            30: "ring-node-purple-op-30",
+            100: "ring-node-purple-op-100",
+        },
+        magenta: {
+            5: "ring-node-magenta-op-5",
+            10: "ring-node-magenta-op-10",
+            15: "ring-node-magenta-op-15",
+            20: "ring-node-magenta-op-20",
+            30: "ring-node-magenta-op-30",
+            100: "ring-node-magenta-op-100",
+        },
+        navy: {
+            5: "ring-node-navy-op-5",
+            10: "ring-node-navy-op-10",
+            15: "ring-node-navy-op-15",
+            20: "ring-node-navy-op-20",
+            30: "ring-node-navy-op-30",
+            100: "ring-node-navy-op-100",
         },
     },
 };

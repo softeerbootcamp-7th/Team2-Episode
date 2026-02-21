@@ -1,30 +1,31 @@
 import { COLOR_CLASS_MAP, type NodeColor, SHADOW_CLASS_MAP } from "@/features/mindmap/node/constants/colors";
-import { NodeMode, Size } from "@/features/mindmap/node/types/node";
+import { NodeSize, NodeVariant } from "@/features/mindmap/node/types/node";
 
 export function shadowClass(color: NodeColor) {
     return SHADOW_CLASS_MAP[color];
 }
 
-export function colorBySize({ size, color, nodeMode }: { size: Size; color: NodeColor; nodeMode: NodeMode }) {
-    const border = COLOR_CLASS_MAP.border[color][100];
+export function colorBySize({ size, color, variant }: { size: NodeSize; color: NodeColor; variant: NodeVariant }) {
+    // border 클래스(예: 'border-blue-500') 대신 ring 클래스(예: 'ring-blue-500')를 가져옵니다.
+    const ring = COLOR_CLASS_MAP.ring[color][100];
 
-    const STATE_SIZE_STYLES: Record<NodeMode, Record<Size, string>> = {
-        default: {
-            sm: `border ${border} bg-white`,
-            md: `border ${border} ${COLOR_CLASS_MAP.bg[color][5]}`,
-            lg: `border ${border} ${COLOR_CLASS_MAP.bg[color][15]}`,
+    const STATE_SIZE_STYLES: Record<NodeVariant, Record<NodeSize, string>> = {
+        idle: {
+            sm: `ring-1 ring-inset ${ring} bg-white`,
+            md: `ring-1 ring-inset ${ring} ${COLOR_CLASS_MAP.bg[color][5]}`,
+            lg: `ring-1 ring-inset ${ring} ${COLOR_CLASS_MAP.bg[color][15]}`,
         },
-        highlight: {
-            sm: `border-2 ${border} bg-white`,
-            md: `border-2 ${border} ${COLOR_CLASS_MAP.bg[color][5]}`,
-            lg: `border-2 ${border} ${COLOR_CLASS_MAP.bg[color][15]}`,
+        highlighted: {
+            sm: `ring-2 ring-inset ${ring} bg-white`,
+            md: `ring-2 ring-inset ${ring} ${COLOR_CLASS_MAP.bg[color][5]}`,
+            lg: `ring-2 ring-inset ${ring} ${COLOR_CLASS_MAP.bg[color][15]}`,
         },
-        selected: {
-            sm: `border-2 ${border} bg-white`,
-            md: `border-2 ${border} ${COLOR_CLASS_MAP.bg[color][5]}`,
-            lg: `border-2 ${border} ${COLOR_CLASS_MAP.bg[color][15]}`,
+        interactive: {
+            sm: `ring-2 ring-inset ${ring} bg-white`,
+            md: `ring-2 ring-inset ${ring} ${COLOR_CLASS_MAP.bg[color][5]}`,
+            lg: `ring-2 ring-inset ${ring} ${COLOR_CLASS_MAP.bg[color][15]}`,
         },
     };
 
-    return STATE_SIZE_STYLES[nodeMode][size];
+    return STATE_SIZE_STYLES[variant][size];
 }

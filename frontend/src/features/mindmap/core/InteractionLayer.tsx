@@ -21,10 +21,20 @@ export default function InteractionLayer({
         const root = rootRef.current;
         if (!root) return;
 
-        const isInteracting = ["dragging", "pending_creation"].includes(status.mode);
-        root.setAttribute("data-dragging", isInteracting ? "true" : "false");
-    }, [status.mode, rootRef]);
+        const isInteracting = ["dragging", "pending_creation", "panning"].includes(status.mode);
 
+        root.setAttribute("data-dragging", isInteracting ? "true" : "false");
+
+        if (isInteracting) {
+            document.body.style.setProperty("cursor", "grabbing", "important");
+        } else {
+            document.body.style.removeProperty("cursor");
+        }
+
+        return () => {
+            document.body.style.removeProperty("cursor");
+        };
+    }, [status.mode]);
     const { mode, draggingNodeId, dragDelta, dragSubtreeIds, baseNode, mousePos } = status;
 
     if (mode !== "dragging" && mode !== "pending_creation") return null;

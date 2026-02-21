@@ -17,7 +17,10 @@ export type KeyLikeEvent = {
     key: string;
     ctrlKey?: boolean;
     metaKey?: boolean;
-
+    code?: string; // 물리적 키 코드
+    target: EventTarget | null;
+    shiftKey?: boolean;
+    altKey?: boolean;
     preventDefault?: () => void;
 };
 
