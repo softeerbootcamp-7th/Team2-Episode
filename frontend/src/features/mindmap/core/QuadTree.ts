@@ -10,15 +10,15 @@ import { isIntersected, isPointInRect } from "@/shared/utils/rect_helper";
  */
 const DEFAULT_QUADTREE_LIMIT = 10;
 
-export default class QuadTree {
+export default class QuadTree<TPoint extends Point> {
     private bounds: Rect;
-    private points: Set<Point> = new Set();
+    private points: Set<TPoint> = new Set();
     private limit: number;
     private children: {
-        NW: QuadTree;
-        NE: QuadTree;
-        SW: QuadTree;
-        SE: QuadTree;
+        NW: QuadTree<TPoint>;
+        NE: QuadTree<TPoint>;
+        SW: QuadTree<TPoint>;
+        SE: QuadTree<TPoint>;
     } | null = null;
 
     constructor(bounds: Rect, limit: number = DEFAULT_QUADTREE_LIMIT) {
@@ -26,7 +26,7 @@ export default class QuadTree {
         this.limit = limit;
     }
     /** [Internal] 실제 삽입 로직: 개수 > limit 이면, 하위 영역으로 분할하고 자식 노드로 전달 */
-    private executeInsert(point: Point): boolean {
+    private executeInsert(point: TPoint): boolean {
         // 삽입하려는 점이 현재 Quad 영역에 속하지 않으면 삽입 거부
         if (!this.isPointInBounds(point)) {
             console.error(`[QuadTree 삽입 실패] 점 (${point.x}, ${point.y})이 경계 영역 밖에 있습니다.`);
@@ -59,7 +59,7 @@ export default class QuadTree {
     /** [Rebuild] 경계를 중심점 기준 2배로 확장하고 트리를 재구축 */
     private rebuild() {
         // 1. 기존의 모든 점 수집
-        const currentSet = new Set<Point>();
+        const currentSet = new Set<TPoint>();
         this.collectAllPoints(currentSet);
         const allPoints = Array.from(currentSet);
 
@@ -84,7 +84,7 @@ export default class QuadTree {
     }
 
     /** 삽입하려는 점이 현재 경계의 90% 영역을 벗어나는지 확인 */
-    private isNearBoundary(point: Point): boolean {
+    private isNearBoundary(point: TPoint): boolean {
         const { minX, maxX, minY, maxY } = this.bounds;
         const width = maxX - minX;
         const height = maxY - minY;
@@ -115,10 +115,10 @@ export default class QuadTree {
         const seBounds: Rect = { minX: midX, maxX, minY: midY, maxY };
 
         this.children = {
-            NW: new QuadTree(nwBounds, this.limit),
-            NE: new QuadTree(neBounds, this.limit),
-            SW: new QuadTree(swBounds, this.limit),
-            SE: new QuadTree(seBounds, this.limit),
+            NW: new QuadTree<TPoint>(nwBounds, this.limit),
+            NE: new QuadTree<TPoint>(neBounds, this.limit),
+            SW: new QuadTree<TPoint>(swBounds, this.limit),
+            SE: new QuadTree<TPoint>(seBounds, this.limit),
         };
     }
 
@@ -137,7 +137,7 @@ export default class QuadTree {
     }
 
     /** 해당 점이 현재 Quad의 영역 내에 포함되는지 확인 */
-    private isPointInBounds(point: Point) {
+    private isPointInBounds(point: TPoint) {
         return isPointInRect(point, this.bounds);
     }
 
@@ -152,7 +152,7 @@ export default class QuadTree {
     }
 
     /** 자식 노드들에 흩어진 모든 점을 하나의 Set으로 수집 */
-    private collectAllPoints(points: Set<Point>) {
+    private collectAllPoints(points: Set<TPoint>) {
         if (!this.children) {
             this.points.forEach((point) => points.add(point));
             return;
@@ -172,7 +172,7 @@ export default class QuadTree {
     }
 
     /** 삽입 작업을 자식 노드에게 위임 */
-    private delegateInsert(point: Point): boolean {
+    private delegateInsert(point: TPoint): boolean {
         if (!this.children) return false;
 
         const { NW, NE, SW, SE } = this.children;
@@ -187,7 +187,7 @@ export default class QuadTree {
     }
 
     /** 삭제 작업을 자식 노드에게 위임 */
-    private delegateRemove(point: Point): boolean {
+    private delegateRemove(point: TPoint): boolean {
         if (!this.children) return false;
 
         const { NW, NE, SW, SE } = this.children;
@@ -206,7 +206,7 @@ export default class QuadTree {
     }
 
     /** [Add/Drop] 점 삽입: 외부 전용 관문으로, 필요 시 영역을 확장하고 삽입을 실행 */
-    insert(point: Point): boolean {
+    insert(point: TPoint): boolean {
         while (!this.isPointInBounds(point)) {
             this.rebuild();
         }
@@ -217,7 +217,7 @@ export default class QuadTree {
     }
 
     /** [DragMove] 범위 탐색 : 마우스 주변의 스냅 가능한 노드 확보 */
-    getPointsInRange(range: Rect, found: Point[] = []): Point[] {
+    getPointsInRange(range: Rect, found: Array<TPoint> = new Array<TPoint>()): Array<TPoint> {
         if (!isIntersected(this.bounds, range)) {
             return found;
         }
@@ -238,7 +238,7 @@ export default class QuadTree {
     }
 
     /** [Remove/DragStart] 점 삭제 : 삭제 후 데이터 밀도가 낮아지면 tryMerge */
-    remove(point: Point): boolean {
+    remove(point: TPoint): boolean {
         if (!this.isPointInBounds(point)) {
             console.error(`[QuadTree 삭제 실패] 점 (${point.x}, ${point.y})이 경계 영역 밖에 있습니다.`);
             return false;

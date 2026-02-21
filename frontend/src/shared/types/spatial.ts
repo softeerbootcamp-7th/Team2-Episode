@@ -7,6 +7,11 @@ export type Point = {
     id: string;
 };
 
+export type SpatialStats = {
+    maxHalfW: number;
+    maxHalfH: number;
+};
+
 export type Rect = {
     minX: number;
     maxX: number;
