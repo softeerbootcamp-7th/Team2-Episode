@@ -159,10 +159,10 @@ collaboration:
       dedupe-ttl:
         sync: "PT30S"
         snapshot: "PT120S"
-    worker:
-      snapshot-trigger:
-        sample-every: 50
-        trigger-threshold: 1000
+  worker:
+    snapshot-trigger:
+      sample-every: 50
+      trigger-threshold: 1000
   async:
     executor:
       core-pool-size: 1
