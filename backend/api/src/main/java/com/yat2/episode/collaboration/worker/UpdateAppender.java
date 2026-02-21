@@ -35,7 +35,7 @@ public class UpdateAppender {
         this.updateStreamStore = updateStreamStore;
         this.jobPublisher = jobPublisher;
         this.maxRetries = Math.max(1, asyncProperties.updateAppendMaxRetries());
-        this.sampleEvery = workerProperties.snapshotTrigger().sampleEvery();
+        this.sampleEvery = Math.max(1, workerProperties.snapshotTrigger().sampleEvery());
         this.threshold = workerProperties.snapshotTrigger().triggerThreshold();
     }
 
