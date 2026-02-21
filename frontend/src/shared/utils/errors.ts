@@ -4,7 +4,7 @@ import { ERROR_CODES, ErrorCode } from "@/shared/constants/error";
 
 type ErrorStatus = number;
 type ErrorMessage = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;
-type ErrorDisplayType = "fatal" | "alert";
+type ErrorDisplayType = "replace" | "alert";
 
 type BaseErrorParams = {
     status: ErrorStatus;
@@ -30,7 +30,7 @@ export class BaseError extends ApiError {
         this.isFatal = isFatal;
         this.displayType = displayType;
 
-        this.name = this.constructor.name;
+        this.name = new.target.name;
     }
 }
 
@@ -39,10 +39,10 @@ export class BadRequestError extends BaseError {
     constructor(message: ErrorMessage = "잘못된 요청입니다.") {
         super({
             status: 400,
-            code: 'INVALID_REQUEST'
+            code: "INVALID_REQUEST",
             message,
             isFatal: false,
-            displayType: "alert",
+            displayType: "replace",
         });
     }
 }
@@ -60,19 +60,6 @@ export class UnauthorizedError extends BaseError {
     }
 }
 
-/** 403: 권한 없음 */
-export class ForbiddenError extends BaseError {
-    constructor(message: ErrorMessage = "접근 권한이 없습니다.") {
-        super({
-            status: 403,
-            code: "FORBIDDEN",
-            message,
-            isFatal: false,
-            displayType: "alert",
-        });
-    }
-}
-
 /** 404: 리소스 없음 */
 export class NotFoundError extends BaseError {
     constructor(message: ErrorMessage = "요청하신 리소스를 찾을 수 없습니다.") {
@@ -81,35 +68,33 @@ export class NotFoundError extends BaseError {
             code: "NOT_FOUND",
             message,
             isFatal: true,
-            displayType: "fatal",
+            displayType: "replace",
         });
     }
 }
-
-// --- 500 & Network Errors ---
 
 /** 500: 서버 내부 오류 */
 export class InternalServerError extends BaseError {
     constructor(message: ErrorMessage = "서버에서 문제가 발생했습니다. 잠시 후 다시 시도해주세요.") {
         super({
             status: 500,
-            code: "INTERNAL_SERVER_ERROR",
+            code: "INTERNAL_ERROR",
             message,
             isFatal: true,
-            displayType: "fatal",
+            displayType: "replace",
         });
     }
 }
 
-/** Network: 오프라인 혹은 타임아웃 */
-export class NetworkError extends BaseError {
-    constructor(message: ErrorMessage = "네트워크 연결이 원활하지 않습니다.") {
-        super({
-            status: 0, // 네트워크 에러는 HTTP 상태 코드가 없음
-            code: "NETWORK_ERROR",
-            message,
-            isFatal: true,
-            displayType: "alert",
-        });
-    }
-}
+// /** Network: 오프라인 혹은 타임아웃 */
+// export class NetworkError extends BaseError {
+//     constructor(message: ErrorMessage = "네트워크 연결이 원활하지 않습니다.") {
+//         super({
+//             status: 0, // 네트워크 에러는 HTTP 상태 코드가 없음
+//             code: "NETWORK_ERROR",
+//             message,
+//             isFatal: true,
+//             displayType: "alert",
+//         });
+//     }
+// }
