@@ -320,7 +320,7 @@ class MindmapServiceTest {
             List<UUID> existingEpisodeIds = List.of(UUID.randomUUID(), UUID.randomUUID());
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willReturn(mindmap);
+            given(mindmapAccessValidator.validateTeamMindmapWithLock(mindmapId)).willReturn(mindmap);
             given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
                     Optional.empty());
 
@@ -352,7 +352,7 @@ class MindmapServiceTest {
             MindmapParticipant existingParticipant = new MindmapParticipant(testUser, mindmap);
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willReturn(mindmap);
+            given(mindmapAccessValidator.validateTeamMindmapWithLock(mindmapId)).willReturn(mindmap);
             given(mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, testUserId)).willReturn(
                     Optional.of(existingParticipant));
 
@@ -371,7 +371,7 @@ class MindmapServiceTest {
             UUID mindmapId = UUID.randomUUID();
 
             given(userService.getUserOrThrow(testUserId)).willReturn(testUser);
-            given(mindmapAccessValidator.validateTeamMindmap(mindmapId)).willThrow(
+            given(mindmapAccessValidator.validateTeamMindmapWithLock(mindmapId)).willThrow(
                     new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
 
             assertThatThrownBy(() -> mindmapService.saveMindmapParticipant(testUserId, mindmapId)).isInstanceOf(

@@ -209,7 +209,7 @@ public class MindmapService {
     @Transactional
     public MindmapSummaryRes saveMindmapParticipant(long userId, UUID mindmapId) {
         User user = userService.getUserOrThrow(userId);
-        Mindmap mindmap = mindmapAccessValidator.validateTeamMindmap(mindmapId);
+        Mindmap mindmap = mindmapAccessValidator.validateTeamMindmapWithLock(mindmapId);
 
         MindmapParticipant participant =
                 mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).orElseGet(() -> {
