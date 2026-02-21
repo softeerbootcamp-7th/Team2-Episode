@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
@@ -47,6 +48,23 @@ class UpdateAppenderTest {
     private static byte[] updatePayload() {
         return new byte[]{ 0, 2, 1, 2, 3, 4 };
     }
+
+    private List<Runnable> submitTasks(UUID roomId, byte[] payload, int times) {
+        for (int i = 0; i < times; i++) {
+            updateAppender.appendUpdateAsync(roomId, payload);
+        }
+
+        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(updateExecutor, org.mockito.Mockito.times(times)).execute(taskCaptor.capture());
+        return taskCaptor.getAllValues();
+    }
+
+    private void runAll(List<Runnable> tasks) {
+        for (Runnable r : tasks) {
+            assertThatCode(r::run).doesNotThrowAnyException();
+        }
+    }
+
 
     @BeforeEach
     void setUp() {
@@ -136,17 +154,7 @@ class UpdateAppenderTest {
         UUID roomId = UUID.randomUUID();
         byte[] payload = updatePayload();
 
-        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
-
-        for (int i = 0; i < 49; i++) {
-            updateAppender.appendUpdateAsync(roomId, payload);
-        }
-
-        verify(updateExecutor, org.mockito.Mockito.times(49)).execute(taskCaptor.capture());
-
-        for (Runnable r : taskCaptor.getAllValues()) {
-            assertThatCode(r::run).doesNotThrowAnyException();
-        }
+        runAll(submitTasks(roomId, payload, 49));
 
         verify(updateStreamStore, org.mockito.Mockito.times(49)).appendUpdate(eq(roomId), eq(payload));
         verify(updateStreamStore, never()).length(eq(roomId));
@@ -161,22 +169,10 @@ class UpdateAppenderTest {
 
         when(updateStreamStore.length(roomId)).thenReturn(1000L);
 
-        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
-
-        for (int i = 0; i < 50; i++) {
-            updateAppender.appendUpdateAsync(roomId, payload);
-        }
-
-        verify(updateExecutor, org.mockito.Mockito.times(50)).execute(taskCaptor.capture());
-
-        for (Runnable r : taskCaptor.getAllValues()) {
-            assertThatCode(r::run).doesNotThrowAnyException();
-        }
+        runAll(submitTasks(roomId, payload, 50));
 
         verify(updateStreamStore, org.mockito.Mockito.times(50)).appendUpdate(eq(roomId), eq(payload));
-
         verify(updateStreamStore, org.mockito.Mockito.times(1)).length(eq(roomId));
-
         verify(jobPublisher, org.mockito.Mockito.times(1)).publishSnapshotTriggerAsync(eq(roomId));
     }
 
@@ -188,17 +184,7 @@ class UpdateAppenderTest {
 
         when(updateStreamStore.length(roomId)).thenReturn(999L);
 
-        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
-
-        for (int i = 0; i < 50; i++) {
-            updateAppender.appendUpdateAsync(roomId, payload);
-        }
-
-        verify(updateExecutor, org.mockito.Mockito.times(50)).execute(taskCaptor.capture());
-
-        for (Runnable r : taskCaptor.getAllValues()) {
-            assertThatCode(r::run).doesNotThrowAnyException();
-        }
+        runAll(submitTasks(roomId, payload, 50));
 
         verify(updateStreamStore, org.mockito.Mockito.times(1)).length(eq(roomId));
         verify(jobPublisher, never()).publishSnapshotTriggerAsync(any());
