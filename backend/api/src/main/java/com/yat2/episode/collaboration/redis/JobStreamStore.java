@@ -2,8 +2,7 @@ package com.yat2.episode.collaboration.redis;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.StreamRecords;
+import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -49,18 +48,25 @@ public class JobStreamStore {
                 return;
             }
 
+            String streamKey = redisProperties.jobStream().key();
+
             Map<String, String> fields = new HashMap<>();
             fields.put(redisProperties.jobStream().fields().type(), type.name());
             fields.put(redisProperties.jobStream().fields().roomId(), roomId.toString());
 
             StreamOperations<String, String, String> ops = stringRedisTemplate.opsForStream();
-            MapRecord<String, String, String> record =
-                    StreamRecords.newRecord().in(redisProperties.jobStream().key()).ofMap(fields);
-            ops.add(record);
+
+            var maxLen = redisProperties.jobStream().maxLen();
+            RedisStreamCommands.XAddOptions options =
+                    RedisStreamCommands.XAddOptions.maxlen(maxLen.count()).approximateTrimming(maxLen.approximate());
+
+            ops.add(streamKey, fields, options);
+
         } catch (Exception e) {
             log.error("Failed to publish job. type={}, roomId={}", type, roomId, e);
         }
     }
+
 
     private boolean tryDedupe(JobType type, UUID roomId, Duration ttl) {
         String key = redisProperties.jobStream().dedupeKeyPrefix() + type.name() + ":" + roomId;
