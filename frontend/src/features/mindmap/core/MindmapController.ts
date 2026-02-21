@@ -17,7 +17,7 @@ import type { AddNodeDirection, NodeDirection, NodeElement, NodeId } from "@/fea
 import { computeMindmapLayout } from "@/features/mindmap/utils/compute_mindmap_layout";
 import { createMindmapStore, MindmapStoreState, StoreChannel } from "@/features/mindmap/utils/mindmap_store";
 import { KeyLikeEvent, PointerLikeEvent, WheelLikeEvent } from "@/shared/types/native_like_event";
-import type { Rect } from "@/shared/types/spatial";
+import type { Bounds, Rect } from "@/shared/types/spatial";
 
 function getTxOriginType(origin: AdapterChange["origin"]): string | boolean | null {
     if (!origin) return null;
@@ -105,9 +105,13 @@ export class MindmapController implements IMindmapController {
 
     private unsubAdapter: (() => void) | null = null;
 
-    private viewportCommitScheduled = false;
-
     private destroyed = false;
+
+    // 🟢 fit_content용 bounds 캐시 (O(1) 조회)
+    private contentBoundsCache: Bounds | null = null;
+
+    // 🟢 viewport store 커밋 rAF 중복 방지
+    private viewportCommitScheduled = false;
 
     constructor(opts: MindmapOptions) {
         this.opts = opts;
@@ -124,6 +128,7 @@ export class MindmapController implements IMindmapController {
         this.tree = new TreeModel(this.adapter);
 
         this.quadTree = new QuadTree(this.calculateInitialBounds());
+        this.rebuildSpatialIndexesAndCacheBounds();
 
         this.unsubAdapter = this.adapter.onChange((c) => this.handleAdapterChange(c));
 
@@ -256,10 +261,9 @@ export class MindmapController implements IMindmapController {
 
         this.viewport = new ViewportController(
             svg,
-
-            // FIX: getBounds 함수를 넘겨줘야합니다.
-            () => null,
-            () => this.scheduleViewportCommit(),
+            () => this.quadTree.getBounds(),
+            () => this.contentBoundsCache, // 🟢 fit_content는 content bounds 사용
+            () => this.scheduleViewportCommit(), // 🟢 applyViewBox → store 반영 연결
         );
 
         this.interaction = new InteractionMachine({
@@ -271,7 +275,8 @@ export class MindmapController implements IMindmapController {
             screenToWorld: (x, y) => this.viewport!.screenToWorld(x, y),
 
             onPan: (dx, dy) => {
-                this.viewport?.panning(dx, dy);
+                // this.viewport?.panning(dx, dy);
+                this.viewport?.panningHandler(dx, dy);
             },
 
             onMoveNode: (targetId, movingId, direction, side) => {
@@ -536,6 +541,15 @@ export class MindmapController implements IMindmapController {
             this.setSelection(nodeId);
         },
 
+        resetViewport: () => {
+            this.viewport?.resetView();
+        },
+
+        fitToContent: () => {
+            console.log("zzz");
+            this.viewport?.fitToWorldRect();
+        },
+
         startCreating: () => {
             this.interaction?.startCreating();
         },
@@ -606,7 +620,8 @@ export class MindmapController implements IMindmapController {
         wheel: (e: WheelLikeEvent) => {
             this.assertNotDestroyed();
             e.preventDefault?.();
-            this.viewport?.zoomByWheel(e.deltaY, e.clientX, e.clientY);
+            // this.viewport?.zoomByWheel(e.deltaY, e.clientX, e.clientY);
+            this.viewport?.zoomHandler(e.deltaY, { clientX: e.clientX, clientY: e.clientY }); // 🟢
         },
 
         keyDown: (e: KeyLikeEvent) => {
@@ -751,9 +766,45 @@ export class MindmapController implements IMindmapController {
         }
     }
 
-    private handleAdapterChange(change: AdapterChange) {
+    private rebuildSpatialIndexesAndCacheBounds() {
         this.quadTree.clear();
-        this.adapter.getMap().forEach((node) => this.quadTree.insert(node));
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        this.adapter.getMap().forEach((node) => {
+            // QuadTree는 drag/탐색용 (기존 유지)
+            this.quadTree.insert(node);
+
+            const w = typeof node.width === "number" && node.width > 0 ? node.width : 200;
+            const h = typeof node.height === "number" && node.height > 0 ? node.height : 80;
+
+            const left = node.x - w / 2;
+            const right = node.x + w / 2;
+            const top = node.y - h / 2;
+            const bottom = node.y + h / 2;
+
+            if (left < minX) minX = left;
+            if (right > maxX) maxX = right;
+            if (top < minY) minY = top;
+            if (bottom > maxY) maxY = bottom;
+        });
+
+        if (minX === Infinity) {
+            this.contentBoundsCache = null;
+            return;
+        }
+
+        const width = Math.max(1, maxX - minX);
+        const height = Math.max(1, maxY - minY);
+
+        this.contentBoundsCache = { minX, maxX, minY, maxY, width, height };
+    }
+
+    private handleAdapterChange(change: AdapterChange) {
+        this.rebuildSpatialIndexesAndCacheBounds();
 
         const changedChannels: StoreChannel[] = ["graph"];
         for (const id of change.changedIds) changedChannels.push(`node:${id}` as const);
@@ -818,6 +869,7 @@ export class MindmapController implements IMindmapController {
 
         requestAnimationFrame(() => {
             this.viewportCommitScheduled = false;
+
             const snap = this.viewport?.getSnapshot() ?? { x: 0, y: 0, scale: 1 };
 
             this.store.setState(
