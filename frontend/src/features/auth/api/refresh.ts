@@ -26,7 +26,7 @@ export function setRefreshState(refreshing: boolean, promise: Promise<boolean> |
  */
 export async function refreshToken(): Promise<boolean> {
     try {
-        await post<void, Record<string, never>>({ endpoint: AUTH_REFRESH_ENDPOINT });
+        await post<void, Record<string, never>>({ endpoint: AUTH_REFRESH_ENDPOINT, options: { skipRefresh: true } });
         return true;
     } catch {
         return false;

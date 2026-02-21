@@ -1,60 +1,61 @@
-// FIX: core대신에 다른 훅을 사용하는거로 변경해야합니다.
-// import { ComponentPropsWithoutRef, ReactNode } from "react";
+import { ComponentPropsWithoutRef, ReactNode } from "react";
 
-// import Button from "@/shared/components/button/Button";
-// import Icon from "@/shared/components/icon/Icon";
-// import { cn } from "@/utils/cn";
+import { useMindmapControllerContext } from "@/features/mindmap/core/MindmapProvider";
+import Button from "@/shared/components/button/Button";
+import Icon from "@/shared/components/icon/Icon";
+import { cn } from "@/utils/cn";
 
-// type ColProps = ComponentPropsWithoutRef<"li"> & {
-//     upSlot?: ReactNode;
-//     bottomSlot?: ReactNode;
-// };
+type ColProps = ComponentPropsWithoutRef<"li"> & {
+    upSlot?: ReactNode;
+    bottomSlot?: ReactNode;
+};
 
-// function Col({ upSlot, bottomSlot, className, ...props }: ColProps) {
-//     return (
-//         <li className={cn("p-0 flex flex-col justify-between items-center gap-6", className)} {...props}>
-//             <div className="flex flex-col gap-2 items-center">{upSlot}</div>
-//             {bottomSlot}
-//         </li>
-//     );
-// }
+function Col({ upSlot, bottomSlot, className, ...props }: ColProps) {
+    return (
+        <li className={cn("p-0 flex flex-col justify-between items-center gap-6", className)} {...props}>
+            <div className="flex flex-col gap-2 items-center">{upSlot}</div>
+            {bottomSlot}
+        </li>
+    );
+}
 
-// const iconColor = "var(--color-gray-700)";
+const iconColor = "var(--color-gray-700)";
 
 export default function ControllerSideBar() {
-    return null;
-    // const core = useMindMapCore();
+    const engine = useMindmapControllerContext();
 
-    // const handleReset = () => {
-    //     core?.getBroker().publish("VIEWPORT_RESET", undefined);
-    // };
+    const handleReset = () => {
+        engine.actions.resetViewport();
+    };
 
-    // const handleFit = () => {
-    //     core?.getBroker().publish("VIEWPORT_FIT_CONTENT", undefined);
-    // };
+    const handleFit = () => {
+        engine.actions.fitToContent();
+    };
 
-    // const handleNewNode = () => {
-    //     core?.getBroker().publish("PENDING_CREATION", undefined);
-    // };
+    const handleNewNode = () => {
+        engine.actions.startCreating();
+    };
 
-    // return (
-    //     <Col
-    //         upSlot={
-    //             <>
-    //                 <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleFit}>
-    //                     <Icon name="ic_tool_fit" color={iconColor} />
-    //                 </Button>
+    return (
+        <div className="absolute top-20 left-0 z-50 p-4">
+            <Col
+                upSlot={
+                    <>
+                        <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleFit}>
+                            <Icon name="ic_tool_fit" color={iconColor} />
+                        </Button>
 
-    //                 <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleReset}>
-    //                     <Icon name="ic_target" color={iconColor} />
-    //                 </Button>
-    //             </>
-    //         }
-    //         bottomSlot={
-    //             <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleNewNode}>
-    //                 <Icon name="ic_plus" color={iconColor} />
-    //             </Button>
-    //         }
-    //     />
-    // );
+                        <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleReset}>
+                            <Icon name="ic_target" color={iconColor} />
+                        </Button>
+                    </>
+                }
+                bottomSlot={
+                    <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleNewNode}>
+                        <Icon name="ic_plus" color={iconColor} />
+                    </Button>
+                }
+            />
+        </div>
+    );
 }

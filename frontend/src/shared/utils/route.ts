@@ -1,13 +1,13 @@
+import { MindmapType } from "@/features/mindmap/types/mindmap";
 export const PATHS = {
     home: "/",
     mindmap: {
         list: "/mindmaps",
-        create: "/mindmaps/create",
+        create: "/create/mindmaps/:mindmapType?",
         detail: "/mindmaps/:mindmapId",
     },
     episode_archive: "/episode_archive",
     login: "/login",
-    landing: "/landing",
 } as const;
 
 export const linkTo = {
@@ -15,12 +15,12 @@ export const linkTo = {
 
     mindmap: {
         list: () => PATHS.mindmap.list,
-        create: () => PATHS.mindmap.create,
+        create: (type: MindmapType | "" = "") =>
+            PATHS.mindmap.create.replace(type ? ":mindmapType?" : "/:mindmapType?", type),
         detail: (mindmapId: number | string) => PATHS.mindmap.detail.replace(":mindmapId", String(mindmapId)),
     },
 
     episode_archive: () => PATHS.episode_archive,
 
     login: () => PATHS.login,
-    landing: () => PATHS.landing,
 };
