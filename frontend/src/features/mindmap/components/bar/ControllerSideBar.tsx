@@ -1,4 +1,3 @@
-// FIX: core대신에 다른 훅을 사용하는거로 변경해야합니다.
 import { ComponentPropsWithoutRef, ReactNode } from "react";
 
 import { useMindmapControllerContext } from "@/features/mindmap/core/MindmapProvider";

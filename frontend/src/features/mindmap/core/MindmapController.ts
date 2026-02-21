@@ -272,7 +272,6 @@ export class MindmapController implements IMindmapController {
             screenToWorld: (x, y) => this.viewport!.screenToWorld(x, y),
 
             onPan: (dx, dy) => {
-                // this.viewport?.panning(dx, dy);
                 this.viewport?.panningHandler(dx, dy);
             },
 
