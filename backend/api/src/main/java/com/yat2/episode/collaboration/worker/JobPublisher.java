@@ -33,6 +33,10 @@ public class JobPublisher {
         executeSafely(() -> jobStreamStore.publishSnapshot(roomId), JobType.SNAPSHOT.name(), roomId);
     }
 
+    public void publishSnapshotTriggerAsync(UUID roomId) {
+        executeSafely(() -> jobStreamStore.publishSnapshotTrigger(roomId), "SNAPSHOT_TRIGGER", roomId);
+    }
+
     private void executeSafely(Runnable task, String type, UUID roomId) {
         try {
             jobExecutor.execute(task);

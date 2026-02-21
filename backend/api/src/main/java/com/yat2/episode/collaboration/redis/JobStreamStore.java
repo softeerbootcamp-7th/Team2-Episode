@@ -27,8 +27,27 @@ public class JobStreamStore {
         publish(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
     }
 
+    public void publishSnapshotTrigger(UUID roomId) {
+        publish(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());
+    }
+
     public void publishSync(UUID roomId) {
         publish(JobType.SYNC, roomId, redisProperties.jobStream().dedupeTtl().sync());
+    }
+
+    private void publishWithDedupe(JobType type, UUID roomId, Duration dedupeTtl) {
+        try {
+            if (!tryDedupe(type, roomId, dedupeTtl)) return;
+
+            Map<String, String> fields = new HashMap<>();
+            fields.put(redisProperties.jobStream().fields().type(), type.name());
+            fields.put(redisProperties.jobStream().fields().roomId(), roomId.toString());
+
+            stringRedisTemplate.opsForStream()
+                    .add(StreamRecords.newRecord().in(redisProperties.jobStream().key()).ofMap(fields));
+        } catch (Exception e) {
+            log.error("Failed to publish job. type={}, roomId={}", type, roomId, e);
+        }
     }
 
     private void publish(JobType type, UUID roomId, Duration dedupeTtl) {
