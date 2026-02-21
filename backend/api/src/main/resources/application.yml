@@ -145,7 +145,7 @@ collaboration:
       ttl: "P2D"
       field-update: "u"
       max-len:
-        count: 4000
+        count: 3000
         approximate: true
     job-stream:
       key: "collab:jobs"
