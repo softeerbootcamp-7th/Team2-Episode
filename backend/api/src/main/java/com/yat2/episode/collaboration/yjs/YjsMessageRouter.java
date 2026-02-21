@@ -110,53 +110,33 @@ public class YjsMessageRouter {
         }
 
         if (updates.isEmpty()) {
-            if (!validateLastEntryId(roomId, requester)) {
+            String runnerLastEntry;
+            try {
+                runnerLastEntry = lastEntryIdStore.get(roomId).orElse("0-0");
+            } catch (Exception e) {
+                log.error("Error reading lastEntryId for room {}", roomId, e);
+                closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
                 return false;
             }
+
+            String clientLastEntry = String.valueOf(requester.getAttributes().getOrDefault(LAST_ENTRY_ID, "0-0"));
+
+            if (!clientLastEntry.equals(runnerLastEntry)) {
+                closeSessionQuietly(requester, new CloseStatus(4000, "LAST_ENTRY_MISMATCH"));
+                return false;
+            }
+
         } else {
-            if (!sendReplay(roomId, requester, updates)) {
+            boolean ok = sessionRegistry.unicastAll(roomId, requester.getId(), updates);
+
+            if (!ok) {
+                closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
                 return false;
             }
         }
 
         requester.getAttributes().put(IS_SYNCED, true);
         requester.getAttributes().remove(LAST_ENTRY_ID);
-
-        return true;
-    }
-
-    private boolean validateLastEntryId(UUID roomId, WebSocketSession requester) {
-        String runnerLastEntry;
-        try {
-            runnerLastEntry = lastEntryIdStore.get(roomId).orElse("0-0");
-        } catch (Exception e) {
-            log.error("Error reading lastEntryId for room {}", roomId, e);
-            closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
-            return false;
-        }
-        String clientLastEntry = String.valueOf(requester.getAttributes().getOrDefault(LAST_ENTRY_ID, "0-0"));
-
-        if (!clientLastEntry.equals(runnerLastEntry)) {
-            closeSessionQuietly(requester, new CloseStatus(4000, "LAST_ENTRY_MISMATCH"));
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean sendReplay(UUID roomId, WebSocketSession requester, List<byte[]> updates) {
-        String requesterId = requester.getId();
-
-        boolean ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
-
-        if (!ok && requester.isOpen()) {
-            ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
-        }
-
-        if (!ok) {
-            closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
-            return false;
-        }
 
         return true;
     }
