@@ -9,17 +9,17 @@ public record CollaborationRedisProperties(
         UpdateStream updateStream,
         JobStream jobStream
 ) {
+    public record MaxLen(
+            long count,
+            boolean approximate
+    ) {}
+
     public record UpdateStream(
             String keyPrefix,
             Duration ttl,
             String fieldUpdate,
             MaxLen maxLen
-    ) {
-        public record MaxLen(
-                long count,
-                boolean approximate
-        ) {}
-    }
+    ) {}
 
     public record JobStream(
             String key,
@@ -36,11 +36,6 @@ public record CollaborationRedisProperties(
         public record DedupeTtl(
                 Duration sync,
                 Duration snapshot
-        ) {}
-
-        public record MaxLen(
-                long count,
-                boolean approximate
         ) {}
     }
 }
