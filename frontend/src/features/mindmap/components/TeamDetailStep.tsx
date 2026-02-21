@@ -63,11 +63,14 @@ export function TeamDetailStep({ funnel }: { funnel: TeamDetailStepFunnel }) {
     };
 
     const addEpisode = () => {
-        if (episodes.length >= MAX_EPISODE_COUNT) {
-            toast.error(`에피소드는 ${MAX_EPISODE_COUNT}개까지 넣을 수 있어요.`);
-            return;
-        }
-        funnel.history.setContext((prev) => ({ ...prev, episodes: [...(prev.episodes || []), ""] }));
+        funnel.history.setContext((prev) => {
+            if (prev.episodes.length >= MAX_EPISODE_COUNT) {
+                toast.error(`에피소드는 ${MAX_EPISODE_COUNT}개까지 넣을 수 있어요.`);
+                return prev;
+            }
+
+            return { ...prev, episodes: [...(prev.episodes || []), ""] };
+        });
     };
 
     const cleanedEpisodes = useMemo(
