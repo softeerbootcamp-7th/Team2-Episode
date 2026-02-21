@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
@@ -21,6 +22,8 @@ import com.yat2.episode.collaboration.redis.LastEntryIdStore;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 import com.yat2.episode.collaboration.worker.UpdateAppender;
 
+import static com.yat2.episode.global.constant.AttributeKeys.IS_SYNCED;
+import static com.yat2.episode.global.constant.AttributeKeys.LAST_ENTRY_ID;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -203,6 +206,63 @@ class YjsMessageRouterTest {
             InOrder order = inOrder(sessionRegistry);
             order.verify(sessionRegistry).unicast(eq(roomId), eq("P1"), any());
             order.verify(sessionRegistry).unicast(eq(roomId), eq("P2"), any());
+        }
+
+        @Test
+        @DisplayName("Sync1 Solo updates가 있으면 replay 후 IS_SYNCED=true, LAST_ENTRY_ID 제거, sync2 전송")
+        void routeIncoming_sync1_solo_withUpdates_replayAndSync2() {
+            UUID roomId = UUID.randomUUID();
+
+            WebSocketSession requester = mock(WebSocketSession.class);
+            when(requester.getId()).thenReturn("REQ");
+
+            var attrs = new java.util.HashMap<String, Object>();
+            attrs.put(IS_SYNCED, false);
+            attrs.put(LAST_ENTRY_ID, "0-0");
+            when(requester.getAttributes()).thenReturn(attrs);
+
+            when(sessionRegistry.findAllAlivePeers(any(UUID.class), eq("REQ"))).thenReturn(new ArrayList<>());
+
+            List<byte[]> updates = List.of(new byte[]{ 1 }, new byte[]{ 2 });
+            when(updateStreamStore.readAllUpdates(roomId)).thenReturn(updates);
+
+            when(sessionRegistry.unicastAll(roomId, "REQ", updates)).thenReturn(true);
+
+            router.routeIncoming(roomId, requester, sync1Frame());
+
+            verify(sessionRegistry).unicastAll(roomId, "REQ", updates);
+            verify(sessionRegistry).unicast(eq(roomId), eq("REQ"), eq(YjsProtocolUtil.emptySync2Frame()));
+
+            org.assertj.core.api.Assertions.assertThat(attrs.get(IS_SYNCED)).isEqualTo(true);
+            org.assertj.core.api.Assertions.assertThat(attrs).doesNotContainKey(LAST_ENTRY_ID);
+        }
+
+        @Test
+        @DisplayName("Sync1 Solo replay 전송 실패 시 SERVER_ERROR로 close하고 sync2는 보내지 않는다")
+        void routeIncoming_sync1_solo_replayFails_closeAndNoSync2() throws Exception {
+            UUID roomId = UUID.randomUUID();
+
+            WebSocketSession requester = mock(WebSocketSession.class);
+            when(requester.getId()).thenReturn("REQ");
+
+            var attrs = new java.util.HashMap<String, Object>();
+            attrs.put(IS_SYNCED, false);
+            attrs.put(LAST_ENTRY_ID, "0-0");
+            when(requester.getAttributes()).thenReturn(attrs);
+
+            when(sessionRegistry.findAllAlivePeers(any(UUID.class), eq("REQ"))).thenReturn(new ArrayList<>());
+
+            List<byte[]> updates = List.of(new byte[]{ 1 });
+            when(updateStreamStore.readAllUpdates(roomId)).thenReturn(updates);
+
+            when(sessionRegistry.unicastAll(roomId, "REQ", updates)).thenReturn(false);
+
+            router.routeIncoming(roomId, requester, sync1Frame());
+
+            verify(requester).close(eq(CloseStatus.SERVER_ERROR));
+            verify(sessionRegistry, never()).unicast(eq(roomId), eq("REQ"), eq(YjsProtocolUtil.emptySync2Frame()));
+
+            org.assertj.core.api.Assertions.assertThat(attrs.get(IS_SYNCED)).isEqualTo(false);
         }
 
         @Test
