@@ -17,7 +17,7 @@ export const linkTo = {
     mindmap: {
         list: () => PATHS.mindmap.list,
         create: (type: MindmapType | "" = "") =>
-            PATHS.mindmap.create.replace(type ? ":mindmapType" : "/:mindmapType", type),
+            PATHS.mindmap.create.replace(type ? ":mindmapType?" : "/:mindmapType?", type),
         detail: (mindmapId: number | string) => PATHS.mindmap.detail.replace(":mindmapId", String(mindmapId)),
     },
 
