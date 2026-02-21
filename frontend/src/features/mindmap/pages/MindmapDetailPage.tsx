@@ -5,6 +5,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import Mindmap from "@/features/mindmap/core/Mindmap";
 import { useMindmapSession } from "@/features/mindmap/hooks/useMindmapSession";
 import Spinner from "@/shared/components/spinner/Spinner";
+import { BadRequestError } from "@/shared/utils/errors";
 
 // TODO: 커서 테스트용 컬러
 const COLORS = ["#34a7ff", "#fd69b9", "#0ed038", "#7749ff", "#ff913c"];
@@ -22,6 +23,10 @@ export default function MindmapDetailPage() {
             color: COLORS[Math.floor(Math.random() * COLORS.length)]!,
         };
     }, [userInfo?.userId, userInfo?.nickname]);
+
+    if (!mindmapId) {
+        throw new BadRequestError("올바른 마인드맵이 아닙니다.");
+    }
 
     const { doc, provider, isSynced } = useMindmapSession({
         mindmapId,
