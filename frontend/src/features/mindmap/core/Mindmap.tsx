@@ -2,6 +2,7 @@ import { useMemo, useRef } from "react";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
+import ControllerSideBar from "@/features/mindmap/components/bar/ControllerSideBar";
 import CollaborationList from "@/features/mindmap/core/CollaborationList";
 import { MindmapProvider } from "@/features/mindmap/core/MindmapProvider";
 import MindmapRenderer from "@/features/mindmap/core/MindmapRenderer";
@@ -14,7 +15,7 @@ export type MindmapConfig = {
 
 type Props = {
     doc?: Y.Doc;
-    mindmapId: string;
+    mindmapId?: string;
     provider?: WebsocketProvider;
     config?: MindmapConfig;
     user?: CollaboratorInfo;
@@ -59,6 +60,7 @@ const Mindmap = ({
         >
             <div className="flex flex-col w-full h-screen bg-slate-100 overflow-hidden">
                 <CollaborationList />
+                <ControllerSideBar />
 
                 <div className="flex-1 relative min-h-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[20px_20px]">
                     <svg ref={canvasRef} className="w-full h-full block">

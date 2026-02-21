@@ -35,7 +35,7 @@ const MindmapListPage = () => {
                 </Tab>
 
                 <Button
-                    onClick={() => navigate(linkTo.mindmap.create())}
+                    onClick={() => navigate(linkTo.mindmap.create(selectedTabId === "ALL" ? undefined : selectedTabId))}
                     size="md"
                     variant="primary"
                     leftSlot={<Icon name="ic_plus" />}

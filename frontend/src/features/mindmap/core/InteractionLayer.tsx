@@ -20,17 +20,24 @@ export default function InteractionLayer({
     useEffect(() => {
         const root = rootRef.current;
         if (!root) return;
-        root.setAttribute("data-dragging", status.mode === "dragging" ? "true" : "false");
+
+        const isInteracting = ["dragging", "pending_creation"].includes(status.mode);
+        root.setAttribute("data-dragging", isInteracting ? "true" : "false");
     }, [status.mode, rootRef]);
 
     const { mode, draggingNodeId, dragDelta, dragSubtreeIds, baseNode, mousePos } = status;
 
-    if (!draggingNodeId || !dragSubtreeIds) return null;
+    if (mode !== "dragging" && mode !== "pending_creation") return null;
 
     return (
         <g className="interaction-layer">
             {baseNode.targetId && baseNode.direction && (
-                <DropNodePreviewLayer targetId={baseNode.targetId} direction={baseNode.direction} nodeMap={nodeMap} />
+                <DropNodePreviewLayer
+                    targetId={baseNode.targetId}
+                    direction={baseNode.direction}
+                    nodeMap={nodeMap}
+                    side={baseNode.side}
+                />
             )}
 
             {mode === "dragging" && draggingNodeId && dragSubtreeIds && (
