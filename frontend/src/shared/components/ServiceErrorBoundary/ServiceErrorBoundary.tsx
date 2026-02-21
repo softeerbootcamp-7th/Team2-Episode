@@ -16,7 +16,8 @@ export default function ServiceErrorBoundary({ children }: Props) {
             throw error;
         }
 
-        const normalizedError = error instanceof Error ? error : new Error("알 수 없는 오류");
+        const normalizedError =
+            error instanceof Error ? error : new Error(typeof error === "string" ? error : "알 수 없는 오류");
         return <GlobalErrorFallback error={normalizedError} resetErrorBoundary={() => window.location.reload()} />;
     }
 

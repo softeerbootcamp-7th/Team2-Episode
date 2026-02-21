@@ -2,12 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
-import { logout as logoutApi } from "@/features/auth/api/auth";
+import { fetchCurrentUser, logout as logoutApi } from "@/features/auth/api/auth";
 import { AUTH_QUERY_KEYS } from "@/features/auth/constants/query_key";
 import { AuthContext } from "@/features/auth/hooks/useAuth";
 import type { User } from "@/features/auth/types/user";
-import { USER_ME_ENDPOINT } from "@/shared/api/api";
-import { get } from "@/shared/api/method";
 import { AUTH_MESSAGES } from "@/shared/constants/authMessage";
 import { linkTo } from "@/shared/utils/route";
 
@@ -21,18 +19,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const { data: user } = useSuspenseQuery<User | null>({
         queryKey: AUTH_QUERY_KEYS.user,
-        queryFn: async () => {
-            try {
-                return await get<User>({
-                    endpoint: USER_ME_ENDPOINT,
-                    options: { skipRefresh: false },
-                });
-            } catch {
-                // 401 에러 등 비로그인 상태일 때는 null을 반환하여 정상 흐름으로 유도
-                return null;
-            }
-        },
-        staleTime: 1000 * 60 * 4,
+        queryFn: () => fetchCurrentUser(true),
         retry: false,
     });
 

@@ -19,20 +19,22 @@ export const logout = async (): Promise<void | ApiError> => {
     }
 };
 
-export const authQueryOptions = queryOptions<User | null>({
-    queryKey: AUTH_QUERY_KEYS.user,
-    queryFn: async () => {
-        try {
-            return await get<User>({ endpoint: USER_ME_ENDPOINT });
-        } catch (error: unknown) {
-            if (isApiError(error)) {
-                const status = error.status ?? error.status;
-                // 401(Unauthorized), 403(Forbidden)은 비로그인으로 간주
-                if (status === 401 || status === 403) return null;
-            }
-            // 그 외 진짜 시스템 장애(500 등)는 throw하여 ServiceErrorBoundary로 전달
-            throw error;
+export const fetchCurrentUser = async (skipRefresh = true): Promise<User | null> => {
+    try {
+        return await get<User>({
+            endpoint: USER_ME_ENDPOINT,
+            options: { skipRefresh },
+        });
+    } catch (error: unknown) {
+        if (isApiError(error) && (error.status === 401 || error.status === 403)) {
+            return null;
         }
-    },
+        throw error;
+    }
+};
+
+export const authQueryOptions = queryOptions({
+    queryKey: AUTH_QUERY_KEYS.user,
+    queryFn: () => fetchCurrentUser(true),
     staleTime: 1000 * 60 * 5,
 });
