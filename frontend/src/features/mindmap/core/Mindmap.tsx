@@ -14,7 +14,7 @@ export type MindmapConfig = {
 
 type Props = {
     doc?: Y.Doc;
-    mindmapId: string;
+    mindmapId?: string;
     provider?: WebsocketProvider;
     config?: MindmapConfig;
     user?: CollaboratorInfo;
