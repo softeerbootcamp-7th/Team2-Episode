@@ -1,0 +1,1 @@
+ALTER TABLE episodes MODIFY COLUMN content VARCHAR(200);

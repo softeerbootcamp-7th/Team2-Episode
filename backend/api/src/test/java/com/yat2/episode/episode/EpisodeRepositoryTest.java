@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeSummaryRes;
+import com.yat2.episode.episode.dto.response.EpisodeSummaryRes;
 import com.yat2.episode.mindmap.Mindmap;
 import com.yat2.episode.utils.AbstractRepositoryTest;
 

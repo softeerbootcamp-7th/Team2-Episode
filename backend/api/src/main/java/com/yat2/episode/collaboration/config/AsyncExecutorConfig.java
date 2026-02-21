@@ -11,22 +11,22 @@ import java.util.concurrent.Executor;
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
-public class CollaborationAsyncConfig {
+public class AsyncExecutorConfig {
 
     private static final String THREAD_PREFIX_UPDATE = "redis-append-";
     private static final String THREAD_PREFIX_SYNC = "sync-job-";
 
-    private final CollaborationAsyncProperties asyncProperties;
+    private final AsyncExecutorProperties asyncExecutorProperties;
 
     @Bean(name = "updateExecutor")
     public Executor updateExecutor() {
         ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
         exec.setThreadNamePrefix(THREAD_PREFIX_UPDATE);
-        exec.setCorePoolSize(asyncProperties.corePoolSize());
-        exec.setMaxPoolSize(asyncProperties.maxPoolSize());
-        exec.setQueueCapacity(asyncProperties.queueCapacity());
-        exec.setKeepAliveSeconds(asyncProperties.keepAliveSeconds());
-        exec.setAllowCoreThreadTimeOut(asyncProperties.allowCoreThreadTimeout());
+        exec.setCorePoolSize(asyncExecutorProperties.corePoolSize());
+        exec.setMaxPoolSize(asyncExecutorProperties.maxPoolSize());
+        exec.setQueueCapacity(asyncExecutorProperties.queueCapacity());
+        exec.setKeepAliveSeconds(asyncExecutorProperties.keepAliveSeconds());
+        exec.setAllowCoreThreadTimeOut(asyncExecutorProperties.allowCoreThreadTimeout());
 
         exec.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
         exec.initialize();
@@ -38,11 +38,11 @@ public class CollaborationAsyncConfig {
         ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
         exec.setThreadNamePrefix(THREAD_PREFIX_SYNC);
 
-        exec.setCorePoolSize(asyncProperties.corePoolSize());
-        exec.setMaxPoolSize(asyncProperties.maxPoolSize());
+        exec.setCorePoolSize(asyncExecutorProperties.corePoolSize());
+        exec.setMaxPoolSize(asyncExecutorProperties.maxPoolSize());
 
-        exec.setQueueCapacity(asyncProperties.queueCapacity());
-        exec.setKeepAliveSeconds(asyncProperties.keepAliveSeconds());
+        exec.setQueueCapacity(asyncExecutorProperties.queueCapacity());
+        exec.setKeepAliveSeconds(asyncExecutorProperties.keepAliveSeconds());
         exec.setAllowCoreThreadTimeOut(true);
 
         exec.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
