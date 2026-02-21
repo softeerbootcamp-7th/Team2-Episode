@@ -1,59 +1,64 @@
-import { createBrowserRouter, isRouteErrorResponse, Outlet, RouterProvider, useRouteError } from "react-router";
+import {
+    createBrowserRouter,
+    isRouteErrorResponse,
+    Outlet,
+    RouterProvider,
+    useLocation,
+    useRouteError,
+} from "react-router";
 
-import { authMiddleWare } from "@/features/auth/middleware/auth_middleware";
+import { authProtectedRouteMiddleware } from "@/features/auth/middleware/authProtectedRoutedMiddleware";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchivePage";
 import HomePage from "@/features/home/pages/HomePage";
-import LandingPage from "@/features/landing/pages/LandingPage";
 import CreateMindmapFunnelPage from "@/features/mindmap/pages/CreateMindmapPage";
 import MindmapDetailPage from "@/features/mindmap/pages/MindmapDetailPage";
 import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
 import LoginPage from "@/features/user/login/pages/LoginPage";
+import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { PATHS } from "@/shared/utils/route";
+import { cn } from "@/utils/cn";
 
 function RootLayout() {
+    const location = useLocation();
+    const isLandingView = location.pathname === PATHS.home;
+
     return (
-        <AuthProvider>
-            <Outlet />
-        </AuthProvider>
+        <div className="flex flex-col h-screen overflow-hidden">
+            <header className={isLandingView ? "fixed top-0 left-0 right-0 z-50" : "relative z-50 shrink-0"}>
+                <GlobalNavigationBar variant={isLandingView ? "transparent" : "white"} />
+            </header>
+
+            <main className={cn("w-full", isLandingView ? "h-full" : "flex-1 overflow-hidden")}>
+                <Outlet />
+            </main>
+        </div>
     );
 }
 
 const router = createBrowserRouter([
     {
-        element: <RootLayout />,
+        element: (
+            <AuthProvider>
+                <RootLayout />
+            </AuthProvider>
+        ),
         errorElement: <RootErrorBoundary />,
         children: [
             {
+                path: "/",
                 element: <HomePage />,
-                middleware: [authMiddleWare],
-                children: [
-                    {
-                        index: true,
-                        element: <MindmapListPage />,
-                    },
-                    {
-                        path: PATHS.mindmap.list,
-                        element: <MindmapListPage />,
-                    },
-                    {
-                        path: PATHS.episode_archive,
-                        element: <EpisodeArchivePage />,
-                    },
-                    {
-                        path: PATHS.mindmap.create,
-                        element: <CreateMindmapFunnelPage />,
-                    },
-                    {
-                        path: PATHS.mindmap.detail,
-                        element: <MindmapDetailPage />,
-                    },
-                ],
             },
             {
-                path: PATHS.landing,
-                element: <LandingPage />,
+                // 로그인 필수 경로 그룹
+                middleware: [authProtectedRouteMiddleware],
+                children: [
+                    { path: PATHS.mindmap.list, element: <MindmapListPage /> },
+                    { path: PATHS.episode_archive, element: <EpisodeArchivePage /> },
+                    { path: PATHS.mindmap.create, element: <CreateMindmapFunnelPage /> },
+                    { path: PATHS.mindmap.detail, element: <MindmapDetailPage /> },
+                ],
             },
         ],
     },
