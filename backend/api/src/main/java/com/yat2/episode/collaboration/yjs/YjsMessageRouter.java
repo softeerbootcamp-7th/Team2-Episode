@@ -78,6 +78,7 @@ public class YjsMessageRouter {
                 return;
             }
         }
+        sessionRegistry.unicast(roomId, requester, YjsProtocolUtil.emptySync2Frame());
     }
 
     private void handleSync2(UUID roomId, WebSocketSession provider, byte[] payload) {
