@@ -1,8 +1,8 @@
 package com.yat2.episode.collaboration.redis;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.domain.Range;
+import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -10,7 +10,6 @@ import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 
@@ -61,9 +60,5 @@ public class UpdateStreamStore {
         String key = redisProperties.updateStream().keyPrefix() + roomId;
         Long len = redisBinaryTemplate.opsForStream().size(key);
         return len == null ? 0 : len;
-    }
-
-    private static byte[] raw(String s) {
-        return s.getBytes(StandardCharsets.UTF_8);
     }
 }
