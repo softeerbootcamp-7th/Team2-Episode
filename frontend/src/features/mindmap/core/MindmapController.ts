@@ -623,7 +623,7 @@ export class MindmapController implements IMindmapController {
         wheel: (e: WheelLikeEvent) => {
             this.assertNotDestroyed();
             e.preventDefault?.();
-            this.viewport?.zoomHandler(e.deltaY, { clientX: e.clientX, clientY: e.clientY });
+            this.viewport?.zoomByWheel(e.deltaY, e.clientX, e.clientY);
         },
 
         keyDown: (e: KeyLikeEvent) => {

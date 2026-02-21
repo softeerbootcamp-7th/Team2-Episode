@@ -167,34 +167,6 @@ export class ViewportController {
         this.applyViewBox();
     }
 
-    zoomHandler(delta: number, e: { clientX: number; clientY: number }): void {
-        this.cancelAnimation();
-        const rect = this.canvas.getBoundingClientRect();
-
-        // 1. 줌 전의 마우스 월드 좌표 계산
-        const beforeZoomMouseX = this.panX + (e.clientX - rect.left - rect.width / 2) / this.zoom;
-        const beforeZoomMouseY = this.panY + (e.clientY - rect.top - rect.height / 2) / this.zoom;
-
-        // 2. 줌 배율 변경
-        const zoomSpeed = 0.001;
-        const scaleChange = Math.exp(-delta * zoomSpeed); // 휠 방향 보정
-
-        const rawZoom = this.zoom * scaleChange;
-
-        const nextZoom = Math.min(BASE_MAX_ZOOM, Math.max(rawZoom, this.softMinZoom));
-
-        this.zoom = nextZoom;
-
-        this.panX = beforeZoomMouseX - (e.clientX - rect.left - rect.width / 2) / this.zoom;
-        this.panY = beforeZoomMouseY - (e.clientY - rect.top - rect.height / 2) / this.zoom;
-
-        // BASE_MIN 복구
-        if (this.zoom >= BASE_MIN_ZOOM) {
-            this.softMinZoom = BASE_MIN_ZOOM;
-        }
-        this.applyViewBox();
-    }
-
     fitToWorldRect() {
         const bounds = this.getContentBounds();
         const cw = this.canvas.clientWidth;
