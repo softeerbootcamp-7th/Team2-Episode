@@ -76,8 +76,7 @@ public class SessionRegistry {
 
             try {
                 session.sendMessage(message);
-            } catch (Exception e) {
-                deadSessionIds.add(sessionId);
+            } catch (Exception ignored) {
             }
         }
 
@@ -102,13 +101,33 @@ public class SessionRegistry {
             session.sendMessage(new BinaryMessage(payload));
             return true;
         } catch (Exception e) {
-            removeSession(mindmapId, receiverSessionId);
             return false;
         }
     }
 
-    public boolean unicast(UUID mindmapId, WebSocketSession receiver, byte[] payload) {
-        return unicast(mindmapId, receiver.getId(), payload);
+    public boolean unicastAll(UUID mindmapId, String receiverSessionId, List<byte[]> payloads) {
+        if (payloads == null || payloads.isEmpty()) return true;
+
+        ConcurrentHashMap<String, WebSocketSession> sessions = rooms.get(mindmapId);
+        if (sessions == null || sessions.isEmpty()) return false;
+
+        WebSocketSession session = sessions.get(receiverSessionId);
+        if (session == null) return false;
+
+        if (!session.isOpen()) {
+            removeSession(mindmapId, receiverSessionId);
+            return false;
+        }
+
+        try {
+            for (byte[] payload : payloads) {
+                if (payload == null) continue;
+                session.sendMessage(new BinaryMessage(payload));
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public List<WebSocketSession> findAllAlivePeers(UUID roomId, String excludeId) {

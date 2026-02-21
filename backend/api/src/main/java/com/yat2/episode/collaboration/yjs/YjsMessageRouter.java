@@ -1,7 +1,9 @@
 package com.yat2.episode.collaboration.yjs;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Comparator;
@@ -10,20 +12,23 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.yat2.episode.collaboration.SessionRegistry;
+import com.yat2.episode.collaboration.redis.LastEntryIdStore;
+import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 import com.yat2.episode.collaboration.worker.UpdateAppender;
 
+import static com.yat2.episode.global.constant.AttributeKeys.IS_SYNCED;
+import static com.yat2.episode.global.constant.AttributeKeys.LAST_ENTRY_ID;
+
 @Slf4j
+@RequiredArgsConstructor
 @Component
 public class YjsMessageRouter {
     private final SessionRegistry sessionRegistry;
     private final UpdateAppender updateAppender;
+    private final UpdateStreamStore updateStreamStore;
+    private final LastEntryIdStore lastEntryIdStore;
 
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, String>> pendingSyncs = new ConcurrentHashMap<>();
-
-    public YjsMessageRouter(SessionRegistry sessionRegistry, UpdateAppender updateAppender) {
-        this.sessionRegistry = sessionRegistry;
-        this.updateAppender = updateAppender;
-    }
 
     public void routeIncoming(UUID roomId, WebSocketSession sender, byte[] payload) {
         if (YjsProtocolUtil.isAwarenessFrame(payload)) {
@@ -51,13 +56,7 @@ public class YjsMessageRouter {
     }
 
     private void handleSync1(UUID roomId, WebSocketSession requester, byte[] payload) {
-
         List<WebSocketSession> candidates = sessionRegistry.findAllAlivePeers(roomId, requester.getId());
-
-        if (candidates.isEmpty()) {
-            sessionRegistry.unicast(roomId, requester, YjsProtocolUtil.emptySync2Frame());
-            return;
-        }
 
         candidates.sort(Comparator.comparingLong(sessionRegistry::getConnectedAt));
 
@@ -78,6 +77,55 @@ public class YjsMessageRouter {
                 return;
             }
         }
+        /* Sync1 송신자가 혼자 있을 경우 */
+        boolean isSynced = Boolean.TRUE.equals(requester.getAttributes().get(IS_SYNCED));
+        if (!isSynced) {
+            List<byte[]> updates;
+            try {
+                updates = updateStreamStore.readAllUpdates(roomId);
+            } catch (Exception e) {
+                log.error("Error reading updates for room {}", roomId, e);
+                updates = List.of();
+            }
+
+            if (updates.isEmpty()) {
+                String runnerLastEntry;
+                try {
+                    runnerLastEntry = lastEntryIdStore.get(roomId).orElse("0-0");
+                } catch (Exception e) {
+                    log.error("Error reading lastEntryId for room {}", roomId, e);
+                    closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
+                    return;
+                }
+
+                String clientLastEntry = String.valueOf(requester.getAttributes().getOrDefault(LAST_ENTRY_ID, "0-0"));
+
+
+                if (!clientLastEntry.equals(runnerLastEntry)) {
+                    closeSessionQuietly(requester, new CloseStatus(4000, "LAST_ENTRY_MISMATCH"));
+                    return;
+                }
+            } else {
+                boolean ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
+                if (!ok) {
+                    if (requester.isOpen()) {
+                        ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
+                    }
+                    if (!ok) {
+                        closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
+                        return;
+                    }
+                }
+            }
+
+            requester.getAttributes().put(IS_SYNCED, true);
+            requester.getAttributes().remove(LAST_ENTRY_ID);
+        }
+
+        boolean ok = sessionRegistry.unicast(roomId, requester.getId(), YjsProtocolUtil.emptySync2Frame());
+        if (!ok && requester.isOpen()) {
+            sessionRegistry.unicast(roomId, requester.getId(), YjsProtocolUtil.emptySync2Frame());
+        }
     }
 
     private void handleSync2(UUID roomId, WebSocketSession provider, byte[] payload) {
@@ -94,6 +142,13 @@ public class YjsMessageRouter {
 
         if (roomSyncs.isEmpty()) {
             pendingSyncs.remove(roomId, roomSyncs);
+        }
+    }
+
+    private void closeSessionQuietly(WebSocketSession session, CloseStatus status) {
+        try {
+            session.close(status);
+        } catch (Exception ignored) {
         }
     }
 

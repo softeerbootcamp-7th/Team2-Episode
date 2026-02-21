@@ -34,7 +34,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
         UriComponents uri = UriComponentsBuilder.fromUri(request.getURI()).build();
 
         String token = uri.getQueryParams().getFirst("token");
-        String lastEntryId = uri.getQueryParams().getFirst("last-entry-id");
+        String lastEntryId = uri.getQueryParams().getFirst("lastEntryId");
 
         if (token == null || token.isBlank()) {
             log.warn("WebSocket 토큰 누락");
@@ -61,6 +61,7 @@ public class HandshakeInterceptor implements org.springframework.web.socket.serv
             attributes.put(AttributeKeys.USER_ID, mindmapTicketPayload.userId());
             attributes.put(AttributeKeys.MINDMAP_ID, mindmapTicketPayload.mindmapId());
             attributes.put(AttributeKeys.LAST_ENTRY_ID, lastEntryId);
+            attributes.put(AttributeKeys.IS_SYNCED, false);
             return true;
         } catch (Exception e) {
             log.warn("WebSocket handshake 실패", e);
