@@ -122,7 +122,7 @@ export class TreeModel {
         return (
             existingMoving ??
             this.generateNewNodeElement({
-                contents: "새 노드",
+                contents: "",
                 addNodeDirection:
                     initialBaseNode.type === "root" ? (addNodeDirection ?? "right") : initialBaseNode.addNodeDirection,
             })
