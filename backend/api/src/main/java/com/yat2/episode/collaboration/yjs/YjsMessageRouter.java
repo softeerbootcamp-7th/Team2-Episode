@@ -153,8 +153,10 @@ public class YjsMessageRouter {
             sessionRegistry.unicast(roomId, requesterId, payload);
 
             WebSocketSession session = sessionRegistry.getAliveSession(roomId, requesterId);
-            session.getAttributes().put(IS_SYNCED, true);
-            session.getAttributes().remove(LAST_ENTRY_ID);
+            if (session != null) {
+                session.getAttributes().put(IS_SYNCED, true);
+                session.getAttributes().remove(LAST_ENTRY_ID);
+            }
         }
 
         if (roomSyncs.isEmpty()) {
