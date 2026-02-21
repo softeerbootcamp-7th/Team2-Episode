@@ -3,6 +3,7 @@ import { getRefreshState, refreshToken, setRefreshState } from "@/features/auth/
 import { ApiError } from "@/features/auth/types/api";
 import type { FetchOptions } from "@/shared/api/types";
 import { ERROR_CODES, ErrorCode } from "@/shared/constants/error";
+import { BadRequestError, InternalServerError, NotFoundError, UnauthorizedError } from "@/shared/utils/errors";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -83,7 +84,21 @@ export async function fetchWithAuth<T>(endpoint: string, options: FetchOptions =
                 };
             }
 
-            throw new ApiError(response.status, errorData.code, errorData.message);
+            const status = response.status;
+            const message = errorData.message;
+
+            switch (status) {
+                case 400:
+                    throw new BadRequestError(message);
+                // case 401:
+                //     throw new UnauthorizedError(message);
+                case 404:
+                    throw new NotFoundError(message);
+                case 500:
+                    throw new InternalServerError(message);
+                default:
+                    throw new ApiError(status, errorData.code, message);
+            }
         }
 
         if (response.status === 204) {
