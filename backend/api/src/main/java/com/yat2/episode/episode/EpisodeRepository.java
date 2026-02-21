@@ -19,7 +19,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
 
     @Query(
             """
-                    SELECT new com.yat2.episode.episode.dto.EpisodeSummaryRes(
+                    SELECT new com.yat2.episode.episode.dto.response.EpisodeSummaryRes(
                         e.id,
                         e.mindmapId,
                         e.content,
