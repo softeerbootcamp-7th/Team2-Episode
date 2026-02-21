@@ -56,6 +56,19 @@ public class YjsMessageRouter {
     }
 
     private void handleSync1(UUID roomId, WebSocketSession requester, byte[] payload) {
+
+        if (delegateToProvider(roomId, requester, payload)) {
+            return;
+        }
+
+        if (!handleSoloSync(roomId, requester)) {
+            return;
+        }
+
+        sessionRegistry.unicast(roomId, requester.getId(), YjsProtocolUtil.emptySync2Frame());
+    }
+
+    private boolean delegateToProvider(UUID roomId, WebSocketSession requester, byte[] payload) {
         List<WebSocketSession> candidates = sessionRegistry.findAllAlivePeers(roomId, requester.getId());
 
         candidates.sort(Comparator.comparingLong(sessionRegistry::getConnectedAt));
@@ -74,58 +87,78 @@ public class YjsMessageRouter {
                     roomSyncs.remove(providerId, requesterId);
                     continue;
                 }
-                return;
+                return true;
             }
         }
-        /* Sync1 송신자가 혼자 있을 경우 */
+
+        return false;
+    }
+
+    private boolean handleSoloSync(UUID roomId, WebSocketSession requester) {
         boolean isSynced = Boolean.TRUE.equals(requester.getAttributes().get(IS_SYNCED));
-        if (!isSynced) {
-            List<byte[]> updates;
-            try {
-                updates = updateStreamStore.readAllUpdates(roomId);
-            } catch (Exception e) {
-                log.error("Error reading updates for room {}", roomId, e);
-                updates = List.of();
-            }
 
-            if (updates.isEmpty()) {
-                String runnerLastEntry;
-                try {
-                    runnerLastEntry = lastEntryIdStore.get(roomId).orElse("0-0");
-                } catch (Exception e) {
-                    log.error("Error reading lastEntryId for room {}", roomId, e);
-                    closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
-                    return;
-                }
-
-                String clientLastEntry = String.valueOf(requester.getAttributes().getOrDefault(LAST_ENTRY_ID, "0-0"));
-
-
-                if (!clientLastEntry.equals(runnerLastEntry)) {
-                    closeSessionQuietly(requester, new CloseStatus(4000, "LAST_ENTRY_MISMATCH"));
-                    return;
-                }
-            } else {
-                boolean ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
-                if (!ok) {
-                    if (requester.isOpen()) {
-                        ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
-                    }
-                    if (!ok) {
-                        closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
-                        return;
-                    }
-                }
-            }
-
-            requester.getAttributes().put(IS_SYNCED, true);
-            requester.getAttributes().remove(LAST_ENTRY_ID);
+        if (isSynced) {
+            return true;
         }
 
-        boolean ok = sessionRegistry.unicast(roomId, requester.getId(), YjsProtocolUtil.emptySync2Frame());
+        List<byte[]> updates;
+        try {
+            updates = updateStreamStore.readAllUpdates(roomId);
+        } catch (Exception e) {
+            log.error("Error reading updates for room {}", roomId, e);
+            updates = List.of();
+        }
+
+        if (updates.isEmpty()) {
+            if (!validateLastEntryId(roomId, requester)) {
+                return false;
+            }
+        } else {
+            if (!sendReplay(roomId, requester, updates)) {
+                return false;
+            }
+        }
+
+        requester.getAttributes().put(IS_SYNCED, true);
+        requester.getAttributes().remove(LAST_ENTRY_ID);
+
+        return true;
+    }
+
+    private boolean validateLastEntryId(UUID roomId, WebSocketSession requester) {
+        String runnerLastEntry;
+        try {
+            runnerLastEntry = lastEntryIdStore.get(roomId).orElse("0-0");
+        } catch (Exception e) {
+            log.error("Error reading lastEntryId for room {}", roomId, e);
+            closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
+            return false;
+        }
+        String clientLastEntry = String.valueOf(requester.getAttributes().getOrDefault(LAST_ENTRY_ID, "0-0"));
+
+        if (!clientLastEntry.equals(runnerLastEntry)) {
+            closeSessionQuietly(requester, new CloseStatus(4000, "LAST_ENTRY_MISMATCH"));
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean sendReplay(UUID roomId, WebSocketSession requester, List<byte[]> updates) {
+        String requesterId = requester.getId();
+
+        boolean ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
+
         if (!ok && requester.isOpen()) {
-            sessionRegistry.unicast(roomId, requester.getId(), YjsProtocolUtil.emptySync2Frame());
+            ok = sessionRegistry.unicastAll(roomId, requesterId, updates);
         }
+
+        if (!ok) {
+            closeSessionQuietly(requester, CloseStatus.SERVER_ERROR);
+            return false;
+        }
+
+        return true;
     }
 
     private void handleSync2(UUID roomId, WebSocketSession provider, byte[] payload) {
