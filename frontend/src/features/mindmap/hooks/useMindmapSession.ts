@@ -6,7 +6,6 @@ import { ENV } from "@/constants/env";
 import { User } from "@/features/auth/types/user";
 import useApplyMindmapSnapshot from "@/features/mindmap/hooks/useApplyMindmapSnapshot";
 import { useJoinMindmapSession } from "@/features/mindmap/hooks/useJoinMindmapSession";
-import { BadRequestError } from "@/shared/utils/errors";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected";
 
