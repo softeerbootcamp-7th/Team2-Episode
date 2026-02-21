@@ -4,7 +4,7 @@ import { useRouteError } from "react-router";
 import GlobalErrorFallback from "@/shared/components/RootErrorBoundary/ErrorFallback";
 import { BaseError } from "@/shared/utils/errors";
 
-export default function RootErrorBoundary() {
+export default function ServiceErrorBoundary() {
     const error = useRouteError();
 
     const normalizedError =
