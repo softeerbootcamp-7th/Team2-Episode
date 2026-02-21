@@ -648,6 +648,11 @@ export class MindmapController implements IMindmapController {
                 return;
             }
 
+            // Ctrl, Cmd, Alt 등의 수식 키가 함께 눌린 경우 단축키 처리 무시
+            if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) {
+                return;
+            }
+
             const key = e.key.toLowerCase();
             const code = e.code;
 
