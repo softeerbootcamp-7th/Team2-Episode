@@ -4,18 +4,18 @@ import * as Y from "yjs";
 
 import { ENV } from "@/constants/env";
 import { User } from "@/features/auth/types/user";
+import useApplyMindmapSnapshot from "@/features/mindmap/hooks/useApplyMindmapSnapshot";
 import { useJoinMindmapSession } from "@/features/mindmap/hooks/useJoinMindmapSession";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected";
-type SnapshotStatus = "idle" | "loading" | "success" | "error";
 
 type Props = {
-    mindmapId?: string;
+    mindmapId: string;
     enableAwareness?: boolean;
     userInfo: User | null;
 };
 
-export function useMindmapSession({ mindmapId = "" }: Props) {
+export function useMindmapSession({ mindmapId }: Props) {
     const doc = useMemo(() => new Y.Doc(), [mindmapId]);
     const [provider, setProvider] = useState<WebsocketProvider | undefined>(undefined);
 
@@ -24,17 +24,16 @@ export function useMindmapSession({ mindmapId = "" }: Props) {
     const [token, setToken] = useState<string | null>(null);
     const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
-    const [snapshotStatus, setSnapshotStatus] = useState<SnapshotStatus>("idle");
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
 
+    const { status: snapshotApplyStatus, lastEntryId } = useApplyMindmapSnapshot({ doc, url: snapshotUrl });
     const { mutate: joinSession } = useJoinMindmapSession({ mindmapId });
 
     useEffect(() => {
         if (!mindmapId) return;
         setToken(null);
-        setSnapshotUrl(null);
-        setSnapshotStatus("idle");
         setConnectionStatus("disconnected");
+        setSnapshotUrl(null);
         setIsSynced(false);
 
         joinSession(mindmapId, {
@@ -42,41 +41,18 @@ export function useMindmapSession({ mindmapId = "" }: Props) {
                 setToken(data.token);
                 setSnapshotUrl(data.presignedUrl);
             },
-            onError: () => setSnapshotStatus("error"),
         });
     }, [mindmapId, joinSession]);
 
     useEffect(() => {
-        if (!snapshotUrl) return;
-        let active = true;
-
-        (async () => {
-            try {
-                setSnapshotStatus("loading");
-                const res = await fetch(snapshotUrl);
-                const buffer = await res.arrayBuffer();
-                if (!active) return;
-
-                Y.applyUpdate(doc, new Uint8Array(buffer));
-                setSnapshotStatus("success");
-            } catch (e) {
-                console.error("Snapshot load failed", e);
-                setSnapshotStatus("error");
-            }
-        })();
-
-        return () => {
-            active = false;
-        };
-    }, [doc, snapshotUrl]);
-
-    useEffect(() => {
-        if (!token || !mindmapId || snapshotStatus !== "success") return;
+        if (!token || !mindmapId || snapshotApplyStatus !== "success") {
+            return;
+        }
 
         const wsProvider = new WebsocketProvider(`${ENV.WS_BASE_URL}/mindmap/`, mindmapId, doc, {
             disableBc: true,
             connect: true,
-            params: { token },
+            params: { token, lastEntryId },
             resyncInterval: 20000,
         });
 
@@ -105,13 +81,12 @@ export function useMindmapSession({ mindmapId = "" }: Props) {
             setProvider(undefined);
             setIsSynced(false);
         };
-    }, [doc, mindmapId, token, snapshotStatus]);
+    }, [doc, mindmapId, token, snapshotApplyStatus]);
 
     return {
         doc,
         provider,
         connectionStatus,
-        snapshotStatus,
         isSynced,
     };
 }
