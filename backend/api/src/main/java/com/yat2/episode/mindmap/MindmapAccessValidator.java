@@ -50,12 +50,4 @@ public class MindmapAccessValidator {
 
         return mindmap;
     }
-
-    public Mindmap validateTeamMindmap(UUID mindmapId) {
-        Mindmap mindmap = mindmapRepository.findById(mindmapId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
-        if (!mindmap.isShared()) throw new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
-
-        return mindmap;
-    }
 }
