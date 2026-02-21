@@ -19,7 +19,9 @@ import java.util.UUID;
 import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.episode.dto.EpisodeDetail;
 import com.yat2.episode.episode.dto.request.EpisodeSearchReq;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertItemReq;
 import com.yat2.episode.episode.dto.request.StarUpdateReq;
 import com.yat2.episode.episode.dto.response.MindmapEpisodeRes;
 import com.yat2.episode.global.exception.CustomException;
@@ -106,7 +108,7 @@ class EpisodeServiceTest {
     class UpsertTests {
 
         @Test
-        @DisplayName("신규 생성 성공: 모든 참여자의 별을 일괄 저장하고 에피소드를 생성한다")
+        @DisplayName("신규 생성 성공: 모든 참여자의 STAR을 일괄 저장하고 에피소드를 생성한다")
         void upsertEpisode_Create() {
             EpisodeUpsertContentReq req = new EpisodeUpsertContentReq("제목");
 
@@ -161,7 +163,7 @@ class EpisodeServiceTest {
         }
 
         @Test
-        @DisplayName("STAR 초기화 성공: 별 조회 후 clearAll + save 호출")
+        @DisplayName("STAR 초기화 성공: STAR 조회 후 clearAll + save 호출")
         void clearStar_Success() {
             EpisodeStar star = EpisodeStar.create(nodeId, userId);
             when(episodeStarRepository.findById(any(EpisodeId.class))).thenReturn(Optional.of(star));
@@ -493,5 +495,141 @@ class EpisodeServiceTest {
             verify(mindmapParticipantRepository).findByUserIdAndSharedOrderByLastJoinedDesc(userId, true);
         }
 
+    }
+
+    @Nested
+    @DisplayName("에피소드 bulk 업서트 테스트")
+    class BulkUpsertTests {
+
+        @Test
+        @DisplayName("성공: 모두 기존 에피소드면 participant 검증/STAR 일괄생성 없이 content만 업데이트 후 결과를 반환")
+        void upsertEpisodes_AllExisting() {
+            UUID n1 = UUID.randomUUID();
+            UUID n2 = UUID.randomUUID();
+
+            var items = new EpisodeUpsertBatchReq(
+                    List.of(new EpisodeUpsertItemReq(n1, "c1"), new EpisodeUpsertItemReq(n2, "c2")));
+
+            Episode e1 = Episode.create(n1, mindmapId);
+            Episode e2 = Episode.create(n2, mindmapId);
+
+            when(episodeRepository.findAllById(List.of(n1, n2))).thenReturn(List.of(e1, e2));
+
+            EpisodeStar s1 = EpisodeStar.create(n1, userId);
+            EpisodeStar s2 = EpisodeStar.create(n2, userId);
+            when(episodeStarRepository.findAllById(any())).thenReturn(List.of(s1, s2));
+
+            var result = episodeService.upsertEpisodes(mindmapId, userId, items);
+
+            assertThat(result).hasSize(2);
+
+            verify(mindmapAccessValidator, never()).findParticipantOrThrow(mindmapId, userId);
+            verify(mindmapParticipantRepository, never()).findAllByMindmapIdWithUser(any());
+            verify(episodeRepository, never()).saveAll(anyList());
+            verify(episodeStarRepository, never()).saveAll(anyList());
+
+            verify(episodeStarRepository, times(1)).findAllById(any());
+        }
+
+        @Test
+        @DisplayName("성공: 일부 신규 생성이면 participant 검증 후 (신규 Episode 저장 + 참가자 전체 Star 저장) 하고 결과를 반환")
+        void upsertEpisodes_SomeCreated() {
+            UUID exist = UUID.randomUUID();
+            UUID created = UUID.randomUUID();
+
+            var items = new EpisodeUpsertBatchReq(
+                    List.of(new EpisodeUpsertItemReq(exist, "old"), new EpisodeUpsertItemReq(created, "new")));
+
+            Episode existingEpisode = Episode.create(exist, mindmapId);
+            when(episodeRepository.findAllById(List.of(exist, created))).thenReturn(List.of(existingEpisode));
+
+            User u1 = mock(User.class);
+            when(u1.getKakaoId()).thenReturn(userId);
+            User u2 = mock(User.class);
+            when(u2.getKakaoId()).thenReturn(999L);
+
+            MindmapParticipant p1 = mock(MindmapParticipant.class);
+            when(p1.getUser()).thenReturn(u1);
+            MindmapParticipant p2 = mock(MindmapParticipant.class);
+            when(p2.getUser()).thenReturn(u2);
+
+            when(mindmapParticipantRepository.findAllByMindmapIdWithUser(mindmapId)).thenReturn(List.of(p1, p2));
+
+            when(episodeRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
+
+            EpisodeStar sExist = EpisodeStar.create(exist, userId);
+            EpisodeStar sCreated = EpisodeStar.create(created, userId);
+            when(episodeStarRepository.findAllById(any())).thenReturn(List.of(sExist, sCreated));
+
+            var result = episodeService.upsertEpisodes(mindmapId, userId, items);
+
+            assertThat(result).hasSize(2);
+
+            verify(mindmapAccessValidator, times(1)).findParticipantOrThrow(mindmapId, userId);
+            verify(mindmapParticipantRepository, times(1)).findAllByMindmapIdWithUser(mindmapId);
+
+            ArgumentCaptor<List<Episode>> episodeSaveCaptor = ArgumentCaptor.forClass(List.class);
+            verify(episodeRepository, times(1)).saveAll(episodeSaveCaptor.capture());
+            assertThat(episodeSaveCaptor.getValue()).hasSize(1);
+            assertThat(episodeSaveCaptor.getValue().get(0).getId()).isEqualTo(created);
+            assertThat(episodeSaveCaptor.getValue().get(0).getMindmapId()).isEqualTo(mindmapId);
+
+            ArgumentCaptor<List<EpisodeStar>> starSaveCaptor = ArgumentCaptor.forClass(List.class);
+            verify(episodeStarRepository, times(1)).saveAll(starSaveCaptor.capture());
+            assertThat(starSaveCaptor.getValue()).hasSize(2);
+            assertThat(starSaveCaptor.getValue()).allMatch(star -> star.getId().getNodeId().equals(created));
+
+            verify(episodeStarRepository, times(1)).findAllById(any());
+        }
+
+        @Test
+        @DisplayName("실패: 기존 에피소드의 mindmapId가 요청 mindmapId와 다르면 EPISODE_NOT_FOUND")
+        void upsertEpisodes_MindmapMismatch_Throws() {
+            UUID n1 = UUID.randomUUID();
+
+            var items = new EpisodeUpsertBatchReq(List.of(new EpisodeUpsertItemReq(n1, "c1")));
+
+            Episode wrong = Episode.create(n1, UUID.randomUUID());
+            when(episodeRepository.findAllById(List.of(n1))).thenReturn(List.of(wrong));
+
+            assertThatThrownBy(() -> episodeService.upsertEpisodes(mindmapId, userId, items)).isInstanceOf(
+                    CustomException.class).hasFieldOrPropertyWithValue("errorCode", ErrorCode.EPISODE_NOT_FOUND);
+
+            verify(mindmapAccessValidator, never()).findParticipantOrThrow(any(), any(Long.class));
+            verify(episodeRepository, never()).saveAll(anyList());
+            verify(episodeStarRepository, never()).saveAll(anyList());
+        }
+
+        @Test
+        @DisplayName("성공: 동일 nodeId가 중복으로 오면 마지막 content가 반영된다(Last wins)")
+        void upsertEpisodes_DuplicateNodeId_LastWins() {
+            UUID n1 = UUID.randomUUID();
+
+            var items = new EpisodeUpsertBatchReq(
+                    List.of(new EpisodeUpsertItemReq(n1, "first"), new EpisodeUpsertItemReq(n1, "last")));
+
+            Episode e1 = Episode.create(n1, mindmapId);
+            when(episodeRepository.findAllById(List.of(n1))).thenReturn(List.of(e1));
+
+            EpisodeStar s1 = EpisodeStar.create(n1, userId);
+            when(episodeStarRepository.findAllById(any())).thenReturn(List.of(s1));
+
+            var result = episodeService.upsertEpisodes(mindmapId, userId, items);
+
+            assertThat(result).hasSize(1);
+
+            assertThat(e1.getContent()).isEqualTo("last");
+        }
+
+        @Test
+        @DisplayName("성공: 빈 리스트면 빈 결과를 반환")
+        void upsertEpisodes_Empty() {
+            var result = episodeService.upsertEpisodes(mindmapId, userId, new EpisodeUpsertBatchReq(List.of()));
+            assertThat(result).isEmpty();
+
+            verify(mindmapAccessValidator, times(1)).findMindmapOrThrow(mindmapId);
+            verify(episodeRepository, never()).findAllById(anyList());
+            verify(episodeStarRepository, never()).findAllById(any());
+        }
     }
 }
