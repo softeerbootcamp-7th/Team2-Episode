@@ -232,8 +232,7 @@ public class MindmapService {
 
     @Transactional
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
-        mindmapAccessValidator.validateTeamMindmap(mindmapId);
-        MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
+        MindmapParticipant participant = mindmapAccessValidator.validateJoin(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
 
         String presignedUrl =
