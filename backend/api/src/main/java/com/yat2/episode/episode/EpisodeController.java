@@ -99,7 +99,7 @@ public class EpisodeController {
             @RequestBody
             EpisodeDeleteBatchReq req
     ) {
-        //episodeService.deleteEpisode(nodeId, userId);
+        episodeService.deleteEpisodes(req, userId);
     }
 
     @Operation(summary = "에피소드 STAR 비우기", description = "에피소드 내의 STAR/태그 등의 내용을 비웁니다.")

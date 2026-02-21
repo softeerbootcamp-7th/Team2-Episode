@@ -8,4 +8,8 @@ import java.util.UUID;
 
 public record EpisodeDeleteBatchReq(
         @NotEmpty List<@NotNull UUID> nodeIds
-) {}
+) {
+    public boolean isEmpty() {
+        return nodeIds.isEmpty();
+    }
+}

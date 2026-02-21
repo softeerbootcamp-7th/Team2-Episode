@@ -82,6 +82,16 @@ public interface EpisodeStarRepository extends JpaRepository<EpisodeStar, Episod
             @Param("userId") long userId
     );
 
-
-    List<EpisodeStar> findAllByIdIn(Iterable<EpisodeId> ids);
+    @Query(
+            """
+                        SELECT s.id.nodeId
+                        FROM EpisodeStar s
+                        WHERE s.id.userId = :userId
+                          AND s.id.nodeId IN :nodeIds
+                    """
+    )
+    List<UUID> findNodeIdsByUserIdAndNodeIdIn(
+            @Param("userId") long userId,
+            @Param("nodeIds") List<UUID> nodeIds
+    );
 }

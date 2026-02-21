@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.competency.dto.CompetencyTypeRes;
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.request.EpisodeDeleteBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeSearchReq;
 import com.yat2.episode.episode.dto.request.EpisodeUpsertBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
@@ -262,6 +263,22 @@ public class EpisodeService {
     public void deleteEpisode(UUID nodeId, long userId) {
         EpisodeDetail episodeDetail = getEpisodeAndStarOrThrow(nodeId, userId);
         episodeRepository.deleteById(episodeDetail.nodeId());
+    }
+
+    @Transactional
+    public void deleteEpisodes(EpisodeDeleteBatchReq req, long userId) {
+        if (req == null || req.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+        List<UUID> dedup = req.nodeIds().stream().distinct().toList();
+
+        List<UUID> allowed = episodeStarRepository.findNodeIdsByUserIdAndNodeIdIn(userId, dedup);
+
+        if (allowed.size() != dedup.size()) {
+            throw new CustomException(ErrorCode.EPISODE_NOT_FOUND);
+        }
+
+        episodeRepository.deleteAllByIdInBatch(dedup);
     }
 
     @Transactional
