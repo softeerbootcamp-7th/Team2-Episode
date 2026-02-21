@@ -104,7 +104,7 @@ export class TreeModel {
         this.adapter.update(nodeId, patch);
     }
 
-    /** 이동 작업에 사용할 노드를 확보 */
+    /** 이동 작업에 사용할 노드를 확보*/
     private ensureMovingNode(
         movingNodeId: NodeId,
         initialBaseNode: NodeElement,

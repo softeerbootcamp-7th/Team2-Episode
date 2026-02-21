@@ -5,7 +5,7 @@ import { User } from "@/features/auth/types/user";
 import { queryClient } from "@/shared/api/query_client";
 import { linkTo } from "@/shared/utils/route";
 
-export function authProtectedRouteMiddleware() {
+export function authMiddleWare() {
     const user = queryClient.getQueryData<User>(AUTH_QUERY_KEYS.user);
 
     if (!user) {

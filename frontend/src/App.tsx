@@ -1,6 +1,6 @@
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router";
 
-import { authProtectedRouteMiddleware } from "@/features/auth/middleware/authProtectedRoutedMiddleware";
+import { authMiddleWare } from "@/features/auth/middleware/authMiddleware";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import EpisodeArchivePage from "@/features/episode_archive/pages/EpisodeArchivePage";
 import HomePage from "@/features/home/pages/HomePage";
@@ -46,7 +46,7 @@ const router = createBrowserRouter([
             },
             {
                 // 로그인 필수 경로 그룹
-                middleware: [authProtectedRouteMiddleware],
+                middleware: [authMiddleWare],
                 children: [
                     { path: PATHS.mindmap.list, element: <MindmapListPage /> },
                     { path: PATHS.episode_archive, element: <EpisodeArchivePage /> },
