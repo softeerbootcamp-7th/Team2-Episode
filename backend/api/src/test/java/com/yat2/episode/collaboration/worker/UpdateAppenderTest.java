@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import com.yat2.episode.collaboration.config.CollaborationAsyncProperties;
+import com.yat2.episode.collaboration.config.CollaborationWorkerProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -40,6 +41,9 @@ class UpdateAppenderTest {
     @Mock
     CollaborationAsyncProperties asyncProperties;
 
+    @Mock
+    CollaborationWorkerProperties workerProperties;
+
     private static byte[] updatePayload() {
         return new byte[]{ 0, 2, 1, 2, 3, 4 };
     }
@@ -47,7 +51,11 @@ class UpdateAppenderTest {
     @BeforeEach
     void setUp() {
         when(asyncProperties.updateAppendMaxRetries()).thenReturn(5);
-        updateAppender = new UpdateAppender(updateStreamStore, jobPublisher, updateExecutor, asyncProperties);
+        CollaborationWorkerProperties.SnapshotTrigger trigger =
+                new CollaborationWorkerProperties.SnapshotTrigger(50, 1000L);
+        when(workerProperties.snapshotTrigger()).thenReturn(trigger);
+        updateAppender =
+                new UpdateAppender(updateStreamStore, jobPublisher, updateExecutor, asyncProperties, workerProperties);
     }
 
     @Test

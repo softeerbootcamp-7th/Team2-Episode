@@ -11,6 +11,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.yat2.episode.collaboration.config.CollaborationAsyncProperties;
+import com.yat2.episode.collaboration.config.CollaborationWorkerProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 @Slf4j
@@ -20,20 +21,22 @@ public class UpdateAppender {
     private final JobPublisher jobPublisher;
     private final Executor updateExecutor;
     private final int maxRetries;
-
-    private static final int SAMPLE_EVERY = 50;
-    private static final long TRIGGER_THRESHOLD = 1000L;
+    private final int sampleEvery;
+    private final long threshold;
 
     private final ConcurrentHashMap<UUID, AtomicInteger> counters = new ConcurrentHashMap<>();
 
     public UpdateAppender(
             UpdateStreamStore updateStreamStore, JobPublisher jobPublisher,
-            @Qualifier("updateExecutor") Executor updateExecutor, CollaborationAsyncProperties asyncProperties
+            @Qualifier("updateExecutor") Executor updateExecutor, CollaborationAsyncProperties asyncProperties,
+            CollaborationWorkerProperties workerProperties
     ) {
         this.updateExecutor = updateExecutor;
         this.updateStreamStore = updateStreamStore;
         this.jobPublisher = jobPublisher;
         this.maxRetries = Math.max(1, asyncProperties.updateAppendMaxRetries());
+        this.sampleEvery = workerProperties.snapshotTrigger().sampleEvery();
+        this.threshold = workerProperties.snapshotTrigger().triggerThreshold();
     }
 
     public void appendUpdateAsync(UUID roomId, byte[] payload) {
@@ -81,7 +84,7 @@ public class UpdateAppender {
 
     private void maybeTriggerSnapshot(UUID roomId) {
         int c = counters.computeIfAbsent(roomId, k -> new AtomicInteger()).incrementAndGet();
-        if (c % SAMPLE_EVERY != 0) {
+        if (c % this.sampleEvery != 0) {
             return;
         }
 
@@ -93,7 +96,7 @@ public class UpdateAppender {
             return;
         }
 
-        if (len >= TRIGGER_THRESHOLD) {
+        if (len >= this.threshold) {
             jobPublisher.publishSnapshotTriggerAsync(roomId);
         }
     }
