@@ -112,7 +112,7 @@ public class SessionRegistry {
     }
 
     public List<WebSocketSession> findAllAlivePeers(UUID roomId, String excludeId) {
-        var sessions = rooms.get(roomId);
+        ConcurrentHashMap<String, WebSocketSession> sessions = rooms.get(roomId);
         if (sessions == null) return List.of();
 
         return sessions.values().stream().filter(WebSocketSession::isOpen).filter(s -> !s.getId().equals(excludeId))
