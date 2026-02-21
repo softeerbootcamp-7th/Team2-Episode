@@ -34,7 +34,7 @@ public class JobPublisher {
     }
 
     public void publishSnapshotTriggerAsync(UUID roomId) {
-        executeSafely(() -> jobStreamStore.publishSnapshotTrigger(roomId), "SNAPSHOT_TRIGGER", roomId);
+        executeSafely(() -> jobStreamStore.publishSnapshotTrigger(roomId), JobType.SNAPSHOT.name(), roomId);
     }
 
     private void executeSafely(Runnable task, String type, UUID roomId) {

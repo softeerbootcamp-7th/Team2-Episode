@@ -34,4 +34,10 @@ public class UpdateStreamStore {
 
         return id;
     }
+
+    public long length(UUID roomId) {
+        String key = redisProperties.updateStream().keyPrefix() + roomId;
+        Long len = redisBinaryTemplate.opsForStream().size(key);
+        return len == null ? 0 : len;
+    }
 }
