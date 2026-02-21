@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.request.EpisodeDeleteBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeSearchReq;
 import com.yat2.episode.episode.dto.request.StarUpdateReq;
 import com.yat2.episode.episode.dto.response.MindmapEpisodeRes;
@@ -82,6 +83,23 @@ public class EpisodeController {
             @RequestAttribute(USER_ID) long userId
     ) {
         episodeService.deleteEpisode(nodeId, userId);
+    }
+
+
+    @Operation(summary = "에피소드 삭제 bulk 처리", description = "에피소드 목록을 삭제합니다.")
+    @ApiErrorCodes(
+            { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
+              ErrorCode.MINDMAP_NOT_FOUND }
+    )
+    @DeleteMapping("/batch")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEpisodeList(
+            @RequestAttribute(USER_ID) long userId,
+            @Valid
+            @RequestBody
+            EpisodeDeleteBatchReq req
+    ) {
+        //episodeService.deleteEpisode(nodeId, userId);
     }
 
     @Operation(summary = "에피소드 STAR 비우기", description = "에피소드 내의 STAR/태그 등의 내용을 비웁니다.")

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetail;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertBatchReq;
 import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
 import com.yat2.episode.episode.dto.response.EpisodeSummaryRes;
 import com.yat2.episode.global.exception.ErrorCode;
@@ -83,7 +84,7 @@ public class MindmapEpisodeController {
             @RequestAttribute(USER_ID) long userId,
             @Valid
             @RequestBody
-            EpisodeUpsertContentReq episodeUpsertReq
+            EpisodeUpsertBatchReq episodeUpsertReq
     ) {
         return List.of();//episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
     }
