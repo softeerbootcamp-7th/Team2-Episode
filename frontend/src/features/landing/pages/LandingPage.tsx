@@ -34,7 +34,7 @@ const LandingPage = () => {
 
             switch (from) {
                 case "start":
-                    return linkTo.home();
+                    return linkTo.mindmap.list();
                 case "mindmap":
                     return linkTo.mindmap.list();
                 case "episode_archive":
