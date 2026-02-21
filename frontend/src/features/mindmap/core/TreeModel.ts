@@ -104,6 +104,31 @@ export class TreeModel {
         this.adapter.update(nodeId, patch);
     }
 
+    /** 이동 작업에 사용할 노드를 확보 */
+    private ensureMovingNode(
+        movingNodeId: NodeId,
+        initialBaseNode: NodeElement,
+        addNodeDirection?: AddNodeDirection,
+    ): NodeElement {
+        const isTempNew = movingNodeId === TEMP_NEW_NODE_ID;
+        const existingMoving = this.safeGetNode(movingNodeId);
+
+        // 1. 유효성 검사: 존재하지도 않고 임시 노드도 아닌 경우 에러 발생
+        if (!existingMoving && !isTempNew) {
+            throw new Error(`[TreeModel.moveTo] Critical error: moving node not found. ID: ${movingNodeId}`);
+        }
+
+        // 2. 이동 대상 확보
+        return (
+            existingMoving ??
+            this.generateNewNodeElement({
+                contents: "새 노드",
+                addNodeDirection:
+                    initialBaseNode.type === "root" ? (addNodeDirection ?? "right") : initialBaseNode.addNodeDirection,
+            })
+        );
+    }
+
     update(nodeId: NodeId, newNodeData: Partial<Omit<NodeElement, "id">>) {
         this.patchNode(nodeId, newNodeData);
     }
@@ -306,42 +331,30 @@ export class TreeModel {
         const { baseNodeId, movingNodeId, direction, addNodeDirection } = args;
 
         if (baseNodeId === movingNodeId) return;
-        if (direction === "child" && baseNodeId === movingNodeId) return;
 
+        // 1. 이동할 노드 확보
         const initialBaseNode = this.getNode(baseNodeId);
+        const movingNode = this.ensureMovingNode(movingNodeId, initialBaseNode, addNodeDirection);
 
-        const isTempNew = movingNodeId === TEMP_NEW_NODE_ID;
-        const existingMoving = this.safeGetNode(movingNodeId);
-
-        if (!existingMoving && !isTempNew) {
-            console.warn(`[TreeModel.moveTo] moving node not found: ${movingNodeId}`);
-            return;
-        }
-
-        // TEMP_NEW_NODE_ID이면 여기서 "실제 노드"를 생성
-        const ensuredMovingNode: NodeElement =
-            existingMoving ??
-            this.generateNewNodeElement({
-                contents: "새 노드",
-                addNodeDirection:
-                    initialBaseNode.type === "root" ? (addNodeDirection ?? "right") : initialBaseNode.addNodeDirection,
-            });
-
-        // 기존 노드 이동
-        if (existingMoving) {
+        // 2. 기존 노드인 경우 순환 참조 방지 및 분리
+        const isExistingNode = this.nodes.has(movingNodeId);
+        if (isExistingNode) {
             const checkNodeId = direction === "child" ? initialBaseNode.id : initialBaseNode.parentId;
-            let temp = this.safeGetNode(checkNodeId);
+            let temp: NodeElement | undefined = this.safeGetNode(checkNodeId);
+
             while (temp) {
-                if (temp.id === ensuredMovingNode.id) throw new Error("Cannot move under descendant");
+                if (temp.id === movingNode.id) {
+                    throw new Error("Cannot move a node into its own descendant subtree.");
+                }
                 if (temp.type === "root") break;
                 temp = this.safeGetNode(temp.parentId);
             }
 
-            this.detach(ensuredMovingNode);
+            this.detach(movingNode);
         }
 
         const freshBaseNode = this.getNode(baseNodeId);
-        const freshMovingNode = this.getNode(ensuredMovingNode.id);
+        const freshMovingNode = this.getNode(movingNode.id);
 
         switch (direction) {
             case "next":
