@@ -546,7 +546,6 @@ export class MindmapController implements IMindmapController {
         },
 
         fitToContent: () => {
-            console.log("zzz");
             this.viewport?.fitToWorldRect();
         },
 
@@ -555,6 +554,11 @@ export class MindmapController implements IMindmapController {
         },
 
         cancelInteraction: () => {
+            if (this.interaction) {
+                this.interaction.cancel(); // 🟢
+                return; // 🟢
+            }
+
             this.store.setState(
                 (prev) => ({
                     ...prev,
@@ -568,6 +572,9 @@ export class MindmapController implements IMindmapController {
 
     input = {
         pointerDown: (e: PointerLikeEvent) => {
+            // 🟢 pending_creation 중 클릭은 pointerUp에서만 처리 (panning/selection 방지)
+            if (this.interaction?.getInteractionMode() === "pending_creation") return; // 🟢
+
             this.assertNotDestroyed();
             if (!this.interaction) return;
 
@@ -630,6 +637,14 @@ export class MindmapController implements IMindmapController {
             if (e.key === "Delete" || e.key === "Backspace") {
                 const selected = this.store.getState().selection.selectedNodeId;
                 if (selected) this.actions.deleteNode(selected);
+            }
+
+            if (e.key === "Escape") {
+                // 🟢 pending_creation 취소
+                if (this.interaction?.getInteractionMode() === "pending_creation") {
+                    this.actions.cancelInteraction(); // 🟢
+                }
+                return;
             }
         },
 

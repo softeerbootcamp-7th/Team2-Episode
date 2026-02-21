@@ -20,12 +20,14 @@ export default function InteractionLayer({
     useEffect(() => {
         const root = rootRef.current;
         if (!root) return;
-        root.setAttribute("data-dragging", ["dragging", "pending_creation"].includes(status.mode) ? "true" : "false"); // 🟢
+
+        const isInteracting = ["dragging", "pending_creation"].includes(status.mode); // 🟢
+        root.setAttribute("data-dragging", isInteracting ? "true" : "false");
     }, [status.mode, rootRef]);
 
     const { mode, draggingNodeId, dragDelta, dragSubtreeIds, baseNode, mousePos } = status;
 
-    if (mode === "idle") return null;
+    if (mode !== "dragging" && mode !== "pending_creation") return null;
 
     return (
         <g className="interaction-layer">

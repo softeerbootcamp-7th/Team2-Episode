@@ -1,3 +1,4 @@
+import { TEMP_NEW_NODE_ID } from "@/features/mindmap/constants/node";
 import type {
     BaseNodeInfo,
     DragSessionSnapshot,
@@ -57,6 +58,9 @@ export class InteractionMachine {
     }
 
     pointerDown(hit: HitResult, e: { clientX: number; clientY: number; button?: number; buttons?: number }) {
+        // 🟢 pending_creation 중에는 클릭으로 panning/drag 시작하지 않음 (확정은 pointerUp에서 처리)
+        if (this.mode === "pending_creation") return;
+
         if (hit.kind === "node") {
             this.selectedNodeId = hit.nodeId;
             this.deps.onSelectNode(hit.nodeId);
@@ -143,26 +147,31 @@ export class InteractionMachine {
     }
 
     pointerUp() {
-        if (this.mode === "dragging" && this.draggingNodeId && this.baseNode.targetId) {
+        const isDragging = this.mode === "dragging";
+        const isCreating = this.mode === "pending_creation";
+
+        if ((isCreating || isDragging) && this.baseNode.targetId && this.baseNode.direction) {
             const targetId = this.baseNode.targetId;
-            const movingId = this.draggingNodeId;
             const direction = this.baseNode.direction;
 
-            const droppingOnDescendant = this.dragSubtreeIds?.has(targetId);
-            if (!droppingOnDescendant && direction) {
-                const targetNode = this.deps.safeGetNode(targetId);
-                if (targetNode) {
-                    const side =
-                        direction === "child" && targetNode.type === "root"
-                            ? (this.baseNode.side ?? "right")
-                            : undefined;
+            const movingId: NodeId | null = isDragging ? this.draggingNodeId : TEMP_NEW_NODE_ID; // 🟢
+            if (movingId) {
+                const droppingOnDescendant = isDragging ? !!this.dragSubtreeIds?.has(targetId) : false; // 🟢
+                if (!droppingOnDescendant) {
+                    const targetNode = this.deps.safeGetNode(targetId);
+                    if (targetNode) {
+                        const side =
+                            direction === "child" && targetNode.type === "root"
+                                ? (this.baseNode.side ?? "right")
+                                : undefined;
 
-                    this.deps.onMoveNode(targetId, movingId, direction, side);
+                        this.deps.onMoveNode(targetId, movingId, direction, side);
+                    }
                 }
             }
         }
 
-        const shouldUpdate = this.mode === "dragging";
+        const shouldUpdate = isDragging || isCreating;
         this.clearStatus();
 
         if (shouldUpdate) {
@@ -330,7 +339,22 @@ export class InteractionMachine {
     }
 
     startCreating() {
-        this.mode = "pending_creation";
+        this.mode = "pending_creation"; // 🟢
+        this.draggingNodeId = null; // 🟢
+        this.dragDelta = { x: 0, y: 0 }; // 🟢
+        this.dragSubtreeIds = null; // 🟢
+        this.baseNode = { targetId: null, direction: null, side: null }; // 🟢
+
+        // 버튼 클릭만으로도 UI가 즉시 반응하도록 스냅샷 emit // 🟢
+        this.emitDragSession(); // 🟢
+        this.emitInteractionFrame(); // 🟢
+    }
+
+    cancel() {
+        if (this.mode === "idle") return; // 🟢
+        this.clearStatus(); // 🟢
+        this.emitDragSession(); // 🟢
+        this.emitInteractionFrame(); // 🟢
     }
 
     getInteractionMode() {
