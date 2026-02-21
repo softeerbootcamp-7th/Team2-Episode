@@ -649,11 +649,18 @@ export class MindmapController implements IMindmapController {
             }
 
             const key = e.key.toLowerCase();
-            if (key === "n") {
+            const code = e.code;
+
+            // N 키 (한글 'ㅜ')
+            if (code === "KeyN" || key === "n" || key === "ㅜ") {
                 this.actions.startCreating();
-            } else if (key === "f") {
+            }
+            // F 키 (한글 'ㄹ')
+            else if (code === "KeyF" || key === "f" || key === "ㄹ") {
                 this.actions.fitToContent();
-            } else if (key === "c") {
+            }
+            // C 키 (한글 'ㅊ')
+            else if (code === "KeyC" || key === "c" || key === "ㅊ") {
                 this.actions.resetViewport();
             }
         },
