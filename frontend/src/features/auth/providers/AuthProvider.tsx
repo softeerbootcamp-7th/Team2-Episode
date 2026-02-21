@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
 import { logout as logoutApi } from "@/features/auth/api/auth";
@@ -17,13 +18,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
-    const { data: user, isLoading } = useQuery({
+    const { data: user } = useSuspenseQuery<User | null>({
         queryKey: AUTH_QUERY_KEYS.user,
-        queryFn: async () =>
-            get<User>({
-                endpoint: USER_ME_ENDPOINT,
-                options: { skipRefresh: false },
-            }),
+        queryFn: async () => {
+            try {
+                return await get<User>({
+                    endpoint: USER_ME_ENDPOINT,
+                    options: { skipRefresh: false },
+                });
+            } catch {
+                // 401 에러 등 비로그인 상태일 때는 null을 반환하여 정상 흐름으로 유도
+                return null;
+            }
+        },
         staleTime: 1000 * 60 * 4,
         retry: false,
     });
@@ -47,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             value={{
                 isAuthenticated,
                 user: user || null,
-                isLoading,
+                isLoading: false,
                 login,
                 logout: logoutMutation.mutateAsync,
                 checkAuth: () => queryClient.refetchQueries({ queryKey: AUTH_QUERY_KEYS.user }),

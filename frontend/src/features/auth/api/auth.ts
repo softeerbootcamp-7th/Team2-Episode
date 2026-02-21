@@ -4,7 +4,7 @@ import { AUTH_ENDPOINT } from "@/features/auth/api/api";
 import { toSafeApiError } from "@/features/auth/api/error";
 import { AUTH_QUERY_KEYS } from "@/features/auth/constants/query_key";
 import { type ApiError } from "@/features/auth/types/api";
-import type { User } from "@/features/auth/types/user";
+import { AuthUser } from "@/features/auth/types/auth";
 import { fetchMeOrNull } from "@/features/auth/utils/fetchMeOrNull";
 import { post } from "@/shared/api/method";
 import { queryClient } from "@/shared/api/query_client";
@@ -20,21 +20,15 @@ export const logout = async (): Promise<void | ApiError> => {
     }
 };
 
-type AuthUser = User | null;
-
 queryClient.setQueryDefaults(AUTH_QUERY_KEYS.user, {
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
 });
 
-const userQueryOptions = queryOptions<AuthUser>({
+export const userQueryOptions = queryOptions<AuthUser>({
     queryKey: AUTH_QUERY_KEYS.user,
-    queryFn: fetchMeOrNull,
+    queryFn: fetchMeOrNull, // 401이면 null, 500이면 throw하는 그 함수
+    staleTime: 1000 * 60 * 4,
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: "always",
 });
-
-export const getUserQueryOptions = () => userQueryOptions;

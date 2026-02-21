@@ -19,7 +19,7 @@ export default class QuadTree {
         SE: QuadTree;
     } | null = null;
 
-    constructor(bounds: Rect, limit: number = 10) {
+    constructor(bounds: Rect, limit: number = 3) {
         this.bounds = bounds;
         this.limit = limit;
     }

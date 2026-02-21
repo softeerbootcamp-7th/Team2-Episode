@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router";
 
 import { authMiddleWare } from "@/features/auth/middleware/authMiddleware";
@@ -10,6 +11,7 @@ import MindmapListPage from "@/features/mindmap/pages/MindmapListPage";
 import LoginPage from "@/features/user/login/pages/LoginPage";
 import GlobalNavigationBar from "@/shared/components/global_navigation_bar/GlobalNavigationBar";
 import ServiceErrorBoundary from "@/shared/components/ServiceErrorBoundary/ServiceErrorBoundary";
+import Spinner from "@/shared/components/spinner/Spinner";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { PATHS } from "@/shared/utils/route";
 import { cn } from "@/utils/cn";
@@ -34,9 +36,13 @@ function RootLayout() {
 const router = createBrowserRouter([
     {
         element: (
-            <AuthProvider>
-                <RootLayout />
-            </AuthProvider>
+            <ServiceErrorBoundary>
+                <Suspense fallback={<Spinner />}>
+                    <AuthProvider>
+                        <RootLayout />
+                    </AuthProvider>
+                </Suspense>
+            </ServiceErrorBoundary>
         ),
         errorElement: <ServiceErrorBoundary />,
         children: [

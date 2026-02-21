@@ -1,6 +1,8 @@
 import { ApiError } from "@/features/auth/types/api";
 import { User } from "@/features/auth/types/user";
 
+export type AuthUser = User | null;
+
 /**
  *  인증 상태 인터페이스
  *  AuthProvider에서 관리하는 전역 상태
