@@ -2,9 +2,9 @@ package com.yat2.episode.collaboration.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Range;
+import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.RecordId;
-import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Service;
@@ -25,12 +25,15 @@ public class UpdateStreamStore {
     public RecordId appendUpdate(UUID roomId, byte[] update) {
         String key = redisProperties.updateStream().keyPrefix() + roomId;
 
+        var maxLen = redisProperties.updateStream().maxLen();
+        String field = redisProperties.updateStream().fieldUpdate();
+
         StreamOperations<String, String, byte[]> ops = redisBinaryTemplate.opsForStream();
 
-        MapRecord<String, String, byte[]> record =
-                StreamRecords.newRecord().in(key).ofMap(Map.of(redisProperties.updateStream().fieldUpdate(), update));
+        RedisStreamCommands.XAddOptions options =
+                RedisStreamCommands.XAddOptions.maxlen(maxLen.count()).approximateTrimming(maxLen.approximate());
 
-        RecordId id = ops.add(record);
+        RecordId id = ops.add(key, Map.of(field, update), options);
 
         redisBinaryTemplate.expire(key, redisProperties.updateStream().ttl());
 
@@ -51,5 +54,11 @@ public class UpdateStreamStore {
 
         return records.stream().map(r -> r.getValue().get(field)).filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public long length(UUID roomId) {
+        String key = redisProperties.updateStream().keyPrefix() + roomId;
+        Long len = redisBinaryTemplate.opsForStream().size(key);
+        return len == null ? 0 : len;
     }
 }

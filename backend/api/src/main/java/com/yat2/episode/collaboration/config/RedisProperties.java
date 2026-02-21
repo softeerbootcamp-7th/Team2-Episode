@@ -10,17 +10,24 @@ public record RedisProperties(
         JobStream jobStream,
         LastEntryIdStore lastEntryIdStore
 ) {
+    public record MaxLen(
+            long count,
+            boolean approximate
+    ) {}
+
     public record UpdateStream(
             String keyPrefix,
             Duration ttl,
-            String fieldUpdate
+            String fieldUpdate,
+            MaxLen maxLen
     ) {}
 
     public record JobStream(
             String key,
             String dedupeKeyPrefix,
             Fields fields,
-            DedupeTtl dedupeTtl
+            DedupeTtl dedupeTtl,
+            MaxLen maxLen
     ) {
         public record Fields(
                 String type,

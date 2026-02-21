@@ -5,10 +5,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.yat2.episode.collaboration.config.AsyncExecutorProperties;
+import com.yat2.episode.collaboration.config.CollaborationWorkerProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 @Slf4j
@@ -18,14 +21,21 @@ public class UpdateAppender {
     private final JobPublisher jobPublisher;
     private final Executor updateExecutor;
     private final int maxRetries;
+    private final int sampleEvery;
+    private final long threshold;
+
+    private final ConcurrentHashMap<UUID, AtomicInteger> counters = new ConcurrentHashMap<>();
 
     public UpdateAppender(
             UpdateStreamStore updateStreamStore, JobPublisher jobPublisher,
+            CollaborationWorkerProperties workerProperties,
             @Qualifier("updateExecutor") Executor updateExecutor, AsyncExecutorProperties asyncExecutorProperties
     ) {
         this.updateExecutor = updateExecutor;
         this.updateStreamStore = updateStreamStore;
         this.jobPublisher = jobPublisher;
+        this.sampleEvery = Math.max(1, workerProperties.snapshotTrigger().sampleEvery());
+        this.threshold = workerProperties.snapshotTrigger().triggerThreshold();
         this.maxRetries = Math.max(1, asyncExecutorProperties.updateAppendMaxRetries());
     }
 
@@ -44,6 +54,7 @@ public class UpdateAppender {
         for (int i = 0; i < maxRetries; i++) {
             try {
                 updateStreamStore.appendUpdate(roomId, payload);
+                maybeTriggerSnapshot(roomId);
                 return;
             } catch (Exception e) {
                 if (isFatalRedisWrite(e)) {
@@ -68,5 +79,25 @@ public class UpdateAppender {
         Throwable t = e;
         while (t.getCause() != null) t = t.getCause();
         return t.getMessage() == null ? "" : t.getMessage();
+    }
+
+
+    private void maybeTriggerSnapshot(UUID roomId) {
+        int c = counters.computeIfAbsent(roomId, k -> new AtomicInteger()).incrementAndGet();
+        if (c % this.sampleEvery != 0) {
+            return;
+        }
+
+        long len;
+        try {
+            len = updateStreamStore.length(roomId);
+        } catch (Exception e) {
+            log.debug("XLEN failed. roomId={}", roomId, e);
+            return;
+        }
+
+        if (len >= this.threshold) {
+            jobPublisher.publishSnapshotTriggerAsync(roomId);
+        }
     }
 }

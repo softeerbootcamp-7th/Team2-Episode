@@ -144,9 +144,15 @@ collaboration:
       key-prefix: "collab:room:"
       ttl: "P2D"
       field-update: "u"
+      max-len:
+        count: 2000
+        approximate: true
     job-stream:
       key: "collab:jobs"
       dedupe-key-prefix: "collab:jobs:dedupe:"
+      max-len:
+        count: 172800
+        approximate: true
       fields:
         type: "t"
         room-id: "rid"
@@ -156,6 +162,10 @@ collaboration:
     last-entry-id-store:
       key-suffix: ":last-entry-id"
 
+  worker:
+    snapshot-trigger:
+      sample-every: 50
+      trigger-threshold: 1000
   async:
     executor:
       core-pool-size: 1

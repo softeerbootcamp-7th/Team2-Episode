@@ -8,10 +8,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import com.yat2.episode.collaboration.config.AsyncExecutorProperties;
+import com.yat2.episode.collaboration.config.CollaborationWorkerProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -40,14 +42,38 @@ class UpdateAppenderTest {
     @Mock
     AsyncExecutorProperties asyncExecutorProperties;
 
+    @Mock
+    CollaborationWorkerProperties workerProperties;
+
     private static byte[] updatePayload() {
         return new byte[]{ 0, 2, 1, 2, 3, 4 };
     }
 
+    private List<Runnable> submitTasks(UUID roomId, byte[] payload, int times) {
+        for (int i = 0; i < times; i++) {
+            updateAppender.appendUpdateAsync(roomId, payload);
+        }
+
+        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(updateExecutor, org.mockito.Mockito.times(times)).execute(taskCaptor.capture());
+        return taskCaptor.getAllValues();
+    }
+
+    private void runAll(List<Runnable> tasks) {
+        for (Runnable r : tasks) {
+            assertThatCode(r::run).doesNotThrowAnyException();
+        }
+    }
+
+
     @BeforeEach
     void setUp() {
         when(asyncExecutorProperties.updateAppendMaxRetries()).thenReturn(5);
-        updateAppender = new UpdateAppender(updateStreamStore, jobPublisher, updateExecutor, asyncExecutorProperties);
+        CollaborationWorkerProperties.SnapshotTrigger trigger =
+                new CollaborationWorkerProperties.SnapshotTrigger(50, 1000L);
+        when(workerProperties.snapshotTrigger()).thenReturn(trigger);
+        updateAppender = new UpdateAppender(updateStreamStore, jobPublisher, workerProperties, updateExecutor,
+                                            asyncExecutorProperties);
     }
 
     @Test
@@ -120,5 +146,47 @@ class UpdateAppenderTest {
         verify(updateStreamStore, org.mockito.Mockito.times(1)).appendUpdate(eq(roomId), any(byte[].class));
 
         verify(jobPublisher, never()).publishSyncAsync(any());
+    }
+
+    @Test
+    @DisplayName("샘플링 주기(50) 이전에는 length를 조회하지 않고 snapshot trigger도 발행하지 않는다")
+    void tryAppend_beforeSampleEvery_doesNotCheckLength_orTriggerSnapshot() {
+        UUID roomId = UUID.randomUUID();
+        byte[] payload = updatePayload();
+
+        runAll(submitTasks(roomId, payload, 49));
+
+        verify(updateStreamStore, org.mockito.Mockito.times(49)).appendUpdate(eq(roomId), eq(payload));
+        verify(updateStreamStore, never()).length(eq(roomId));
+        verify(jobPublisher, never()).publishSnapshotTriggerAsync(any());
+    }
+
+    @Test
+    @DisplayName("50번째 append 성공 시 length를 조회하고, length>=1000이면 snapshot trigger를 발행한다")
+    void tryAppend_onSampleEvery_checksLength_andTriggersSnapshotWhenThresholdMet() {
+        UUID roomId = UUID.randomUUID();
+        byte[] payload = updatePayload();
+
+        when(updateStreamStore.length(roomId)).thenReturn(1000L);
+
+        runAll(submitTasks(roomId, payload, 50));
+
+        verify(updateStreamStore, org.mockito.Mockito.times(50)).appendUpdate(eq(roomId), eq(payload));
+        verify(updateStreamStore, org.mockito.Mockito.times(1)).length(eq(roomId));
+        verify(jobPublisher, org.mockito.Mockito.times(1)).publishSnapshotTriggerAsync(eq(roomId));
+    }
+
+    @Test
+    @DisplayName("50번째 append 성공 시 length를 조회하지만, length<1000이면 snapshot trigger를 발행하지 않는다")
+    void tryAppend_onSampleEvery_checksLength_butDoesNotTriggerWhenBelowThreshold() {
+        UUID roomId = UUID.randomUUID();
+        byte[] payload = updatePayload();
+
+        when(updateStreamStore.length(roomId)).thenReturn(999L);
+
+        runAll(submitTasks(roomId, payload, 50));
+
+        verify(updateStreamStore, org.mockito.Mockito.times(1)).length(eq(roomId));
+        verify(jobPublisher, never()).publishSnapshotTriggerAsync(any());
     }
 }
