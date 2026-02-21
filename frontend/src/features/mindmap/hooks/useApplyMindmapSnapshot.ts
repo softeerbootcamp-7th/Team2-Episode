@@ -15,6 +15,8 @@ const useApplyMindmapSnapshot = ({ url, doc }: Props) => {
     const [lastEntryId, setLastEntryId] = useState("0-0");
 
     useEffect(() => {
+        setStatus(url ? "loading" : "idle");
+
         if (!url || url === "" || !doc) {
             setStatus("idle");
             return;
@@ -42,7 +44,6 @@ const useApplyMindmapSnapshot = ({ url, doc }: Props) => {
                 if (e instanceof Error && e.name === "AbortError") return;
 
                 setStatus("error");
-                throw new BadRequestError("마인드맵 스냅샷 반영에 실패했습니다.");
             }
         })();
 
@@ -50,6 +51,10 @@ const useApplyMindmapSnapshot = ({ url, doc }: Props) => {
             controller.abort();
         };
     }, [doc, url]);
+
+    if (status === "error") {
+        throw new BadRequestError("마인드맵 스냅샷 반영에 실패했습니다.");
+    }
 
     return { status, lastEntryId };
 };

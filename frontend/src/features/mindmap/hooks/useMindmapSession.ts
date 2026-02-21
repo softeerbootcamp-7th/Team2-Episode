@@ -6,6 +6,7 @@ import { ENV } from "@/constants/env";
 import { User } from "@/features/auth/types/user";
 import useApplyMindmapSnapshot from "@/features/mindmap/hooks/useApplyMindmapSnapshot";
 import { useJoinMindmapSession } from "@/features/mindmap/hooks/useJoinMindmapSession";
+import { BadRequestError } from "@/shared/utils/errors";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected";
 
@@ -45,7 +46,9 @@ export function useMindmapSession({ mindmapId }: Props) {
     }, [mindmapId, joinSession]);
 
     useEffect(() => {
-        if (!token || !mindmapId || snapshotApplyStatus !== "success") return;
+        if (!token || !mindmapId || snapshotApplyStatus !== "success") {
+            return;
+        }
 
         const wsProvider = new WebsocketProvider(`${ENV.WS_BASE_URL}/mindmap/`, mindmapId, doc, {
             disableBc: true,
