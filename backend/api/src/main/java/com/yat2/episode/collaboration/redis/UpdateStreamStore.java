@@ -9,7 +9,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -50,12 +49,7 @@ public class UpdateStreamStore {
             return List.of();
         }
 
-        List<byte[]> result = new ArrayList<>(records.size());
-        for (MapRecord<String, String, byte[]> r : records) {
-            byte[] update = r.getValue().get(field);
-            if (update == null) continue;
-            result.add(update);
-        }
-        return result;
+        return records.stream().map(r -> r.getValue().get(field)).filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toList());
     }
 }
