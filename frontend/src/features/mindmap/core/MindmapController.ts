@@ -628,6 +628,14 @@ export class MindmapController implements IMindmapController {
         keyDown: (e: KeyLikeEvent) => {
             this.assertNotDestroyed();
 
+            const target = e.target as HTMLElement | null;
+            const isEditingText =
+                target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+
+            if (isEditingText) {
+                return;
+            }
+
             if (e.key === "Delete" || e.key === "Backspace") {
                 const selected = this.store.getState().selection.selectedNodeId;
                 if (selected) this.actions.deleteNode(selected);
@@ -638,6 +646,15 @@ export class MindmapController implements IMindmapController {
                     this.actions.cancelInteraction();
                 }
                 return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === "n") {
+                this.actions.startCreating();
+            } else if (key === "f") {
+                this.actions.fitToContent();
+            } else if (key === "c") {
+                this.actions.resetViewport();
             }
         },
 
