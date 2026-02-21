@@ -1,10 +1,11 @@
-package com.yat2.episode.episode.dto;
+package com.yat2.episode.episode.dto.response;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 import com.yat2.episode.episode.Episode;
 import com.yat2.episode.episode.EpisodeStar;
+import com.yat2.episode.episode.dto.EpisodeDetail;
 
 /* 마인드맵 사이드바 STAR 정리하기 용 */
 public record EpisodeSummaryRes(
