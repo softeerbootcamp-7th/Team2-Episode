@@ -58,7 +58,7 @@ const Mindmap = ({
             user={user}
             config={resolvedConfig}
         >
-            <div className="flex flex-col w-full h-screen bg-slate-100 overflow-hidden">
+            <div className="flex flex-col w-full h-full bg-slate-100 overflow-hidden">
                 <CollaborationList />
                 <ControllerSideBar />
 
