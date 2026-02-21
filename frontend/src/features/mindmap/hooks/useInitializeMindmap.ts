@@ -2,6 +2,7 @@ import * as Y from "yjs";
 
 import { ENV } from "@/constants/env";
 import { useCreateMindmap } from "@/features/mindmap/hooks/useCreateMindmap";
+import { MindmapId } from "@/features/mindmap/types/mindmap";
 import { makeDocWithArr } from "@/features/mindmap/utils/create_doc_with_arr";
 import { uploadToS3 } from "@/shared/utils/upload_to_s3";
 
@@ -11,7 +12,7 @@ interface InitializeOptions {
     items: string[];
 }
 
-export function useInitializeMindmap(onSuccess: () => void) {
+export function useInitializeMindmap(onSuccess: (mindmapId: MindmapId) => void) {
     const { mutate: createMindmap, isPending } = useCreateMindmap();
 
     const initialize = ({ title, isShared, items }: InitializeOptions) => {
@@ -44,7 +45,7 @@ export function useInitializeMindmap(onSuccess: () => void) {
                             await uploadToS3(cleanUploadInfo, yDocBinary);
                         }
 
-                        onSuccess();
+                        onSuccess(mindmapId);
                     } catch (e) {
                         console.error("초기 데이터 생성 및 업로드 실패:", e);
                     }

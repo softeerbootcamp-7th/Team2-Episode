@@ -10,12 +10,12 @@ type ConnectionStatus = "disconnected" | "connecting" | "connected";
 type SnapshotStatus = "idle" | "loading" | "success" | "error";
 
 type Props = {
-    mindmapId: string;
+    mindmapId?: string;
     enableAwareness?: boolean;
     userInfo: User | null;
 };
 
-export function useMindmapSession({ mindmapId }: Props) {
+export function useMindmapSession({ mindmapId = "" }: Props) {
     const doc = useMemo(() => new Y.Doc(), [mindmapId]);
     const [provider, setProvider] = useState<WebsocketProvider | undefined>(undefined);
 

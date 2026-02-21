@@ -1,4 +1,4 @@
-import { ActivityCategory, MindmapType } from "@/features/mindmap/types/mindmap";
+import { ActivityCategoryItem, MindmapType } from "@/features/mindmap/types/mindmap";
 import { SelectFrom } from "@/shared/types/utility_type";
 
 export type CreateMindmapFunnel = {
@@ -6,7 +6,7 @@ export type CreateMindmapFunnel = {
     TEAM_DETAIL: { mindmapType: SelectFrom<MindmapType, "PUBLIC">; projectName?: string; episodes: string[] };
     CATEGORY: {
         mindmapType: SelectFrom<MindmapType, "PRIVATE">;
-        categories?: ActivityCategory[];
+        categories?: ActivityCategoryItem[];
         projectName?: string;
         episodes?: string[];
     };
