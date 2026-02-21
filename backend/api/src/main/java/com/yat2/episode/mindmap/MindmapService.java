@@ -232,7 +232,7 @@ public class MindmapService {
 
     @Transactional
     public MindmapSessionJoinRes joinMindmapSession(long userId, UUID mindmapId) {
-        mindmapAccessValidator.findMindmapOrThrow(mindmapId);
+        mindmapAccessValidator.validateTeamMindmap(mindmapId);
         MindmapParticipant participant = mindmapAccessValidator.findParticipantOrThrow(mindmapId, userId);
         String ticket = mindmapJwtProvider.issue(userId, mindmapId);
 
