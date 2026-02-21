@@ -112,7 +112,7 @@ public class SessionRegistry {
         }
     }
 
-    private WebSocketSession getAliveSession(UUID roomId, String sessionId) {
+    public WebSocketSession getAliveSession(UUID roomId, String sessionId) {
         ConcurrentHashMap<String, WebSocketSession> sessions = rooms.get(roomId);
         if (sessions == null || sessions.isEmpty()) return null;
 
