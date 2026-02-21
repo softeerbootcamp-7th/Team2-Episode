@@ -1,8 +1,10 @@
 import { ComponentPropsWithoutRef, ReactNode } from "react";
 
 import { useMindmapControllerContext } from "@/features/mindmap/core/MindmapProvider";
-import Button from "@/shared/components/button/Button";
 import Icon from "@/shared/components/icon/Icon";
+import SquareButton from "@/shared/components/square_button/SquareButton";
+import SquareButtonToolTip from "@/shared/components/square_button/SquareButtonToolTip";
+import Tooltip from "@/shared/components/tooltip/Tooltip";
 import { cn } from "@/utils/cn";
 
 type ColProps = ComponentPropsWithoutRef<"li"> & {
@@ -41,19 +43,25 @@ export default function ControllerSideBar() {
             <Col
                 upSlot={
                     <>
-                        <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleFit}>
-                            <Icon name="ic_tool_fit" color={iconColor} />
-                        </Button>
+                        <Tooltip contents={<SquareButtonToolTip>화면 맞춤</SquareButtonToolTip>}>
+                            <SquareButton onClick={handleFit}>
+                                <Icon name="ic_tool_fit" color={iconColor} size="16" />
+                            </SquareButton>
+                        </Tooltip>
 
-                        <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleReset}>
-                            <Icon name="ic_target" color={iconColor} />
-                        </Button>
+                        <Tooltip contents={<SquareButtonToolTip>중앙으로 이동</SquareButtonToolTip>}>
+                            <SquareButton onClick={handleReset}>
+                                <Icon name="ic_target" color={iconColor} size="16" />
+                            </SquareButton>
+                        </Tooltip>
                     </>
                 }
                 bottomSlot={
-                    <Button variant="sidebar" borderRadius="xl" size="xs" onClick={handleNewNode}>
-                        <Icon name="ic_plus" color={iconColor} />
-                    </Button>
+                    <Tooltip contents={<SquareButtonToolTip>노드 추가</SquareButtonToolTip>}>
+                        <SquareButton onClick={handleNewNode}>
+                            <Icon name="ic_plus" color={iconColor} size="16" />
+                        </SquareButton>
+                    </Tooltip>
                 }
             />
         </div>
