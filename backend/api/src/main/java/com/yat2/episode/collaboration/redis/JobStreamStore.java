@@ -13,14 +13,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.yat2.episode.collaboration.JobType;
-import com.yat2.episode.collaboration.config.CollaborationRedisProperties;
+import com.yat2.episode.collaboration.config.RedisProperties;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobStreamStore {
     private final StringRedisTemplate stringRedisTemplate;
-    private final CollaborationRedisProperties redisProperties;
+    private final RedisProperties redisProperties;
 
     public void publishSnapshot(UUID roomId) {
         publishNoNeedDedupe(JobType.SNAPSHOT, roomId, redisProperties.jobStream().dedupeTtl().snapshot());

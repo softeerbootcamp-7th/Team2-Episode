@@ -10,7 +10,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.yat2.episode.collaboration.config.CollaborationAsyncProperties;
+import com.yat2.episode.collaboration.config.AsyncExecutorProperties;
 import com.yat2.episode.collaboration.config.CollaborationWorkerProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
@@ -28,15 +28,15 @@ public class UpdateAppender {
 
     public UpdateAppender(
             UpdateStreamStore updateStreamStore, JobPublisher jobPublisher,
-            @Qualifier("updateExecutor") Executor updateExecutor, CollaborationAsyncProperties asyncProperties,
-            CollaborationWorkerProperties workerProperties
+            CollaborationWorkerProperties workerProperties,
+            @Qualifier("updateExecutor") Executor updateExecutor, AsyncExecutorProperties asyncExecutorProperties
     ) {
         this.updateExecutor = updateExecutor;
         this.updateStreamStore = updateStreamStore;
         this.jobPublisher = jobPublisher;
-        this.maxRetries = Math.max(1, asyncProperties.updateAppendMaxRetries());
         this.sampleEvery = Math.max(1, workerProperties.snapshotTrigger().sampleEvery());
         this.threshold = workerProperties.snapshotTrigger().triggerThreshold();
+        this.maxRetries = Math.max(1, asyncExecutorProperties.updateAppendMaxRetries());
     }
 
     public void appendUpdateAsync(UUID roomId, byte[] payload) {

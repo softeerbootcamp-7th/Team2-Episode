@@ -1,13 +1,14 @@
 import "dotenv/config";
 import Redis from "ioredis";
 import { S3SnapshotStorage } from "./infrastructure/S3SnapshotStorage";
-import { RedisUpdateRepository } from "./infrastructure/UpdateRepository";
+import { RedisUpdateRepository } from "./infrastructure/redis/UpdateRepository";
 import { DefaultYjsProcessor } from "./domain/YjsProcessor";
 import { SnapshotService } from "./services/SnapshotService";
-import { RedisStreamJobConsumer } from "./infrastructure/JobConsumer";
+import { RedisStreamJobConsumer } from "./infrastructure/redis/JobConsumer";
 import { SnapshotWorker } from "./worker/SnapshotWorker";
 import { MindmapTicketIssuer } from "./infrastructure/MindmapTicketIssuer";
 import { WebsocketSyncClient } from "./infrastructure/WebsocketSyncClient";
+import { LastEntryIdRepository } from "./infrastructure/redis/LastEntryIdRepository";
 
 const redis = new Redis({
     host: process.env.REDIS_HOST!,
@@ -15,9 +16,9 @@ const redis = new Redis({
     password: process.env.REDIS_PASSWORD,
 });
 
-const updateRepo = new RedisUpdateRepository(redis, {
-    updateStreamKeyPrefix: process.env.UPDATE_STREAM_PREFIX!,
-});
+const updateRepo = new RedisUpdateRepository(redis);
+
+const lastEntryIdRepo = new LastEntryIdRepository(redis);
 
 const storage = new S3SnapshotStorage({
     region: process.env.AWS_REGION!,
@@ -45,15 +46,14 @@ const service = new SnapshotService({
     yjs,
     storage,
     syncClient,
+    lastEntryIdRepo,
 });
 
 const consumer = new RedisStreamJobConsumer(redis, {
-    jobStreamKey: process.env.JOB_STREAM_KEY!,
-    jobDedupePrefix: process.env.JOB_DEDUPE_KEY_PRIFIX!,
     groupName: process.env.JOB_GROUP_NAME!,
     consumerName: process.env.JOB_CONSUMER_NAME!,
     roomIdField: process.env.JOB_ROOM_FIELD ? process.env.JOB_ROOM_FIELD : "rid",
-    typeField: process.env.JOB_TYPE_FIELD ? process.env.JOB_TYPE_FIELD : "type",
+    typeField: process.env.JOB_TYPE_FIELD ? process.env.JOB_TYPE_FIELD : "t",
     maxRetries: Number(process.env.JOB_MAX_TRY ?? 5),
 });
 

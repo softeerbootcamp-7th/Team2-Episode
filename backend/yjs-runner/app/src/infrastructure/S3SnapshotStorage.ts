@@ -1,7 +1,7 @@
 import { GetObjectCommand, NoSuchKey, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export interface SnapshotStorage {
-    upload(roomId: string, data: Uint8Array): Promise<void>;
+    upload(roomId: string, lastEntryId: string, data: Uint8Array): Promise<void>;
 
     download(roomId: string): Promise<Uint8Array>;
 }
@@ -38,12 +38,15 @@ export class S3SnapshotStorage implements SnapshotStorage {
         return `${this.config.keyPrefix}${roomId}`;
     }
 
-    async upload(roomId: string, data: Uint8Array): Promise<void> {
+    async upload(roomId: string, lastEntryId: string, data: Uint8Array): Promise<void> {
         const command = new PutObjectCommand({
             Bucket: this.config.bucket,
             Key: this.getFullKey(roomId),
             Body: data,
             ContentType: "application/octet-stream",
+            Metadata: {
+                "last-entry-id": lastEntryId,
+            },
         });
 
         await this.client.send(command);

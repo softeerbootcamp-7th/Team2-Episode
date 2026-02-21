@@ -1,4 +1,4 @@
-package com.yat2.episode.episode.dto;
+package com.yat2.episode.episode.dto.request;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;

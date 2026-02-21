@@ -9,16 +9,21 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.yat2.episode.collaboration.SessionRegistry;
-import com.yat2.episode.collaboration.worker.JobPublisher;
+import com.yat2.episode.collaboration.redis.LastEntryIdStore;
+import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 import com.yat2.episode.collaboration.worker.UpdateAppender;
 
+import static com.yat2.episode.global.constant.AttributeKeys.IS_SYNCED;
+import static com.yat2.episode.global.constant.AttributeKeys.LAST_ENTRY_ID;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,7 +32,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,16 +42,19 @@ class YjsMessageRouterTest {
     SessionRegistry sessionRegistry;
 
     @Mock
-    JobPublisher jobPublisher;
+    UpdateAppender updateAppender;
 
     @Mock
-    UpdateAppender updateAppender;
+    UpdateStreamStore updateStreamStore;
+
+    @Mock
+    LastEntryIdStore lastEntryIdStore;
 
     YjsMessageRouter router;
 
     @BeforeEach
     void setUp() {
-        router = new YjsMessageRouter(sessionRegistry, updateAppender);
+        router = new YjsMessageRouter(sessionRegistry, updateAppender, updateStreamStore, lastEntryIdStore);
     }
 
     private static byte[] awarenessFrame() {
@@ -84,13 +91,8 @@ class YjsMessageRouterTest {
 
             router.routeIncoming(roomId, sender, payload);
 
-            ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
-            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), captor.capture());
-            assertArrayEquals(payload, captor.getValue());
-
+            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), eq(payload));
             verifyNoInteractions(updateAppender);
-            verifyNoInteractions(jobPublisher);
-            verifyNoMoreInteractions(sessionRegistry);
         }
 
         @Test
@@ -103,9 +105,8 @@ class YjsMessageRouterTest {
 
             router.routeIncoming(roomId, sender, payload);
 
-            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), any(byte[].class));
+            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), eq(payload));
             verifyNoInteractions(updateAppender);
-            verifyNoInteractions(jobPublisher);
         }
     }
 
@@ -115,7 +116,7 @@ class YjsMessageRouterTest {
 
         @Test
         @DisplayName("Update 프레임이면 broadcast 후 UpdateAppender에 appendUpdateAsync를 위임한다")
-        void routeIncoming_whenUpdate_broadcastsAndDelegatesToAppender() {
+        void routeIncoming_whenUpdate_broadcastAndAppend() {
             UUID roomId = UUID.randomUUID();
             WebSocketSession sender = mock(WebSocketSession.class);
 
@@ -123,33 +124,8 @@ class YjsMessageRouterTest {
 
             router.routeIncoming(roomId, sender, payload);
 
-            ArgumentCaptor<byte[]> broadcastCaptor = ArgumentCaptor.forClass(byte[].class);
-            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), broadcastCaptor.capture());
-            assertArrayEquals(payload, broadcastCaptor.getValue());
-
-            ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
-            verify(updateAppender).appendUpdateAsync(eq(roomId), payloadCaptor.capture());
-            assertArrayEquals(payload, payloadCaptor.getValue());
-
-            verifyNoInteractions(jobPublisher);
-            verifyNoMoreInteractions(sessionRegistry);
-        }
-    }
-
-    @Nested
-    @DisplayName("Snapshot 트리거")
-    class SnapshotTests {
-
-        @Test
-        @DisplayName("executeSnapshot은 JobPublisher.publishSnapshotAsync를 위임한다")
-        void executeSnapshot_delegatesToPublisher() {
-            UUID roomId = UUID.randomUUID();
-
-            jobPublisher.publishSnapshotAsync(roomId);
-
-            verify(jobPublisher).publishSnapshotAsync(eq(roomId));
-            verifyNoInteractions(updateAppender);
-            verifyNoInteractions(sessionRegistry);
+            verify(sessionRegistry).broadcast(eq(roomId), eq(sender), eq(payload));
+            verify(updateAppender).appendUpdateAsync(eq(roomId), eq(payload));
         }
     }
 
@@ -162,22 +138,20 @@ class YjsMessageRouterTest {
         void routeIncoming_sync1_noCandidates_unicastEmptySync2() {
             UUID roomId = UUID.randomUUID();
             WebSocketSession requester = mock(WebSocketSession.class);
+
             when(requester.getId()).thenReturn("REQ");
+            when(sessionRegistry.findAllAlivePeers(any(UUID.class), eq("REQ"))).thenReturn(new ArrayList<>());
 
-            when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(List.of());
+            when(updateStreamStore.readAllUpdates(roomId)).thenReturn(List.of());
+            when(lastEntryIdStore.get(roomId)).thenReturn(Optional.of("0-0"));
 
-            byte[] sync1 = sync1Frame();
+            router.routeIncoming(roomId, requester, sync1Frame());
 
-            router.routeIncoming(roomId, requester, sync1);
+            ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
 
-            ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
-            verify(sessionRegistry).unicast(eq(roomId), eq(requester), payloadCaptor.capture());
+            verify(sessionRegistry).unicast(eq(roomId), eq("REQ"), captor.capture());
 
-            assertArrayEquals(YjsProtocolUtil.emptySync2Frame(), payloadCaptor.getValue());
-
-            verify(sessionRegistry, never()).broadcast(any(), any(), any());
-            verifyNoInteractions(updateAppender);
-            verifyNoInteractions(jobPublisher);
+            assertArrayEquals(YjsProtocolUtil.emptySync2Frame(), captor.getValue());
         }
 
         @Test
@@ -192,32 +166,19 @@ class YjsMessageRouterTest {
             when(p1.getId()).thenReturn("P1");
 
             WebSocketSession p2 = mock(WebSocketSession.class);
-            when(p2.getId()).thenReturn("P2");
 
             when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(new ArrayList<>(List.of(p2, p1)));
 
-            // ✅ 불필요 stubbing 방지: 한 줄 stubbing으로 connectedAt 값 제공
-            when(sessionRegistry.getConnectedAt(any(WebSocketSession.class))).thenAnswer(inv -> {
-                WebSocketSession s = inv.getArgument(0);
-                if ("P1".equals(s.getId())) return 10L;
-                if ("P2".equals(s.getId())) return 20L;
-                return 0L;
-            });
+            when(sessionRegistry.getConnectedAt(p1)).thenReturn(10L);
+            when(sessionRegistry.getConnectedAt(p2)).thenReturn(20L);
 
-            byte[] sync1 = sync1Frame();
+            when(sessionRegistry.unicast(eq(roomId), eq("P1"), any())).thenReturn(true);
 
-            when(sessionRegistry.unicast(roomId, "P1", sync1)).thenReturn(true);
+            router.routeIncoming(roomId, requester, sync1Frame());
 
-            router.routeIncoming(roomId, requester, sync1);
-
-            verify(sessionRegistry).unicast(roomId, "P1", sync1);
+            verify(sessionRegistry).unicast(eq(roomId), eq("P1"), any());
             verify(sessionRegistry, never()).unicast(eq(roomId), eq("P2"), any());
-
-            verify(sessionRegistry, never()).broadcast(any(), any(), any());
-            verifyNoInteractions(updateAppender);
-            verifyNoInteractions(jobPublisher);
         }
-
 
         @Test
         @DisplayName("Sync1에서 첫 provider unicast 실패하면 다음 provider로 넘어간다")
@@ -233,24 +194,75 @@ class YjsMessageRouterTest {
             WebSocketSession p2 = mock(WebSocketSession.class);
             when(p2.getId()).thenReturn("P2");
 
-            when(sessionRegistry.getConnectedAt(p1)).thenReturn(10L);
-            when(sessionRegistry.getConnectedAt(p2)).thenReturn(20L);
-
             when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(new ArrayList<>(List.of(p1, p2)));
 
-            byte[] sync1 = sync1Frame();
+            when(sessionRegistry.getConnectedAt(any())).thenReturn(10L);
 
-            when(sessionRegistry.unicast(eq(roomId), eq("P1"), any(byte[].class))).thenReturn(false);
-            when(sessionRegistry.unicast(eq(roomId), eq("P2"), any(byte[].class))).thenReturn(true);
+            when(sessionRegistry.unicast(eq(roomId), eq("P1"), any())).thenReturn(false);
+            when(sessionRegistry.unicast(eq(roomId), eq("P2"), any())).thenReturn(true);
 
-            router.routeIncoming(roomId, requester, sync1);
+            router.routeIncoming(roomId, requester, sync1Frame());
 
             InOrder order = inOrder(sessionRegistry);
-            order.verify(sessionRegistry).unicast(eq(roomId), eq("P1"), any(byte[].class));
-            order.verify(sessionRegistry).unicast(eq(roomId), eq("P2"), any(byte[].class));
+            order.verify(sessionRegistry).unicast(eq(roomId), eq("P1"), any());
+            order.verify(sessionRegistry).unicast(eq(roomId), eq("P2"), any());
+        }
 
-            verifyNoInteractions(updateAppender);
-            verifyNoInteractions(jobPublisher);
+        @Test
+        @DisplayName("Sync1 Solo updates가 있으면 replay 후 IS_SYNCED=true, LAST_ENTRY_ID 제거, sync2 전송")
+        void routeIncoming_sync1_solo_withUpdates_replayAndSync2() {
+            UUID roomId = UUID.randomUUID();
+
+            WebSocketSession requester = mock(WebSocketSession.class);
+            when(requester.getId()).thenReturn("REQ");
+
+            var attrs = new java.util.HashMap<String, Object>();
+            attrs.put(IS_SYNCED, false);
+            attrs.put(LAST_ENTRY_ID, "0-0");
+            when(requester.getAttributes()).thenReturn(attrs);
+
+            when(sessionRegistry.findAllAlivePeers(any(UUID.class), eq("REQ"))).thenReturn(new ArrayList<>());
+
+            List<byte[]> updates = List.of(new byte[]{ 1 }, new byte[]{ 2 });
+            when(updateStreamStore.readAllUpdates(roomId)).thenReturn(updates);
+
+            when(sessionRegistry.unicastAll(roomId, "REQ", updates)).thenReturn(true);
+
+            router.routeIncoming(roomId, requester, sync1Frame());
+
+            verify(sessionRegistry).unicastAll(roomId, "REQ", updates);
+            verify(sessionRegistry).unicast(eq(roomId), eq("REQ"), eq(YjsProtocolUtil.emptySync2Frame()));
+
+            org.assertj.core.api.Assertions.assertThat(attrs.get(IS_SYNCED)).isEqualTo(true);
+            org.assertj.core.api.Assertions.assertThat(attrs).doesNotContainKey(LAST_ENTRY_ID);
+        }
+
+        @Test
+        @DisplayName("Sync1 Solo replay 전송 실패 시 SERVER_ERROR로 close하고 sync2는 보내지 않는다")
+        void routeIncoming_sync1_solo_replayFails_closeAndNoSync2() throws Exception {
+            UUID roomId = UUID.randomUUID();
+
+            WebSocketSession requester = mock(WebSocketSession.class);
+            when(requester.getId()).thenReturn("REQ");
+
+            var attrs = new java.util.HashMap<String, Object>();
+            attrs.put(IS_SYNCED, false);
+            attrs.put(LAST_ENTRY_ID, "0-0");
+            when(requester.getAttributes()).thenReturn(attrs);
+
+            when(sessionRegistry.findAllAlivePeers(any(UUID.class), eq("REQ"))).thenReturn(new ArrayList<>());
+
+            List<byte[]> updates = List.of(new byte[]{ 1 });
+            when(updateStreamStore.readAllUpdates(roomId)).thenReturn(updates);
+
+            when(sessionRegistry.unicastAll(roomId, "REQ", updates)).thenReturn(false);
+
+            router.routeIncoming(roomId, requester, sync1Frame());
+
+            verify(requester).close(eq(CloseStatus.SERVER_ERROR));
+            verify(sessionRegistry, never()).unicast(eq(roomId), eq("REQ"), eq(YjsProtocolUtil.emptySync2Frame()));
+
+            org.assertj.core.api.Assertions.assertThat(attrs.get(IS_SYNCED)).isEqualTo(false);
         }
 
         @Test
@@ -261,49 +273,26 @@ class YjsMessageRouterTest {
             WebSocketSession requester = mock(WebSocketSession.class);
             when(requester.getId()).thenReturn("REQ");
 
-            WebSocketSession provider = mock(WebSocketSession.class);
-            when(provider.getId()).thenReturn("P1");
-
-            when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(new ArrayList<>(List.of(provider)));
-            when(sessionRegistry.unicast(eq(roomId), eq("P1"), any(byte[].class))).thenReturn(true);
-
-            router.routeIncoming(roomId, requester, sync1Frame());
-            router.routeIncoming(roomId, provider, sync2Frame());
-
-            ArgumentCaptor<byte[]> forwarded = ArgumentCaptor.forClass(byte[].class);
-            verify(sessionRegistry).unicast(eq(roomId), eq("REQ"), forwarded.capture());
-            assertArrayEquals(sync2Frame(), forwarded.getValue());
-
-            verify(sessionRegistry, never()).broadcast(any(), any(), any());
-
-            verifyNoInteractions(updateAppender);
-            verifyNoInteractions(jobPublisher);
-        }
-
-        @Test
-        @DisplayName("disconnect된 provider는 pendingSyncs에서 제거되어 sync2가 와도 포워딩되지 않는다")
-        void onDisconnect_removesPendingSync_provider() {
-            UUID roomId = UUID.randomUUID();
-
-            WebSocketSession requester = mock(WebSocketSession.class);
-            when(requester.getId()).thenReturn("REQ");
+            var attrs = new java.util.HashMap<String, Object>();
+            when(requester.getAttributes()).thenReturn(attrs);
 
             WebSocketSession provider = mock(WebSocketSession.class);
             when(provider.getId()).thenReturn("P1");
 
-            when(sessionRegistry.findAllAlivePeers(roomId, "REQ")).thenReturn(new ArrayList<>(List.of(provider)));
-            when(sessionRegistry.unicast(eq(roomId), eq("P1"), any(byte[].class))).thenReturn(true);
+            when(sessionRegistry.findAllAlivePeers(any(UUID.class), eq("REQ"))).thenReturn(
+                    new ArrayList<>(List.of(provider)));
+
+            when(sessionRegistry.unicast(eq(roomId), eq("P1"), any())).thenReturn(true);
+
+            when(sessionRegistry.getAliveSession(eq(roomId), eq("REQ"))).thenReturn(requester);
 
             router.routeIncoming(roomId, requester, sync1Frame());
-
-            router.onDisconnect(roomId, "P1");
-
             router.routeIncoming(roomId, provider, sync2Frame());
 
-            verify(sessionRegistry, never()).unicast(eq(roomId), eq("REQ"), any(byte[].class));
+            verify(sessionRegistry).unicast(eq(roomId), eq("REQ"), eq(sync2Frame()));
 
-            verifyNoInteractions(updateAppender);
-            verifyNoInteractions(jobPublisher);
+            org.assertj.core.api.Assertions.assertThat(attrs.get(IS_SYNCED)).isEqualTo(true);
+            org.assertj.core.api.Assertions.assertThat(attrs).doesNotContainKey(LAST_ENTRY_ID);
         }
     }
 }

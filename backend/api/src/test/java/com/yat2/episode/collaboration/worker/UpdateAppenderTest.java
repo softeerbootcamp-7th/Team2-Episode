@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
-import com.yat2.episode.collaboration.config.CollaborationAsyncProperties;
+import com.yat2.episode.collaboration.config.AsyncExecutorProperties;
 import com.yat2.episode.collaboration.config.CollaborationWorkerProperties;
 import com.yat2.episode.collaboration.redis.UpdateStreamStore;
 
@@ -40,7 +40,7 @@ class UpdateAppenderTest {
     UpdateAppender updateAppender;
 
     @Mock
-    CollaborationAsyncProperties asyncProperties;
+    AsyncExecutorProperties asyncExecutorProperties;
 
     @Mock
     CollaborationWorkerProperties workerProperties;
@@ -68,12 +68,12 @@ class UpdateAppenderTest {
 
     @BeforeEach
     void setUp() {
-        when(asyncProperties.updateAppendMaxRetries()).thenReturn(5);
+        when(asyncExecutorProperties.updateAppendMaxRetries()).thenReturn(5);
         CollaborationWorkerProperties.SnapshotTrigger trigger =
                 new CollaborationWorkerProperties.SnapshotTrigger(50, 1000L);
         when(workerProperties.snapshotTrigger()).thenReturn(trigger);
-        updateAppender =
-                new UpdateAppender(updateStreamStore, jobPublisher, updateExecutor, asyncProperties, workerProperties);
+        updateAppender = new UpdateAppender(updateStreamStore, jobPublisher, workerProperties, updateExecutor,
+                                            asyncExecutorProperties);
     }
 
     @Test

@@ -36,7 +36,14 @@ public class MindmapAccessValidator {
         return mindmap;
     }
 
-    public Mindmap validateTeamMindmap(UUID mindmapId) {
+    public MindmapParticipant validateJoin(UUID mindmapId, long userId) {
+        Mindmap mindmap = findMindmapOrThrow(mindmapId);
+        return mindmapParticipantRepository.findByMindmapIdAndUserId(mindmapId, userId).orElseThrow(
+                () -> new CustomException(mindmap.isShared() ? ErrorCode.MINDMAP_PARTICIPANT_NOT_FOUND :
+                                          ErrorCode.MINDMAP_ACCESS_FORBIDDEN));
+    }
+
+    public Mindmap validateTeamMindmapWithLock(UUID mindmapId) {
         Mindmap mindmap = mindmapRepository.findByIdWithLock(mindmapId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MINDMAP_NOT_FOUND));
         if (!mindmap.isShared()) throw new CustomException(ErrorCode.MINDMAP_ACCESS_FORBIDDEN);
