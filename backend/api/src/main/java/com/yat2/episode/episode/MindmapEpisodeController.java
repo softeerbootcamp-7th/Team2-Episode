@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,8 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.yat2.episode.episode.dto.EpisodeDetail;
-import com.yat2.episode.episode.dto.EpisodeSummaryRes;
-import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.response.EpisodeSummaryRes;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.global.swagger.ApiErrorCodes;
 import com.yat2.episode.global.swagger.AuthRequiredErrors;
@@ -49,8 +50,8 @@ public class MindmapEpisodeController {
     }
 
     @Operation(
-            summary = "마인드맵 내 에피소드 생성",
-            description = "마인드맵 내에 에피소드를 생성합니다. 클라이언트에서 ID를 생성해서 요청합니다. Body의 모든 필드는 Optional입니다. 빈 객체도 허용됩니다."
+            summary = "마인드맵 내 에피소드 생성/수정",
+            description = "마인드맵 내에 에피소드를 생성/수정합니다. 클라이언트에서 ID를 생성해서 요청합니다. Body의 모든 필드는 Optional입니다. 빈 객체도 허용됩니다."
     )
     @ApiErrorCodes(
             { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
@@ -66,5 +67,24 @@ public class MindmapEpisodeController {
             EpisodeUpsertContentReq episodeUpsertReq
     ) {
         return episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
+    }
+
+    @Operation(
+            summary = "마인드맵 내 에피소드 생성/수정 bulk 처리",
+            description = "마인드맵 내에 에피소드들을 생성/수정합니다. 클라이언트에서 ID를 생성해서 요청합니다. Body의 모든 필드는 Optional입니다. 빈 객체도 허용됩니다."
+    )
+    @ApiErrorCodes(
+            { ErrorCode.INVALID_REQUEST, ErrorCode.EPISODE_NOT_FOUND, ErrorCode.INTERNAL_ERROR,
+              ErrorCode.MINDMAP_NOT_FOUND }
+    )
+    @PostMapping("/batch")
+    public List<EpisodeDetail> createEpisodeList(
+            @PathVariable UUID mindmapId,
+            @RequestAttribute(USER_ID) long userId,
+            @Valid
+            @RequestBody
+            EpisodeUpsertContentReq episodeUpsertReq
+    ) {
+        return List.of();//episodeService.upsertEpisode(nodeId, userId, mindmapId, episodeUpsertReq);
     }
 }

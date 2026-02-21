@@ -12,7 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.UUID;
 
-import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

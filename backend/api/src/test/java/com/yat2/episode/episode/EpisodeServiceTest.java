@@ -18,10 +18,10 @@ import java.util.UUID;
 
 import com.yat2.episode.competency.CompetencyTypeService;
 import com.yat2.episode.episode.dto.EpisodeDetail;
-import com.yat2.episode.episode.dto.EpisodeSearchReq;
-import com.yat2.episode.episode.dto.EpisodeUpsertContentReq;
-import com.yat2.episode.episode.dto.MindmapEpisodeRes;
-import com.yat2.episode.episode.dto.StarUpdateReq;
+import com.yat2.episode.episode.dto.request.EpisodeSearchReq;
+import com.yat2.episode.episode.dto.request.EpisodeUpsertContentReq;
+import com.yat2.episode.episode.dto.request.StarUpdateReq;
+import com.yat2.episode.episode.dto.response.MindmapEpisodeRes;
 import com.yat2.episode.global.exception.CustomException;
 import com.yat2.episode.global.exception.ErrorCode;
 import com.yat2.episode.mindmap.MindmapAccessValidator;
