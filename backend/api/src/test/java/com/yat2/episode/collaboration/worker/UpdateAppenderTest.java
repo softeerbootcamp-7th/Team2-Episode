@@ -121,4 +121,78 @@ class UpdateAppenderTest {
 
         verify(jobPublisher, never()).publishSyncAsync(any());
     }
+
+    @Test
+    @DisplayName("샘플링 주기(50) 이전에는 length를 조회하지 않고 snapshot trigger도 발행하지 않는다")
+    void tryAppend_beforeSampleEvery_doesNotCheckLength_orTriggerSnapshot() {
+        UUID roomId = UUID.randomUUID();
+        byte[] payload = updatePayload();
+
+        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+
+        for (int i = 0; i < 49; i++) {
+            updateAppender.appendUpdateAsync(roomId, payload);
+        }
+
+        verify(updateExecutor, org.mockito.Mockito.times(49)).execute(taskCaptor.capture());
+
+        for (Runnable r : taskCaptor.getAllValues()) {
+            assertThatCode(r::run).doesNotThrowAnyException();
+        }
+
+        verify(updateStreamStore, org.mockito.Mockito.times(49)).appendUpdate(eq(roomId), eq(payload));
+        verify(updateStreamStore, never()).length(eq(roomId));
+        verify(jobPublisher, never()).publishSnapshotTriggerAsync(any());
+    }
+
+    @Test
+    @DisplayName("50번째 append 성공 시 length를 조회하고, length>=1000이면 snapshot trigger를 발행한다")
+    void tryAppend_onSampleEvery_checksLength_andTriggersSnapshotWhenThresholdMet() {
+        UUID roomId = UUID.randomUUID();
+        byte[] payload = updatePayload();
+
+        when(updateStreamStore.length(roomId)).thenReturn(1000L);
+
+        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+
+        for (int i = 0; i < 50; i++) {
+            updateAppender.appendUpdateAsync(roomId, payload);
+        }
+
+        verify(updateExecutor, org.mockito.Mockito.times(50)).execute(taskCaptor.capture());
+
+        for (Runnable r : taskCaptor.getAllValues()) {
+            assertThatCode(r::run).doesNotThrowAnyException();
+        }
+
+        verify(updateStreamStore, org.mockito.Mockito.times(50)).appendUpdate(eq(roomId), eq(payload));
+
+        verify(updateStreamStore, org.mockito.Mockito.times(1)).length(eq(roomId));
+
+        verify(jobPublisher, org.mockito.Mockito.times(1)).publishSnapshotTriggerAsync(eq(roomId));
+    }
+
+    @Test
+    @DisplayName("50번째 append 성공 시 length를 조회하지만, length<1000이면 snapshot trigger를 발행하지 않는다")
+    void tryAppend_onSampleEvery_checksLength_butDoesNotTriggerWhenBelowThreshold() {
+        UUID roomId = UUID.randomUUID();
+        byte[] payload = updatePayload();
+
+        when(updateStreamStore.length(roomId)).thenReturn(999L);
+
+        ArgumentCaptor<Runnable> taskCaptor = ArgumentCaptor.forClass(Runnable.class);
+
+        for (int i = 0; i < 50; i++) {
+            updateAppender.appendUpdateAsync(roomId, payload);
+        }
+
+        verify(updateExecutor, org.mockito.Mockito.times(50)).execute(taskCaptor.capture());
+
+        for (Runnable r : taskCaptor.getAllValues()) {
+            assertThatCode(r::run).doesNotThrowAnyException();
+        }
+
+        verify(updateStreamStore, org.mockito.Mockito.times(1)).length(eq(roomId));
+        verify(jobPublisher, never()).publishSnapshotTriggerAsync(any());
+    }
 }
