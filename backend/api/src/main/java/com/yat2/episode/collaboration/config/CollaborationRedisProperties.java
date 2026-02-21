@@ -12,14 +12,21 @@ public record CollaborationRedisProperties(
     public record UpdateStream(
             String keyPrefix,
             Duration ttl,
-            String fieldUpdate
-    ) {}
+            String fieldUpdate,
+            MaxLen maxLen
+    ) {
+        public record MaxLen(
+                long count,
+                boolean approximate
+        ) {}
+    }
 
     public record JobStream(
             String key,
             String dedupeKeyPrefix,
             Fields fields,
-            DedupeTtl dedupeTtl
+            DedupeTtl dedupeTtl,
+            MaxLen maxLen
     ) {
         public record Fields(
                 String type,
@@ -29,6 +36,11 @@ public record CollaborationRedisProperties(
         public record DedupeTtl(
                 Duration sync,
                 Duration snapshot
+        ) {}
+
+        public record MaxLen(
+                long count,
+                boolean approximate
         ) {}
     }
 }
